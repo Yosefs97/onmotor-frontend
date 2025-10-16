@@ -1,14 +1,11 @@
-// /app/shop/page.jsx
 'use client';
-import ShopLayoutInternal from '@/components/ShopLayoutInternal';
-import ManufacturerGrid from '@/components/ManufacturerGrid';
+import { Suspense } from 'react';
+import ShopPageInner from './ShopPageInner';
 
-export default function ShopHome() {
+export default function ShopPage() {
   return (
-    <ShopLayoutInternal>
-      <div className="w-full px-2 md:px-4 mt-4">
-        <ManufacturerGrid />
-      </div>
-    </ShopLayoutInternal>
+    <Suspense fallback={<div className="text-center py-6">טוען חנות...</div>}>
+      <ShopPageInner />
+    </Suspense>
   );
 }
