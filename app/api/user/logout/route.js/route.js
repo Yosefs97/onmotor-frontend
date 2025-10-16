@@ -1,4 +1,3 @@
-// app/api/user/logout/route.js
 import { serialize } from 'cookie';
 
 export async function POST() {
@@ -9,8 +8,9 @@ export async function POST() {
     sameSite: 'lax',
     path: '/',
     maxAge: 60 * 60 * 24 * 7 // 7 ימים
-
   });
+
+  console.log('נשלחה עוגייה למחיקה:', cookie);
 
   return new Response(JSON.stringify({ success: true }), {
     status: 200,
@@ -20,4 +20,3 @@ export async function POST() {
     },
   });
 }
-console.log('נשלחה עוגייה למחיקה:', cookie);
