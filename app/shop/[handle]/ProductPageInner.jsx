@@ -1,4 +1,4 @@
-// /app/shop/[handle]/page.jsx
+//app\shop\[handle]\ProductPageInner.jsx
 'use client';
 import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
