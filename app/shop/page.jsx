@@ -1,5 +1,6 @@
-export const dynamic = 'force-dynamic';
+
 'use client';
+export const dynamic = 'force-dynamic';
 import { Suspense } from 'react';
 import ShopLayoutInternal from '@/components/ShopLayoutInternal';
 import ManufacturerGrid from '@/components/ManufacturerGrid';

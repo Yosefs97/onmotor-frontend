@@ -1,7 +1,7 @@
 //app\shop\[handle]\page.jsx
-export const dynamic = 'force-dynamic';
 
 'use client';
+export const dynamic = 'force-dynamic';
 import { Suspense } from 'react';
 import ProductPageInner from './ProductPageInner';
 
