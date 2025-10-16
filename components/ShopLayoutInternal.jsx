@@ -1,5 +1,5 @@
-// /components/ShopLayoutInternal.jsx
 'use client';
+import { Suspense } from 'react';
 import ShopSidebar from '@/components/ShopSidebar';
 import MobileShopFilterBar from '@/components/MobileShopFilterBar';
 import AutoShopBreadcrumbs from '@/components/AutoShopBreadcrumbs';
@@ -7,7 +7,7 @@ import ShopInfoAccordion from '@/components/ShopInfoAccordion';
 import { useSearchParams, usePathname, useRouter } from 'next/navigation';
 import { buildUrlFromFilters } from '@/utils/buildUrlFromFilters';
 
-export default function ShopLayoutInternal({ children, product = null }) {
+function ShopLayoutInternalContent({ children, product = null }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
@@ -37,5 +37,13 @@ export default function ShopLayoutInternal({ children, product = null }) {
         <ShopInfoAccordion />
       </div>
     </div>
+  );
+}
+
+export default function ShopLayoutInternal(props) {
+  return (
+    <Suspense fallback={<div className="text-center py-6">טוען רכיבי חנות...</div>}>
+      <ShopLayoutInternalContent {...props} />
+    </Suspense>
   );
 }

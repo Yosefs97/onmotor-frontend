@@ -1,4 +1,4 @@
-// /app/shop/page.jsx
+// app\shop\ShopPageInner.jsx
 'use client';
 import ShopLayoutInternal from '@/components/ShopLayoutInternal';
 import ManufacturerGrid from '@/components/ManufacturerGrid';
