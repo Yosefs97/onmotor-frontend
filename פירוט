@@ -1,0 +1,3214 @@
+///global.css454 ///
+
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700&display=swap');
+@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@keyframes parts-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.animate-parts-bounce {
+  animation: parts-bounce 1s infinite;
+}
+
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Heebo', sans-serif;
+}
+
+@keyframes spinEaseOut {
+  0% {
+    transform: rotate(0deg);
+  }
+  70% {
+    transform: rotate(900deg);
+  }
+  100% {
+    transform: rotate(1080deg);
+  }
+}
+
+@keyframes bounceDecay {
+  0% {
+    transform: translateY(0);
+  }
+  20% {
+    transform: translateY(-20px);
+  }
+  40% {
+    transform: translateY(0);
+  }
+  60% {
+    transform: translateY(-10px);
+  }
+  80% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-5px);
+  }
+}
+@keyframes marquee {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.news-ticker-line {
+  position: absolute;
+  white-space: nowrap;
+  animation: marquee 15s linear infinite;
+  direction: rtl;
+  font-weight: bold;
+}
+
+.animate-spin-ease-out {
+  animation: spinEaseOut 1.5s ease-out forwards;
+}
+
+.animate-bounce-decay {
+  animation: bounceDecay 1s ease-out forwards;
+}
+
+select {
+  max-width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@keyframes marquee-loop {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-marquee-loop {
+  display: inline-block;
+  white-space: nowrap;
+  animation: marquee-loop 15s linear infinite;
+}
+
+/* 🎯 עיצוב פסי גלילה בכל האתר או רק לאלמנטים עם overflow */
+::-webkit-scrollbar {
+  width: 6px; /* עובי פס הגלילה */
+}
+
+::-webkit-scrollbar-track {
+  background: transparent; /* רקע המסילה */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #a0a0a0; /* צבע הידית */
+  border-radius: 8px;        /* עיגול פינות */
+  border: 1px solid #555;    /* מסגרת עדינה */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #ff1a1a; /* אדום בעת מעבר עכבר */
+}
+
+/* עיצוב פס גלילה רק לאזור הסיידר */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #ff1a1a;;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #ff1a1a;
+}
+
+/* 🎨 שליטה בפונט של הטקסטים בלבד */
+.article-text {
+  font-family: 'Heebo', sans-serif; /* או כל פונט שתגדיר בסטרפאי */
+  font-size: 18px;
+  line-height: 1.8;
+}
+
+/* 🛑 אל תשפיע על iframes או embeds */
+.article-text iframe,
+.article-text blockquote,
+.article-text .instagram-media,
+.article-text .tiktok-embed,
+.article-text .twitter-tweet,
+.article-text .fb-post {
+  all: unset; /* מסיר כל השפעה של הפונט שלך */
+  font-family: initial;
+  font-size: initial;
+  line-height: normal;
+}
+/* 🧩 ביטול מרווחים מיותרים מתחת להטמעות */
+.instagram-media,
+.tiktok-embed,
+.twitter-tweet,
+.fb-post,
+iframe[src*="facebook.com"],
+iframe[src*="instagram.com"],
+iframe[src*="tiktok.com"],
+iframe[src*="twitter.com"],
+iframe[src*="x.com"] {
+  margin-bottom: 0 !important;
+  margin-top: 0.5rem !important;
+}
+
+/* התאמה למובייל */
+@media (max-width: 640px) {
+  .instagram-media,
+  .tiktok-embed,
+  .twitter-tweet,
+  .fb-post {
+    margin-top: 0.2rem !important;
+  }
+}
+///// components/EmbedContent.jsx 
+
+// components/EmbedContent.jsx
+"use client";
+import React, { useEffect } from "react";
+
+export default function EmbedContent({ url }) {
+  useEffect(() => {
+    // --- טעינת SDKs של פלטפורמות ---
+    const loadScript = (id, src) => {
+      if (!document.getElementById(id)) {
+        const s = document.createElement("script");
+        s.id = id;
+        s.src = src;
+        s.async = true;
+        document.body.appendChild(s);
+      }
+    };
+
+    loadScript("instagram-embed", "https://www.instagram.com/embed.js");
+    loadScript("tiktok-embed", "https://www.tiktok.com/embed.js");
+    loadScript("twitter-embed", "https://platform.twitter.com/widgets.js");
+    loadScript("facebook-jssdk", "https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v17.0");
+
+    // --- Instagram עיבוד מחדש ---
+    if (url.includes("instagram.com")) {
+      const tryProcess = () => {
+        if (window.instgrm && window.instgrm.Embeds) window.instgrm.Embeds.process();
+      };
+      tryProcess();
+      const t = setTimeout(tryProcess, 800);
+      return () => clearTimeout(t);
+    }
+
+    // --- Facebook רענון ---
+    if (url.includes("facebook.com")) {
+      const tryProcessFB = () => {
+        if (window.FB && window.FB.XFBML) window.FB.XFBML.parse();
+      };
+      tryProcessFB();
+      const t = setTimeout(tryProcessFB, 800);
+      return () => clearTimeout(t);
+    }
+  }, [url]);
+
+  // --- עיצוב אחיד ---
+  const wrapperClass =
+    "flex justify-center items-center mt-2 sm:mt-4 mb-1 w-full max-w-full text-center";
+
+  // ✅ YouTube
+  if (url.includes("youtube.com") || url.includes("youtu.be")) {
+    let videoId = "";
+    if (url.includes("shorts/")) videoId = url.split("shorts/")[1]?.split("?")[0];
+    else if (url.includes("watch?v=")) videoId = url.split("v=")[1]?.split("&")[0];
+    else videoId = url.split("/").pop()?.split("?")[0];
+
+    return (
+      <div className={wrapperClass}>
+        <div className="w-full max-w-[720px] aspect-video">
+          <iframe
+            src={`https://www.youtube.com/embed/${videoId}`}
+            allowFullScreen
+            title="YouTube Video"
+            className="w-full h-full rounded-xl"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ TikTok
+  if (url.includes("tiktok.com")) {
+    const videoId = url.split("/video/")[1]?.split("?")[0];
+    return (
+      <div className={wrapperClass}>
+        <blockquote
+          className="tiktok-embed"
+          cite={url}
+          data-video-id={videoId}
+          style={{ maxWidth: "360px", minWidth: "320px" }}
+        >
+          <a href={url}></a>
+        </blockquote>
+      </div>
+    );
+  }
+
+  // ✅ Instagram
+  if (url.includes("instagram.com")) {
+    return (
+      <div className={wrapperClass}>
+        <blockquote
+          className="instagram-media"
+          data-instgrm-permalink={url}
+          data-instgrm-version="14"
+          style={{ maxWidth: "400px", margin: "0 auto" }}
+        />
+      </div>
+    );
+  }
+
+  // ✅ Facebook (פוסט או ריל)
+  if (url.includes("facebook.com")) {
+    return (
+      <div className={wrapperClass}>
+        <div
+          className="fb-post"
+          data-href={url}
+          data-width="500"
+          style={{ margin: "0 auto" }}
+        ></div>
+      </div>
+    );
+  }
+
+  // ✅ X / Twitter
+  if (url.includes("twitter.com") || url.includes("x.com")) {
+    const fixedUrl = url.replace("x.com", "twitter.com");
+    return (
+      <div className={wrapperClass}>
+        <blockquote className="twitter-tweet">
+          <a href={fixedUrl}></a>
+        </blockquote>
+      </div>
+    );
+  }
+
+  // ✅ ברירת מחדל – קישור רגיל
+  return (
+    <div className={wrapperClass}>
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-blue-600 underline break-words"
+      >
+        {url}
+      </a>
+    </div>
+  );
+}
+////
+// app/articles/[slug]/page.jsx
+export const dynamic = 'force-dynamic';
+
+import PageContainer from "@/components/PageContainer";
+import ArticleHeader from "@/components/ArticleHeader";
+import SimpleKeyValueTable from "@/components/SimpleKeyValueTable";
+import Tags from "@/components/Tags";
+import SimilarArticles from "@/components/SimilarArticles";
+import { notFound } from "next/navigation";
+import CommentsSection from "@/components/CommentsSection";
+import Gallery from "@/components/Gallery";
+import { labelMap } from "@/utils/labelMap";
+import InlineImage from "@/components/InlineImage";
+import EmbedContent from "@/components/EmbedContent";
+
+const API_URL = process.env.STRAPI_API_URL;
+
+export default async function ArticlePage({ params }) {
+  const res = await fetch(
+    `${API_URL}/api/articles?filters[slug][$eq]=${params.slug}&populate=*`,
+    { next: { revalidate: 0 } }
+  );
+
+  const json = await res.json();
+  const rawArticle = json.data?.[0];
+  if (!rawArticle) return notFound();
+
+  const data = rawArticle;
+
+  const article = {
+    title: data.title || "כתבה ללא כותרת",
+    description: data.description || "אין תיאור זמין",
+    image: data.image?.url ? `${API_URL}${data.image.url}` : "/default-image.jpg",
+    imageSrc: data.image?.url ? `${API_URL}${data.image.url}` : "/default-image.jpg",
+    imageAlt: data.image?.alternativeText || "תמונה ראשית",
+    author: data.author || "מערכת OnMotor",
+    date: data.date || "2025-06-22",
+    time: data.time || "10:00",
+    tags: data.tags || [],
+    content: data.content || "",
+    tableData: data.tableData || {},
+    href: `/articles/${params.slug}`,
+    category: data.category || "general",
+    subcategory: Array.isArray(data.subcategory)
+      ? data.subcategory[0]
+      : data.subcategory,
+    values: Array.isArray(data.Values)
+      ? data.Values
+      : data.Values
+      ? [data.Values]
+      : [],
+    headline: data.headline || data.title,
+    subdescription: data.subdescription || "",
+    slug: params.slug,
+    gallery:
+      data.gallery?.map((img) => ({
+        src: `${API_URL}${img.url}`,
+        alt: img.alternativeText || "תמונה מהגלריה",
+      })) || [],
+    font_family: data.font_family || "Heebo, sans-serif",
+  };
+
+  // ✅ בניית פירורי לחם
+  const breadcrumbs = [{ label: "דף הבית", href: "/" }];
+  if (article.category) {
+    breadcrumbs.push({
+      label: labelMap[article.category] || article.category,
+      href: `/${article.category}`,
+    });
+  }
+  if (article.subcategory) {
+    breadcrumbs.push({
+      label: labelMap[article.subcategory] || article.subcategory,
+      href: `/${article.category}/${article.subcategory}`,
+    });
+  }
+  if (article.values && article.values.length > 0) {
+    const valueKey = article.values[0];
+    breadcrumbs.push({
+      label: labelMap[valueKey] || valueKey,
+      href: `/${article.category}/${article.subcategory}/${valueKey}`,
+    });
+  }
+  breadcrumbs.push({ label: article.title });
+
+  // ✅ פונקציית רינדור תומכת Rich Text והטמעות
+  const renderParagraph = (block, i) => {
+    // מחרוזת פשוטה
+    if (typeof block === "string") {
+      const cleanText = block.trim();
+
+      if (cleanText.startsWith("[[img:") && cleanText.endsWith("]]")) {
+        const parts = cleanText.slice(6, -2).split("||");
+        const [src, alt = "", caption = ""] = parts;
+        return (
+          <InlineImage
+            key={i}
+            src={src.trim()}
+            alt={alt.trim()}
+            caption={caption.trim()}
+          />
+        );
+      }
+
+      const urlMatch = cleanText.match(/https?:\/\/[^\s]+/);
+      if (urlMatch) return <EmbedContent key={i} url={urlMatch[0]} />;
+
+      return (
+        <p
+          key={i}
+          className="article-text text-gray-800 text-[18px] leading-relaxed"
+          dangerouslySetInnerHTML={{ __html: cleanText }}
+        />
+      );
+    }
+
+    // Rich Text בלוק של סטרפאי
+    if (block.type === "paragraph" && block.children) {
+      const html = block.children
+        .map((child) => {
+          let text = child.text || "";
+          if (child.bold) text = `<strong>${text}</strong>`;
+          if (child.italic) text = `<em>${text}</em>`;
+          if (child.underline) text = `<u>${text}</u>`;
+          if (child.type === "link" && child.url) {
+            text = `<a href="${child.url}" target="_blank" rel="noopener noreferrer" 
+            class="text-blue-600 underline hover:text-blue-800 transition-colors duration-150">
+            ${text}</a>`;
+          }
+          return text;
+        })
+        .join("");
+
+      // ✅ תיקון לזיהוי קישורים עטופים בתגיות (כולל reels)
+      const cleanHtml = html.replace(/<[^>]+>/g, "").trim(); // מסיר תגיות
+      const urlMatch = cleanHtml.match(/https?:\/\/[^\s"']+/);
+
+      if (urlMatch && cleanHtml === urlMatch[0]) {
+        return <EmbedContent key={i} url={urlMatch[0]} />;
+      }
+
+      return (
+        <p
+          key={i}
+          className="article-text text-gray-800 text-[18px] leading-relaxed"
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+      );
+    }
+
+    // כותרות
+    if (block.type === "heading") {
+      const level = block.level || 2;
+      const Tag = `h${Math.min(level, 3)}`;
+      const text = block.children?.map((c) => c.text).join("") || "";
+      return (
+        <Tag
+          key={i}
+          className="font-bold text-2xl text-gray-900 mt-4 mb-2"
+          dangerouslySetInnerHTML={{ __html: text }}
+        />
+      );
+    }
+
+    return null;
+  };
+
+  // ✅ בניית פסקאות מתוך content
+  let paragraphs = [];
+  if (typeof article.content === "string") {
+    paragraphs = article.content.split("\n\n");
+  } else if (Array.isArray(article.content)) {
+    paragraphs = article.content;
+  }
+
+  return (
+    <PageContainer title={article.title} breadcrumbs={breadcrumbs}>
+      <div
+        className="mx-auto max-w-[740px] space-y-2 text-right leading-relaxed text-base text-gray-800 px-2"
+        style={{ fontFamily: article.font_family }}
+      >
+        <ArticleHeader
+          author={article.author}
+          date={article.date}
+          time={article.time}
+          image={article.image}
+          imageSrc={article.imageSrc}
+          imageAlt={article.imageAlt}
+          title={article.headline}
+          subdescription={article.subdescription}
+        />
+
+        {article.description && (
+          <p className="font-bold text-2xl text-gray-600">{article.description}</p>
+        )}
+
+        {/* ✅ מציג טקסטים, תמונות והטמעות */}
+        {paragraphs.map(renderParagraph)}
+
+        {article.tableData && <SimpleKeyValueTable data={article.tableData} />}
+
+        <Gallery images={article.gallery} />
+
+        <Tags tags={article.tags} />
+
+        <SimilarArticles
+          currentSlug={article.slug}
+          category={article.category}
+        />
+
+        <CommentsSection articleUrl={`https://onmotor-media.com${article.href}`} />
+      </div>
+    </PageContainer>
+  );
+}
+
+
+
+// components/EmbedContent.jsx  234
+"use client";
+import React, { useEffect } from "react";
+
+export default function EmbedContent({ url }) {
+  useEffect(() => {
+    // Instagram: להריץ עיבוד של ה־embeds אחרי שהאלמנט נכנס ל־DOM
+    if (url.includes("instagram.com")) {
+      const tryProcess = () => {
+        if (window.instgrm && window.instgrm.Embeds) {
+          window.instgrm.Embeds.process();
+        }
+      };
+      // מיידית + עוד ניסיון קטן אחרי חצי שניה
+      tryProcess();
+      const t = setTimeout(tryProcess, 500);
+      return () => clearTimeout(t);
+    }
+  }, [url]);
+
+  // === EMBED BLOCKS ===
+
+  // YouTube
+  if (url.includes("youtube.com") || url.includes("youtu.be")) {
+    let videoId = "";
+    if (url.includes("shorts/")) {
+      videoId = url.split("shorts/")[1]?.split("?")[0];
+    } else if (url.includes("watch?v=")) {
+      videoId = url.split("v=")[1]?.split("&")[0];
+    } else {
+      videoId = url.split("/").pop()?.split("?")[0];
+    }
+    return (
+      <div className="my-4 aspect-video">
+        <iframe
+          src={`https://www.youtube.com/embed/${videoId}`}
+          title="YouTube video"
+          allowFullScreen
+          className="w-full h-full rounded-lg"
+        />
+      </div>
+    );
+  }
+
+  // Instagram
+  if (url.includes("instagram.com")) {
+    return (
+      <div className="my-4">
+        <blockquote
+          className="instagram-media"
+          data-instgrm-permalink={url}
+          data-instgrm-version="14"
+          style={{ maxWidth: "540px", margin: "0 auto" }}
+        />
+      </div>
+    );
+  }
+
+  // Facebook
+  if (url.includes("facebook.com")) {
+    return (
+      <div className="my-4">
+        <div className="fb-post" data-href={url} data-width="w-full" />
+      </div>
+    );
+  }
+
+  // Twitter/X
+  if (url.includes("twitter.com") || url.includes("x.com")) {
+    return (
+      <div className="my-4">
+        <blockquote className="twitter-tweet">
+          <a href={url}></a>
+        </blockquote>
+      </div>
+    );
+  }
+
+  // TikTok
+  if (url.includes("tiktok.com")) {
+    const videoId = url.split("/video/")[1]?.split("?")[0];
+    return (
+      <div className="my-4">
+        <blockquote
+          className="tiktok-embed"
+          cite={url}
+          data-video-id={videoId}
+          style={{ maxWidth: "605px", minWidth: "325px" }}
+        >
+          <a href={url}></a>
+        </blockquote>
+      </div>
+    );
+  }
+
+  // Default – link
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-blue-600 underline break-words"
+    >
+      {url}
+    </a>
+  );
+}
+
+
+
+
+
+
+///12:08-9/21///
+//components\ProductGrid.jsx
+'use client';
+import Link from 'next/link';
+
+export default function ProductGrid({ products = [], loading=false, onLoadMore, hasMore=false }) {
+  return (
+    <div dir="rtl" className="space-y-4">
+      {loading && <div>טוען...</div>}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {products.map(p => {
+          const img = p.images?.edges?.[0]?.node?.url;
+          const price = p.variants?.edges?.[0]?.node?.price;
+          return (
+            <Link key={p.id} href={`/shop/${p.handle}`} className="border rounded-lg overflow-hidden hover:shadow">
+              {img && <img src={img} alt={p.title} className="w-full h-40 object-cover" />}
+              <div className="p-3 space-y-1">
+                <div className="font-medium">{p.title}</div>
+                {price && <div className="text-sm opacity-70">{price.amount} {price.currencyCode}</div>}
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+      {hasMore && (
+        <div className="flex justify-center">
+          <button onClick={onLoadMore} className="border px-4 py-2 rounded-md">טען עוד</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+
+
+
+
+
+
+
+////9/15/16:27
+
+// /app/shop/page.jsx
+"use client";
+import { useState, useEffect } from "react";
+import ShopSidebar from "@/components/ShopSidebar";
+import ProductGrid from "@/components/ProductGrid";
+import SkuSearchBar from "@/components/SkuSearchBar";
+
+export default function ShopPage() {
+  const [filters, setFilters] = useState({});
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // חיפוש לפי מק״ט ישיר
+  async function handleSkuSearch(sku) {
+    setLoading(true);
+    const res = await fetch("/api/shopify/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sku }),
+    });
+    const data = await res.json();
+    setProducts(data);
+    setLoading(false);
+  }
+
+  // חיפוש לפי סינון Sidebar
+  useEffect(() => {
+    if (!filters) return;
+
+    async function fetchProducts() {
+      setLoading(true);
+      const res = await fetch("/api/shopify/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(filters),
+      });
+      const data = await res.json();
+      setProducts(data);
+      setLoading(false);
+    }
+
+    // להריץ חיפוש רק אם נבחר משהו
+    if (
+      filters.vehicleType ||
+      filters.vendor ||
+      filters.model ||
+      filters.year ||
+      filters.category
+    ) {
+      fetchProducts();
+    }
+  }, [filters]);
+
+  return (
+    <div className="flex flex-col md:flex-row gap-6 p-4">
+      {/* Sidebar */}
+      <div className="md:w-1/4">
+        <ShopSidebar onFilterChange={setFilters} />
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1">
+        {/* חיפוש מק״ט */}
+        <SkuSearchBar onSearch={handleSkuSearch} />
+
+        {/* Loader */}
+        {loading && <p className="text-center">טוען מוצרים...</p>}
+
+        {/* מוצרים */}
+        <ProductGrid products={products} />
+      </div>
+    </div>
+  );
+}
+//////////
+
+// /app/api/shopify/search/route.js
+import { NextResponse } from "next/server";
+
+const SHOPIFY_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;
+const SHOPIFY_API_VERSION = process.env.SHOPIFY_API_VERSION || "2024-07";
+const SHOPIFY_TOKEN = process.env.SHOPIFY_STOREFRONT_TOKEN;
+
+export async function POST(req) {
+  try {
+    const { sku, manufacturer, model, year, category } = await req.json();
+
+    // בניית query string לחיפוש
+    let queryString = "";
+
+    if (sku) {
+      queryString = `sku:${sku}`;
+    } else {
+      if (manufacturer) queryString += ` vendor:${manufacturer}`;
+      if (model) queryString += ` product_type:${model}`;
+      if (year) queryString += ` tag:year:${year}`;
+      if (category) queryString += ` tag:cat:${category}`;
+    }
+
+    const query = `
+      {
+        products(first: 20, query: "${queryString.trim()}") {
+          edges {
+            node {
+              id
+              title
+              description
+              images(first: 1) {
+                edges {
+                  node { url }
+                }
+              }
+              variants(first: 1) {
+                edges {
+                  node {
+                    sku
+                    price { amount currencyCode }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    const res = await fetch(
+      `https://${SHOPIFY_DOMAIN}/api/${SHOPIFY_API_VERSION}/graphql.json`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Shopify-Storefront-Access-Token": SHOPIFY_TOKEN,
+        },
+        body: JSON.stringify({ query }),
+      }
+    );
+
+    const data = await res.json();
+    return NextResponse.json(
+      data.data.products.edges.map((edge) => edge.node)
+    );
+  } catch (error) {
+    console.error("Shopify API error:", error);
+    return NextResponse.json({ error: "Failed to fetch products" }, { status: 500 });
+  }
+}
+
+////
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '1337',
+        pathname: '/uploads/**',
+      },
+    ],
+  },
+};
+
+export default nextConfig;
+
+
+
+
+////9/15/16:27
+// components/CommentForm.jsx
+'use client';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase'; // ודא שהנתיב נכון בפרויקט שלך
+
+function generateAvatar(name) {
+  return name?.charAt(0).toUpperCase() || '?';
+}
+
+function timeAgo(date) {
+  const localDate = new Date(new Date(date).getTime() + 3 * 60 * 60 * 1000); // UTC+3
+  const seconds = Math.floor((new Date() - localDate) / 1000);
+  const intervals = [
+    { singular: 'שנה', plural: 'שנים', seconds: 31536000 },
+    { singular: 'חודש', plural: 'חודשים', seconds: 2592000 },
+    { singular: 'יום', plural: 'ימים', seconds: 86400 },
+    { singular: 'שעה', plural: 'שעות', seconds: 3600 },
+    { singular: 'דקה', plural: 'דקות', seconds: 60 },
+    { singular: 'שנייה', plural: 'שניות', seconds: 1 }
+  ];
+  for (const interval of intervals) {
+    const count = Math.floor(seconds / interval.seconds);
+    if (count > 0) {
+      const label = count === 1 ? interval.singular : interval.plural;
+      return `לפני ${count} ${label}`;
+    }
+  }
+  return 'הרגע';
+}
+
+export default function CommentForm({ articleId }) {
+  const [name, setName] = useState('');
+  const [comment, setComment] = useState('');
+  const [comments, setComments] = useState([]);
+  const [replyTo, setReplyTo] = useState(null);
+  const [replyContent, setReplyContent] = useState('');
+  const [replyName, setReplyName] = useState('');
+  const [sortBy, setSortBy] = useState('new');
+
+  useEffect(() => {
+    const fetchComments = async () => {
+      const { data, error } = await supabase
+        .from('comments')
+        .select('*')
+        .eq('article_id', articleId)
+        .order('date', { ascending: true });
+      if (!error) setComments(data);
+    };
+    if (articleId) fetchComments();
+  }, [articleId]);
+
+  const submitComment = async (e) => {
+    e.preventDefault();
+    if (!name || !comment) return;
+    const newComment = {
+      article_id: articleId,
+      name,
+      comment,
+      likes: 0,
+      parent_id: null,
+    };
+    const { data, error } = await supabase
+      .from('comments')
+      .insert([newComment])
+      .select();
+    if (!error && data?.[0]) {
+      setComments(prev => [data[0], ...prev]);
+      setName('');
+      setComment('');
+    }
+  };
+
+  const submitReply = async (parentId) => {
+    if (!replyContent || !replyName) return;
+    const reply = {
+      article_id: articleId,
+      name: replyName,
+      comment: replyContent,
+      likes: 0,
+      parent_id: parentId,
+    };
+    const { data, error } = await supabase
+      .from('comments')
+      .insert([reply])
+      .select();
+    if (!error && data?.[0]) {
+      setComments(prev => [...prev, data[0]]);
+      setReplyContent('');
+      setReplyName('');
+      setReplyTo(null);
+    }
+  };
+
+  const likeComment = async (id) => {
+    const comment = comments.find(c => c.id === id);
+    if (!comment) return;
+    const { data, error } = await supabase
+      .from('comments')
+      .update({ likes: comment.likes + 1 })
+      .eq('id', id)
+      .select();
+    if (!error && data?.[0]) {
+      setComments(prev => prev.map(c => c.id === id ? data[0] : c));
+    }
+  };
+
+  const deleteComment = async (id) => {
+    const { error } = await supabase.from('comments').delete().eq('id', id);
+    if (!error) {
+      setComments(prev => prev.filter(c => c.id !== id && c.parent_id !== id));
+    }
+  };
+
+  const sorted = [...comments].sort((a, b) => {
+    if (sortBy === 'likes') return b.likes - a.likes;
+    return new Date(b.date) - new Date(a.date);
+  });
+
+  const parents = sorted.filter(c => !c.parent_id);
+  const childrenMap = sorted.filter(c => c.parent_id).reduce((map, reply) => {
+    (map[reply.parent_id] = map[reply.parent_id] || []).push(reply);
+    return map;
+  }, {});
+
+  return (
+    <div className="w-full text-right space-y-4 border-t-2 border-red-600 pt-1">
+      <h3 className="text-xl font-semibold text-gray-700 mt-0">השאר תגובה</h3>
+      <form onSubmit={submitComment} className="space-y-2">
+        <div>
+          <label className="block text-sm text-gray-600 mb-1">שם:</label>
+          <input
+            type="text"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            className="w-1/4 bg-white px-4 py-2 border rounded"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm text-gray-600 mb-1">תגובה:</label>
+          <textarea
+            value={comment}
+            onChange={e => setComment(e.target.value)}
+            className="w-1/2 bg-white px-4 py-2 border rounded"
+            rows={4}
+            required
+          />
+        </div>
+        <button type="submit" className="bg-red-600 text-white px-6 py-2 rounded">
+          שלח תגובה
+        </button>
+      </form>
+
+      <div className="text-sm flex gap-4 items-center">
+        <span>מיון:</span>
+        <button onClick={() => setSortBy('new')} className={sortBy === 'new' ? 'text-red-600 font-bold' : 'text-gray-600'}>הכי חדשים</button>
+        <button onClick={() => setSortBy('likes')} className={sortBy === 'likes' ? 'text-red-600 font-bold' : 'text-gray-600'}>הכי אהובים</button>
+        <span className="ml-auto">סה"כ תגובות: {comments.length}</span>
+      </div>
+
+      <div className="space-y-6">
+        {parents.map((c) => (
+          <div key={c.id} className="border rounded bg-white p-4">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-red-600 text-white flex justify-center items-center font-bold">{generateAvatar(c.name)}</div>
+                <div className="text-sm font-semibold text-gray-800">{c.name}</div>
+              </div>
+              <div className="text-xs text-gray-500">{timeAgo(c.date)}</div>
+            </div>
+            <p className="mt-2 text-gray-700 text-sm whitespace-pre-line">{c.comment}</p>
+            <div className="mt-2 flex gap-4 text-sm text-gray-600">
+              <button onClick={() => likeComment(c.id)}>❤️ {c.likes}</button>
+              <button onClick={() => setReplyTo(c.id)}>השב</button>
+              <button onClick={() => deleteComment(c.id)}>🗑️ מחק</button>
+            </div>
+
+            {replyTo === c.id && (
+              <div className="mt-4 bg-gray-50 border p-4 rounded">
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">
+                  ✏️ כתוב תגובת משנה ל־{c.name}
+                </h4>
+                <div className="flex flex-wrap gap-2 items-start">
+                  <input
+                    type="text"
+                    placeholder="השם שלך"
+                    value={replyName}
+                    onChange={(e) => setReplyName(e.target.value)}
+                    className="w-1/4 bg-white px-3 py-2 border rounded"
+                  />
+                  <textarea
+                    rows={3}
+                    placeholder="תגובת משנה..."
+                    value={replyContent}
+                    onChange={(e) => setReplyContent(e.target.value)}
+                    className="w-1/2 bg-white px-3 py-2 border rounded"
+                  />
+                </div>
+                <div className="mt-2 flex gap-2">
+                  <button
+                    onClick={() => submitReply(c.id)}
+                    className="bg-red-600 text-white px-4 py-1 rounded hover:bg-red-700 text-sm"
+                  >
+                    שלח
+                  </button>
+                  <button
+                    onClick={() => setReplyTo(null)}
+                    className="text-gray-500 hover:text-gray-800 text-sm"
+                  >
+                    ביטול
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {(childrenMap[c.id] || []).map((r) => (
+              <div key={r.id} className="mt-4 pl-4 border-r-2 border-gray-200 space-y-3">
+                <div className="bg-gray-50 p-3 rounded border">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full bg-gray-600 text-white flex justify-center items-center text-sm font-bold">{generateAvatar(r.name)}</div>
+                      <div className="text-sm font-semibold text-gray-700">{r.name}</div>
+                    </div>
+                    <div className="text-xs text-gray-500">{timeAgo(r.date)}</div>
+                  </div>
+                  <p className="mt-1 text-sm text-gray-700 whitespace-pre-line">{r.comment}</p>
+                  <div className="mt-1 flex gap-3 text-xs text-gray-600">
+                    <button onClick={() => likeComment(r.id)}>❤️ {r.likes}</button>
+                    <button onClick={() => deleteComment(r.id)}>🗑️ מחק</button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/////////////
+C:\Users\yosef\Desktop\onmotor-media - Copy\components\CommentsSection.jsx
+'use client';
+import React from 'react';
+import CommentForm from './CommentForm';
+import FacebookComments from './FacebookComments';
+
+// כאן אנחנו מניחים ש־articleUrl משמש כ־slug של הכתבה ומשמש גם כ־articleId
+export default function CommentsSection({ articleUrl }) {
+  const articleId = articleUrl; // אפשר לשנות את השם אם תרצה
+
+  return (
+    <div className="flex flex-col lg:flex-row gap-10 mt-12" dir="rtl">
+      
+      {/* צד שמאל: תגובות קיימות + פייסבוק */}      
+      <div className="lg:w-1/2 w-full space-y-6">
+        <h3 className="text-xl font-bold border-red-600 border-t-2 pb-2">תגובות הגולשים</h3>
+
+        
+        {/* תגובות פייסבוק */}
+        <FacebookComments url={articleUrl} />
+      </div>
+
+      {/* צד ימין: טופס השארת תגובה (כולל articleId) */}
+      <div className="lg:w-1/2 w-full">
+        <CommentForm articleId={articleId} />
+      </div>
+    </div>
+  );
+}
+
+
+
+// components/MainGridContentDesktop.jsx
+'use client';
+import React, { useEffect, useState } from 'react';
+import ArticleCard from './ArticleCards/ArticleCard';
+import SectionWithHeader from './SectionWithHeader';
+import useIsMobile from '@/hooks/useIsMobile';
+import SidebarFixed from './SidebarFixed';
+import LeftSidebar from './LeftSidebar';
+
+const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
+
+export default function MainGridContent() {
+  const isMobile = useIsMobile();
+  const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [offsetY, setOffsetY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setOffsetY(window.scrollY * 0.3);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    async function fetchArticles() {
+      try {
+        const res = await fetch(`${API_URL}/api/articles?populate=*`);
+        const json = await res.json();
+
+        const mapped = json.data?.map((a) => {
+          return {
+            id: a.id,
+                title: a.title,
+                slug: a.slug,
+                image: a.image?.url ? `${API_URL}${a.image.url}` : '/default-image.jpg',
+                imageAlt: a.imageAlt || '',
+                category: a.category || 'general',
+                subcategory: Array.isArray(a.subcategory)
+                  ? a.subcategory
+                  : [a.subcategory ?? 'general'],
+                description: a.description,
+                headline: a.headline || a.title,
+                subdescription: a.subdescription,
+                href: `/articles/${a.slug}`,
+                tags: a.tags || [],
+          };
+        }) || [];
+
+        setArticles(mapped);
+      } catch (err) {
+        console.error("❌ שגיאה בטעינת כתבות:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchArticles();
+  }, []);
+
+  const categories = [...new Set(articles.map(article => article.category))];
+
+  return (
+    <div className="w-full flex flex-col xl:flex-row h-auto min-h-screen bg-gray-100">
+      {/* תוכן ראשי (ימין) */}
+      <div className="xl:w-1/2 flex-shrink-0 px-0 sm:px-0 py-0 lg:border-l xl:border-red-500">
+        <div className="bg-white p-2 rounded-xl shadow space-y-0">
+          {categories.map(category => (
+            <div key={category}>
+              <SectionWithHeader title={category} href={`/${category}`} />
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-0">
+                {articles
+                  .filter(article => article.category === category && article.slug && article.href)
+                  .map(article => (
+                    <ArticleCard key={article.slug || article.id} article={article} />
+                  ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* בלוקים צדדיים */}
+      {isMobile ? (
+        <div className="w-full flex flex-col gap-6 px-0 sm:px-0 py-0">
+          <SidebarFixed />
+        <div className="w-[300px] h-fit sticky top-0">
+          <LeftSidebar />
+        </div>
+
+        </div>
+      ) : (
+        <>
+          <div className="xl:w-1/4 flex-shrink-0 px-0 sm:px-0 py-0 border-l border-red-500">
+            <SidebarFixed />
+          </div>
+          <div className="lg:w-1/4 flex-shrink-0 px-0 sm:px-0 py-0 border-red-500">
+            <LeftSidebar />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+////////////////
+//components\ArticleCards\ArticleCard.jsx
+'use client';
+import React, { useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+
+export default function ArticleCard({ article }) { // ה-`article` כאן הוא כבר האובייקט הממופה ישירות
+  const [isTouched, setIsTouched] = useState(false);
+
+  const handleTouchStart = () => setIsTouched(true);
+
+  const showDescription = isTouched ? true : false;
+
+  // ה-imageUrl כבר אמור להיות מלא ומעובד ב-MainGridContentDesktop
+  // ה-API_URL כבר כלול ב-imageUrl
+  const imageUrl = article.image; // גישה ישירה ל-image כי הוא כבר URL מלא
+  const imageAltText = article.imageAlt || article.title || 'Article image'; // גישה ישירה ל-imageAlt/title
+
+  return (
+    <Link
+      href={article.href} // גישה ישירה ל-href
+      className="group block relative overflow-hidden rounded-lg shadow-md transition-all duration-300 hover:shadow-xl"
+      onTouchStart={handleTouchStart}
+    >
+      <div className="relative aspect-[1/1] w-full">
+        {imageUrl && typeof imageUrl === 'string' && imageUrl !== '/default-image.jpg' ? ( // ודא שיש URL וזה לא תמונת ברירת מחדל ריקה
+          <Image
+            src={imageUrl}
+            alt={imageAltText}
+            fill
+            className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+          />
+        ) : (
+          <div className="flex items-center justify-center h-full bg-gray-200 text-gray-500">
+            אין תמונה
+          </div>
+        )}
+
+        <div
+          className={`absolute bottom-0 w-full text-white p-4 transition-all duration-300
+          ${showDescription ? 'bg-[#e60000]/150' : 'bg-gradient-to-t from-black/90 via-black/70 to-transparent group-hover:bg-[#e60000]/90'}`}
+        >
+          <h3 className={`text-lg font-bold transition-all duration-300 ${showDescription ? 'mb-2' : 'group-hover:mb-2'}`}>
+            {article.title} {/* גישה ישירה ל-title */}
+          </h3>
+
+          <p className={`text-sm overflow-hidden transition-all duration-300
+            ${showDescription ? 'max-h-20 opacity-100' : 'max-h-0 opacity-0 group-hover:max-h-20 group-hover:opacity-100'}`}>
+            {article.description} {/* גישה ישירה ל-description */}
+          </p>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+///
+import MainGridContentMobile from '@/components/MainGridContentMobile';
+<div className="xl:hidden">
+        <MainGridContentMobile articles={articles} />
+      </div>
+////
+//components\MainGridContentMobile.jsx
+'use client';
+import React from 'react';
+
+import articles from '@/data/articles';
+export default function MainGridContentMobile() {
+  const categories = [...new Set(articles.map(article => article.category))];
+
+  return (
+    <div className="w-full px-0 md:px-0 overflow-x-hidden" dir="rtl">
+      
+    </div>
+  );
+}
+///
+
+// components/LeftSidebar.jsx
+'use client';
+import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
+
+const tabs = ['אחרונים', 'פופולרי', 'תגובות'];
+const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
+
+export default function LeftSidebar() {
+  const [activeTab, setActiveTab] = useState('תגובות');
+  const [articles, setArticles] = useState([]);
+
+  useEffect(() => {
+    async function fetchArticles() {
+      try {
+        const res = await fetch(`${API_URL}/api/articles?populate=*`);
+        const json = await res.json();
+        const data = json.data || [];
+
+        const mapped = data.map((a) => ({
+          id: a.id,
+          title: a.title,
+          slug: a.slug,
+          image: a.image?.data?.attributes?.url || '/default-image.jpg',
+          date: a.publishedAt?.split('T')[0] || '',
+          category: a.category || 'אחרונים',
+        }));
+
+        setArticles(mapped);
+      } catch (err) {
+        console.error('שגיאה בטעינת כתבות מה־Strapi:', err);
+      }
+    }
+
+    fetchArticles();
+  }, []);
+
+  const filteredArticles = articles.filter((a) => a.category === activeTab);
+
+  return (
+    <div className="flex flex-col min-h-0 bg-white rounded-xl shadow-md w-full overflow-hidden text-sm">
+      {/* טאבים */}
+      <div className="flex border-b text-sm font-semibold" dir="rtl">
+        {tabs.map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`w-1/3 text-center py-2 ${
+              activeTab === tab
+                ? 'text-black border-b-2 border-red-500 bg-white'
+                : 'text-gray-500 bg-gray-100'
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+
+      {/* כתבות */}
+      <div className="p-3 space-y-3 flex-1" dir="rtl">
+        <h4 className="font-bold text-base px-1">תגיות</h4>
+        <div className="space-y-3">
+          {filteredArticles.slice(0, 5).map((article) => (
+            <a
+              key={article.id}
+              href={`/articles/${article.slug}`}
+              className="flex gap-3 items-start hover:opacity-90"
+            >
+              <div className="w-20 h-14 relative rounded overflow-hidden flex-shrink-0">
+                <Image
+                  src={article.image}
+                  alt={article.title}
+                  layout="fill"
+                  objectFit="cover"
+                  className="rounded"
+                />
+              </div>
+              <div className="flex flex-col text-right">
+                <p className="font-semibold text-sm leading-snug line-clamp-2">
+                  {article.title}
+                </p>
+                <span className="text-xs text-gray-500 mt-1">{article.date}</span>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+//////////////////
+
+////components\ArticleCards\ArticleCard.jsx
+'use client';
+import React, { useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+
+export default function ArticleCard({ article }) {
+  const [isTouched, setIsTouched] = useState(false);
+
+  const handleTouchStart = () => setIsTouched(true);
+  // אופציונלי: כדי לסגור בחזרה אחרי מגע
+  // const handleTouchEnd = () => setIsTouched(false);
+
+  const showDescription = isTouched ? true : false;
+
+  return (
+    <Link
+      href={article.href}
+      className="group block relative overflow-hidden rounded-lg shadow-md transition-all duration-300 hover:shadow-xl"
+      onTouchStart={handleTouchStart}
+    >
+      <div className="relative h-64">
+        <Image
+          src={article.image}
+          alt={article.title}
+          fill
+          className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+        />
+        
+        {/* שכבת רקע אדומה בשקיפות הדרגתית */}
+        <div
+          className={`absolute bottom-0 w-full text-white p-4 transition-all duration-300
+          ${showDescription ? 'bg-[#e60000]/150' : 'bg-gradient-to-t from-black/90 via-black/70 to-transparent group-hover:bg-[#e60000]/90'}`}
+        >
+          <h3 className={`text-lg font-bold transition-all duration-300 ${showDescription ? 'mb-2' : 'group-hover:mb-2'}`}>
+            {article.title}
+          </h3>
+
+          <p className={`text-sm overflow-hidden transition-all duration-300 
+            ${showDescription ? 'max-h-20 opacity-100' : 'max-h-0 opacity-0 group-hover:max-h-20 group-hover:opacity-100'}`}>
+            {article.description}
+          </p>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+//////////////
+// components/MainGridContentDesktop.jsx
+'use client';
+import React, { useEffect, useState } from 'react';
+import ArticleCard from './ArticleCards/ArticleCard';
+import SectionWithHeader from './SectionWithHeader';
+import useIsMobile from '@/hooks/useIsMobile';
+import SidebarFixed from './SidebarFixed';
+import LeftSidebar from './LeftSidebar';
+
+const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
+
+export default function MainGridContent() {
+  const isMobile = useIsMobile();
+  const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [offsetY, setOffsetY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setOffsetY(window.scrollY * 0.3);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    async function fetchArticles() {
+      try {
+        const res = await fetch(`${API_URL}/api/articles?populate=*`);
+        const json = await res.json();
+
+        const mapped = json.data?.map((item) => {
+          return {
+            title: item.title || 'ללא כותרת',
+            slug: item.slug,
+            href: `/articles/${item.slug}`,
+            image: item.imageSrc
+              ? `${API_URL}${item.imageSrc}`
+              : '/default-image.jpg',
+            category: item.category || 'general',
+            subcategory: Array.isArray(item.subcategory)
+              ? item.subcategory
+              : item.subcategory ? [item.subcategory] : ['כללי'],
+            description: item.description,
+            ...item,
+          };
+        }) || [];
+
+        setArticles(mapped);
+      } catch (err) {
+        console.error("❌ שגיאה בטעינת כתבות:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchArticles();
+  }, []);
+
+  const categories = [...new Set(articles.map(article => article.category))];
+
+  return (
+    <div className="w-full flex flex-col xl:flex-row h-auto min-h-screen bg-gray-100">
+      {/* תוכן ראשי (ימין) */}
+      <div className="xl:w-1/2 flex-shrink-0 px-0 sm:px-0 py-0 lg:border-l xl:border-red-500">
+        <div className="bg-white p-2 rounded-xl shadow space-y-1">
+          {categories.map(category => (
+            <div key={category}>
+              <SectionWithHeader title={category} href={`/${category}`} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1">
+                {articles
+                  .filter(article => article.category === category && article.slug && article.href)
+                  .map(article => (
+                    <ArticleCard key={article.slug || article.id} article={article} />
+                  ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* בלוקים צדדיים */}
+      {isMobile ? (
+        <div className="w-full flex flex-col gap-6 px-0 sm:px-0 py-0">
+          <SidebarFixed />
+          <LeftSidebar />
+        </div>
+      ) : (
+        <>
+          <div className="xl:w-1/4 flex-shrink-0 px-0 sm:px-0 py-0 border-l border-red-500">
+            <SidebarFixed />
+          </div>
+          <div className="lg:w-1/4 flex-shrink-0 px-0 sm:px-0 py-0 border-red-500">
+            <LeftSidebar />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+
+
+///////////////////
+///app\articles\[slug]\page.jsx
+import articlesData from '@/data/articles';
+import PageContainer from "@/components/PageContainer";
+import ArticleHeader from "@/components/ArticleHeader";
+import SimpleKeyValueTable from "@/components/SimpleKeyValueTable";
+import Tags from "@/components/Tags";
+import SimilarArticles from "@/components/SimilarArticles";
+import { notFound } from "next/navigation";
+import CommentsSection from "@/components/CommentsSection";
+import InlineImage from "@/components/InlineImage";
+import Gallery from "@/components/Gallery";
+import categoryLabels from '@/data/categoryLabels'; // ✅ מייבאים את המילון
+
+export default function ArticlePage({ params }) {
+  const rawArticle = articlesData.find((a) => a.slug === params.slug);
+  if (!rawArticle) return notFound();
+
+  const defaultArticle = {
+    title: "כתבה ללא כותרת",
+    description: "אין תיאור זמין",
+    image: "/default-image.jpg",
+    imageSrc: "/default-image.jpg",
+    imageAlt: "תמונה כללית",
+    author: "מערכת OnMotor",
+    date: "2025-06-22",
+    time: "10:00",
+    tags: [],
+    content: "",
+    tableData: {},
+    href: "",
+    category: "general",
+    subcategory: "general",
+    headline: "כותרת בתוך הכתבה",
+    subdescription: "",
+  };
+
+  const article = { ...defaultArticle, ...rawArticle };
+  const paragraphs = article.content?.split("\n\n") || [];
+
+  // ✅ יצירת נתיב דינמי ל־breadcrumbs
+  const breadcrumbs = [
+    { label: "דף הבית", href: "/" },
+  ];
+
+  if (article.category) {
+    breadcrumbs.push({
+      label: categoryLabels[article.category] || article.category,
+      href: `/${article.category}`,
+    });
+  }
+
+  if (article.subcategory) {
+    breadcrumbs.push({
+      label: categoryLabels[article.subcategory] || article.subcategory,
+      href: `/${article.category}/${article.subcategory}`,
+    });
+  }
+
+  breadcrumbs.push({ label: article.title });
+
+  // ✅ פסקאות (טקסט או תמונות משובצות)
+  const renderParagraph = (text, i) => {
+    if (text.startsWith("[[img:") && text.endsWith("]]")) {
+      const parts = text.slice(6, -2).split("|");
+      const [src, alt = "", caption = ""] = parts;
+      return (
+        <InlineImage key={i} src={src.trim()} alt={alt.trim()} caption={caption.trim()} />
+      );
+    }
+    return (
+      <p key={i} className="text-gray-800 text-2xl leading-relaxed">{text}</p>
+    );
+  };
+
+  return (
+    <PageContainer title={article.title} breadcrumbs={breadcrumbs}>
+      <div className="mx-auto max-w-[740px] space-y-6 text-right leading-relaxed text-base text-gray-800">
+        <ArticleHeader
+          author={article.author}
+          date={article.date}
+          time={article.time}
+          image={article.image}
+          imageSrc={article.imageSrc}
+          imageAlt={article.imageAlt}
+          title={article.headline || article.title}
+          subdescription={article.subdescription}
+        />
+
+        {article.description && (
+          <p className="font-bold text-3xl text-gray-800">{article.description}</p>
+        )}
+
+        {paragraphs.map(renderParagraph)}
+
+        {article.tableData && <SimpleKeyValueTable data={article.tableData} />}
+
+        <Gallery galleryPath={article.galleryPath || `/images/articles/${article.slug}/gallery`} />
+
+        <Tags tags={article.tags} />
+
+        <SimilarArticles currentSlug={article.slug} category={article.category} />
+
+        <CommentsSection articleUrl={`https://onmotor-media.com${article.href}`} />
+      </div>
+    </PageContainer>
+  );
+}
+
+
+/////////
+// components/AuthBox.jsx
+'use client';
+
+import React, { useState, useEffect, useRef } from 'react';
+import useIsMobile from '@/hooks/useIsMobile';
+import { FaChevronUp } from 'react-icons/fa';
+import { loginUser, logoutUser, getCurrentUser } from '@/utils/auth';
+import { useRouter } from 'next/navigation';
+
+export default function AuthBox({ mode = 'inline', boxRef }) {
+  const isMobile = useIsMobile();
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
+  const [loginError, setLoginError] = useState('');
+  const [loginSuccess, setLoginSuccess] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
+  const [user, setUser] = useState(null);
+  const [isLoadingLogin, setIsLoadingLogin] = useState(false);
+
+  const [showReset, setShowReset] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetStatus, setResetStatus] = useState('');
+  const [isLoadingReset, setIsLoadingReset] = useState(false);
+
+  const [showRegister, setShowRegister] = useState(false);
+  const [registerEmail, setRegisterEmail] = useState('');
+  const [registerPassword, setRegisterPassword] = useState('');
+  const [registerConfirm, setRegisterConfirm] = useState('');
+  const [registerStatus, setRegisterStatus] = useState('');
+  const [isLoadingRegister, setIsLoadingRegister] = useState(false);
+
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [changeStatus, setChangeStatus] = useState('');
+  const [isLoadingChangePassword, setIsLoadingChangePassword] = useState(false);
+
+  const resetRef = useRef(null);
+  const registerRef = useRef(null);
+  const changePassRef = useRef(null);
+
+  useEffect(() => {
+    (async () => {
+      const stored = await getCurrentUser();
+      setUser(stored);
+    })();
+    const lastEmail = localStorage.getItem('lastEmail');
+    if (lastEmail) setEmail(lastEmail);
+  }, []);
+
+  useEffect(() => {
+    if (isMobile && isOpen && boxRef?.current) {
+      boxRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [isOpen, isMobile, boxRef, user]);
+
+  useEffect(() => {
+    if (showReset && resetRef.current) {
+      resetRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    } else if (showRegister && registerRef.current) {
+      registerRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    } else if (showChangePassword && changePassRef.current) {
+      changePassRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  }, [showReset, showRegister, showChangePassword]);
+
+  const handleLogin = async () => {
+    setIsLoadingLogin(true);
+    try {
+      const res = await fetch('/api/user/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Login failed');
+
+      loginUser(data.user);
+      setUser(data.user);
+      if (rememberMe) localStorage.setItem('lastEmail', email);
+      setLoginSuccess(true);
+      setLoginError('');
+    } catch (err) {
+      setLoginError(err.message);
+      setLoginSuccess(false);
+    } finally {
+      setIsLoadingLogin(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await logoutUser();
+    localStorage.removeItem('lastEmail');
+    setUser(null);
+    router.refresh();
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!confirm('האם אתה בטוח שברצונך למחוק את החשבון?')) return;
+    try {
+      const res = await fetch('/api/user/delete', { method: 'DELETE' });
+      if (!res.ok) throw new Error('Error deleting account');
+      await logoutUser();
+      setUser(null);
+      alert('החשבון נמחק בהצלחה');
+      router.refresh();
+    } catch {
+      alert('אירעה שגיאה במחיקת החשבון');
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    setIsLoadingReset(true);
+    setResetStatus('');
+    const res = await fetch('/api/user/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: resetEmail }),
+    });
+    setResetStatus(res.ok ? 'נשלחה סיסמה חדשה לאימייל שלך' : 'אירעה שגיאה');
+    setIsLoadingReset(false);
+  };
+
+  const handleRegister = async () => {
+    if (registerPassword !== registerConfirm) {
+      setRegisterStatus('הסיסמאות לא תואמות');
+      return;
+    }
+    setIsLoadingRegister(true);
+    const res = await fetch('/api/user/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: registerEmail, password: registerPassword }),
+    });
+    const data = await res.json();
+    setRegisterStatus(res.ok ? 'נרשמת בהצלחה!' : data.error || 'שגיאה בהרשמה');
+    setIsLoadingRegister(false);
+  };
+
+  const handleChangePassword = async () => {
+    setIsLoadingChangePassword(true);
+    const res = await fetch('/api/user/change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    setChangeStatus(res.ok ? 'הסיסמה עודכנה בהצלחה' : 'שגיאה בעדכון הסיסמה');
+    setIsLoadingChangePassword(false);
+  };
+
+  return (
+    <div dir="rtl" className="text-center" ref={boxRef}>
+      {isMobile && mode === 'side' && (
+        <button
+          onClick={() => setIsOpen(false)}
+          className="text-sm bg-white text-black px-2 py-2 rounded shadow hover:bg-gray-200 transition"
+        >
+          סגור <FaChevronUp className="inline" />
+        </button>
+      )}
+
+      <div className="transition-all duration-500 ease-in-out overflow-hidden mt-2 max-w-md px-0 bg-white text-black border border-gray-300 rounded p-1 text-sm shadow-md">
+        <h3 className="font-semibold text-black mb-6">
+          {user ? 'ניהול חשבון' : 'התחברות'}
+        </h3>
+
+        {user ? (
+          <>
+            <p className="mb-4">שלום, {user.email}</p>
+            <div className="flex flex-col gap-2 mb-4 items-center">
+              <button
+                onClick={handleLogout}
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              >
+                התנתק
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+              >
+                מחיקת חשבון
+              </button>
+            </div>
+            <div className="text-xs text-center space-x-2 flex justify-center">
+              <button
+                onClick={() => {
+                  setShowChangePassword(true);
+                  setShowReset(false);
+                  setShowRegister(false);
+                }}
+                className="text-blue-600 underline"
+              >
+                שנה סיסמא
+              </button>
+              <span>|</span>
+              <button
+                onClick={() => {
+                  setShowReset(true);
+                  setShowChangePassword(false);
+                  setShowRegister(false);
+                }}
+                className="text-blue-600 underline"
+              >
+                שכחתי סיסמא
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <input
+              type="email"
+              placeholder="אימייל"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              className="w-[90%] px-2 py-1 mb-2 border border-gray-300 rounded text-right text-sm"
+            />
+            <input
+              type="password"
+              placeholder="סיסמא"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              className="w-[90%] px-2 py-1 mb-2 border border-gray-300 rounded text-right text-sm"
+            />
+            <div className="flex items-center justify-start mb-2">
+              <input
+                type="checkbox"
+                id="rememberMe"
+                checked={rememberMe}
+                onChange={e => setRememberMe(e.target.checked)}
+                className="ml-2"
+              />
+              <label htmlFor="rememberMe" className="text-sm text-black">השאר מחובר</label>
+            </div>
+            <button
+              onClick={handleLogin}
+              className="bg-[#e60000] text-white px-3 py-1 rounded hover:bg-red-700 text-sm w-full flex items-center justify-center"
+            >
+              {isLoadingLogin
+                ? <span className="loader mr-2 w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                : 'התחבר'}
+            </button>
+            {loginError && <p className="text-red-600 mt-1 text-xs">{loginError}</p>}
+            {loginSuccess && <p className="text-green-600 mt-1 text-xs">התחברת בהצלחה!</p>}
+
+            <div className="mt-3 text-xs text-center space-x-1 flex flex-wrap justify-center">
+              <button
+                onClick={() => { setShowRegister(true); setShowReset(false); setShowChangePassword(false); }}
+                className="text-blue-600 underline"
+              >צור חשבון</button>
+              <span>|</span>
+              <button
+                onClick={() => { setShowReset(true); setShowRegister(false); setShowChangePassword(false); }}
+                className="text-blue-600 underline"
+              >שכחתי סיסמה</button>
+              <span>|</span>
+              <button
+                onClick={() => { setShowChangePassword(true); setShowReset(false); setShowRegister(false); }}
+                className="text-blue-600 underline"
+              >שנה סיסמה</button>
+            </div>
+          </>
+        )}
+
+        
+
+
+        {showReset && (
+          <div ref={resetRef} className="mt-4 bg-gray-100 p-3 rounded text-right text-sm relative">
+            <button onClick={() => setShowReset(false)} className="absolute top-2 left-2 text-gray-500 hover:text-black">✖</button>
+            <h4 className="font-semibold mb-2 pr-6">שכחתי סיסמה</h4>
+            <input
+              type="email"
+              placeholder="אימייל לאיפוס"
+              value={resetEmail}
+              onChange={e => setResetEmail(e.target.value)}
+              className="w-full px-2 py-1 mb-2 border border-gray-300 rounded"
+            />
+            <button onClick={handleForgotPassword} className="bg-blue-600 text-white px-3 py-1 rounded text-sm">
+              {isLoadingReset ? 'שולח...' : 'שלח סיסמה חדשה'}
+            </button>
+            {resetStatus && <p className="text-green-600 mt-2 text-xs">{resetStatus}</p>}
+          </div>
+        )}
+
+        {showRegister && (
+          <div ref={registerRef} className="mt-4 bg-gray-100 p-3 rounded text-right text-sm relative">
+            <button onClick={() => setShowRegister(false)} className="absolute top-2 left-2 text-gray-500 hover:text-black">✖</button>
+            <h4 className="font-semibold mb-2 pr-6">צור חשבון</h4>
+            <input
+              type="email"
+              placeholder="אימייל"
+              value={registerEmail}
+              onChange={e => setRegisterEmail(e.target.value)}
+              className="w-full px-2 py-1 mb-2 border border-gray-300 rounded"
+            />
+            <input
+              type="password"
+              placeholder="סיסמה"
+              value={registerPassword}
+              onChange={e => setRegisterPassword(e.target.value)}
+              className="w-full px-2 py-1 mb-2 border border-gray-300 rounded"
+            />
+            <input
+              type="password"
+              placeholder="אימות סיסמה"
+              value={registerConfirm}
+              onChange={e => setRegisterConfirm(e.target.value)}
+              className="w-full px-2 py-1 mb-2 border border-gray-300 rounded"
+            />
+            <button onClick={handleRegister} className="bg-green-600 text-white px-3 py-1 rounded text-sm">
+              {isLoadingRegister ? 'נרשם...' : 'הרשמה'}
+            </button>
+            {registerStatus && <p className="text-green-600 mt-2 text-xs">{registerStatus}</p>}
+          </div>
+        )}
+
+        {showChangePassword && (
+          <div ref={changePassRef} className="mt-4 bg-gray-100 p-3 rounded text-right text-sm relative">
+            <button onClick={() => setShowChangePassword(false)} className="absolute top-2 left-2 text-gray-500 hover:text-black">✖</button>
+            <h4 className="font-semibold mb-2 pr-6">שנה סיסמה</h4>
+            <input
+              type="password"
+              placeholder="סיסמה נוכחית"
+              value={currentPassword}
+              onChange={e => setCurrentPassword(e.target.value)}
+              className="w-full px-2 py-1 mb-2 border border-gray-300 rounded"
+            />
+            <input
+              type="password"
+              placeholder="סיסמה חדשה"
+              value={newPassword}
+              onChange={e => setNewPassword(e.target.value)}
+              className="w-full px-2 py-1 mb-2 border border-gray-300 rounded"
+            />
+            <button onClick={handleChangePassword} className="bg-yellow-600 text-white px-3 py-1 rounded text-sm">
+              {isLoadingChangePassword ? 'מעדכן...' : 'עדכן סיסמה'}
+            </button>
+            {changeStatus && <p className="text-green-600 mt-2 text-xs">{changeStatus}</p>}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+// C:\Users\yosef\onmotor-media - Copy\components\AuthBox.jsx
+'use client';
+
+import React, { useState, useEffect, useRef } from 'react';
+import useIsMobile from '@/hooks/useIsMobile';
+import { FaChevronUp } from 'react-icons/fa';
+import { loginUser, logoutUser, getCurrentUser } from '@/utils/auth';
+import { useRouter } from 'next/navigation';
+
+export default function AuthBox({ mode = 'inline', boxRef }) {
+  const isMobile = useIsMobile();
+  
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
+  const [loginError, setLoginError] = useState('');
+  const [loginSuccess, setLoginSuccess] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
+  const [user, setUser] = useState(null);
+  const [isLoadingLogin, setIsLoadingLogin] = useState(false);
+
+  const [showReset, setShowReset] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetStatus, setResetStatus] = useState('');
+  const [isLoadingReset, setIsLoadingReset] = useState(false);
+
+  const [showRegister, setShowRegister] = useState(false);
+  const [registerEmail, setRegisterEmail] = useState('');
+  const [registerPassword, setRegisterPassword] = useState('');
+  const [registerConfirm, setRegisterConfirm] = useState('');
+  const [registerStatus, setRegisterStatus] = useState('');
+  const [isLoadingRegister, setIsLoadingRegister] = useState(false);
+
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [changeStatus, setChangeStatus] = useState('');
+  const [isLoadingChangePassword, setIsLoadingChangePassword] = useState(false);
+
+  const resetRef = useRef(null);
+  const registerRef = useRef(null);
+  const changePassRef = useRef(null);
+
+  useEffect(() => {
+    const stored = getCurrentUser();
+    setUser(stored);
+    const lastEmail = localStorage.getItem('lastEmail');
+    if (lastEmail) setEmail(lastEmail);
+  }, []);
+
+  useEffect(() => {
+    if (isMobile && isOpen && boxRef?.current) {
+      boxRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [isOpen, isMobile, boxRef, user]);
+
+  useEffect(() => {
+    if (showReset && resetRef.current) {
+      resetRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    } else if (showRegister && registerRef.current) {
+      registerRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    } else if (showChangePassword && changePassRef.current) {
+      changePassRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  }, [showReset, showRegister, showChangePassword]);
+
+  const handleLogin = async () => {
+    setIsLoadingLogin(true);
+    try {
+      const res = await fetch('/api/user/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Login failed');
+
+      loginUser(data.user);
+      setUser(data.user);
+      if (rememberMe) localStorage.setItem('lastEmail', email);
+      setLoginSuccess(true);
+      setLoginError('');
+    } catch (err) {
+      setLoginError(err.message);
+      setLoginSuccess(false);
+    } finally {
+      setIsLoadingLogin(false);
+    }
+  };
+
+  const handleLogout = () => {
+    logoutUser();
+    localStorage.removeItem('lastEmail');
+    setUser(null);
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!confirm('האם אתה בטוח שברצונך למחוק את החשבון?')) return;
+    try {
+      const res = await fetch('/api/user/delete', { method: 'DELETE' });
+      if (!res.ok) throw new Error('Error deleting account');
+      logoutUser();
+      setUser(null);
+      alert('החשבון נמחק בהצלחה');
+    } catch {
+      alert('אירעה שגיאה במחיקת החשבון');
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    setIsLoadingReset(true);
+    setResetStatus('');
+    const res = await fetch('/api/user/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: resetEmail }),
+    });
+    setResetStatus(res.ok ? 'נשלחה סיסמה חדשה לאימייל שלך' : 'אירעה שגיאה');
+    setIsLoadingReset(false);
+  };
+
+  const handleRegister = async () => {
+    if (registerPassword !== registerConfirm) {
+      setRegisterStatus('הסיסמאות לא תואמות');
+      return;
+    }
+    setIsLoadingRegister(true);
+    const res = await fetch('/api/user/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: registerEmail, password: registerPassword }),
+    });
+    const data = await res.json();
+    setRegisterStatus(res.ok ? 'נרשמת בהצלחה!' : data.error || 'שגיאה בהרשמה');
+    setIsLoadingRegister(false);
+  };
+
+  const handleChangePassword = async () => {
+    setIsLoadingChangePassword(true);
+    const res = await fetch('/api/user/change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    setChangeStatus(res.ok ? 'הסיסמה עודכנה בהצלחה' : 'שגיאה בעדכון הסיסמה');
+    setIsLoadingChangePassword(false);
+  };
+
+  return (
+    <div dir="rtl" className="text-center" ref={boxRef}>
+      {isMobile && mode === 'side' && (
+        <button
+          onClick={() => setIsOpen(false)}
+          className="text-sm bg-white text-black px-2 py-2 rounded shadow hover:bg-gray-200 transition"
+        >
+          סגור <FaChevronUp className="inline" />
+        </button>
+      )}
+
+      <div className="transition-all duration-500 ease-in-out overflow-hidden mt-2 max-w-md px-0 bg-white text-black border border-gray-300 rounded p-1 text-sm shadow-md">
+        <h3 className="font-semibold text-black mb-6">
+          {user ? 'ניהול חשבון' : 'התחברות'}
+        </h3>
+
+        {user ? (
+          <>
+            <p className="mb-4">שלום, {user.email}</p>
+            <div className="flex flex-col gap-2 mb-4 items-center">
+              <button
+                onClick={handleLogout}
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              >
+                התנתק
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+              >
+                מחיקת חשבון
+              </button>
+            </div>
+            <div className="text-xs text-center space-x-2 flex justify-center">
+              <button
+                onClick={() => {
+                  setShowChangePassword(true);
+                  setShowReset(false);
+                  setShowRegister(false);
+                }}
+                className="text-blue-600 underline"
+              >
+                שנה סיסמא
+              </button>
+              <span>|</span>
+              <button
+                onClick={() => {
+                  setShowReset(true);
+                  setShowChangePassword(false);
+                  setShowRegister(false);
+                }}
+                className="text-blue-600 underline"
+              >
+                שכחתי סיסמא
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <input
+              type="email"
+              placeholder="אימייל"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              className="w-[90%] px-2 py-1 mb-2 border border-gray-300 rounded text-right text-sm"
+            />
+            <input
+              type="password"
+              placeholder="סיסמא"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              className="w-[90%] px-2 py-1 mb-2 border border-gray-300 rounded text-right text-sm"
+            />
+            <div className="flex items-center justify-start mb-2">
+              <input
+                type="checkbox"
+                id="rememberMe"
+                checked={rememberMe}
+                onChange={e => setRememberMe(e.target.checked)}
+                className="ml-2"
+              />
+              <label htmlFor="rememberMe" className="text-sm text-black">השאר מחובר</label>
+            </div>
+            <button
+              onClick={handleLogin}
+              className="bg-[#e60000] text-white px-3 py-1 rounded hover:bg-red-700 text-sm w-full flex items-center justify-center"
+            >
+              {isLoadingLogin
+                ? <span className="loader mr-2 w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                : 'התחבר'}
+            </button>
+            {loginError && <p className="text-red-600 mt-1 text-xs">{loginError}</p>}
+            {loginSuccess && <p className="text-green-600 mt-1 text-xs">התחברת בהצלחה!</p>}
+
+            <div className="mt-3 text-xs text-center space-x-1 flex flex-wrap justify-center">
+              <button
+                onClick={() => { setShowRegister(true); setShowReset(false); setShowChangePassword(false); }}
+                className="text-blue-600 underline"
+              >צור חשבון</button>
+              <span>|</span>
+              <button
+                onClick={() => { setShowReset(true); setShowRegister(false); setShowChangePassword(false); }}
+                className="text-blue-600 underline"
+              >שכחתי סיסמה</button>
+              <span>|</span>
+              <button
+                onClick={() => { setShowChangePassword(true); setShowReset(false); setShowRegister(false); }}
+                className="text-blue-600 underline"
+              >שנה סיסמה</button>
+            </div>
+          </>
+        )}
+
+        {showReset && (
+          <div ref={resetRef} className="mt-4 bg-gray-100 p-3 rounded text-right text-sm relative">
+            <button onClick={() => setShowReset(false)} className="absolute top-2 left-2 text-gray-500 hover:text-black">✖</button>
+            <h4 className="font-semibold mb-2 pr-6">שכחתי סיסמה</h4>
+            <input
+              type="email"
+              placeholder="אימייל לאיפוס"
+              value={resetEmail}
+              onChange={e => setResetEmail(e.target.value)}
+              className="w-full px-2 py-1 mb-2 border border-gray-300 rounded"
+            />
+            <button onClick={handleForgotPassword} className="bg-blue-600 text-white px-3 py-1 rounded text-sm">
+              {isLoadingReset ? 'שולח...' : 'שלח סיסמה חדשה'}
+            </button>
+            {resetStatus && <p className="text-green-600 mt-2 text-xs">{resetStatus}</p>}
+          </div>
+        )}
+
+        {showRegister && (
+          <div ref={registerRef} className="mt-4 bg-gray-100 p-3 rounded text-right text-sm relative">
+            <button onClick={() => setShowRegister(false)} className="absolute top-2 left-2 text-gray-500 hover:text-black">✖</button>
+            <h4 className="font-semibold mb-2 pr-6">צור חשבון</h4>
+            <input
+              type="email"
+              placeholder="אימייל"
+              value={registerEmail}
+              onChange={e => setRegisterEmail(e.target.value)}
+              className="w-full px-2 py-1 mb-2 border border-gray-300 rounded"
+            />
+            <input
+              type="password"
+              placeholder="סיסמה"
+              value={registerPassword}
+              onChange={e => setRegisterPassword(e.target.value)}
+              className="w-full px-2 py-1 mb-2 border border-gray-300 rounded"
+            />
+            <input
+              type="password"
+              placeholder="אימות סיסמה"
+              value={registerConfirm}
+              onChange={e => setRegisterConfirm(e.target.value)}
+              className="w-full px-2 py-1 mb-2 border border-gray-300 rounded"
+            />
+            <button onClick={handleRegister} className="bg-green-600 text-white px-3 py-1 rounded text-sm">
+              {isLoadingRegister ? 'נרשם...' : 'הרשמה'}
+            </button>
+            {registerStatus && <p className="text-green-600 mt-2 text-xs">{registerStatus}</p>}
+          </div>
+        )}
+
+        {showChangePassword && (
+          <div ref={changePassRef} className="mt-4 bg-gray-100 p-3 rounded text-right text-sm relative">
+            <button onClick={() => setShowChangePassword(false)} className="absolute top-2 left-2 text-gray-500 hover:text-black">✖</button>
+            <h4 className="font-semibold mb-2 pr-6">שנה סיסמה</h4>
+            <input
+              type="password"
+              placeholder="סיסמה נוכחית"
+              value={currentPassword}
+              onChange={e => setCurrentPassword(e.target.value)}
+              className="w-full px-2 py-1 mb-2 border border-gray-300 rounded"
+            />
+            <input
+              type="password"
+              placeholder="סיסמה חדשה"
+              value={newPassword}
+              onChange={e => setNewPassword(e.target.value)}
+              className="w-full px-2 py-1 mb-2 border border-gray-300 rounded"
+            />
+            <button onClick={handleChangePassword} className="bg-yellow-600 text-white px-3 py-1 rounded text-sm">
+              {isLoadingChangePassword ? 'מעדכן...' : 'עדכן סיסמה'}
+            </button>
+            {changeStatus && <p className="text-green-600 mt-2 text-xs">{changeStatus}</p>}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+
+// File: strapi/config/database.js
+module.exports = ({ env }) => ({
+  connection: {
+    client: 'sqlite',
+    connection: {
+      filename: env('DATABASE_FILENAME', '.tmp/data.db'),
+    },
+    useNullAsDefault: true,
+  },
+});
+
+
+//data\articles\newsMotorcycle.js
+const newsMotorcycle = [
+{
+  id: 101,
+  slug: "ktm-990-duke-2024",
+  title: "ktm-990-duke-2024 ",
+  headline: "המהפכה בדרך: הכירו את ה־KTM 990 DUKE החדש – הדוכס חזר לכביש חם מתמיד",
+  description: "אם חשבתם שכבר ראיתם הכול בזירת הנייקד הבינוניים...",
+  subdescription: "ב-קטמ לא מחכים למתחרים ויצאו עם מכונה שמעלה ערגונות",
+  href: "/articles/ktm-990-duke-2024",
+  image: "/images/articles/ktm-990-duke-2024/ktm990.jpg",
+  imageSrc: "/images/articles/ktm-990-duke-2024/ktm990-main.jpg",
+  galleryPath: "/images/articles/ktm-990-duke-2024/gallery",
+  imageAlt: "ה־KTM 990 Duke החדש בפעולה",
+
+  category: "news",
+  subcategory: ["global",],
+
+  display: {
+    homepage: true,
+    sidebar: false,
+    mainSlider: true,
+    newsletter: false
+  },
+
+  priority: 1,
+
+  author: "יוסף סבג",
+  date: "22.06.2025",
+  time: "14:50",
+  tags: ["KTM", "DUKE", "אופנועים"],
+  content: "   ",
+
+ tableData: {
+      "נפח מנוע": "947 סמ\"ק",
+      "תצורת מנוע": "טווין מקבילי, 4 פעימות, 8 שסתומים",
+      "הספק מרבי": "123 כ\"ס @ 9,500 סל\"ד",
+      "מומנט מרבי": "10.3 קג\"מ @ 6,750 סל\"ד",
+      "הילוכים": "6 הילוכים עם quickshifter דו-כיווני",
+      "מערכת קירור": "קירור מים",
+      "שלדה": "מסבך כרומול (Chromoly Trellis Frame)",
+      "משקל יבש": "179 ק\"ג",
+      "משקל רטוב": "כ־199 ק\"ג",
+      "מיכל דלק": "14 ליטר",
+      "צריכת דלק ממוצעת": "כ־4.5 ל'/100 ק\"מ",
+      "קוטר גלגל קדמי": "17 אינץ'",
+      "קוטר גלגל אחורי": "17 אינץ'",
+      "צמיג קדמי": "120/70-ZR17",
+      "צמיג אחורי": "180/55-ZR17",
+      "בולם קדמי": "WP APEX 43 מ\"מ, הפיך, כוונון מלא",
+      "בולם אחורי": "WP APEX, זרוע אחת, כוונון מלא",
+      "בלמים קדמיים": "Brembo, דיסק כפול 300 מ\"מ",
+      "בלם אחורי": "דיסק בודד 240 מ\"מ",
+      "מערכות עזר": "ABS בפנייה, בקרת אחיזה, ווילי, זינוק, רכיבה, שיוט, מסך TFT",
+      "גובה מושב": "825 מ\"מ",
+      "בסיס גלגלים": "1,482 מ\"מ",
+      "מרווח גחון": "186 מ\"מ",
+      "מערכת תאורה": "LED מלאה כולל DRL",
+      "מחיר בישראל (הערכה)": "כ־89,000 ש\"ח"
+    }
+  },
+  {
+  id: 102,
+  slug: "new-moto-parking-tlv",
+  title: "חניון חדש לאופנועים בתל אביב",
+  headline: "פתרון חדש לרוכבים: חניון ייעודי לאופנועים נפתח בדרום תל אביב",
+  description: "אחרי שנים של תלונות מצד רוכבי דו־גלגלי, העיר תל אביב חונכת חניון חדש וייעודי לאופנועים בשכונת פלורנטין.",
+  subdescription: "החניון מציע עשרות מקומות חנייה, מצלמות אבטחה ועמדות טעינה לכלים חשמליים.",
+  href: "/articles/new-moto-parking-tlv",
+  image: "/images/articles/new-moto-parking-tlv/parking.jpg",
+  imageSrc: "/images/articles/new-moto-parking-tlv/parking-main.jpg",
+  galleryPath: "/images/articles/new-moto-parking-tlv/gallery",
+  imageAlt: "חניון אופנועים ייעודי חדש בדרום תל אביב",
+
+  category: "news",
+  subcategory: ["local"],
+
+  display: {
+    homepage: true,
+    sidebar: true,
+    mainSlider: false,
+    newsletter: false
+  },
+
+  priority: 2,
+
+  author: "יוסף סבג",
+  date: "29.06.2025",
+  time: "14:30",
+  tags: ["", " ", ""],
+  content:"    " ,
+📍 
+
+  tableData: {
+    " " : " ",
+    " ": " "}
+}
+];
+
+export default newsMotorcycle;
+
+
+
+// app/api/register/route.js
+import fs from 'fs';
+import path from 'path';
+import bcrypt from 'bcryptjs';
+import { sendEmail } from '@/utils/mailer';
+import { buildEmailTemplate } from '@/utils/emailTemplate';
+
+
+const usersPath = path.join(process.cwd(), 'data', 'users.json');
+
+function readUsers() {
+  if (!fs.existsSync(usersPath)) return [];
+  return JSON.parse(fs.readFileSync(usersPath, 'utf-8'));
+}
+
+function writeUsers(users) {
+  fs.writeFileSync(usersPath, JSON.stringify(users, null, 2), 'utf-8');
+}
+
+export async function POST(request) {
+  const { email, password } = await request.json();
+
+  if (!email || !password) {
+    return new Response(JSON.stringify({ error: 'חסר אימייל או סיסמה' }), { status: 400 });
+  }
+
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
+  if (!passwordRegex.test(password)) {
+    return new Response(JSON.stringify({
+      error: 'הסיסמה חייבת להכיל לפחות 6 תווים, כולל אות גדולה, אות קטנה ומספר'
+    }), { status: 400 });
+  }
+
+  const users = readUsers();
+  const emailExists = users.find(u => u.email === email);
+
+  if (emailExists) {
+    return new Response(JSON.stringify({ error: 'אימייל כבר רשום' }), { status: 409 });
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const newUser = {
+    id: Date.now(),
+    email,
+    password: hashedPassword
+  };
+
+  users.push(newUser);
+  writeUsers(users);
+
+  try {
+    await sendEmail({
+  to: email,
+  subject: 'ברוך הבא ל-OnMotor Media',
+  html: buildEmailTemplate(email, 'ברוך הבא ל־OnMotor Media', `
+    <p>תודה שנרשמת לאתר <strong>OnMotor Media</strong>!</p>
+    <p>שמחים שהצטרפת למשפחת הרוכבים שלנו 🏍️</p>
+    <a href="https://onmotormedia.com" style="
+      display:inline-block;
+      margin-top:20px;
+      background:#d32f2f;
+      color:white;
+      padding:10px 20px;
+      text-decoration:none;
+      border-radius:5px;
+      font-weight:bold;">כניסה לאתר</a>
+  `)
+});
+
+  } catch (err) {
+    console.error('Failed to send welcome email:', err);
+  }
+
+  return new Response(JSON.stringify({ success: true, user: { email } }), {
+    status: 201,
+    headers: { 'Content-Type': 'application/json' }
+  });
+}
+
+
+
+פקודות
+dot -Tpng tree.dot -o tree.png
+
+npm run dev
+
+סיכום
+.env (בשורש) עם DATABASE_URL="file:./dev.db".
+
+schema.prisma בתיקיית prisma/ כפי שהודגם.
+
+npx prisma migrate dev --name init כדי לבנות הכל.
+
+npx prisma studio לווידוא וסקירת הנתונים.
+
+ייבוא ושימוש ב־@prisma/client בקוד שלך.
+
+כעת יש לך בסיס נתונים SQLite מקומי ומוכן לפיתוח, עם מודל Article ול-Prisma Client זמין לכל קריאה וכתיבה. בהצלחה!
+
+
+AuthNewsletterBox  מייבא אליו ../hooks/useIsMobile פעיל 
+// מקושר ל
+//maingridcompontent maingridcontentdesktop mobilemenu 
+//slidingmobilemenu
+// רכיב הרשמה לאתר ולקבלת חדשות במייל 
+
+ArticleCard    כלומר לא מייבא לבד נקסט וכו פעיל
+// מקושר ל maingridcontent&mobail&desktop
+// רכיב למיקום התמונה והכיתוב בכתבות בדף הראשי מסודר כבר למובייל ולמחשב
+// רכיב למיקום התמונה בכתבות מסודר כבר למובייל ולמחשב
+
+ClientLayout פעיל
+// פריסה ומיקום בדף הראשי, חלוקה למבנים, חלוקת הדף במחשב
+//מקושר Layout
+
+FloatingArticles
+//מקושר  ל(pagecontablayout) לא נבדק
+
+Footer
+//פשוט פוטר
+
+Header
+//ראשית רגיל
+//מקושר ל
+//מנוע חיפוש - תפריט - תפריט נייד - אייקונים
+
+MainArticles
+///לא מקושר לא פעיל
+
+MainGridContent
+///לא מקושר לא פעיל
+
+MainGridContentDesktop
+// מקושר Page
+
+MainGridContentMobile
+// מקושר Page
+
+
+MobileMenu
+//תפריט נפתח בנייד 
+מקושר להדר
+
+SlidingMobileMenu
+/// לא מקושר לא פעיל
+
+MobileMenuButton
+/// לא מקושר לא פעיל
+
+MobileSocialMenu
+// מקושר MobileMenu
+// מייבא SocialIcons
+
+NavigationMenu
+// מקושר MobileMenu Header
+
+NewsTicker
+//מקושר ClientLayout
+
+PageContentLayout   נמחק
+// Page\news   C:\Users\yosef\onmotor-media - Copy\app\news\page.jsx נמחק  je
+
+/////
+SearchBar מקושר פעיל
+// header mobilemenu slidingmobilemenu  
+בהמשך לשלב:
+אייקון חיפוש 🔍
+אנימציה להצעות
+טעינה מ־API
+/////
+
+SectionWithHeader לא מקושר לא פעיל
+
+SocialIcons מקושר פעיל
+//
+
+
+PageContainer.jsx פעיל
+//שמש כתבנית לכל עמוד תוכן 
+
+Breadcrumbs.jsx לא מקושר לא פעיל
+// במידת הצורך (למשל: "דף הבית / חדשות / סקירה חדשה")
+
+NewsContent
+//לא פעיל
+
+jsconfig.json פעיל 
+// שיטה ליבוא
+
+searchSuggestions  //data\searchSuggestions.js
+// נתונים למנוע חיפוש מקושר ל searchbar
+
+lib\generateSearchSuggestions.js
+// מייצר דאטה למנוע חיפוש מבוסס תוכן קיים/תוכן חדש
+
+
+////
+// components/SimpleKeyValueTable.jsx 
+טבלה דינמית לפי מפתחות
+////
+
+/////
+app/articles/[slug]/page.jsx קובץ כתבה דינמית
+
+
+/////
+
+////
+✅Gallery.jsx
+גלריית תמונות
+import Gallery from "@/components/Gallery";
+{/* 🖼️ גלריה בסוף הכתבה אם קיימת */}  בתחתית ArticlePage, לפני </PageContainer>:
+<Gallery images={article.gallery || []} />
+
+///
+
+/// 
+✅ components/InlineImage.jsx
+import InlineImage from "@/components/InlineImage";
+<InlineImage
+  src="/images/articles/ktm990-mid.jpg"
+  alt="KTM 990 - מבט צדדי"
+  caption="ה־KTM 990 בפוזיציית פעולה"
+  [[img:/נתיב/לתמונה.jpg|alt טקסט|כיתוב מתחת לתמונה]]
+
+/>
+////
+
+
+שלב 4 (רשות): מבנה קבצים מוצע
+bash
+Copy
+Edit
+/app
+  /news/page.jsx
+  /reviews/page.jsx
+  /tips/page.jsx
+  /gear/page.jsx
+
+/components
+  /CategoryPage.jsx
+  /SectionWithHeader.jsx
+  /ArticleCard.jsx
+
+/data
+  /articlesData.js
+
+
+  מבנה קבצים מוצע לכתבות
+  app/
+├── articles/
+│   └── [slug]/
+│       └── page.jsx         ← תצוגת עמוד הכתבה
+├── components/
+│   ├── ArticleHeader.jsx     ← כותב + תאריך + שעה + תמונה ראשית
+│   ├── ArticleContent.jsx    ← גוף הכתבה (כולל טבלה דינמית)
+│   ├── Tags.jsx       ← תגיות
+│   ├── RelatedArticles.jsx   ← כתבות קשורות
+│   ├── CommentForm.jsx       ← טופס תגובה רגיל
+│   └── FacebookComments.jsx  ← פלאגין פייסבוק
+├── data/
+│   └── articlesData.js       ← נתוני כתבות
+
+//////
+app/
+├── articles/
+│   └── [slug]/
+│       └── page.jsx               ← דף הכתבה – דינמי לפי כתובת URL
+│
+├── components/
+│   ├── PageContainer.jsx         ← עוטף את הדף כולו (כותרת + ברדקרמבס)
+│   ├── ArticleHeader.jsx         ← מציג: שם הכותב, תאריך, שעה, תמונה ראשית
+│   ├── ArticleContent.jsx        ← מפצל לפסקאות + מציג את תוכן הכתבה
+│   ├── SimpleKeyValueTable.jsx   ← טבלת נתונים דינמית מתוך מילון
+│   ├── Tags.jsx           ← מציג תגיות לחיצה עם קישורים
+│   ├──SimilarArticles.jsx       ← כתבות דומות (לפי קטגוריה או תגיות)
+│   ├── CommentForm.jsx           ← טופס תגובה באתר (שם + תוכן תגובה)
+│   └── FacebookComments.jsx      ← תגובות פייסבוק (פלאגין)
+
+data/
+└── articlesData.js  ← מקור כל הנתונים של הכתבות (כולל תוכן מלא, תמונות, טבלה, כותב וכו')
+
+////
+קשרים בין הקבצים (זרימת נתונים)
+
+page.jsx  ←  קורא את כל הנתונים לפי slug מה־articlesData.js
+   └── PageContainer
+       ├── ArticleHeader       ← מקבל: author, date, time, image
+       ├── ArticleContent      ← מקבל: content (split לפסקאות)
+       ├── SimpleKeyValueTable ← מקבל: tableData
+       ├── Tags         ← מקבל: tags
+       ├── FacebookComments    ← קבוע
+       ├── CommentForm         ← ק // לטפל בשמירת תגובות או מערכת לבדיקת התגובה// קבוע
+       └── RelatedArticles     ← מקבל: category / tags
+///
+components\CommentsSection.jsx
+מבנה תגובות
+///
+
+////
+ספר חוקים מבוסס בינה מלאכותית
+/app
+│
+├── /law-book                   ← ספר החוקים ✅
+│   ├── page.jsx                ← עמוד ראשי של הקטגוריה ✅
+│   ├── ask-question.jsx        ← דף לשליחת שאלה חדשה (יכול להיות מודל או אזור בדף הראשי) ✅
+│   └── /[questionId]           ← דף של שאלה בודדת (דינאמי) ✅
+│       └── page.jsx  ✅
+│
+├── /api   ✅
+│   └── /law-book    ✅  
+│       └── ask.js              ← API Route ששולח שאלה ל-OpenAI ומחזיר תשובה  ✅
+│
+/components
+├── LawBookForm.jsx             ← רכיב תיבת שאלה ✅
+├── LawBookAnswer.jsx           ← הצגת תשובה ✅
+├── LawBookQuestionList.jsx     ← רשימת שאלות נפוצות ✅
+└── Loader.jsx                  ← טוען (ספינר) ✅
+
+✅ ספר החוקים – תשתית ראשונית (AI Q&A)
+
+📅 תאריך הקמה: 2025-06-22  
+⚙️ מצב: הוקם בסיס מלא – צד לקוח + API  
+📁 מיקום: /app/law-book + /components + /api/law-book
+
+---
+
+law-book/page.jsx  ←  דף ראשי עם תיבת שאלה ורשימת שאלות  
+   └── LawBookForm             ← טופס שאלה → onQuestionSubmit  
+       └── Loader              ← אנימציית טעינה  
+   └── LawBookQuestionList     ← מקבל: questions (מערך של שאלה+תשובה)
+
+law-book/[questionId]/page.jsx  ←  דף לשאלה בודדת  
+   └── LawBookAnswer           ← מקבל: questionId → תצוגה עתידית מנתוני DB
+
+api/law-book/ask.js  ←  API Route לשליחת שאלה ל־OpenAI  
+   ↳ מקבל POST עם שאלה  
+   ↳ מחזיר תשובה מ־GPT עם ניסוח רשמי, מבוסס חוקים  
+   ↳ דורש הגדרת משתנה סביבה OPENAI_API_KEY בקובץ .env.local
+
+components/LawBookForm.jsx         ← טופס שאלה עם textarea וכפתור שליחה  
+components/LawBookQuestionList.jsx ← מציג שאלות ותשובות לאחר שליחה  
+components/LawBookAnswer.jsx       ← מציג תשובה בדף עצמאי  
+components/Loader.jsx              ← טוען... (במהלך שליחת שאלה)
+
+---
+
+🛠️ הערות:
+→ חובה להגדיר `.env.local` עם:
+   OPENAI_API_KEY=your-key-here
+
+→ בעתיד:
+   - אחסון נתונים ב־Supabase / MongoDB  
+   - שליפת תשובות ישנות לפי דמיון שאלה  
+   - תגובות גולשים ודירוג איכות תשובה  
+   - אינטגרציה עם מנוע RAG (שליפת חוקים ממסמכים)
+
+////מבנה תיקיות לכתבות ולכל עמוד
+/components/ArticleCards
+  ArticleCard.jsx              ← תצוגת ברירת מחדל (מה שיש לך עכשיו)
+  ArticleCardCompact.jsx       ← לגריד צפוף או סיידבר
+  ArticleCardWide.jsx          ← לכרטיס רוחבי עם תמונה מימין
+  ArticleCardOverlay.jsx       ← למשל עם תגיות, תאריך, קטגוריה מוצגת
+
+////
+
+/data/
+  └── /articles/
+        ├── news.js
+        ├── tips.js
+        ├── reviews.js
+        ├── tests.js
+        └── index.js (מאחד את כולם)
+
+
+///app\news\global\page.jsx
+
+import PageContainer from '@/components/PageContainer';
+import ArticleCard from '@/components/ArticleCards/ArticleCard';
+import articlesData from '@/data/articles';
+
+export default function GlobalNews() {
+  const globalArticles = articlesData.filter(
+    a => a.category === 'news' && a.subcategory === 'global'
+  );
+
+  return (
+    <PageContainer
+      title="חדשות מהעולם"
+      breadcrumbs={[
+        { label: 'דף הבית', href: '/' },
+        { label: 'חדשות', href: '/news' },
+        { label: 'חדשות מהעולם' }
+      ]}
+    >
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {globalArticles.map(article => (
+          <ArticleCard key={article.id} article={article} />
+        ))}
+      </div>
+    </PageContainer>
+  );
+}
+
+///app\news\local\page.jsx
+
+import PageContainer from '@/components/PageContainer';
+import ArticleCard from '@/components/ArticleCards/ArticleCard';
+import articlesData from '@/data/articles';
+
+export default function LocalNews() {
+  const localArticles = articlesData.filter(
+    a => a.category === 'news' && a.subcategory === 'local'
+  );
+
+  return (
+    <PageContainer
+      title="חדשות מקומיות"
+      breadcrumbs={[
+        { label: 'דף הבית', href: '/' },
+        { label: 'חדשות', href: '/news' },
+        { label: 'חדשות מקומיות' }
+      ]}
+    >
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {localArticles.map(article => (
+          <ArticleCard key={article.id} article={article} />
+        ))}
+      </div>
+    </PageContainer>
+  );
+}
+
+/////
+///app\news\[subcategory]\page.jsx
+
+/////
+מערך לכתבה
+const forumArticles = [
+  {
+    id: 1001,
+    slug: "example-slug",
+    title: "כותרת לדוגמה",
+    headline: "כותרת משנית אם יש",
+    description: "",
+    subdescription: "",
+    href: "/articles/example-slug",
+    image: "/images/articles/example-slug/cover.jpg",
+    imageSrc: "/images/articles/example-slug/main.jpg",
+    galleryPath: "/images/articles/example-slug/gallery",
+    imageAlt: "תיאור תמונה",
+
+    category: "forum",
+    subcategory: "tech", // או "rides", או "sale"
+
+    display: {
+      homepage: false,
+      sidebar: false,
+      mainSlider: false,
+      newsletter: false
+    },
+
+    priority: 1,
+
+    author: "שם הכותב",
+    date: "25.06.2025",
+    time: "12:00",
+    tags: ["דוגמה", "פורום"],
+    content: ``,
+    tableData: {}
+  },
+];
+
+export default forumArticles;
+///
+
+
+//components\AuthNewsletterBox.jsx
+'use client';
+import React, { useState, useEffect } from 'react';
+import useIsMobile from '@/hooks/useIsMobile';
+import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { loginUser } from '@/utils/auth'; // ✅ לוודא שקיים הקובץ הזה
+
+export default function AuthNewsletterBox({ mode = 'inline' }) {
+  const isMobile = useIsMobile();
+  const [hydrated, setHydrated] = useState(false);
+
+  const [email, setEmail] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [loginSuccess, setLoginSuccess] = useState(false);
+  const [agreed, setAgreed] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
+  const [showTerms, setShowTerms] = useState(false);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  const handleLogin = async () => {
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (!res.ok) throw new Error('שם משתמש או סיסמה שגויים');
+
+      await res.json();
+      loginUser(username); // ✅ שמור את המשתמש
+      setLoginSuccess(true);
+      setLoginError('');
+      window.location.reload(); // ✅ טען את הדף מחדש כדי לשקף התחברות
+    } catch (err) {
+      setLoginError(err.message);
+      setLoginSuccess(false);
+    }
+  };
+
+  const handleSubscribe = async (e) => {
+    e.preventDefault();
+    if (!agreed) {
+      alert('יש לאשר את תנאי השימוש על מנת להירשם');
+      return;
+    }
+    setSuccess(true);
+    setTimeout(() => setSuccess(false), 3000);
+  };
+
+  if (!hydrated || (isMobile && mode === 'side' && !isOpen)) {
+    return (
+      <div dir="rtl" className="text-center">
+        <button
+          onClick={() => setIsOpen(true)}
+          className="text-sm bg-white text-black px-3 py-2 rounded shadow hover:bg-gray-200 transition"
+        >
+          התחברות / הרשמה <FaChevronDown className="inline" />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div dir="rtl" className="text-center">
+      {isMobile && mode === 'side' && (
+        <button
+          onClick={() => setIsOpen(false)}
+          className="text-sm bg-white text-black px-3 py-2 rounded shadow hover:bg-gray-200 transition"
+        >
+          סגור התחברות / הרשמה <FaChevronUp className="inline" />
+        </button>
+      )}
+
+      <div
+        className={`transition-all duration-500 ease-in-out overflow-hidden mt-4
+          ${mode === 'inline' ? 'w-[320px] bg-white text-black' : ''}
+          ${mode === 'modal' ? '' : mode === 'side' ? 'fixed top-32 left-4 bg-white z-50 w-[320px]' : ''}
+          border border-gray-300 rounded p-6 text-sm shadow-md`}
+      >
+        <form onSubmit={handleSubscribe} className="mb-4">
+          <label className="block mb-1 font-semibold text-black"> הרשמה לניוזלטר </label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="onmotormedia@gmail.com"
+            className="w-full px-1 py-1 border border-gray-300 rounded text-right text-sm"
+          />
+          <div className={`flex items-center mt-2 ${isMobile ? 'justify-end' : ''}`}>
+            <input
+              type="checkbox"
+              id="agree"
+              className="ml-2 accent-[#e60000]"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+            />
+            <label htmlFor="agree" className="text-xs text-gray-700">
+              אני מסכים ל{' '}
+              <button
+                type="button"
+                className="text-blue-600 underline hover:text-blue-800"
+                onClick={() => setShowTerms(true)}
+              >
+                תנאי השימוש של האתר
+              </button>
+            </label>
+          </div>
+          <button
+            type="submit"
+            className="mt-2 bg-[#e60000] text-white px-3 py-1 rounded hover:bg-red-700 text-sm w-full"
+          >
+            שלח
+          </button>
+          {success && <p className="text-green-600 mt-1 text-xs">ההרשמה הצליחה!</p>}
+        </form>
+
+        <div className="border-t pt-3">
+          <h3 className="font-semibold text-black mb-2">התחברות</h3>
+          <input
+            type="text"
+            placeholder="שם משתמש"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="w-full px-2 py-1 mb-2 border border-gray-300 rounded text-right text-sm"
+          />
+          <input
+            type="password"
+            placeholder="סיסמה"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-2 py-1 mb-2 border border-gray-300 rounded text-right text-sm"
+          />
+          <div className={`flex items-center mb-2 ${isMobile ? 'justify-end' : ''}`}>
+            <input id="remember" type="checkbox" className="ml-2 accent-[#e60000]" />
+            <label htmlFor="remember" className="text-xs text-gray-700">זכור אותי</label>
+          </div>
+          <button
+            type="button"
+            onClick={handleLogin}
+            className="bg-[#e60000] text-white px-3 py-1 rounded hover:bg-red-700 text-sm w-full"
+          >
+            התחבר
+          </button>
+
+          {loginError && <p className="text-red-600 mt-1 text-xs">{loginError}</p>}
+          {loginSuccess && <p className="text-green-600 mt-1 text-xs">התחברת בהצלחה!</p>}
+
+          <div className="mt-2 text-center text-xs">
+            <a href="/auth/signup" className="text-[#e60000] hover:underline ml-2">צור חשבון</a>
+            |
+            <a href="/auth/forgot-password" className="text-[#e60000] hover:underline mr-2">שכחתי סיסמה</a>
+          </div>
+        </div>
+      </div>
+
+      {showTerms && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full text-right text-sm relative shadow-lg">
+            <button
+              onClick={() => setShowTerms(false)}
+              className="absolute top-2 left-3 text-gray-600 hover:text-black"
+            >
+              ✖
+            </button>
+            <h2 className="text-lg font-bold mb-2">תנאי השימוש</h2>
+            <p className="mb-4">
+              שימוש באתר OnMotor Media כפוף להסכמה לתנאי השימוש. נא לא לפרסם תכנים פוגעניים, לא חוקיים או כאלו הפוגעים בזכויות יוצרים. המשתמש אחראי לתוכן שהוא מפרסם.
+            </p>
+            <button
+              onClick={() => setShowTerms(false)}
+              className="bg-[#e60000] text-white px-4 py-1 rounded hover:bg-red-700"
+            >
+              אישור
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+///
+
+ קבצים בצד השרת (API)
+1. /app/api/forgot-password/route.js
+ מאפס סיסמה ע"י שליחת סיסמה זמנית לאימייל של המשתמש.
+
+2. /app/api/change-password/route.js
+ משנה סיסמה קיימת למשתמש מחובר לאחר אימות סיסמה נוכחית.
+
+3. /app/api/login/route.js
+ מאמת התחברות לפי שם משתמש או אימייל, מחזיר את פרטי המשתמש אם הצליח.
+
+ קבצים בצד הלקוח (React Components + Utilities)
+4. /components/AuthBox.jsx
+ קופסה עם טפסים: התחברות, הרשמה, שכחתי סיסמה, שינוי סיסמה.
+ תומך גם במובייל (מצב "side") עם גלילה אוטומטית והתאמת רוחב.
+
+5. /components/NewsletterBox.jsx
+ טופס הרשמה לניוזלטר.
+ כולל טיפול בפתיחה וסגירה במובייל, גלילה אוטומטית, מודאל של תנאי שימוש.
+
+ Utilities
+6. /utils/auth.js
+ ניהול מצב התחברות ב־localStorage – כולל:
+
+getCurrentUser() – החזרת המשתמש הנוכחי
+
+loginUser() – שמירת התחברות
+
+logoutUser() – ניתוק
+
+isLoggedIn() – בדיקת התחברות
+
+ Hooks
+7. /hooks/useIsMobile.js (הוזכר בשימוש)
+ הוק שבודק אם התצוגה היא במובייל, בשימוש ברכיבים AuthBox ו־NewsletterBox.
+
+ קבצי JSON/נתונים
+8. /data/users.json
+ קובץ נתונים המאכסן את כל המשתמשים כולל סיסמאות מוצפנות.
+ משמש לכל פעולות קריאה/עדכון משתמשים במערכת.
+

@@ -1,0 +1,35 @@
+[
+  {
+    "id": 1750928976631,
+    "username": "Yosefs",
+    "email": "Yosefsabag46@gmail.com",
+    "passwordHash": "Yos121212",
+    "role": "user"
+  },
+  {
+    "id": 1750962910162,
+    "username": "yosefsabag46@gmail.com",
+    "email": "yosefsabag46@gmail.com",
+    "passwordHash": "$2b$10$z9aqYNpVHvDeppXGkCwj8Ogyx3LMFCkFAWdxGvWYEu7VzeoCcrVU.",
+    "role": "user"
+  },
+  {
+    "id": 123,
+    "username": "test",
+    "email": "test@email.com",
+    "passwordHash": "123",
+    "role": "user"
+  },
+  {
+    "id": 1751029026943,
+    "email": "yosefsabag@mail.tau.ac.il",
+    "passwordHash": "$2b$10$GWQ6u.8zzJ24Lvm/DPXhGO.j9uJHZv0lFJm7bm03T0aULWnPJbxS.",
+    "role": "user"
+  },
+  {
+    "id": 1751294164435,
+    "email": "7097assaf@gmail.com",
+    "passwordHash": "$2b$10$u.u1VXY64uPCtgsNoqsNDu2lQY5OXKMrZ6QH34YyRhBS5rmV.fY0i",
+    "role": "user"
+  }
+]

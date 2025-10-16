@@ -1,0 +1,207 @@
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700&display=swap');
+@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@keyframes parts-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.animate-parts-bounce {
+  animation: parts-bounce 1s infinite;
+}
+
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Heebo', sans-serif;
+}
+
+@keyframes spinEaseOut {
+  0% {
+    transform: rotate(0deg);
+  }
+  70% {
+    transform: rotate(900deg);
+  }
+  100% {
+    transform: rotate(1080deg);
+  }
+}
+
+@keyframes bounceDecay {
+  0% {
+    transform: translateY(0);
+  }
+  20% {
+    transform: translateY(-20px);
+  }
+  40% {
+    transform: translateY(0);
+  }
+  60% {
+    transform: translateY(-10px);
+  }
+  80% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-5px);
+  }
+}
+@keyframes marquee {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.news-ticker-line {
+  position: absolute;
+  white-space: nowrap;
+  animation: marquee 15s linear infinite;
+  direction: rtl;
+  font-weight: bold;
+}
+
+.animate-spin-ease-out {
+  animation: spinEaseOut 1.5s ease-out forwards;
+}
+
+.animate-bounce-decay {
+  animation: bounceDecay 1s ease-out forwards;
+}
+
+select {
+  max-width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@keyframes marquee-loop {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-marquee-loop {
+  display: inline-block;
+  white-space: nowrap;
+  animation: marquee-loop 15s linear infinite;
+}
+
+/* 🎯 עיצוב פסי גלילה בכל האתר או רק לאלמנטים עם overflow */
+::-webkit-scrollbar {
+  width: 6px; /* עובי פס הגלילה */
+}
+
+::-webkit-scrollbar-track {
+  background: transparent; /* רקע המסילה */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #a0a0a0; /* צבע הידית */
+  border-radius: 8px;        /* עיגול פינות */
+  border: 1px solid #555;    /* מסגרת עדינה */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #ff1a1a; /* אדום בעת מעבר עכבר */
+}
+
+/* עיצוב פס גלילה רק לאזור הסיידר */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #ff1a1a;;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #ff1a1a;
+}
+
+/* 🎨 שליטה בפונט של הטקסטים בלבד */
+.article-text {
+  font-family: 'Heebo', sans-serif; /* או כל פונט שתגדיר בסטרפאי */
+  font-size: 18px;
+  line-height: 1.8;
+}
+
+/* 🛑 אל תשפיע על iframes או embeds */
+.article-text iframe,
+.article-text blockquote,
+.article-text .instagram-media,
+.article-text .tiktok-embed,
+.article-text .twitter-tweet,
+.article-text .fb-post {
+  all: unset; /* מסיר כל השפעה של הפונט שלך */
+  font-family: initial;
+  font-size: initial;
+  line-height: normal;
+}
+/* 🎯 תיקון רווחים מיותרים במובייל סביב embeds */
+@media (max-width: 640px) {
+  /* כל עטיפה של embed */
+  .embed-box {
+    margin-bottom: 0 !important;
+  }
+
+  /* ביטול מרווחי תחתית מיותרים */
+  .embed-box iframe,
+  .embed-box blockquote,
+  .embed-box .fb-post,
+  .instagram-media,
+  .tiktok-embed,
+  .twitter-tweet,
+  .fb-post {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+    max-height: 520px;
+    overflow: hidden;
+  }
+
+  /* קצת scaling עדין לפלטפורמות שגוזלות גובה (פייסבוק/טיקטוק) */
+  .embed-box .tiktok-embed,
+  .embed-box .fb-post {
+    transform: scale(0.95);
+    transform-origin: top center;
+  }
+}
