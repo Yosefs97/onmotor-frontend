@@ -1,153 +1,163 @@
-// app/forum/[slug]/page.jsx
-'use client';
+// lib/forumApi.js
+const API_URL =
+  process.env.NEXT_PUBLIC_STRAPI_API_URL ||
+  'https://onmotor-strapi.onrender.com';
 
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import PageContainer from '@/components/PageContainer';
-import { fetchThreadsByCategorySlug, addThread } from '@/lib/forumApi';
-
-export default function ForumCategoryPage() {
-  const { slug } = useParams();
-  const [threads, setThreads] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [newThread, setNewThread] = useState({ title: '', content: '' });
-  const [author, setAuthor] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const data = await fetchThreadsByCategorySlug(slug);
-        setThreads(data);
-      } catch (err) {
-        console.error('שגיאה בטעינת דיונים:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-
-    const user = JSON.parse(localStorage.getItem('onmotor-user'));
-    if (user?.email) setAuthor(user.email.split('@')[0]);
-  }, [slug]);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!newThread.title.trim() || !newThread.content.trim()) {
-      alert('נא למלא כותרת ותוכן');
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const added = await addThread({
-        title: newThread.title,
-        content: newThread.content,
-        author: author || 'אנונימי',
-        categorySlug: slug,
-      });
-      alert('✅ הדיון נוסף בהצלחה!');
-      setThreads((prev) => [
-        ...prev,
-        {
-          id: added.id,
-          title: newThread.title,
-          author,
-          content: newThread.content,
-          comments: [],
-        },
-      ]);
-      setNewThread({ title: '', content: '' });
-    } catch (err) {
-      alert('❌ שגיאה ביצירת הדיון: ' + err.message);
-    } finally {
-      setSubmitting(false);
-    }
-  };
+/* 🟩 קבלת כל הקטגוריות */
+export async function fetchForumCategories() {
+  const res = await fetch(`${API_URL}/api/forum-categories?populate=*`, {
+    cache: 'no-store',
+  });
+  if (!res.ok) throw new Error('שגיאה בטעינת קטגוריות');
+  const json = await res.json();
 
   return (
-    <PageContainer
-      title={`פורום - ${slug}`}
-      breadcrumbs={[
-        { label: 'דף הבית', href: '/' },
-        { label: 'פורום', href: '/forum' },
-      ]}
-    >
-      {loading ? (
-        <p>טוען דיונים...</p>
-      ) : threads.length === 0 ? (
-        <p>אין דיונים בקטגוריה זו.</p>
-      ) : (
-        <ul className="space-y-6 mb-8">
-          {threads.map((t) => (
-            <li key={t.id} className="border p-5 rounded-xl bg-white shadow-sm hover:shadow-md transition">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                {t.title}
-              </h3>
-              <p className="text-sm text-gray-500 mb-3">
-                נכתב על ידי <strong>{t.author}</strong>
-              </p>
-              <p className="text-gray-800 leading-relaxed whitespace-pre-line">
-                {t.content}
-              </p>
-              {t.comments?.length > 0 && (
-                <div className="mt-4 border-t pt-3">
-                  <p className="text-sm text-gray-700 font-semibold mb-1">
-                    תגובות ({t.comments.length})
-                  </p>
-                  <ul className="space-y-2">
-                    {t.comments.map((c, i) => (
-                      <li key={i} className="text-sm text-gray-700 border rounded p-2 bg-gray-50">
-                        <strong>{c.author}:</strong> {c.text}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {/* 🟢 טופס פתיחת דיון חדש */}
-      <form
-        onSubmit={handleSubmit}
-        className="border p-6 rounded-xl bg-gray-50 shadow-inner"
-      >
-        <h3 className="text-xl font-semibold mb-4">פתח דיון חדש</h3>
-
-        <label className="block mb-2 text-sm font-medium text-gray-700">
-          כותרת
-        </label>
-        <input
-          type="text"
-          value={newThread.title}
-          onChange={(e) => setNewThread({ ...newThread, title: e.target.value })}
-          className="w-full border rounded px-3 py-2 mb-4"
-          placeholder="לדוגמה: בעיה במערכת בלימה של GSX..."
-        />
-
-        <label className="block mb-2 text-sm font-medium text-gray-700">
-          תוכן
-        </label>
-        <textarea
-          value={newThread.content}
-          onChange={(e) =>
-            setNewThread({ ...newThread, content: e.target.value })
-          }
-          className="w-full border rounded px-3 py-2 h-32 mb-4 resize-none"
-          placeholder="כתוב כאן את תוכן הדיון..."
-        />
-
-        <button
-          type="submit"
-          disabled={submitting}
-          className={`px-6 py-2 rounded text-white font-semibold ${
-            submitting ? 'bg-gray-400' : 'bg-red-600 hover:bg-red-700'
-          }`}
-        >
-          {submitting ? 'שולח...' : 'פרסם דיון'}
-        </button>
-      </form>
-    </PageContainer>
+    json.data?.map((item) => ({
+      id: item.id,
+      documentId: item.documentId,
+      name: item.name || item.attributes?.name,
+      slug: item.slug || item.attributes?.slug, // ✅ שדה slug נדרש
+      description: item.description || item.attributes?.description,
+    })) || []
   );
+}
+
+/* 🟦 קבלת כל השרשורים לפי slug של קטגוריה */
+export async function fetchThreadsByCategorySlug(slug) {
+  const res = await fetch(
+    `${API_URL}/api/forum-threads?filters[category][slug][$eq]=${slug}&populate=*`,
+    { cache: 'no-store' }
+  );
+  if (!res.ok) throw new Error('שגיאה בטעינת דיונים לפי קטגוריה');
+  const json = await res.json();
+
+  return (
+    json.data?.map((item) => ({
+      id: item.id,
+      documentId: item.documentId,
+      title: item.title || item.attributes?.title,
+      content: Array.isArray(item.content)
+        ? item.content
+            .map((block) =>
+              block.children?.map((child) => child.text).join(' ')
+            )
+            .join('\n')
+        : item.content || item.attributes?.content || '',
+      author: item.author || item.attributes?.author,
+      date: item.date || item.attributes?.date,
+      category:
+        item.category?.name ||
+        item.attributes?.category?.data?.attributes?.name ||
+        null,
+      comments:
+        item.comments ||
+        item.attributes?.comments?.data?.map((c) => ({
+          id: c.id,
+          text: c.text || c.attributes?.text,
+          author: c.author || c.attributes?.author,
+          date: c.date || c.attributes?.date,
+        })) ||
+        [],
+    })) || []
+  );
+}
+
+/* 🟨 קבלת שרשור בודד לפי מזהה */
+export async function fetchThreadById(id) {
+  const res = await fetch(`${API_URL}/api/forum-threads/${id}?populate=*`, {
+    cache: 'no-store',
+  });
+  if (!res.ok) throw new Error('שגיאה בטעינת דיון');
+  const json = await res.json();
+  const item = json.data;
+
+  return {
+    id: item.id,
+    documentId: item.documentId,
+    title: item.title || item.attributes?.title,
+    content: Array.isArray(item.content)
+      ? item.content
+          .map((block) => block.children?.map((child) => child.text).join(' '))
+          .join('\n')
+      : item.content || item.attributes?.content || '',
+    author: item.author || item.attributes?.author,
+    date: item.date || item.attributes?.date,
+    category:
+      item.category?.name ||
+      item.attributes?.category?.data?.attributes?.name ||
+      null,
+    comments:
+      item.comments ||
+      item.attributes?.comments?.data?.map((c) => ({
+        id: c.id,
+        text: c.text || c.attributes?.text,
+        author: c.author || c.attributes?.author,
+        date: c.date || c.attributes?.date,
+      })) ||
+      [],
+  };
+}
+
+/* 🟧 קבלת תגובות לפי מזהה שרשור */
+export async function fetchComments(threadId) {
+  const res = await fetch(
+    `${API_URL}/api/forum-comments?filters[forum_thread][id][$eq]=${threadId}&sort[0]=createdAt:asc&populate=*`,
+    { cache: 'no-store' }
+  );
+  if (!res.ok) throw new Error('שגיאה בטעינת תגובות');
+  const json = await res.json();
+
+  return (
+    json.data?.map((c) => ({
+      id: c.id,
+      documentId: c.documentId,
+      text: c.text || c.attributes?.text,
+      author: c.author || c.attributes?.author,
+      date: c.date || c.attributes?.date,
+    })) || []
+  );
+}
+
+/* 🟥 הוספת תגובה חדשה */
+export async function addComment({ threadId, text, author }) {
+  const res = await fetch(`${API_URL}/api/forum-comments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      data: { text, author, forum_thread: threadId },
+    }),
+  });
+  if (!res.ok) throw new Error('שגיאה בשליחת תגובה');
+  const json = await res.json();
+  return json.data;
+}
+
+/* 🟦 פתיחת שרשור חדש לפי slug */
+export async function addThread({ title, content, author, categorySlug }) {
+  try {
+    // שלב 1: מצא את ה-ID של הקטגוריה לפי ה-slug
+    const catRes = await fetch(
+      `${API_URL}/api/forum-categories?filters[slug][$eq]=${categorySlug}`
+    );
+    const catJson = await catRes.json();
+    const categoryId = catJson?.data?.[0]?.id;
+
+    if (!categoryId) throw new Error('לא נמצאה קטגוריה מתאימה ל-slug');
+
+    // שלב 2: צור דיון חדש עם ID של הקטגוריה
+    const res = await fetch(`${API_URL}/api/forum-threads`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        data: { title, content, author, category: categoryId },
+      }),
+    });
+
+    if (!res.ok) throw new Error('שגיאה ביצירת דיון חדש');
+    const json = await res.json();
+    return json.data;
+  } catch (err) {
+    console.error('⚠️ addThread error:', err);
+    throw err;
+  }
 }
