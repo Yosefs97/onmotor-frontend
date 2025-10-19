@@ -1,9 +1,9 @@
-//app\forum\NewPostButton.jsx
+// app/forum/NewPostButton.jsx
 'use client';
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuthModal } from '@/contexts/AuthModalProvider';
-import { getCurrentUser } from '@/utils/auth'; // ✅ שימוש בפונקציה מרוכזת
+import { getCurrentUser } from '@/utils/auth';
 
 export default function NewPostButton() {
   const router = useRouter();
@@ -18,7 +18,7 @@ export default function NewPostButton() {
   const handleClick = () => {
     if (!isClient) return;
 
-    const user = getCurrentUser(); // ✅ דרך תקנית ואחידה
+    const user = getCurrentUser();
     if (user) {
       router.push(`/forum/${params.category}/new`);
     } else {

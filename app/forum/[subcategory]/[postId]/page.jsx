@@ -1,15 +1,11 @@
-//app\forum\[subcategory]\[postId]\page.jsx
+// app/forum/[subcategory]/[postId]/page.jsx
 'use client';
 
 import { useEffect, useState } from 'react';
 import { notFound } from 'next/navigation';
 import PageContainer from '@/components/PageContainer';
 import { useAuthModal } from '@/contexts/AuthModalContext';
-import {
-  fetchThreadById,
-  fetchComments,
-  addComment,
-} from '@/lib/forumApi';
+import { fetchThreadById, fetchComments, addComment } from '@/lib/forumApi';
 
 export default function ForumPostPage({ params }) {
   const { subcategory, postId } = params;
@@ -24,9 +20,10 @@ export default function ForumPostPage({ params }) {
     const load = async () => {
       try {
         const thread = await fetchThreadById(postId);
-        if (!thread || thread.category_id !== subcategory) return setPost(null);
-        setPost(thread);
+        if (!thread || thread.category?.id?.toString() !== subcategory)
+          return setPost(null);
 
+        setPost(thread);
         const commentsList = await fetchComments(postId);
         setComments(commentsList);
       } catch (err) {
@@ -66,27 +63,37 @@ export default function ForumPostPage({ params }) {
       breadcrumbs={[
         { label: 'דף הבית', href: '/' },
         { label: 'פורום', href: '/forum' },
-        { label: getHebrewSubcategory(post.category_id), href: `/forum/${post.category_id}` },
+        {
+          label: post.category?.name || 'קטגוריה',
+          href: `/forum/${post.category?.id}`,
+        },
         { label: post.title },
       ]}
     >
       <div className="prose max-w-none text-right" dir="rtl">
         <p className="text-sm text-gray-500 mb-2">
-          נכתב על ידי <strong>{post.author}</strong> בתאריך {new Date(post.date).toLocaleDateString('he-IL')}
+          נכתב על ידי <strong>{post.author}</strong> בתאריך{' '}
+          {new Date(post.date).toLocaleDateString('he-IL')}
         </p>
 
         <p className="text-lg leading-relaxed">{post.content}</p>
 
         <hr className="my-8" />
 
-        <h3 className="text-xl font-bold mb-2">תגובות ({comments.length})</h3>
+        <h3 className="text-xl font-bold mb-2">
+          תגובות ({comments.length})
+        </h3>
 
         {comments.length > 0 ? (
           <ul className="mt-4 space-y-4">
             {comments.map((comment, index) => (
-              <li key={comment.id || index} className="border rounded p-4 bg-gray-50">
+              <li
+                key={comment.id || index}
+                className="border rounded p-4 bg-gray-50"
+              >
                 <p className="text-sm text-gray-600 mb-1">
-                  <strong>{comment.author}</strong> ({new Date(comment.date).toLocaleDateString('he-IL')})
+                  <strong>{comment.author}</strong>{' '}
+                  ({new Date(comment.date).toLocaleDateString('he-IL')})
                 </p>
                 <p>{comment.text}</p>
               </li>
@@ -128,13 +135,4 @@ export default function ForumPostPage({ params }) {
       </div>
     </PageContainer>
   );
-}
-
-function getHebrewSubcategory(key) {
-  const map = {
-    tech: 'פורום טכני',
-    rides: 'טיולים ורכיבות',
-    sale: 'קנייה ומכירה',
-  };
-  return map[key] || key;
 }

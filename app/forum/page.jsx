@@ -1,4 +1,4 @@
-//app\forum\page.jsx
+// app/forum/page.jsx
 'use client';
 
 import { useEffect, useState } from 'react';
