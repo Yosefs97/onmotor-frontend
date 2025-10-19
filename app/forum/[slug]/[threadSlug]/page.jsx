@@ -4,7 +4,11 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import PageContainer from '@/components/PageContainer';
-import { fetchThreadBySlug, fetchComments, addComment } from '@/lib/forumApi';
+import {
+  fetchThreadBySlug,
+  fetchCommentsByThreadSlug,
+  addCommentByThreadSlug,
+} from '@/lib/forumApi';
 import { labelMap } from '@/utils/labelMap';
 
 export default function ForumThreadPage() {
@@ -15,15 +19,16 @@ export default function ForumThreadPage() {
   const [newComment, setNewComment] = useState({ author: '', text: '' });
   const [submitting, setSubmitting] = useState(false);
 
+  // --- טעינת דיון ותגובות לפי slug בלבד ---
   useEffect(() => {
     async function load() {
       try {
         const t = await fetchThreadBySlug(threadSlug);
         setThread(t);
-        const c = await fetchComments(t.id);
+        const c = await fetchCommentsByThreadSlug(threadSlug);
         setComments(c);
       } catch (err) {
-        console.error('❌ שגיאה בטעינת דיון:', err);
+        console.error('❌ שגיאה בטעינת דיון לפי slug:', err);
       } finally {
         setLoading(false);
       }
@@ -31,18 +36,19 @@ export default function ForumThreadPage() {
     load();
   }, [threadSlug]);
 
+  // --- שליחת תגובה לפי slug בלבד ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!newComment.text.trim()) return alert('נא למלא תוכן תגובה');
     setSubmitting(true);
     try {
-      await addComment({
-        threadId: thread.id,
+      await addCommentByThreadSlug({
+        threadSlug,
         text: newComment.text,
         author: newComment.author || 'אנונימי',
       });
       setNewComment({ author: '', text: '' });
-      const c = await fetchComments(thread.id);
+      const c = await fetchCommentsByThreadSlug(threadSlug);
       setComments(c);
     } catch (err) {
       alert('❌ שגיאה בשליחת תגובה');
@@ -70,7 +76,9 @@ export default function ForumThreadPage() {
       ) : (
         <>
           <div className="border p-6 rounded-xl bg-white shadow mb-8">
-            <h2 className="text-2xl font-semibold mb-2 text-right">{thread.title}</h2>
+            <h2 className="text-2xl font-semibold mb-2 text-right">
+              {thread.title}
+            </h2>
             <p className="text-sm text-gray-500 mb-4 text-right">
               נכתב על ידי {thread.author}
             </p>
@@ -99,7 +107,9 @@ export default function ForumThreadPage() {
             onSubmit={handleSubmit}
             className="border p-6 rounded-xl bg-gray-50 shadow-inner"
           >
-            <h3 className="text-xl font-semibold mb-4 text-right">השאר תגובה</h3>
+            <h3 className="text-xl font-semibold mb-4 text-right">
+              השאר תגובה
+            </h3>
 
             <label className="block mb-2 text-sm font-medium text-gray-700 text-right">
               שם
