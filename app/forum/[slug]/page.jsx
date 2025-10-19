@@ -3,8 +3,10 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import Link from 'next/link';
 import PageContainer from '@/components/PageContainer';
 import { fetchThreadsByCategorySlug, addThread } from '@/lib/forumApi';
+import { labelMap } from '@/utils/labelMap';
 
 export default function ForumCategoryPage() {
   const { slug } = useParams();
@@ -13,7 +15,6 @@ export default function ForumCategoryPage() {
   const [newThread, setNewThread] = useState({ title: '', content: '', author: '' });
   const [submitting, setSubmitting] = useState(false);
 
-  // --- טוען דיונים ---
   const loadThreads = async () => {
     try {
       const data = await fetchThreadsByCategorySlug(slug);
@@ -29,7 +30,6 @@ export default function ForumCategoryPage() {
     loadThreads();
   }, [slug]);
 
-  // --- שליחת דיון חדש ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!newThread.title.trim() || !newThread.content.trim()) {
@@ -48,7 +48,7 @@ export default function ForumCategoryPage() {
 
       alert('✅ הדיון נוסף בהצלחה!');
       setNewThread({ title: '', content: '', author: '' });
-      await loadThreads(); // טוען מחדש את הרשימה
+      await loadThreads();
     } catch (err) {
       alert('❌ שגיאה ביצירת דיון: ' + err.message);
     } finally {
@@ -56,13 +56,15 @@ export default function ForumCategoryPage() {
     }
   };
 
+  const categoryLabel = labelMap[slug] || slug;
+
   return (
     <PageContainer
-      title={`פורום ${slug}`}
+      title={`פורום ${categoryLabel}`}
       breadcrumbs={[
         { label: 'דף הבית', href: '/' },
         { label: 'פורום', href: '/forum' },
-        { label: threads[0]?.category || slug, href: `/forum/${slug}` },
+        { label: categoryLabel, href: `/forum/${slug}` },
       ]}
     >
       {loading ? (
@@ -76,14 +78,19 @@ export default function ForumCategoryPage() {
               key={t.id}
               className="border p-5 rounded-xl bg-white shadow-sm hover:shadow-md transition"
             >
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                {t.title}
-              </h3>
+              {/* 🔗 קישור לפי slug בלבד */}
+              <Link href={`/forum/${slug}/${t.slug}`}>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2 hover:text-red-600">
+                  {t.title}
+                </h3>
+              </Link>
               <p className="text-sm text-gray-500 mb-3">
                 נכתב על ידי <strong>{t.author}</strong>
               </p>
               <p className="text-gray-800 leading-relaxed whitespace-pre-line">
-                {t.content}
+                {t.content.length > 300
+                  ? t.content.slice(0, 300) + '...'
+                  : t.content}
               </p>
             </li>
           ))}
@@ -105,7 +112,9 @@ export default function ForumCategoryPage() {
         <input
           type="text"
           value={newThread.author}
-          onChange={(e) => setNewThread({ ...newThread, author: e.target.value })}
+          onChange={(e) =>
+            setNewThread({ ...newThread, author: e.target.value })
+          }
           className="w-full border rounded px-3 py-2 mb-4"
           placeholder="לדוגמה: יוסי מ-CRF..."
         />
@@ -116,7 +125,9 @@ export default function ForumCategoryPage() {
         <input
           type="text"
           value={newThread.title}
-          onChange={(e) => setNewThread({ ...newThread, title: e.target.value })}
+          onChange={(e) =>
+            setNewThread({ ...newThread, title: e.target.value })
+          }
           className="w-full border rounded px-3 py-2 mb-4"
           placeholder="לדוגמה: בעיה במערכת בלימה של GSX..."
         />
