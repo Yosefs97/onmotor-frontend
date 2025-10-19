@@ -21,7 +21,7 @@ export default function NewsTicker() {
   useEffect(() => {
     async function fetchHeadlines() {
       try {
-        const url = `${API_URL}/api/articles?filters[$or][0][tags][$contains]=חדשנות&filters[$or][1][tags][$contains]=2025&filters[$or][2][tags][$contains]=חוק וסדר&sort=publishedAt:desc`;
+        const url = `${API_URL}/api/articles?filters[$or][0][tags_txt][$contains]=חדשנות&filters[$or][1][tags_txt][$contains]=2025&filters[$or][2][tags_txt][$contains]=חוק וסדר&sort=publishedAt:desc`;
         const res = await fetch(url);
         const data = await res.json();
 

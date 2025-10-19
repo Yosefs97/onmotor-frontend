@@ -15,7 +15,8 @@ export default function IroadsBox() {
     async function fetchArticles() {
       try {
         const res = await fetch(
-          `${API_URL}/api/articles?filters[tags][$contains]=iroads&populate=image`
+          `${API_URL}/api/articles?filters[tags_txt][$contains]=iroads&populate=image`
+
 
         );
         const json = await res.json();

@@ -103,7 +103,8 @@ export default function TabLeftSidebar() {
     const fetchOnRoad = async () => {
       try {
         const res = await fetch(
-          `${API_URL}/api/articles?filters[tags][$contains]=iroads&sort=date:desc&populate=*`
+         `${API_URL}/api/articles?filters[tags_txt][$contains]=iroads&sort=date:desc&populate=*`
+
         );
         const data = (await res.json()).data || [];
         setOnRoadArticles(data.map((a) => normalizeItem(a, 'article')));
