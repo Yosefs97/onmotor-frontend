@@ -1,3 +1,4 @@
+// components/MobileMenu.jsx
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { FaTimes, FaChevronDown, FaChevronUp } from 'react-icons/fa';
@@ -58,9 +59,12 @@ export default function MobileMenu() {
     }
   };
 
-  // ✅ החלקה שמאלה = סגירה
+  // ✅ החלקה לשני הכיוונים = סגירה
   const handlers = useSwipeable({
     onSwipedLeft: () => {
+      if (isOpen) closeMenu();
+    },
+    onSwipedRight: () => {
       if (isOpen) closeMenu();
     },
     trackTouch: true,
@@ -94,11 +98,17 @@ export default function MobileMenu() {
           {...handlers}
           ref={menuRef}
           className="fixed top-0 left-0 right-0 h-screen w-[90vw] bg-black text-white flex flex-col z-[9999] text-right shadow-lg overflow-y-auto"
-          style={{ touchAction: 'pan-y' }}
+          style={{
+            touchAction: 'pan-y',
+            overscrollBehavior: 'contain', // ✅ מונע בליעה של ההחלקה
+          }}
         >
           {/* 🔝 אזור עליון קבוע (כפתור X + חיפוש) */}
           <div className="sticky top-0 bg-black z-[50] border-b border-neutral-800 pb-2">
-            <div dir="ltr" className="flex justify-between items-center px-2 pt-2 mb-1">
+            <div
+              dir="ltr"
+              className="flex justify-between items-center px-2 pt-2 mb-1"
+            >
               <button onClick={closeMenu} className="text-2xl">
                 <FaTimes />
               </button>
