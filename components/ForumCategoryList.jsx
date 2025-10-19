@@ -7,7 +7,8 @@ export default function ForumCategoryList({ categories }) {
     <ul className="space-y-4">
       {categories.map((cat) => (
         <li key={cat.id} className="border p-4 rounded shadow">
-          <Link href={`/forum/${cat.id}`}>
+          {/* ✅ החלפנו את id ל-slug */}
+          <Link href={`/forum/${cat.slug}`}>
             <span className="text-lg font-semibold hover:underline">
               {cat.name}
             </span>

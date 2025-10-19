@@ -62,7 +62,7 @@ export default function ForumCategoryPage() {
       breadcrumbs={[
         { label: 'דף הבית', href: '/' },
         { label: 'פורום', href: '/forum' },
-        { label: slug, href: `/forum/${slug}` },
+        { label: threads[0]?.category || slug, href: `/forum/${slug}` },
       ]}
     >
       {loading ? (
