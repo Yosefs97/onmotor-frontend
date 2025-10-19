@@ -1,3 +1,4 @@
+// components/MobileMenu.jsx
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { FaTimes, FaChevronDown, FaChevronUp } from 'react-icons/fa';
@@ -7,7 +8,7 @@ import MobileSocialMenu from './MobileSocialMenu';
 import AuthBox from './AuthBox';
 import { getCurrentUser } from '@/utils/auth';
 import { gsap } from 'gsap';
-import { useSwipeable } from 'react-swipeable'; // ✅ נדרש להחלקה
+import { useSwipeable } from 'react-swipeable';
 
 export default function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -32,6 +33,7 @@ export default function MobileMenu() {
     }
   }, [showAuthBox]);
 
+  // ✅ פתיחה חלקה
   useEffect(() => {
     if (isOpen && menuRef.current) {
       gsap.fromTo(
@@ -42,10 +44,25 @@ export default function MobileMenu() {
     }
   }, [isOpen]);
 
-  // ✅ הוספת החלקה לסגירה
+  // ✅ אנימציית סגירה משותפת (לכפתור X ול-Swipe)
+  const closeMenu = () => {
+    if (menuRef.current) {
+      gsap.to(menuRef.current, {
+        y: -30,
+        opacity: 0,
+        duration: 0.35,
+        ease: 'power2.in',
+        onComplete: () => setIsOpen(false),
+      });
+    } else {
+      setIsOpen(false);
+    }
+  };
+
+  // ✅ החלקה שמאלה = סגירה עם אנימציה
   const handlers = useSwipeable({
     onSwipedLeft: () => {
-      if (isOpen) setIsOpen(false);
+      if (isOpen) closeMenu();
     },
     trackTouch: true,
     delta: 25,
@@ -55,7 +72,7 @@ export default function MobileMenu() {
 
   return (
     <>
-      {/* כפתור ההמבורגר תמיד בראש הדף */}
+      {/* כפתור ההמבורגר */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
@@ -72,28 +89,28 @@ export default function MobileMenu() {
         </button>
       )}
 
-      {/* תפריט נפתח בגודל מסך */}
+      {/* תפריט נפתח */}
       {isOpen && (
         <div
-          {...handlers} // ✅ מאפשר סגירה בהחלקה שמאלה
+          {...handlers}
           ref={menuRef}
           className="fixed top-0 left-0 right-0 h-screen w-[90vw] bg-black text-white p-2 flex flex-col gap-4 z-[9999] text-right shadow-lg overflow-y-auto"
-          style={{ touchAction: 'pan-y' }} // מאפשר גלילה אנכית תקינה
+          style={{ touchAction: 'pan-y' }}
         >
           <div dir="ltr" className="flex justify-between items-center mb-2">
-            <button onClick={() => setIsOpen(false)} className="text-2xl">
+            <button onClick={closeMenu} className="text-2xl">
               <FaTimes />
             </button>
           </div>
 
           {/* חיפוש */}
           <div className="w-full mb-2">
-            <SearchBar onSelect={() => setIsOpen(false)} />
+            <SearchBar onSelect={closeMenu} />
           </div>
 
-          {/* תפריט ניווט */}
+          {/* ניווט */}
           <div dir="rtl" className="relative z-[1]">
-            <NavigationMenu mobile onClose={() => setIsOpen(false)} />
+            <NavigationMenu mobile onClose={closeMenu} />
           </div>
 
           {/* רשתות חברתיות */}
@@ -110,12 +127,18 @@ export default function MobileMenu() {
               } text-white px-3 py-2 rounded shadow hover:bg-opacity-80 transition w-full text-center`}
             >
               {isLoggedIn ? 'מחובר' : 'התחברות / הרשמה'}{' '}
-              {showAuthBox ? <FaChevronUp className="inline" /> : <FaChevronDown className="inline" />}
+              {showAuthBox ? (
+                <FaChevronUp className="inline" />
+              ) : (
+                <FaChevronDown className="inline" />
+              )}
             </button>
 
             <div
               className={`overflow-hidden transition-all duration-500 ease-in-out ${
-                showAuthBox ? 'max-h-[1000px] opacity-100 scale-100 mt-4' : 'max-h-0 opacity-0 scale-95'
+                showAuthBox
+                  ? 'max-h-[1000px] opacity-100 scale-100 mt-4'
+                  : 'max-h-0 opacity-0 scale-95'
               }`}
             >
               <div className="bg-white text-black p-4 rounded shadow-md relative z-[2]">
