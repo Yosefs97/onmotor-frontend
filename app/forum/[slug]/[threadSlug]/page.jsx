@@ -1,4 +1,3 @@
-// app/forum/[slug]/[threadSlug]/page.jsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -14,6 +13,7 @@ export default function ForumThreadPage() {
   const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState({ author: '', text: '' });
   const [submitting, setSubmitting] = useState(false);
+  const [statusMessage, setStatusMessage] = useState(null); // 🟢 הודעה למשתמש
 
   useEffect(() => {
     async function load() {
@@ -24,6 +24,7 @@ export default function ForumThreadPage() {
         setComments(c);
       } catch (err) {
         console.error('❌ שגיאה בטעינת דיון:', err);
+        setStatusMessage({ text: 'שגיאה בטעינת הדיון', type: 'error' });
       } finally {
         setLoading(false);
       }
@@ -33,48 +34,62 @@ export default function ForumThreadPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!newComment.text.trim()) return alert('נא למלא תוכן תגובה');
+    if (!newComment.text.trim()) {
+      setStatusMessage({ text: 'נא למלא תוכן תגובה', type: 'error' });
+      return;
+    }
+
     setSubmitting(true);
     try {
+      console.log("📨 שליחת תגובה חדשה...");
       await addCommentByThreadSlug({
         threadSlug,
         text: newComment.text,
         author: newComment.author || 'אנונימי',
       });
+
+      // 🧩 נקה שדות
       setNewComment({ author: '', text: '' });
-      const c = await fetchCommentsByThreadSlug(threadSlug);
-      setComments(c);
+
+      // 🔁 טען תגובות מעודכנות
+      console.log("🔁 טוען תגובות מעודכנות...");
+      const updatedComments = await fetchCommentsByThreadSlug(threadSlug);
+      setComments(updatedComments);
+
+      // 🟢 הודעת הצלחה
+      setStatusMessage({ text: 'התגובה פורסמה בהצלחה 🎉', type: 'success' });
+
+      // העלם את ההודעה אחרי 3 שניות
+      setTimeout(() => setStatusMessage(null), 3000);
     } catch (err) {
-      alert('❌ שגיאה בשליחת תגובה');
+      console.error('❌ שגיאה בשליחת תגובה:', err);
+      setStatusMessage({ text: 'שגיאה בשליחת תגובה', type: 'error' });
     } finally {
       setSubmitting(false);
     }
   };
 
   const categoryLabel = labelMap[slug] || slug;
-  const decodedSlug = decodeURIComponent(threadSlug);
 
   return (
     <PageContainer
-      title={thread?.title || decodedSlug || 'דיון'}
+      title={thread ? thread.title : 'טוען...'}
       breadcrumbs={[
         { label: 'דף הבית', href: '/' },
         { label: 'פורום', href: '/forum' },
         { label: categoryLabel, href: `/forum/${slug}` },
-        { label: thread?.title || decodedSlug || 'דיון', href: `/forum/${slug}/${threadSlug}` },
+        { label: thread?.title || 'דיון', href: `/forum/${slug}/${threadSlug}` },
       ]}
     >
       {loading ? (
         <p>טוען דיון...</p>
       ) : !thread ? (
-        <p className="text-red-600 font-semibold">❌ דיון לא נמצא</p>
+        <p>❌ דיון לא נמצא</p>
       ) : (
         <>
           <div className="border p-6 rounded-xl bg-white shadow mb-8">
             <h2 className="text-2xl font-semibold mb-2 text-right">{thread.title}</h2>
-            <p className="text-sm text-gray-500 mb-4 text-right">
-              נכתב על ידי {thread.author}
-            </p>
+            <p className="text-sm text-gray-500 mb-4 text-right">נכתב על ידי {thread.author}</p>
             <p className="whitespace-pre-line text-gray-800 leading-relaxed text-right">
               {thread.content}
             </p>
@@ -96,7 +111,11 @@ export default function ForumThreadPage() {
             )}
           </div>
 
-          <form onSubmit={handleSubmit} className="border p-6 rounded-xl bg-gray-50 shadow-inner">
+          {/* 🟢 טופס השארת תגובה */}
+          <form
+            onSubmit={handleSubmit}
+            className="border p-6 rounded-xl bg-gray-50 shadow-inner"
+          >
             <h3 className="text-xl font-semibold mb-4 text-right">השאר תגובה</h3>
 
             <label className="block mb-2 text-sm font-medium text-gray-700 text-right">
@@ -105,7 +124,9 @@ export default function ForumThreadPage() {
             <input
               type="text"
               value={newComment.author}
-              onChange={(e) => setNewComment({ ...newComment, author: e.target.value })}
+              onChange={(e) =>
+                setNewComment({ ...newComment, author: e.target.value })
+              }
               className="w-full border rounded px-3 py-2 mb-4"
               placeholder="לדוגמה: רוכב מ-TMAX..."
             />
@@ -115,7 +136,9 @@ export default function ForumThreadPage() {
             </label>
             <textarea
               value={newComment.text}
-              onChange={(e) => setNewComment({ ...newComment, text: e.target.value })}
+              onChange={(e) =>
+                setNewComment({ ...newComment, text: e.target.value })
+              }
               className="w-full border rounded px-3 py-2 h-32 mb-4 resize-none"
               placeholder="כתוב כאן את תגובתך..."
             />
@@ -123,12 +146,25 @@ export default function ForumThreadPage() {
             <button
               type="submit"
               disabled={submitting}
-              className={`px-6 py-2 rounded text-white font-semibold w-full ${
+              className={`px-6 py-2 rounded text-white font-semibold w-full transition ${
                 submitting ? 'bg-gray-400' : 'bg-red-600 hover:bg-red-700'
               }`}
             >
               {submitting ? 'שולח...' : 'פרסם תגובה'}
             </button>
+
+            {/* 🔔 הודעת הצלחה/שגיאה מתחת לכפתור */}
+            {statusMessage && (
+              <p
+                className={`mt-4 text-center font-medium ${
+                  statusMessage.type === 'success'
+                    ? 'text-green-600'
+                    : 'text-red-600'
+                }`}
+              >
+                {statusMessage.text}
+              </p>
+            )}
           </form>
         </>
       )}
