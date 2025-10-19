@@ -59,14 +59,10 @@ export default function MobileMenu() {
     }
   };
 
-  // ✅ החלקה לשני הכיוונים = סגירה
+  // ✅ החלקה דו־כיוונית לסגירה
   const handlers = useSwipeable({
-    onSwipedLeft: () => {
-      if (isOpen) closeMenu();
-    },
-    onSwipedRight: () => {
-      if (isOpen) closeMenu();
-    },
+    onSwipedLeft: () => isOpen && closeMenu(),
+    onSwipedRight: () => isOpen && closeMenu(),
     trackTouch: true,
     delta: 25,
     preventScrollOnSwipe: true,
@@ -75,7 +71,6 @@ export default function MobileMenu() {
 
   return (
     <>
-      {/* כפתור ההמבורגר */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
@@ -92,23 +87,16 @@ export default function MobileMenu() {
         </button>
       )}
 
-      {/* תפריט נפתח */}
       {isOpen && (
         <div
           {...handlers}
           ref={menuRef}
-          className="fixed top-0 left-0 right-0 h-screen w-[90vw] bg-black text-white flex flex-col z-[9999] text-right shadow-lg overflow-y-auto"
-          style={{
-            touchAction: 'pan-y',
-            overscrollBehavior: 'contain', // ✅ מונע בליעה של ההחלקה
-          }}
+          className="fixed top-0 left-0 right-0 h-screen w-[90vw] bg-black text-white flex flex-col z-[9999] text-right shadow-lg"
+          style={{ touchAction: 'pan-y', overscrollBehavior: 'contain' }}
         >
-          {/* 🔝 אזור עליון קבוע (כפתור X + חיפוש) */}
+          {/* 🔝 אזור עליון קבוע */}
           <div className="sticky top-0 bg-black z-[50] border-b border-neutral-800 pb-2">
-            <div
-              dir="ltr"
-              className="flex justify-between items-center px-2 pt-2 mb-1"
-            >
+            <div dir="ltr" className="flex justify-between items-center px-2 pt-2 mb-1">
               <button onClick={closeMenu} className="text-2xl">
                 <FaTimes />
               </button>
@@ -118,8 +106,11 @@ export default function MobileMenu() {
             </div>
           </div>
 
-          {/* גוף התפריט – ניתן לגלול */}
-          <div className="flex-1 px-2 mt-3 space-y-4">
+          {/* ⚙️ גוף התפריט – גובה מחושב וגלילה פנימית */}
+          <div
+            className="flex-1 px-2 mt-3 space-y-4 overflow-y-auto"
+            style={{ maxHeight: 'calc(100vh - 110px)' }} // ← חישוב כדי שתחתית תוצג תמיד
+          >
             <div dir="rtl" className="relative z-[1]">
               <NavigationMenu mobile onClose={closeMenu} />
             </div>
@@ -128,7 +119,7 @@ export default function MobileMenu() {
               <MobileSocialMenu />
             </div>
 
-            <div className="w-full mt-auto" ref={authBoxRef}>
+            <div className="w-full mt-auto pb-6" ref={authBoxRef}>
               <button
                 onClick={() => setShowAuthBox(!showAuthBox)}
                 className={`text-xl ${
