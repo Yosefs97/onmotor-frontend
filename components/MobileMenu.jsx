@@ -1,4 +1,3 @@
-// components/MobileMenu.jsx
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { FaTimes, FaChevronDown, FaChevronUp } from 'react-icons/fa';
@@ -44,7 +43,7 @@ export default function MobileMenu() {
     }
   }, [isOpen]);
 
-  // ✅ אנימציית סגירה משותפת (לכפתור X ול-Swipe)
+  // ✅ סגירה חלקה
   const closeMenu = () => {
     if (menuRef.current) {
       gsap.to(menuRef.current, {
@@ -59,7 +58,7 @@ export default function MobileMenu() {
     }
   };
 
-  // ✅ החלקה שמאלה = סגירה עם אנימציה
+  // ✅ החלקה שמאלה = סגירה
   const handlers = useSwipeable({
     onSwipedLeft: () => {
       if (isOpen) closeMenu();
@@ -94,55 +93,56 @@ export default function MobileMenu() {
         <div
           {...handlers}
           ref={menuRef}
-          className="fixed top-0 left-0 right-0 h-screen w-[90vw] bg-black text-white p-2 flex flex-col gap-4 z-[9999] text-right shadow-lg overflow-y-auto"
+          className="fixed top-0 left-0 right-0 h-screen w-[90vw] bg-black text-white flex flex-col z-[9999] text-right shadow-lg overflow-y-auto"
           style={{ touchAction: 'pan-y' }}
         >
-          <div dir="ltr" className="flex justify-between items-center mb-2">
-            <button onClick={closeMenu} className="text-2xl">
-              <FaTimes />
-            </button>
+          {/* 🔝 אזור עליון קבוע (כפתור X + חיפוש) */}
+          <div className="sticky top-0 bg-black z-[50] border-b border-neutral-800 pb-2">
+            <div dir="ltr" className="flex justify-between items-center px-2 pt-2 mb-1">
+              <button onClick={closeMenu} className="text-2xl">
+                <FaTimes />
+              </button>
+            </div>
+            <div className="px-2">
+              <SearchBar onSelect={closeMenu} />
+            </div>
           </div>
 
-          {/* חיפוש */}
-          <div className="w-full mb-2">
-            <SearchBar onSelect={closeMenu} />
-          </div>
+          {/* גוף התפריט – ניתן לגלול */}
+          <div className="flex-1 px-2 mt-3 space-y-4">
+            <div dir="rtl" className="relative z-[1]">
+              <NavigationMenu mobile onClose={closeMenu} />
+            </div>
 
-          {/* ניווט */}
-          <div dir="rtl" className="relative z-[1]">
-            <NavigationMenu mobile onClose={closeMenu} />
-          </div>
+            <div className="mt-3">
+              <MobileSocialMenu />
+            </div>
 
-          {/* רשתות חברתיות */}
-          <div className="mt-3">
-            <MobileSocialMenu />
-          </div>
+            <div className="w-full mt-auto" ref={authBoxRef}>
+              <button
+                onClick={() => setShowAuthBox(!showAuthBox)}
+                className={`text-xl ${
+                  isLoggedIn ? 'bg-green-600' : 'bg-[#e60000]'
+                } text-white px-3 py-2 rounded shadow hover:bg-opacity-80 transition w-full text-center`}
+              >
+                {isLoggedIn ? 'מחובר' : 'התחברות / הרשמה'}{' '}
+                {showAuthBox ? (
+                  <FaChevronUp className="inline" />
+                ) : (
+                  <FaChevronDown className="inline" />
+                )}
+              </button>
 
-          {/* תיבת התחברות */}
-          <div className="w-full mt-auto" ref={authBoxRef}>
-            <button
-              onClick={() => setShowAuthBox(!showAuthBox)}
-              className={`text-xl ${
-                isLoggedIn ? 'bg-green-600' : 'bg-[#e60000]'
-              } text-white px-3 py-2 rounded shadow hover:bg-opacity-80 transition w-full text-center`}
-            >
-              {isLoggedIn ? 'מחובר' : 'התחברות / הרשמה'}{' '}
-              {showAuthBox ? (
-                <FaChevronUp className="inline" />
-              ) : (
-                <FaChevronDown className="inline" />
-              )}
-            </button>
-
-            <div
-              className={`overflow-hidden transition-all duration-500 ease-in-out ${
-                showAuthBox
-                  ? 'max-h-[1000px] opacity-100 scale-100 mt-4'
-                  : 'max-h-0 opacity-0 scale-95'
-              }`}
-            >
-              <div className="bg-white text-black p-4 rounded shadow-md relative z-[2]">
-                <AuthBox mode="inline" />
+              <div
+                className={`overflow-hidden transition-all duration-500 ease-in-out ${
+                  showAuthBox
+                    ? 'max-h-[1000px] opacity-100 scale-100 mt-4'
+                    : 'max-h-0 opacity-0 scale-95'
+                }`}
+              >
+                <div className="bg-white text-black p-4 rounded shadow-md relative z-[2]">
+                  <AuthBox mode="inline" />
+                </div>
               </div>
             </div>
           </div>
