@@ -1,4 +1,4 @@
-// components/IroadsBox.jsx
+// C:\Users\yosef\Desktop\onmotor-frontend\components\IroadsBox.jsx
 'use client';
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -16,7 +16,7 @@ export default function IroadsBox() {
       try {
         const res = await fetch(
           `${API_URL}/api/articles?filters[tags][$contains]=${encodeURIComponent(
-            'נתיבי ישראל'
+            'iroads'
           )}&populate=image`
         );
         const json = await res.json();
