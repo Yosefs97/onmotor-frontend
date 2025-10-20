@@ -7,6 +7,7 @@ import { sendEmail } from '@/utils/mailer';
 const { STRAPI_API_URL, STRAPI_ADMIN_TOKEN, NODE_ENV } = process.env;
 
 export async function DELETE(request) {
+  console.log('🟢 delete-account route reached!');
   const jwt = getTokenFromCookie(request);
 
   if (!jwt) {

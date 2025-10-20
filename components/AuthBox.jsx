@@ -120,7 +120,7 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
   const handleDeleteAccount = async () => {
     if (!confirm('האם אתה בטוח שברצונך למחוק את החשבון?')) return;
     try {
-      const res = await fetch('/api/user/delete', {
+      const res = await fetch('/api/user/delete-account', {
         method: 'DELETE',
         credentials: 'include'
       });
