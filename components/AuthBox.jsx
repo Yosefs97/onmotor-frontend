@@ -49,6 +49,11 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
       const stored = await getCurrentUser();
       setUser(stored);
     })();
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser)); // ✅ משחזר את המשתמש מהשמירה המקומית
+    }
+
     const lastEmail = localStorage.getItem('lastEmail');
     if (lastEmail) setEmail(lastEmail);
   }, [setUser]);
@@ -86,6 +91,7 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
 
       loginUser(data.user);
       setUser(data.user);
+      localStorage.setItem('user', JSON.stringify(data.user)); // ✅ שמירה מקומית
       if (rememberMe) localStorage.setItem('lastEmail', email);
       setLoginSuccess(true);
       setLoginError('');
@@ -106,6 +112,7 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
     setLoginSuccess(false);
     setLoginError('');
     setUser(null);
+    localStorage.removeItem('user'); // ✅ מנקה את השמירה המקומית
   };
 
   /* === מחיקת חשבון === */

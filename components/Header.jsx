@@ -105,7 +105,7 @@ export default function Header() {
               }}
               className="bg-green-600 text-white px-3 py-1 rounded text-sm font-bold whitespace-nowrap"
             >
-              Y מחובר
+              {user?.email?.charAt(0).toUpperCase()} מחובר
             </button>
           ) : (
             <button
