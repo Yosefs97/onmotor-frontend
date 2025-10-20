@@ -1,5 +1,4 @@
 // components/AuthBox.jsx
-// components/AuthBox.jsx
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -44,6 +43,7 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
   const registerRef = useRef(null);
   const changePassRef = useRef(null);
 
+  // בעת טעינה – שלוף משתמש מקומי אם יש
   useEffect(() => {
     (async () => {
       const stored = await getCurrentUser();
@@ -53,12 +53,14 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
     if (lastEmail) setEmail(lastEmail);
   }, [setUser]);
 
+  // גלילה במובייל
   useEffect(() => {
     if (isMobile && isOpen && boxRef?.current) {
       boxRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, [isOpen, isMobile, boxRef, user]);
 
+  // גלילה פנימית לטפסים
   useEffect(() => {
     if (showReset && resetRef.current) {
       resetRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -69,6 +71,7 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
     }
   }, [showReset, showRegister, showChangePassword]);
 
+  /* === התחברות === */
   const handleLogin = async () => {
     setIsLoadingLogin(true);
     try {
@@ -77,10 +80,9 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
         credentials: 'include'
-
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Login failed');
+      if (!res.ok) throw new Error(data.error || 'שגיאת התחברות');
 
       loginUser(data.user);
       setUser(data.user);
@@ -95,68 +97,100 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
     }
   };
 
+  /* === התנתקות === */
   const handleLogout = async () => {
     await logoutUser();
     localStorage.removeItem('lastEmail');
+    setEmail('');
+    setPassword('');
+    setLoginSuccess(false);
+    setLoginError('');
     setUser(null);
   };
 
+  /* === מחיקת חשבון === */
   const handleDeleteAccount = async () => {
     if (!confirm('האם אתה בטוח שברצונך למחוק את החשבון?')) return;
     try {
-      const res = await fetch('/api/user/delete', { method: 'DELETE' });
-      if (!res.ok) throw new Error('Error deleting account');
+      const res = await fetch('/api/user/delete', {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'שגיאה במחיקת החשבון');
+
       await logoutUser();
       setUser(null);
       alert('החשבון נמחק בהצלחה');
-    } catch {
-      alert('אירעה שגיאה במחיקת החשבון');
+    } catch (err) {
+      alert(err.message || 'אירעה שגיאה במחיקת החשבון');
     }
   };
 
+  /* === שכחתי סיסמה === */
   const handleForgotPassword = async () => {
     setIsLoadingReset(true);
     setResetStatus('');
-    const res = await fetch('/api/user/forgot-password', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: resetEmail }),
-      credentials: 'include'
-    });
-    setResetStatus(res.ok ? 'נשלחה סיסמה חדשה לאימייל שלך' : 'אירעה שגיאה');
-    setIsLoadingReset(false);
+    try {
+      const res = await fetch('/api/user/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: resetEmail }),
+        credentials: 'include'
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'שגיאה בשליחת האיפוס');
+      setResetStatus('נשלחה סיסמה חדשה לאימייל שלך');
+    } catch (err) {
+      setResetStatus(err.message);
+    } finally {
+      setIsLoadingReset(false);
+    }
   };
 
+  /* === הרשמה === */
   const handleRegister = async () => {
     if (registerPassword !== registerConfirm) {
       setRegisterStatus('הסיסמאות לא תואמות');
       return;
     }
     setIsLoadingRegister(true);
-    const res = await fetch('/api/user/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: registerEmail, password: registerPassword }),
-      credentials: 'include'
-    });
-    const data = await res.json();
-    setRegisterStatus(res.ok ? 'נרשמת בהצלחה!' : data.error || 'שגיאה בהרשמה');
-    setIsLoadingRegister(false);
+    try {
+      const res = await fetch('/api/user/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: registerEmail, password: registerPassword }),
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'שגיאה בהרשמה');
+      setRegisterStatus('נרשמת בהצלחה!');
+    } catch (err) {
+      setRegisterStatus(err.message);
+    } finally {
+      setIsLoadingRegister(false);
+    }
   };
 
+  /* === שינוי סיסמה === */
   const handleChangePassword = async () => {
     setIsLoadingChangePassword(true);
-    const res = await fetch('/api/user/change-password', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ currentPassword, newPassword }),
-      credentials: 'include'
-    });
-    setChangeStatus(res.ok ? 'הסיסמה עודכנה בהצלחה' : 'שגיאה בעדכון הסיסמה');
-    setIsLoadingChangePassword(false);
+    try {
+      const res = await fetch('/api/user/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword, newPassword }),
+        credentials: 'include'
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'שגיאה בעדכון הסיסמה');
+      setChangeStatus('הסיסמה עודכנה בהצלחה');
+    } catch (err) {
+      setChangeStatus(err.message);
+    } finally {
+      setIsLoadingChangePassword(false);
+    }
   };
-
-
 
   return (
     <div dir="rtl" className="text-center" ref={boxRef}>
@@ -174,6 +208,7 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
           {user ? 'ניהול חשבון' : 'התחברות'}
         </h3>
 
+        {/* === מצב משתמש מחובר === */}
         {user ? (
           <>
             <p className="mb-4">שלום, {user.email}</p>
@@ -200,7 +235,7 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
                 }}
                 className="text-blue-600 underline"
               >
-                שנה סיסמא
+                שנה סיסמה
               </button>
               <span>|</span>
               <button
@@ -211,11 +246,12 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
                 }}
                 className="text-blue-600 underline"
               >
-                שכחתי סיסמא
+                שכחתי סיסמה
               </button>
             </div>
           </>
         ) : (
+          /* === מצב לא מחובר === */
           <>
             <input
               type="email"
@@ -226,7 +262,7 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
             />
             <input
               type="password"
-              placeholder="סיסמא"
+              placeholder="סיסמה"
               value={password}
               onChange={e => setPassword(e.target.value)}
               className="w-[90%] px-2 py-1 mb-2 border border-gray-300 rounded text-right text-sm"
@@ -271,9 +307,7 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
           </>
         )}
 
-        
-
-
+        {/* === טפסים פנימיים === */}
         {showReset && (
           <div ref={resetRef} className="mt-4 bg-gray-100 p-3 rounded text-right text-sm relative">
             <button onClick={() => setShowReset(false)} className="absolute top-2 left-2 text-gray-500 hover:text-black">✖</button>
