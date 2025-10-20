@@ -20,7 +20,7 @@ export async function POST(request) {
   }
 
   try {
-    // בדיקת אם האימייל כבר קיים
+    // בדיקה אם האימייל כבר קיים
     const checkRes = await fetch(`${STRAPI_API_URL}/api/users?filters[email][$eq]=${email}`, {
       headers: { Authorization: `Bearer ${STRAPI_ADMIN_TOKEN}` },
     });
@@ -37,13 +37,19 @@ export async function POST(request) {
     });
 
     const result = await createRes.json();
+
+    // 🔧 בדיקה חדשה – אם Strapi מחזיר הודעה שהאימייל תפוס
+    if (!createRes.ok && result.error?.message?.includes('taken')) {
+      return new Response(JSON.stringify({ error: 'האימייל כבר רשום במערכת' }), { status: 409 });
+    }
+
     if (!createRes.ok) {
       return new Response(JSON.stringify({ error: result?.error?.message || 'שגיאה ביצירת המשתמש' }), {
         status: createRes.status || 500,
       });
     }
 
-    // התחברות מיידית
+    // התחברות מיידית לאחר הרשמה
     const loginRes = await fetch(`${STRAPI_API_URL}/api/auth/local`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
