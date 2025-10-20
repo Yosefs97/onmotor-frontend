@@ -26,7 +26,7 @@ export async function POST(request) {
     });
     const existing = await checkRes.json();
     if (existing?.data?.length > 0 || existing?.length > 0) {
-      return new Response(JSON.stringify({ error: 'אימייל כבר רשום' }), { status: 409 });
+      return new Response(JSON.stringify({ error: 'האימייל כבר רשום במערכת' }), { status: 409 });
     }
 
     // יצירת המשתמש
@@ -38,13 +38,21 @@ export async function POST(request) {
 
     const result = await createRes.json();
 
-    // 🔧 בדיקה חדשה – אם Strapi מחזיר הודעה שהאימייל תפוס
-    if (!createRes.ok && result.error?.message?.includes('taken')) {
-      return new Response(JSON.stringify({ error: 'האימייל כבר רשום במערכת' }), { status: 409 });
-    }
-
+    // 🔧 שינוי: טיפול רחב בכל סוגי הודעות "מייל תפוס"
     if (!createRes.ok) {
-      return new Response(JSON.stringify({ error: result?.error?.message || 'שגיאה ביצירת המשתמש' }), {
+      const errMsg =
+        result?.error?.message ||
+        result?.message ||
+        (Array.isArray(result?.error?.details?.errors)
+          ? result.error.details.errors.map(e => e.message).join(', ')
+          : '') ||
+        '';
+
+      if (errMsg.toLowerCase().includes('taken') || errMsg.toLowerCase().includes('already')) {
+        return new Response(JSON.stringify({ error: 'האימייל כבר רשום במערכת' }), { status: 409 });
+      }
+
+      return new Response(JSON.stringify({ error: errMsg || 'שגיאה ביצירת המשתמש' }), {
         status: createRes.status || 500,
       });
     }
