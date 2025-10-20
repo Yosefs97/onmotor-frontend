@@ -86,8 +86,8 @@ export async function POST(request) {
         subject: 'ברוך הבא ל־OnMotor Media',
         html: buildEmailTemplate(email, 'ברוך הבא ל־OnMotor Media', `
           <p>תודה שנרשמת לאתר <strong>OnMotor Media</strong>!</p>
-          <p>שמחים שהצטרפת למשפחת הרוכבים שלנו 🏍️</p>
-          <a href="https://onmotormedia.com/login" style="display:inline-block;margin-top:20px;background:#d32f2f;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;font-weight:bold;">כניסה לאתר</a>
+          <p>שמחים שהצטרפת למשפחת הרוכבים שלנו.</p>
+          <a href="https://onmotormedia.com" style="display:inline-block;margin-top:20px;background:#d32f2f;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;font-weight:bold;">כניסה לאתר</a>
         `)
       });
     } catch (err) {
