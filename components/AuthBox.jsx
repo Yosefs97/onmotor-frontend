@@ -107,12 +107,13 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
   const handleLogout = async () => {
     await logoutUser();
     localStorage.removeItem('lastEmail');
+    localStorage.removeItem('user'); // ✅ מנקה את השמירה המקומית
+    setUser(null);
     setEmail('');
     setPassword('');
     setLoginSuccess(false);
     setLoginError('');
-    setUser(null);
-    localStorage.removeItem('user'); // ✅ מנקה את השמירה המקומית
+    setRememberMe(false); // ✅ מוסיף איפוס לתיבת הסימון
   };
 
   /* === מחיקת חשבון === */
