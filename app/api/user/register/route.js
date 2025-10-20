@@ -1,4 +1,4 @@
-//C:\Users\yosef\onmotor-media - Copy\app\api\user\register\route.js
+// app/api/user/register/route.js
 import { serialize } from 'cookie';
 import { buildEmailTemplate } from '@/utils/emailTemplate';
 import { sendEmail } from '@/utils/mailer';
@@ -22,9 +22,7 @@ export async function POST(request) {
   try {
     // בדיקת אם האימייל כבר קיים
     const checkRes = await fetch(`${STRAPI_API_URL}/api/users?filters[email][$eq]=${email}`, {
-      headers: {
-        Authorization: `Bearer ${STRAPI_ADMIN_TOKEN}`,
-      },
+      headers: { Authorization: `Bearer ${STRAPI_ADMIN_TOKEN}` },
     });
     const existing = await checkRes.json();
     if (existing?.data?.length > 0 || existing?.length > 0) {
@@ -45,7 +43,7 @@ export async function POST(request) {
       });
     }
 
-    // התחברות מיידית כדי לקבל JWT
+    // התחברות מיידית
     const loginRes = await fetch(`${STRAPI_API_URL}/api/auth/local`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -54,16 +52,15 @@ export async function POST(request) {
 
     const loginData = await loginRes.json();
     if (!loginRes.ok || !loginData.jwt) {
-      return new Response(JSON.stringify({ error: 'המשתמש נוצר אך לא הצלחנו לחבר אותו אוטומטית' }), {
-        status: 200,
-      });
+      return new Response(JSON.stringify({ error: 'המשתמש נוצר אך לא הצלחנו לחבר אותו אוטומטית' }), { status: 200 });
     }
 
-    // יצירת עוגייה
+    // ✅ עוגייה מאובטחת
     const cookie = serialize('token', loginData.jwt, {
       httpOnly: true,
       secure: NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'none',
+      domain: '.onmotormedia.com',
       path: '/',
       maxAge: 60 * 60 * 24 * 7,
     });
@@ -83,10 +80,7 @@ export async function POST(request) {
       console.error('שליחת מייל נכשלה:', err);
     }
 
-    return new Response(JSON.stringify({
-      success: true,
-      user: loginData.user,
-    }), {
+    return new Response(JSON.stringify({ success: true, user: loginData.user }), {
       status: 201,
       headers: {
         'Content-Type': 'application/json',

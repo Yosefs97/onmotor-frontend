@@ -76,6 +76,8 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
+        credentials: 'include'
+
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Login failed');
@@ -119,6 +121,7 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: resetEmail }),
+      credentials: 'include'
     });
     setResetStatus(res.ok ? 'נשלחה סיסמה חדשה לאימייל שלך' : 'אירעה שגיאה');
     setIsLoadingReset(false);
@@ -134,6 +137,7 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: registerEmail, password: registerPassword }),
+      credentials: 'include'
     });
     const data = await res.json();
     setRegisterStatus(res.ok ? 'נרשמת בהצלחה!' : data.error || 'שגיאה בהרשמה');
@@ -146,6 +150,7 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ currentPassword, newPassword }),
+      credentials: 'include'
     });
     setChangeStatus(res.ok ? 'הסיסמה עודכנה בהצלחה' : 'שגיאה בעדכון הסיסמה');
     setIsLoadingChangePassword(false);

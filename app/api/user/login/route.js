@@ -1,5 +1,4 @@
-//app\api\user\login\route.js
-
+// app/api/user/login/route.js
 import { serialize } from 'cookie';
 
 const { STRAPI_API_URL, NODE_ENV } = process.env;
@@ -20,28 +19,29 @@ export async function POST(request) {
     const res = await fetch(`${STRAPI_API_URL}/api/auth/local`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        identifier: email,
-        password,
-      }),
+      body: JSON.stringify({ identifier: email, password }),
     });
 
     const data = await res.json();
 
     if (!res.ok || !data.jwt) {
-      return new Response(JSON.stringify({
-        error: data?.error?.message || 'שגיאת התחברות',
-      }), {
-        status: res.status,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return new Response(
+        JSON.stringify({
+          error: data?.error?.message || 'שגיאת התחברות',
+        }),
+        {
+          status: res.status,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
     }
 
-    // יצירת עוגייה
+    // ✅ יצירת עוגייה מאובטחת
     const cookie = serialize('token', data.jwt, {
       httpOnly: true,
       secure: NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'none', // מאפשר קרוס-דומיין
+      domain: '.onmotormedia.com', // עובד עם כל הסאב דומיינים
       path: '/',
       maxAge: 60 * 60 * 24 * 7, // 7 ימים
     });
@@ -53,7 +53,6 @@ export async function POST(request) {
         'Set-Cookie': cookie,
       },
     });
-
   } catch (err) {
     console.error('שגיאת התחברות:', err);
     return new Response(JSON.stringify({ error: 'שגיאה פנימית בשרת' }), {
