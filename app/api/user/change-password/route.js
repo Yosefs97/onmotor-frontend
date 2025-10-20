@@ -19,10 +19,7 @@ export async function POST(request) {
 
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
     if (!passwordRegex.test(newPassword)) {
-      return new Response(
-        JSON.stringify({ error: 'Password must have 6+ chars, uppercase, lowercase, number' }),
-        { status: 400 }
-      );
+      return new Response(JSON.stringify({ error: 'Password must contain uppercase, lowercase, and number' }), { status: 400 });
     }
 
     const res = await fetch(`${STRAPI_API_URL}/api/auth/change-password`, {
@@ -39,44 +36,37 @@ export async function POST(request) {
     });
 
     const data = await res.json();
+    if (!res.ok) throw new Error(data?.error?.message || 'Error changing password');
 
-    if (!res.ok) {
-      return new Response(
-        JSON.stringify({ error: data?.error?.message || 'Error changing password' }),
-        { status: res.status }
-      );
-    }
-
-    // ✅ שלב חדש: שליפת פרטי המשתמש המחובר
+    // שליפת המשתמש המחובר
     const meRes = await fetch(`${STRAPI_API_URL}/api/users/me`, {
-      headers: {
-        Authorization: `Bearer ${jwt}`,
-      },
+      headers: { Authorization: `Bearer ${jwt}` },
     });
-
     const user = await meRes.json();
 
-    // ✅ שליחת מייל אישור שינוי סיסמה
-    try {
-      await sendEmail({
-        to: user.email,
-        subject: 'הסיסמה שלך עודכנה בהצלחה',
-        html: buildEmailTemplate(user.email, 'הסיסמה שלך שונתה', `
-         
-          <p>הסיסמה שלך עודכנה בהצלחה.</p>
-          <p>אם לא אתה ביצעת את הפעולה, יש לפנות אלינו באופן מיידי.</p>
-        `)
-      });
-    } catch (err) {
-      console.error('שליחת מייל אישור שינוי סיסמה נכשלה:', err);
+    // שליחת מייל אישור
+    if (user?.email) {
+      try {
+        await sendEmail({
+          to: user.email,
+          subject: 'הסיסמה שלך עודכנה בהצלחה - OnMotor Media',
+          html: buildEmailTemplate(
+            user.email,
+            'הסיסמה שלך שונתה',
+            `
+              <p>הסיסמה שלך עודכנה בהצלחה במערכת <strong>OnMotor Media</strong>.</p>
+              <p>אם לא אתה ביצעת את הפעולה הזו, צור איתנו קשר מיידית.</p>
+            `
+          ),
+        });
+      } catch (err) {
+        console.warn('⚠️ שליחת מייל שינוי סיסמה נכשלה:', err.message);
+      }
     }
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return new Response(JSON.stringify({ success: true }), { status: 200 });
   } catch (err) {
-    console.error('Change-password error:', err);
-    return new Response(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });
+    console.error('❌ Change-password error:', err);
+    return new Response(JSON.stringify({ error: err.message || 'Internal Server Error' }), { status: 500 });
   }
 }

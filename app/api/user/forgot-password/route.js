@@ -11,46 +11,28 @@ export async function POST(request) {
       return new Response(JSON.stringify({ error: 'Missing email' }), { status: 400 });
     }
 
-    // שלב 1: חיפוש המשתמש לפי אימייל
+    // חיפוש המשתמש
     const res = await fetch(`${STRAPI_API_URL}/api/users?filters[email][$eq]=${email}`, {
-      headers: {
-        Authorization: `Bearer ${STRAPI_ADMIN_TOKEN}`,
-      },
+      headers: { Authorization: `Bearer ${STRAPI_ADMIN_TOKEN}` },
     });
 
     const data = await res.json();
     const user = data?.data?.[0] ?? data?.[0];
-    const userId = user?.id ?? user?.id;
+    const userId = user?.id;
 
+    // כדי למנוע חשיפת אימיילים, נחזיר תשובה כללית
     if (!userId) {
-      return new Response(JSON.stringify({ error: 'Email not found' }), { status: 404 });
+      console.warn(`⚠️ Password reset requested for unknown email: ${email}`);
+      return new Response(JSON.stringify({ success: true }), { status: 200 });
     }
 
-    // שלב 2: יצירת סיסמה זמנית
-    const generateStrongPassword = (length = 10) => {
-      const lower = 'abcdefghijklmnopqrstuvwxyz';
-      const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-      const numbers = '0123456789';
-      const all = lower + upper + numbers;
+    // יצירת סיסמה זמנית
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const tempPassword = Array.from({ length: 10 })
+      .map(() => chars[Math.floor(Math.random() * chars.length)])
+      .join('');
 
-      let password = '';
-      password += lower[Math.floor(Math.random() * lower.length)];
-      password += upper[Math.floor(Math.random() * upper.length)];
-      password += numbers[Math.floor(Math.random() * numbers.length)];
-
-      for (let i = 3; i < length; i++) {
-        password += all[Math.floor(Math.random() * all.length)];
-      }
-
-      return password
-        .split('')
-        .sort(() => Math.random() - 0.5)
-        .join('');
-    };
-
-    const tempPassword = generateStrongPassword();
-
-    // שלב 3: עדכון הסיסמה
+    // עדכון הסיסמה ב־Strapi
     await fetch(`${STRAPI_API_URL}/api/users/${userId}`, {
       method: 'PUT',
       headers: {
@@ -60,36 +42,24 @@ export async function POST(request) {
       body: JSON.stringify({ password: tempPassword }),
     });
 
-    // שלב 4: שליחת מייל
-    const htmlContent = `
-      <p>בקשת לאפס את הסיסמה שלך באתר <strong>OnMotor Media</strong>.</p>
-      <p>הנה הסיסמה הזמנית החדשה שלך:</p>
-      <p style="font-size:18px; font-weight:bold; color:#d32f2f;">${tempPassword}</p>
-      <p>נא להתחבר ולהחליף לסיסמה קבועה בהקדם.</p>
-      <a href="https://onmotormedia.com/login" style="
-        display:inline-block;
-        margin-top:20px;
-        background:#d32f2f;
-        color:white;
-        padding:10px 20px;
-        text-decoration:none;
-        border-radius:5px;
-        font-weight:bold;">כניסה לאתר</a>
+    // שליחת מייל
+    const html = `
+      <p>התקבלה בקשה לאיפוס סיסמה לאתר <strong>OnMotor Media</strong>.</p>
+      <p>הנה הסיסמה הזמנית שלך:</p>
+      <p style="font-size:20px;font-weight:bold;color:#e60000;">${tempPassword}</p>
+      <p>אנא התחבר והחלף אותה לסיסמה אישית בהקדם.</p>
+      <a href="https://onmotormedia.com/login" style="display:inline-block;margin-top:15px;background:#e60000;color:white;padding:10px 20px;text-decoration:none;border-radius:6px;">כניסה לאתר</a>
     `;
 
     await sendEmail({
       to: email,
       subject: 'איפוס סיסמה - OnMotor Media',
-      html: buildEmailTemplate(email, 'איפוס סיסמה', htmlContent),
+      html: buildEmailTemplate(email, 'איפוס סיסמה', html),
     });
 
-    return new Response(JSON.stringify({ success: true }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
-
+    return new Response(JSON.stringify({ success: true }), { status: 200 });
   } catch (err) {
-    console.error('Forgot-password error:', err);
-    return new Response(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });
+    console.error('❌ Forgot-password error:', err);
+    return new Response(JSON.stringify({ error: err.message || 'Internal Server Error' }), { status: 500 });
   }
 }
