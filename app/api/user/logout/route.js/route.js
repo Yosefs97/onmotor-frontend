@@ -1,3 +1,4 @@
+//app\api\user\logout\route.js\route.js
 import { serialize } from 'cookie';
 
 export async function POST() {

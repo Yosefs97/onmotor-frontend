@@ -89,7 +89,7 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'שגיאת התחברות');
 
-      loginUser(data.user);
+      loginUser({ email: data.user.email, jwt: data.jwt });
       setUser(data.user);
       localStorage.setItem('user', JSON.stringify(data.user)); // ✅ שמירה מקומית
       if (rememberMe) localStorage.setItem('lastEmail', email);
