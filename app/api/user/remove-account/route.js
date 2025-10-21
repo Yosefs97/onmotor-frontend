@@ -102,3 +102,10 @@ export async function DELETE(request) {
     });
   }
 }
+// ✅ רק לצורכי בדיקה שהנתיב מזוהה
+export async function GET() {
+  return new Response(
+    JSON.stringify({ message: 'Route exists, use DELETE instead' }),
+    { status: 200, headers: { 'Content-Type': 'application/json' } }
+  );
+}
