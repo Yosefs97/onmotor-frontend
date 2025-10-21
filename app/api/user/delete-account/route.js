@@ -29,7 +29,7 @@ export async function DELETE(request) {
     }
 
     // שלב 2: מחיקה ע"י אדמין
-    const deleteRes = await fetch(`${STRAPI_API_URL}/api/users-permissions/users/${user.id}`, {
+    const deleteRes = await fetch(`${STRAPI_API_URL}/api/users/${user.id}`, {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${STRAPI_ADMIN_TOKEN}`,
