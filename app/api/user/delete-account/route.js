@@ -1,4 +1,4 @@
-// app/api/user/delete/route.js
+//app\api\user\delete-account\route.js
 import { getTokenFromCookie } from '@/utils/auth-server';
 import { serialize } from 'cookie';
 import { buildEmailTemplate } from '@/utils/emailTemplate';
@@ -29,7 +29,7 @@ export async function DELETE(request) {
     }
 
     // שלב 2: מחיקה ע"י אדמין
-    const deleteRes = await fetch(`${STRAPI_API_URL}/api/users/${user.id}`, {
+    const deleteRes = await fetch(`${STRAPI_API_URL}/api/users-permissions/users/${user.id}`, {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${STRAPI_ADMIN_TOKEN}`,
