@@ -103,15 +103,15 @@ export default function ProductPage() {
       <div className="grid md:grid-cols-2 gap-6">
         <ProductGallery images={product.images?.edges} title={product.title} />
 
-        <div className="space-y-3">
+        <div className="space-y-3 text-gray-900">
           <h1 className="text-2xl font-bold text-gray-900">{product.title}</h1>
           <div
-            className="prose max-w-none"
+            className="prose max-w-none text-gray-900"
             dangerouslySetInnerHTML={{ __html: product.descriptionHtml }}
           />
 
           {firstVariant && (
-            <div className="text-sm space-y-1 border-t pt-2">
+            <div className="text-sm space-y-1 border-t pt-2 text-gray-900">
               <div>
                 <span className="font-bold text-gray-900">מחיר: </span>
                 {firstVariant.price.amount} {firstVariant.price.currencyCode}
