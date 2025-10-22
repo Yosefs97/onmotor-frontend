@@ -104,7 +104,7 @@ export default function ProductPage() {
         <ProductGallery images={product.images?.edges} title={product.title} />
 
         <div className="space-y-3">
-          <h1 className="text-2xl font-bold">{product.title}</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{product.title}</h1>
           <div
             className="prose max-w-none"
             dangerouslySetInnerHTML={{ __html: product.descriptionHtml }}
@@ -113,19 +113,19 @@ export default function ProductPage() {
           {firstVariant && (
             <div className="text-sm space-y-1 border-t pt-2">
               <div>
-                <span className="font-bold">מחיר: </span>
+                <span className="font-bold text-gray-900">מחיר: </span>
                 {firstVariant.price.amount} {firstVariant.price.currencyCode}
               </div>
               <div>
-                <span className="font-bold">מק״ט: </span>
+                <span className="font-bold text-gray-900">מק״ט: </span>
                 {firstVariant.sku || 'N/A'}
               </div>
               <div>
-                <span className="font-bold">מלאי: </span>
+                <span className="font-bold text-gray-900">מלאי: </span>
                 {firstVariant.quantityAvailable}
               </div>
               <div>
-                <span className="font-bold">דגם: </span>
+                <span className="font-bold text-gray-900">דגם: </span>
                 {modelTag ? (
                   <a
                     href={`/shop/vendor/${product.vendor}/${encodeURIComponent(modelTag)}`}
@@ -139,7 +139,7 @@ export default function ProductPage() {
               </div>
               {yrText && (
                 <div>
-                  <span className="font-bold">שנים: </span>
+                  <span className="font-bold text-gray-900">שנים: </span>
                   {yrText}
                 </div>
               )}
