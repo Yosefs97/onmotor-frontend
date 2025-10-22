@@ -15,23 +15,20 @@ export default function VendorPage() {
   const [models, setModels] = useState([]);
   const [loading, setLoading] = useState(true);
   const vendor = filters.vendor || vendorParam;
-  const containerRef = useRef(null);
 
+  const containerRef = useRef(null);
+  const animationRef = useRef(null);
+  const [hasScrolled, setHasScrolled] = useState(false);
+
+  // ⚙️ שליפת דגמים מה-API
   useEffect(() => {
     const fetchVendorModels = async () => {
       setLoading(true);
 
-      // ⚡️ לנקות פרמטרים לא תקינים (כמו yearFrom=0, yearTo=0)
       const cleanFilters = { ...filters };
-      if (cleanFilters.year === '0' || cleanFilters.year === 0) {
-        delete cleanFilters.year;
-      }
-      if (cleanFilters.yearFrom === '0' || cleanFilters.yearFrom === 0) {
-        delete cleanFilters.yearFrom;
-      }
-      if (cleanFilters.yearTo === '0' || cleanFilters.yearTo === 0) {
-        delete cleanFilters.yearTo;
-      }
+      ['year', 'yearFrom', 'yearTo'].forEach((key) => {
+        if (cleanFilters[key] === '0' || cleanFilters[key] === 0) delete cleanFilters[key];
+      });
 
       const params = new URLSearchParams({ vendor, ...cleanFilters, limit: '100' });
       const res = await fetch(`/api/shopify/search?${params.toString()}`);
@@ -39,6 +36,7 @@ export default function VendorPage() {
 
       const items = json.items || [];
       const modelMap = {};
+
       items.forEach((p) => {
         const modelTag = p.tags.find((t) => t.startsWith('model:'));
         if (modelTag) {
@@ -54,8 +52,6 @@ export default function VendorPage() {
       });
 
       const modelsArray = Object.values(modelMap);
-
-      // ✅ מיון אלפביתי
       modelsArray.sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }));
 
       setModels(modelsArray);
@@ -65,23 +61,60 @@ export default function VendorPage() {
     fetchVendorModels();
   }, [vendor, JSON.stringify(filters)]);
 
+  // 🎬 אנימציית "רמז גלילה" — כמו אצל היצרנים
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    let start = null;
+    const maxOffset = 60;
+    const duration = 1000;
+
+    const animate = (timestamp) => {
+      if (!start) start = timestamp;
+      const progress = timestamp - start;
+      const offset = Math.sin((progress / duration) * Math.PI) * maxOffset;
+      el.scrollLeft = offset;
+
+      if (!hasScrolled && progress < duration * 2) {
+        animationRef.current = requestAnimationFrame(animate);
+      } else {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+
+    const handleUserScroll = () => {
+      setHasScrolled(true);
+      cancelAnimationFrame(animationRef.current);
+    };
+
+    el.addEventListener('scroll', handleUserScroll, { once: true });
+    animationRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      el.removeEventListener('scroll', handleUserScroll);
+      cancelAnimationFrame(animationRef.current);
+    };
+  }, [hasScrolled]);
+
   return (
     <ShopLayoutInternal>
       {loading && <div className="text-center py-6">טוען...</div>}
+
       {!loading && (
         <div>
           <ScrollSearchBar placeholder={`חפש דגם ${vendor}`} containerRef={containerRef} />
 
           <div
             ref={containerRef}
-            className="flex overflow-x-auto space-x-4 pb-4 px-2 snap-x snap-mandatory"
+            className="scroll-container flex overflow-x-auto space-x-4 pb-4 px-2 snap-x snap-mandatory scroll-smooth"
           >
             {models.map((m) => (
               <Link
                 key={m.name}
                 href={`/shop/vendor/${vendor}/${m.handle}`}
                 data-name={m.name}
-                className="min-w-[160px] flex-shrink-0 border rounded-lg p-4 shadow hover:shadow-lg transition snap-start"
+                className="min-w-[160px] flex-shrink-0 border rounded-lg p-4 shadow hover:shadow-lg transition snap-start bg-white"
               >
                 {m.image && (
                   <div className="relative w-full h-24 mb-2">
@@ -93,7 +126,9 @@ export default function VendorPage() {
                     />
                   </div>
                 )}
-                <p className="text-center font-semibold text-gray-900">{m.name}</p>
+                <p className="text-center font-semibold text-gray-900 hover:text-[#e60000] transition-colors duration-200">
+                  {m.name}
+                </p>
               </Link>
             ))}
           </div>
