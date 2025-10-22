@@ -108,7 +108,7 @@ export default function AutoShopBreadcrumbs({ product = null, filters = null }) 
             <Link href={p.href} className="text-red-600 hover:underline">
               {p.label}
             </Link>
-            {idx < parts.length - 1 && <span className="mx-1 text-2xl font-bold text-gray-900">/</span>}
+            {idx < parts.length - 1 && <span className="mx-1 text-xl font-bold text-gray-900">/</span>}
           </span>
         ))}
       </nav>
