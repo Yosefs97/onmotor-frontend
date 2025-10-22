@@ -103,7 +103,7 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
         const sorted = mapped.sort((a, b) => {
           const aDateTime = new Date(`${a.date}T${a.time}`);
           const bDateTime = new Date(`${b.date}T${b.time}`);
-          return aDateTime - bDateTime;
+          return bDateTime - aDateTime;
         });
 
         setArticles(sorted);
