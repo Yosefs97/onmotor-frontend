@@ -57,7 +57,7 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
 
         // ✅ סינון לפי תת־קטגוריה
         if (subcategoryKey) {
-          url += `&filters[subcategory][$contains]=${subcategoryKey}`;
+          url += `&filters[subcategory][$eq]=${subcategoryKey}`;
         }
 
         // ✅ סינון לפי תת־תת קטגוריה (Values)
