@@ -33,32 +33,34 @@ export default function ManufacturerGrid() {
     fetchManufacturers();
   }, []);
 
-  // 🎬 אנימציית "רמז גלילה"
+  // 🎬 אנימציית "רמז גלילה" עדינה
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
     let start = null;
-    let direction = 1; // ימינה ואז שמאלה
-    const maxOffset = 60; // כמה פיקסלים לזוז
-    const duration = 1000; // כמה מהר
+    const distance = 80; // כמה פיקסלים לזוז
+    const duration = 1500; // משך האנימציה הכולל (מילישניות)
 
     const animate = (timestamp) => {
       if (!start) start = timestamp;
       const progress = timestamp - start;
+      const half = duration / 2;
 
-      // תנועה חלקה קדימה ואחורה
-      const offset = Math.sin((progress / duration) * Math.PI) * maxOffset * direction;
-      el.scrollLeft = offset;
-
-      if (!hasScrolled && progress < duration * 2) {
-        animationRef.current = requestAnimationFrame(animate);
+      if (progress < half) {
+        // גלילה ימינה
+        el.scrollLeft = (progress / half) * distance;
+      } else if (progress < duration) {
+        // גלילה שמאלה חזרה
+        el.scrollLeft = distance - ((progress - half) / half) * distance;
       } else {
-        cancelAnimationFrame(animationRef.current);
+        el.scrollLeft = 0;
+        return; // עצירה בסוף
       }
+      if (!hasScrolled) animationRef.current = requestAnimationFrame(animate);
     };
 
-    // מאזינים לגלילה כדי לעצור את האנימציה
+    // עצירה כשמשתמש גולל בעצמו
     const handleUserScroll = () => {
       setHasScrolled(true);
       cancelAnimationFrame(animationRef.current);
@@ -82,14 +84,14 @@ export default function ManufacturerGrid() {
 
       <div
         ref={containerRef}
-        className="flex overflow-x-auto space-x-4 pb-4 px-2 snap-x snap-mandatory scroll-smooth"
+        className="scroll-container flex overflow-x-auto space-x-4 pb-4 px-2 snap-x snap-mandatory scroll-smooth bg-[#e60000] rounded-lg"
       >
         {manufacturers.map((m) => (
           <Link
             key={m.id}
             href={`/shop/vendor/${m.handle}`}
             data-name={m.title}
-            className="min-w-[160px] flex-shrink-0 border rounded-lg p-4 shadow hover:shadow-lg transition snap-start bg-white"
+            className="min-w-[160px] flex-shrink-0 border border-white/50 bg-white rounded-lg p-4 shadow hover:shadow-xl transition snap-start"
           >
             {m.image?.url && (
               <div className="relative w-full h-24 mb-2">
