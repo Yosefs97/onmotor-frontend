@@ -1,11 +1,8 @@
-// components/CategoryPage.jsx
 'use client';
 import React, { useEffect, useState } from 'react';
 import SectionWithHeader from './SectionWithHeader';
 import LimitedArticles from './LimitedArticles';
 import { labelMap } from '@/utils/labelMap';
-
-
 
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 
@@ -55,19 +52,31 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
           url += `&filters[category][$eq]=${categoryKey}`;
         }
 
-        // ✅ סינון לפי תת־קטגוריה
+        const res = await fetch(url);
+        const json = await res.json();
+        let data = json.data || [];
+
+        // ✅ סינון בצד הלקוח לפי תת־קטגוריה (בגלל מגבלת SQLite)
         if (subcategoryKey) {
-          url += `&filters[subcategory][$eq]=${subcategoryKey}`;
+          data = data.filter((a) => {
+            const sub = a.subcategory;
+            if (!sub) return false;
+            if (Array.isArray(sub)) return sub.includes(subcategoryKey);
+            if (typeof sub === 'string') return sub.includes(subcategoryKey);
+            return false;
+          });
         }
 
         // ✅ סינון לפי תת־תת קטגוריה (Values)
         if (guideSubKey) {
-          url += `&filters[Values][$eq]=${guideSubKey}`;
+          data = data.filter((a) => {
+            const vals = a.Values;
+            if (!vals) return false;
+            if (Array.isArray(vals)) return vals.includes(guideSubKey);
+            if (typeof vals === 'string') return vals.includes(guideSubKey);
+            return false;
+          });
         }
-
-        const res = await fetch(url);
-        const json = await res.json();
-        const data = json.data || [];
 
         const mapped = data.map((a) => ({
           id: a.id,
@@ -92,7 +101,7 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
 
         setArticles(mapped);
       } catch (err) {
-        console.error("שגיאה בטעינת כתבות:", err);
+        console.error('שגיאה בטעינת כתבות:', err);
       } finally {
         setLoading(false);
       }
@@ -106,15 +115,15 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
   }
 
   if (articles.length === 0) {
-    return <p className="text-center text-gray-500">אין עדיין כתבות בקטגוריה88 זו</p>;
+    return <p className="text-center text-gray-500">אין עדיין כתבות בקטגוריה זו</p>;
   }
 
   // ✅ לוגיקת קיבוץ
   const grouped =
     guideSubKey
-      ? { [guideSubKey]: articles } // אם יש guideSubKey – תציג רק אותו
-      : subcategoryKey === "guides"
-        ? groupByValues(articles)   // מדריכים – קיבוץ לפי values
+      ? { [guideSubKey]: articles }
+      : subcategoryKey === 'guides'
+        ? groupByValues(articles)
         : subcategoryKey
           ? { [subcategoryKey]: articles }
           : groupBySubcategory(articles);
@@ -145,7 +154,7 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
               <SectionWithHeader
                 title={labelMap[subKey] || subKey}
                 href={
-                  subcategoryKey === "guides"
+                  subcategoryKey === 'guides'
                     ? `/${categoryKey}/${subcategoryKey}/${subKey}`
                     : `/${categoryKey}/${subKey}`
                 }
@@ -153,10 +162,7 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
               />
             )}
 
-            <LimitedArticles
-              articles={subArticles}
-              initialCount={2}
-            />
+            <LimitedArticles articles={subArticles} initialCount={2} />
           </div>
         ))}
       </div>
