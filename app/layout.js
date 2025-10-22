@@ -37,12 +37,11 @@ export default function RootLayout({ children }) {
                 version: "2.3",
                 language: "he",
                 position: "left-bottom",
-                color: "blue",
+                color: "#e60000",
                 compact: false,
                 accordion: false,
                 declarationLink: "https://www.onmotormedia.com/accessibility-statement.html",
                 declarationName: "סבג יוסף",
-                declarationPhone: "0522304604",
                 declarationEmail: "onmotormedia@gmail.com",
                 declarationFax: "",
                 assetsFolder: "https://www.onmotormedia.com/nagishli/"
