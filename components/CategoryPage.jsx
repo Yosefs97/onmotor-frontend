@@ -98,8 +98,16 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
           tags: a.tags || [],
           date: a.publishedAt || '',
         }));
+        // ✅ מיון לפי תאריך + שעה + דקה (מהחדש לישן)
+        const sorted = mapped.sort((a, b) => {
+          const aDateTime = new Date(`${a.date || ''}T${a.time || '00:00'}`);
+          const bDateTime = new Date(`${b.date || ''}T${b.time || '00:00'}`);
+          return bDateTime - aDateTime;
+        });
 
-        setArticles(mapped);
+        setArticles(sorted);
+
+        
       } catch (err) {
         console.error('שגיאה בטעינת כתבות:', err);
       } finally {
