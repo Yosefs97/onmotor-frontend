@@ -59,7 +59,7 @@ export default function ManufacturerGrid() {
                 />
               </div>
             )}
-            <p className="text-center font-semibold">{m.title}</p>
+            <p className="text-center font-semibold text-gray-900">{m.title}</p>
           </Link>
         ))}
       </div>
