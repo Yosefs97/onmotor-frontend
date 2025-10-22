@@ -24,14 +24,14 @@ export default function ProductGrid({ products = [], loading = false, onLoadMore
             >
               {img && <img src={img} alt={p.title} className="w-full h-40 object-cover" />}
               <div className="p-3 space-y-1">
-                <div className="font-medium">{p.title}</div>
+                <div className="font-medium text-gray-900">{p.title}</div>
                 {price && (
-                  <div className="text-sm opacity-70">
+                  <div className="text-sm opacity-70 text-gray-900">
                     {price.amount} {price.currencyCode}
                   </div>
                 )}
                 {yrText && (
-                  <div className="text-sm opacity-70">שנים: {yrText}</div>
+                  <div className="text-sm opacity-70 text-gray-900">שנים: {yrText}</div>
                 )}
               </div>
             </Link>
