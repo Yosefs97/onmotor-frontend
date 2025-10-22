@@ -4,7 +4,6 @@ import { AuthModalProvider } from '@/contexts/AuthModalProvider';
 import ClientLayout from '@/components/ClientLayout';
 import ZoomWrapper from '@/components/ZoomWrapper';
 import ScrollToTopButton from '@/components/ScrollToTopButton';
-import Script from 'next/script';
 
 export const metadata = {
   title: 'OnMotor Media',
@@ -24,34 +23,11 @@ export default function RootLayout({ children }) {
         <AuthModalProvider>
           <ScrollToTopButton />
           <ZoomWrapper>
-            <ClientLayout>{children}</ClientLayout>
+            <ClientLayout>
+              {children}
+            </ClientLayout>
           </ZoomWrapper>
         </AuthModalProvider>
-
-        {/* 🟦 תוסף נגיש לי - גרסה 2.3 */}
-        <Script src="/nagishli/nagishli.js" strategy="afterInteractive" />
-        <Script id="nagishli-init" strategy="afterInteractive">
-          {`
-            window.addEventListener("load", function() {
-              window.NagishLiConfig = {
-                version: "2.3",
-                language: "he",
-                position: "left-bottom",
-                color: "#e60000",
-                compact: false,
-                accordion: false,
-                declarationLink: "https://www.onmotormedia.com/accessibility-statement.html",
-                declarationName: "סבג יוסף",
-                declarationEmail: "onmotormedia@gmail.com",
-                declarationFax: "",
-                assetsFolder: "https://www.onmotormedia.com/nagishli/"
-              };
-              if (typeof window.nagishliInit === "function") {
-                window.nagishliInit(window.NagishLiConfig);
-              }
-            });
-          `}
-        </Script>
       </body>
     </html>
   );
