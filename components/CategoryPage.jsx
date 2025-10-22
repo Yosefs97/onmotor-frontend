@@ -96,12 +96,13 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
           subdescription: a.subdescription,
           href: `/articles/${a.slug}`,
           tags: a.tags || [],
-          date: a.publishedAt || '',
+          date: a.date || '',
+          time: a.time || '00:00',
         }));
         // ✅ מיון לפי תאריך + שעה + דקה (מהחדש לישן)
         const sorted = mapped.sort((a, b) => {
-          const aDateTime = new Date(`${a.date || ''}T${a.time || '00:00'}`);
-          const bDateTime = new Date(`${b.date || ''}T${b.time || '00:00'}`);
+          const aDateTime = new Date(`${a.date}T${a.time}`);
+          const bDateTime = new Date(`${b.date}T${b.time}`);
           return bDateTime - aDateTime;
         });
 
