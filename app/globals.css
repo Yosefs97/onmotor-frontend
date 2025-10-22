@@ -228,4 +228,5 @@ select {
 .scroll-container {
   scrollbar-color: #e60000 #f1f1f1; /* thumb אדום, track אפור בהיר */
   scrollbar-width: thin;
+  overflow-x: scroll !important; /* מבטיח שפס הגלילה יישאר קבוע */
 }

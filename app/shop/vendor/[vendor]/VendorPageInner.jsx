@@ -107,7 +107,7 @@ export default function VendorPage() {
 
           <div
             ref={containerRef}
-            className="scroll-container flex overflow-x-auto space-x-4 pb-4 px-2 snap-x snap-mandatory scroll-smooth"
+            className="scroll-container flex overflow-x-scroll space-x-4 pb-4 px-2 snap-x snap-mandatory scroll-smooth"
           >
             {models.map((m) => (
               <Link
