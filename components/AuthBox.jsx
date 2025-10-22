@@ -1,10 +1,9 @@
 // components/AuthBox.jsx
 'use client';
-
+import PasswordField from '@/components/PasswordField';
 import React, { useState, useEffect, useRef } from 'react';
 import useIsMobile from '@/hooks/useIsMobile';
 import { FaChevronUp } from 'react-icons/fa';
-import PasswordField from '@/components/PasswordField';
 import { loginUser, logoutUser, getCurrentUser } from '@/utils/auth';
 import { useRouter } from 'next/navigation';
 import { useAuthModal } from '@/contexts/AuthModalProvider';
@@ -44,14 +43,16 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
   const registerRef = useRef(null);
   const changePassRef = useRef(null);
 
-  // שליפת משתמש מה-localStorage
+  // בעת טעינה – שלוף משתמש מקומי אם יש
   useEffect(() => {
     (async () => {
       const stored = await getCurrentUser();
       setUser(stored);
     })();
     const savedUser = localStorage.getItem('user');
-    if (savedUser) setUser(JSON.parse(savedUser));
+    if (savedUser) {
+      setUser(JSON.parse(savedUser)); // ✅ משחזר את המשתמש מהשמירה המקומית
+    }
 
     const lastEmail = localStorage.getItem('lastEmail');
     if (lastEmail) setEmail(lastEmail);
@@ -64,11 +65,15 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
     }
   }, [isOpen, isMobile, boxRef, user]);
 
-  // גלילה לטפסים פנימיים
+  // גלילה פנימית לטפסים
   useEffect(() => {
-    if (showReset && resetRef.current) resetRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
-    else if (showRegister && registerRef.current) registerRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
-    else if (showChangePassword && changePassRef.current) changePassRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    if (showReset && resetRef.current) {
+      resetRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    } else if (showRegister && registerRef.current) {
+      registerRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    } else if (showChangePassword && changePassRef.current) {
+      changePassRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
   }, [showReset, showRegister, showChangePassword]);
 
   /* === התחברות === */
@@ -86,7 +91,7 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
 
       loginUser({ email: data.user.email, jwt: data.jwt });
       setUser(data.user);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('user', JSON.stringify(data.user)); // ✅ שמירה מקומית
       if (rememberMe) localStorage.setItem('lastEmail', email);
       setLoginSuccess(true);
       setLoginError('');
@@ -102,13 +107,13 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
   const handleLogout = async () => {
     await logoutUser();
     localStorage.removeItem('lastEmail');
-    localStorage.removeItem('user');
+    localStorage.removeItem('user'); // ✅ מנקה את השמירה המקומית
     setUser(null);
     setEmail('');
     setPassword('');
     setLoginSuccess(false);
     setLoginError('');
-    setRememberMe(false);
+    setRememberMe(false); // ✅ מוסיף איפוס לתיבת הסימון
   };
 
   /* === מחיקת חשבון === */
@@ -211,60 +216,102 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
           {user ? 'ניהול חשבון' : 'התחברות'}
         </h3>
 
-        {/* === משתמש מחובר === */}
+        {/* === מצב משתמש מחובר === */}
         {user ? (
           <>
             <p className="mb-4">שלום, {user.email}</p>
             <div className="flex flex-col gap-2 mb-4 items-center">
-              <button onClick={handleLogout} className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">התנתק</button>
-              <button onClick={handleDeleteAccount} className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">מחיקת חשבון</button>
+              <button
+                onClick={handleLogout}
+                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              >
+                התנתק
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+              >
+                מחיקת חשבון
+              </button>
             </div>
             <div className="text-xs text-center space-x-2 flex justify-center">
-              <button onClick={() => { setShowChangePassword(true); setShowReset(false); setShowRegister(false); }} className="text-blue-600 underline">שנה סיסמה</button>
+              <button
+                onClick={() => {
+                  setShowChangePassword(true);
+                  setShowReset(false);
+                  setShowRegister(false);
+                }}
+                className="text-blue-600 underline"
+              >
+                שנה סיסמה
+              </button>
               <span>|</span>
-              <button onClick={() => { setShowReset(true); setShowChangePassword(false); setShowRegister(false); }} className="text-blue-600 underline">שכחתי סיסמה</button>
+              <button
+                onClick={() => {
+                  setShowReset(true);
+                  setShowChangePassword(false);
+                  setShowRegister(false);
+                }}
+                className="text-blue-600 underline"
+              >
+                שכחתי סיסמה
+              </button>
             </div>
           </>
         ) : (
+          /* === מצב לא מחובר === */
           <>
             <input
               type="email"
               placeholder="אימייל"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={e => setEmail(e.target.value)}
               className="w-[90%] px-2 py-1 mb-2 border border-gray-300 rounded text-right text-sm"
             />
-
             <PasswordField
+              type="password"
               placeholder="סיסמה"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-[90%] mb-2"
+              className="w-[90%] px-2 py-1 mb-2 border border-gray-300 rounded text-right text-sm"
             />
-
             <div className="flex items-center justify-start mb-2">
               <input
                 type="checkbox"
                 id="rememberMe"
                 checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
+                onChange={e => setRememberMe(e.target.checked)}
                 className="ml-2"
               />
               <label htmlFor="rememberMe" className="text-sm text-black">השאר מחובר</label>
             </div>
-
             <button
               onClick={handleLogin}
               className="bg-[#e60000] text-white px-3 py-1 rounded hover:bg-red-700 text-sm w-full flex items-center justify-center"
             >
-              {isLoadingLogin ? (
-                <span className="loader mr-2 w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-              ) : (
-                'התחבר'
-              )}
+              {isLoadingLogin
+                ? <span className="loader mr-2 w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                : 'התחבר'}
             </button>
             {loginError && <p className="text-red-600 mt-1 text-xs">{loginError}</p>}
             {loginSuccess && <p className="text-green-600 mt-1 text-xs">התחברת בהצלחה!</p>}
+
+            <div className="mt-3 text-xs text-center space-x-1 flex flex-wrap justify-center">
+              <button
+                onClick={() => { setShowRegister(true); setShowReset(false); setShowChangePassword(false); }}
+                className="text-blue-600 underline"
+              >צור חשבון</button>
+              <span>|</span>
+              <button
+                onClick={() => { setShowReset(true); setShowRegister(false); setShowChangePassword(false); }}
+                className="text-blue-600 underline"
+              >שכחתי סיסמה</button>
+              <span>|</span>
+              <button
+                onClick={() => { setShowChangePassword(true); setShowReset(false); setShowRegister(false); }}
+                className="text-blue-600 underline"
+              >שנה סיסמה</button>
+            </div>
           </>
         )}
 
@@ -277,7 +324,7 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
               type="email"
               placeholder="אימייל לאיפוס"
               value={resetEmail}
-              onChange={(e) => setResetEmail(e.target.value)}
+              onChange={e => setResetEmail(e.target.value)}
               className="w-full px-2 py-1 mb-2 border border-gray-300 rounded"
             />
             <button onClick={handleForgotPassword} className="bg-blue-600 text-white px-3 py-1 rounded text-sm">
@@ -295,20 +342,22 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
               type="email"
               placeholder="אימייל"
               value={registerEmail}
-              onChange={(e) => setRegisterEmail(e.target.value)}
+              onChange={e => setRegisterEmail(e.target.value)}
               className="w-full px-2 py-1 mb-2 border border-gray-300 rounded"
             />
-            <PasswordField
+            <input
+              type="password"
               placeholder="סיסמה"
               value={registerPassword}
-              onChange={(e) => setRegisterPassword(e.target.value)}
-              className="mb-2"
+              onChange={e => setRegisterPassword(e.target.value)}
+              className="w-full px-2 py-1 mb-2 border border-gray-300 rounded"
             />
-            <PasswordField
+            <input
+              type="password"
               placeholder="אימות סיסמה"
               value={registerConfirm}
-              onChange={(e) => setRegisterConfirm(e.target.value)}
-              className="mb-2"
+              onChange={e => setRegisterConfirm(e.target.value)}
+              className="w-full px-2 py-1 mb-2 border border-gray-300 rounded"
             />
             <button onClick={handleRegister} className="bg-green-600 text-white px-3 py-1 rounded text-sm">
               {isLoadingRegister ? 'נרשם...' : 'הרשמה'}
@@ -321,17 +370,19 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
           <div ref={changePassRef} className="mt-4 bg-gray-100 p-3 rounded text-right text-sm relative">
             <button onClick={() => setShowChangePassword(false)} className="absolute top-2 left-2 text-gray-500 hover:text-black">✖</button>
             <h4 className="font-semibold mb-2 pr-6">שנה סיסמה</h4>
-            <PasswordField
+            <input
+              type="password"
               placeholder="סיסמה נוכחית"
               value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              className="mb-2"
+              onChange={e => setCurrentPassword(e.target.value)}
+              className="w-full px-2 py-1 mb-2 border border-gray-300 rounded"
             />
-            <PasswordField
+            <input
+              type="password"
               placeholder="סיסמה חדשה"
               value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="mb-2"
+              onChange={e => setNewPassword(e.target.value)}
+              className="w-full px-2 py-1 mb-2 border border-gray-300 rounded"
             />
             <button onClick={handleChangePassword} className="bg-yellow-600 text-white px-3 py-1 rounded text-sm">
               {isLoadingChangePassword ? 'מעדכן...' : 'עדכן סיסמה'}
