@@ -74,7 +74,7 @@ export default function VendorPage() {
 
           <div
             ref={containerRef}
-            className="flex overflow-x-auto space-x-4 pb-4 px-2 snap-x snap-mandatory bg-[#e60000] rounded-lg"
+            className="flex overflow-x-auto space-x-4 pb-4 px-2 snap-x snap-mandatory"
           >
             {models.map((m) => (
               <Link
