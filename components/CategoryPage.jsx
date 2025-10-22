@@ -62,7 +62,7 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
 
         // ✅ סינון לפי תת־תת קטגוריה (Values)
         if (guideSubKey) {
-          url += `&filters[Values][$contains]=${guideSubKey}`;
+          url += `&filters[Values][$eq]=${guideSubKey}`;
         }
 
         const res = await fetch(url);
