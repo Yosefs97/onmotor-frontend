@@ -31,7 +31,6 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
     newPassword: ''
   });
 
-  // טעינת משתמש קיים
   useEffect(() => {
     const stored = localStorage.getItem('user');
     if (stored) setUser(JSON.parse(stored));
@@ -39,12 +38,10 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
     if (lastEmail) setEmail(lastEmail);
   }, [setUser]);
 
-  // סגירת טפסים אם המשתמש התחבר
   useEffect(() => {
     if (user) setActiveForm(null);
   }, [user]);
 
-  // גלילה במובייל
   useEffect(() => {
     if (isMobile && boxRef?.current) {
       boxRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -79,6 +76,8 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
     setUser(null);
     setEmail('');
     setPassword('');
+    setStatusMsg(''); // ✅ מנקה את ההודעה
+    setLoginError('');
   };
 
   const handleAction = async (type) => {
@@ -172,7 +171,7 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
               placeholder="סיסמה"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              onEnter={handleLogin} // ✅ Enter = התחברות
+              onEnter={handleLogin}
               className="w-full mb-2"
             />
 
@@ -197,7 +196,9 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
             </button>
 
             {loginError && <p className="text-red-600 mt-1 text-xs">{loginError}</p>}
-            {statusMsg && <p className="text-green-600 mt-1 text-xs">{statusMsg}</p>}
+            {statusMsg && !loginError && (
+              <p className="text-green-600 mt-1 text-xs">{statusMsg}</p>
+            )}
 
             <div className="mt-3 flex justify-center gap-3 text-xs">
               <button onClick={() => setActiveForm('register')} className="text-blue-600 underline">
@@ -212,12 +213,7 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
 
         {/* === טפסים פנימיים === */}
         {activeForm === 'register' && (
-          <FormBox
-            title="צור חשבון"
-            onClose={() => setActiveForm(null)}
-            onSubmit={() => handleAction('register')}
-            refEl={refs.register}
-          >
+          <FormBox title="צור חשבון" onClose={() => setActiveForm(null)} refEl={refs.register}>
             <input
               type="email"
               placeholder="אימייל"
@@ -246,17 +242,13 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
               onEnter={() => handleAction('register')}
               className="mb-2"
             />
-            <SubmitButton text="הרשמה" color="green" />
+            <SubmitButton text="הרשמה" color="green" onClick={() => handleAction('register')} />
+            {statusMsg && <p className="text-green-600 mt-2 text-xs">{statusMsg}</p>}
           </FormBox>
         )}
 
         {activeForm === 'reset' && (
-          <FormBox
-            title="שכחתי סיסמה"
-            onClose={() => setActiveForm(null)}
-            onSubmit={() => handleAction('reset')}
-            refEl={refs.reset}
-          >
+          <FormBox title="שכחתי סיסמה" onClose={() => setActiveForm(null)} refEl={refs.reset}>
             <input
               type="email"
               placeholder="אימייל לאיפוס"
@@ -267,17 +259,13 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
               onKeyDown={(e) => e.key === 'Enter' && handleAction('reset')}
               className="w-full px-3 py-2 mb-2 border border-gray-300 rounded text-right text-sm focus:ring-1 focus:ring-red-500"
             />
-            <SubmitButton text="שלח סיסמה חדשה" color="blue" />
+            <SubmitButton text="שלח סיסמה חדשה" color="blue" onClick={() => handleAction('reset')} />
+            {statusMsg && <p className="text-green-600 mt-2 text-xs">{statusMsg}</p>}
           </FormBox>
         )}
 
         {activeForm === 'change' && (
-          <FormBox
-            title="שנה סיסמה"
-            onClose={() => setActiveForm(null)}
-            onSubmit={() => handleAction('change')}
-            refEl={refs.change}
-          >
+          <FormBox title="שנה סיסמה" onClose={() => setActiveForm(null)} refEl={refs.change}>
             <PasswordField
               placeholder="סיסמה נוכחית"
               value={formData.currentPassword}
@@ -296,7 +284,8 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
               onEnter={() => handleAction('change')}
               className="mb-2"
             />
-            <SubmitButton text="עדכן סיסמה" color="yellow" />
+            <SubmitButton text="עדכן סיסמה" color="yellow" onClick={() => handleAction('change')} />
+            {statusMsg && <p className="text-green-600 mt-2 text-xs">{statusMsg}</p>}
           </FormBox>
         )}
       </div>
@@ -305,7 +294,7 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
 }
 
 /* === רכיבי משנה === */
-function FormBox({ title, children, onClose, onSubmit, refEl }) {
+function FormBox({ title, children, onClose, refEl }) {
   return (
     <div
       ref={refEl}
@@ -319,19 +308,11 @@ function FormBox({ title, children, onClose, onSubmit, refEl }) {
       </button>
       <h4 className="font-semibold mb-2 pr-6">{title}</h4>
       {children}
-      <div className="mt-2 text-center">
-        <button
-          onClick={onSubmit}
-          className="bg-gray-800 text-white px-3 py-1 rounded text-sm hover:bg-gray-900"
-        >
-          אישור
-        </button>
-      </div>
     </div>
   );
 }
 
-function SubmitButton({ text, color }) {
+function SubmitButton({ text, color, onClick }) {
   const colors = {
     green: 'bg-green-600 hover:bg-green-700',
     blue: 'bg-blue-600 hover:bg-blue-700',
@@ -340,6 +321,7 @@ function SubmitButton({ text, color }) {
   return (
     <button
       type="button"
+      onClick={onClick}
       className={`${colors[color]} text-white px-3 py-2 rounded text-sm w-full`}
     >
       {text}
