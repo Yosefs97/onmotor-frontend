@@ -205,28 +205,27 @@ select {
     transform-origin: top center;
   }
 }
-/* 🎨 עיצוב פס גלילה אדום לאזור היצרנים */
+/* 🔴 פס גלילה אדום מודגש לאזור היצרנים */
 .scroll-container::-webkit-scrollbar {
-  height: 8px; /* עובי פס הגלילה */
+  height: 6px; /* גובה פס הגלילה האופקי */
 }
 
 .scroll-container::-webkit-scrollbar-track {
-  background: #ffcccc; /* רקע ורדרד */
-  border-radius: 8px;
+  background: #f1f1f1; /* רקע בהיר מאוד – נשאר לבן/אפור */
+  border-radius: 10px;
 }
 
 .scroll-container::-webkit-scrollbar-thumb {
   background-color: #e60000; /* 🔴 אדום של OnMotor */
-  border-radius: 8px;
-  border: 1px solid #fff; /* קונטרסט בהיר */
+  border-radius: 10px;       /* פינות עגולות */
 }
 
 .scroll-container::-webkit-scrollbar-thumb:hover {
-  background-color: #ff1a1a; /* אדום חזק יותר בהובר */
+  background-color: #b30000; /* כהה יותר במעבר עכבר */
 }
 
-/* תמיכה בפיירפוקס */
+/* תמיכה גם בפיירפוקס */
 .scroll-container {
-  scrollbar-color: #e60000 #ffcccc;
+  scrollbar-color: #e60000 #f1f1f1; /* thumb אדום, track אפור בהיר */
   scrollbar-width: thin;
 }

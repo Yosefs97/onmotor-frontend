@@ -33,34 +33,28 @@ export default function ManufacturerGrid() {
     fetchManufacturers();
   }, []);
 
-  // 🎬 אנימציית "רמז גלילה" עדינה
+  // 🎬 אנימציית "רמז גלילה"
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
     let start = null;
-    const distance = 80; // כמה פיקסלים לזוז
-    const duration = 1500; // משך האנימציה הכולל (מילישניות)
+    const maxOffset = 60; // כמה פיקסלים לזוז
+    const duration = 1000; // כמה זמן האנימציה
 
     const animate = (timestamp) => {
       if (!start) start = timestamp;
       const progress = timestamp - start;
-      const half = duration / 2;
+      const offset = Math.sin((progress / duration) * Math.PI) * maxOffset;
+      el.scrollLeft = offset;
 
-      if (progress < half) {
-        // גלילה ימינה
-        el.scrollLeft = (progress / half) * distance;
-      } else if (progress < duration) {
-        // גלילה שמאלה חזרה
-        el.scrollLeft = distance - ((progress - half) / half) * distance;
+      if (!hasScrolled && progress < duration * 2) {
+        animationRef.current = requestAnimationFrame(animate);
       } else {
-        el.scrollLeft = 0;
-        return; // עצירה בסוף
+        cancelAnimationFrame(animationRef.current);
       }
-      if (!hasScrolled) animationRef.current = requestAnimationFrame(animate);
     };
 
-    // עצירה כשמשתמש גולל בעצמו
     const handleUserScroll = () => {
       setHasScrolled(true);
       cancelAnimationFrame(animationRef.current);
@@ -84,14 +78,14 @@ export default function ManufacturerGrid() {
 
       <div
         ref={containerRef}
-        className="scroll-container flex overflow-x-auto space-x-4 pb-4 px-2 snap-x snap-mandatory scroll-smooth bg-[#e60000] rounded-lg"
+        className="scroll-container flex overflow-x-auto space-x-4 pb-4 px-2 snap-x snap-mandatory scroll-smooth"
       >
         {manufacturers.map((m) => (
           <Link
             key={m.id}
             href={`/shop/vendor/${m.handle}`}
             data-name={m.title}
-            className="min-w-[160px] flex-shrink-0 border border-white/50 bg-white rounded-lg p-4 shadow hover:shadow-xl transition snap-start"
+            className="min-w-[160px] flex-shrink-0 border rounded-lg p-4 shadow hover:shadow-lg transition snap-start bg-white"
           >
             {m.image?.url && (
               <div className="relative w-full h-24 mb-2">
