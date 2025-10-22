@@ -10,6 +10,8 @@ export default function ManufacturerGrid() {
   const [manufacturers, setManufacturers] = useState([]);
   const [loading, setLoading] = useState(true);
   const containerRef = useRef(null);
+  const animationRef = useRef(null);
+  const [hasScrolled, setHasScrolled] = useState(false);
 
   useEffect(() => {
     async function fetchManufacturers() {
@@ -31,6 +33,46 @@ export default function ManufacturerGrid() {
     fetchManufacturers();
   }, []);
 
+  // 🎬 אנימציית "רמז גלילה"
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    let start = null;
+    let direction = 1; // ימינה ואז שמאלה
+    const maxOffset = 60; // כמה פיקסלים לזוז
+    const duration = 1000; // כמה מהר
+
+    const animate = (timestamp) => {
+      if (!start) start = timestamp;
+      const progress = timestamp - start;
+
+      // תנועה חלקה קדימה ואחורה
+      const offset = Math.sin((progress / duration) * Math.PI) * maxOffset * direction;
+      el.scrollLeft = offset;
+
+      if (!hasScrolled && progress < duration * 2) {
+        animationRef.current = requestAnimationFrame(animate);
+      } else {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+
+    // מאזינים לגלילה כדי לעצור את האנימציה
+    const handleUserScroll = () => {
+      setHasScrolled(true);
+      cancelAnimationFrame(animationRef.current);
+    };
+
+    el.addEventListener('scroll', handleUserScroll, { once: true });
+    animationRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      el.removeEventListener('scroll', handleUserScroll);
+      cancelAnimationFrame(animationRef.current);
+    };
+  }, [hasScrolled]);
+
   if (loading) return <p className="text-center py-8">טוען יצרנים...</p>;
   if (!manufacturers.length) return <p className="text-center py-8">לא נמצאו יצרנים</p>;
 
@@ -40,14 +82,14 @@ export default function ManufacturerGrid() {
 
       <div
         ref={containerRef}
-        className="flex overflow-x-auto space-x-4 pb-4 px-2 snap-x snap-mandatory"
+        className="flex overflow-x-auto space-x-4 pb-4 px-2 snap-x snap-mandatory scroll-smooth"
       >
         {manufacturers.map((m) => (
           <Link
             key={m.id}
             href={`/shop/vendor/${m.handle}`}
             data-name={m.title}
-            className="min-w-[160px] flex-shrink-0 border rounded-lg p-4 shadow hover:shadow-lg transition snap-start"
+            className="min-w-[160px] flex-shrink-0 border rounded-lg p-4 shadow hover:shadow-lg transition snap-start bg-white"
           >
             {m.image?.url && (
               <div className="relative w-full h-24 mb-2">
@@ -59,7 +101,9 @@ export default function ManufacturerGrid() {
                 />
               </div>
             )}
-            <p className="text-center font-semibold text-gray-900">{m.title}</p>
+            <p className="text-center font-semibold text-gray-900 hover:text-[#e60000] transition-colors duration-200">
+              {m.title}
+            </p>
           </Link>
         ))}
       </div>
