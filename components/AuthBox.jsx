@@ -1,12 +1,12 @@
 // components/AuthBox.jsx
 'use client';
-import PasswordField from '@/components/PasswordField';
 import React, { useState, useEffect, useRef } from 'react';
-import useIsMobile from '@/hooks/useIsMobile';
 import { FaChevronUp } from 'react-icons/fa';
-import { loginUser, logoutUser, getCurrentUser } from '@/utils/auth';
+import useIsMobile from '@/hooks/useIsMobile';
 import { useRouter } from 'next/navigation';
 import { useAuthModal } from '@/contexts/AuthModalProvider';
+import { loginUser, logoutUser, getCurrentUser } from '@/utils/auth';
+import PasswordField from '@/components/PasswordField';
 
 export default function AuthBox({ mode = 'inline', boxRef }) {
   const isMobile = useIsMobile();
@@ -17,65 +17,42 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [loginError, setLoginError] = useState('');
-  const [loginSuccess, setLoginSuccess] = useState(false);
-  const [isOpen, setIsOpen] = useState(true);
-  const [isLoadingLogin, setIsLoadingLogin] = useState(false);
+  const [statusMsg, setStatusMsg] = useState('');
 
-  const [showReset, setShowReset] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
-  const [resetStatus, setResetStatus] = useState('');
-  const [isLoadingReset, setIsLoadingReset] = useState(false);
+  const [activeForm, setActiveForm] = useState(null); // "register" | "reset" | "change" | null
+  const refs = { register: useRef(null), reset: useRef(null), change: useRef(null) };
 
-  const [showRegister, setShowRegister] = useState(false);
-  const [registerEmail, setRegisterEmail] = useState('');
-  const [registerPassword, setRegisterPassword] = useState('');
-  const [registerConfirm, setRegisterConfirm] = useState('');
-  const [registerStatus, setRegisterStatus] = useState('');
-  const [isLoadingRegister, setIsLoadingRegister] = useState(false);
+  const [formData, setFormData] = useState({
+    registerEmail: '',
+    registerPassword: '',
+    registerConfirm: '',
+    resetEmail: '',
+    currentPassword: '',
+    newPassword: ''
+  });
 
-  const [showChangePassword, setShowChangePassword] = useState(false);
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [changeStatus, setChangeStatus] = useState('');
-  const [isLoadingChangePassword, setIsLoadingChangePassword] = useState(false);
-
-  const resetRef = useRef(null);
-  const registerRef = useRef(null);
-  const changePassRef = useRef(null);
-
+  // טעינת משתמש קיים
   useEffect(() => {
-    (async () => {
-      const stored = await getCurrentUser();
-      setUser(stored);
-    })();
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-
+    const stored = localStorage.getItem('user');
+    if (stored) setUser(JSON.parse(stored));
     const lastEmail = localStorage.getItem('lastEmail');
     if (lastEmail) setEmail(lastEmail);
   }, [setUser]);
 
+  // סגירת טפסים אם המשתמש התחבר
   useEffect(() => {
-    if (isMobile && isOpen && boxRef?.current) {
+    if (user) setActiveForm(null);
+  }, [user]);
+
+  // גלילה במובייל
+  useEffect(() => {
+    if (isMobile && boxRef?.current) {
       boxRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  }, [isOpen, isMobile, boxRef, user]);
+  }, [isMobile, user, boxRef]);
 
-  useEffect(() => {
-    if (showReset && resetRef.current) {
-      resetRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
-    } else if (showRegister && registerRef.current) {
-      registerRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
-    } else if (showChangePassword && changePassRef.current) {
-      changePassRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
-    }
-  }, [showReset, showRegister, showChangePassword]);
-
-  /* === התחברות === */
   const handleLogin = async () => {
-    setIsLoadingLogin(true);
+    setStatusMsg('');
     try {
       const res = await fetch('/api/user/login', {
         method: 'POST',
@@ -84,116 +61,64 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
         credentials: 'include'
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'שגיאת התחברות');
-
+      if (!res.ok) throw new Error(data.error);
       loginUser({ email: data.user.email, jwt: data.jwt });
       setUser(data.user);
       localStorage.setItem('user', JSON.stringify(data.user));
       if (rememberMe) localStorage.setItem('lastEmail', email);
-      setLoginSuccess(true);
+      setStatusMsg('התחברת בהצלחה!');
       setLoginError('');
     } catch (err) {
       setLoginError(err.message);
-      setLoginSuccess(false);
-    } finally {
-      setIsLoadingLogin(false);
     }
   };
 
-  /* === התנתקות === */
   const handleLogout = async () => {
     await logoutUser();
-    localStorage.removeItem('lastEmail');
-    localStorage.removeItem('user');
+    localStorage.clear();
     setUser(null);
     setEmail('');
     setPassword('');
-    setLoginSuccess(false);
-    setLoginError('');
-    setRememberMe(false);
   };
 
-  /* === מחיקת חשבון === */
-  const handleDeleteAccount = async () => {
-    if (!confirm('האם אתה בטוח שברצונך למחוק את החשבון?')) return;
-    try {
-      const res = await fetch('/api/user/remove-account', {
-        method: 'DELETE',
-        credentials: 'include'
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'שגיאה במחיקת החשבון');
-
-      await logoutUser();
-      setUser(null);
-      alert('החשבון נמחק בהצלחה');
-    } catch (err) {
-      alert(err.message || 'אירעה שגיאה במחיקת החשבון');
+  const handleAction = async (type) => {
+    setStatusMsg('');
+    const body = {};
+    let url = '';
+    if (type === 'register') {
+      const { registerEmail, registerPassword, registerConfirm } = formData;
+      if (registerPassword !== registerConfirm)
+        return setStatusMsg('הסיסמאות אינן תואמות');
+      body.email = registerEmail;
+      body.password = registerPassword;
+      url = '/api/user/register';
+    } else if (type === 'reset') {
+      body.email = formData.resetEmail;
+      url = '/api/user/forgot-password';
+    } else if (type === 'change') {
+      body.currentPassword = formData.currentPassword;
+      body.newPassword = formData.newPassword;
+      url = '/api/user/change-password';
     }
-  };
 
-  /* === שכחתי סיסמה === */
-  const handleForgotPassword = async () => {
-    setIsLoadingReset(true);
-    setResetStatus('');
     try {
-      const res = await fetch('/api/user/forgot-password', {
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: resetEmail }),
-        credentials: 'include'
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'שגיאה בשליחת האיפוס');
-      setResetStatus('נשלחה סיסמה חדשה לאימייל שלך');
-    } catch (err) {
-      setResetStatus(err.message);
-    } finally {
-      setIsLoadingReset(false);
-    }
-  };
-
-  /* === הרשמה === */
-  const handleRegister = async () => {
-    if (registerPassword !== registerConfirm) {
-      setRegisterStatus('הסיסמאות לא תואמות');
-      return;
-    }
-    setIsLoadingRegister(true);
-    try {
-      const res = await fetch('/api/user/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: registerEmail, password: registerPassword }),
+        body: JSON.stringify(body),
         credentials: 'include'
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'שגיאה בהרשמה');
-      setRegisterStatus('נרשמת בהצלחה!');
+      if (!res.ok) throw new Error(data.error);
+      setStatusMsg(
+        type === 'register'
+          ? 'נרשמת בהצלחה!'
+          : type === 'reset'
+          ? 'נשלחה סיסמה חדשה לאימייל שלך'
+          : 'הסיסמה עודכנה בהצלחה'
+      );
     } catch (err) {
-      setRegisterStatus(err.message);
-    } finally {
-      setIsLoadingRegister(false);
-    }
-  };
-
-  /* === שינוי סיסמה === */
-  const handleChangePassword = async () => {
-    setIsLoadingChangePassword(true);
-    try {
-      const res = await fetch('/api/user/change-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ currentPassword, newPassword }),
-        credentials: 'include'
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'שגיאה בעדכון הסיסמה');
-      setChangeStatus('הסיסמה עודכנה בהצלחה');
-    } catch (err) {
-      setChangeStatus(err.message);
-    } finally {
-      setIsLoadingChangePassword(false);
+      setStatusMsg(err.message);
     }
   };
 
@@ -201,56 +126,33 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
     <div dir="rtl" className="text-center" ref={boxRef}>
       {isMobile && mode === 'side' && (
         <button
-          onClick={() => setIsOpen(false)}
+          onClick={() => router.back()}
           className="text-sm bg-white text-black px-2 py-2 rounded shadow hover:bg-gray-200 transition"
         >
           סגור <FaChevronUp className="inline" />
         </button>
       )}
 
-      <div className="transition-all duration-500 ease-in-out overflow-hidden mt-2 max-w-md px-0 bg-white text-black border border-gray-300 rounded p-1 text-sm shadow-md">
+      <div className="transition-all duration-500 ease-in-out mt-2 max-w-md bg-white text-black border border-gray-300 rounded p-3 text-sm shadow-md">
         <h3 className="font-semibold text-black mb-6">
-          {user ? 'ניהול חשבון' : 'התחברות'}
+          {user ? 'ניהול חשבון' : 'התחברות / הרשמה'}
         </h3>
 
-        {/* === מצב משתמש מחובר === */}
+        {/* === משתמש מחובר === */}
         {user ? (
           <>
             <p className="mb-4">שלום, {user.email}</p>
-            <div className="flex flex-col gap-2 mb-4 items-center">
-              <button
-                onClick={handleLogout}
-                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-              >
-                התנתק
-              </button>
-              <button
-                onClick={handleDeleteAccount}
-                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-              >
-                מחיקת חשבון
-              </button>
-            </div>
-            <div className="text-xs text-center space-x-2 flex justify-center">
-              <button
-                onClick={() => {
-                  setShowChangePassword(true);
-                  setShowReset(false);
-                  setShowRegister(false);
-                }}
-                className="text-blue-600 underline"
-              >
+            <button
+              onClick={handleLogout}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 mb-2 w-full"
+            >
+              התנתק
+            </button>
+            <div className="flex justify-center gap-3 text-xs">
+              <button onClick={() => setActiveForm('change')} className="text-blue-600 underline">
                 שנה סיסמה
               </button>
-              <span>|</span>
-              <button
-                onClick={() => {
-                  setShowReset(true);
-                  setShowChangePassword(false);
-                  setShowRegister(false);
-                }}
-                className="text-blue-600 underline"
-              >
+              <button onClick={() => setActiveForm('reset')} className="text-blue-600 underline">
                 שכחתי סיסמה
               </button>
             </div>
@@ -261,15 +163,17 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
               type="email"
               placeholder="אימייל"
               value={email}
-              onChange={e => setEmail(e.target.value)}
-              className="w-[90%] px-2 py-1 mb-2 border border-gray-300 rounded text-right text-sm"
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+              className="w-full px-3 py-2 mb-2 border border-gray-300 rounded text-right text-sm focus:outline-none focus:ring-1 focus:ring-red-500"
             />
 
             <PasswordField
               placeholder="סיסמה"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-[90%] mb-2"
+              onEnter={handleLogin} // ✅ Enter = התחברות
+              className="w-full mb-2"
             />
 
             <div className="flex items-center justify-start mb-2">
@@ -277,119 +181,168 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
                 type="checkbox"
                 id="rememberMe"
                 checked={rememberMe}
-                onChange={e => setRememberMe(e.target.checked)}
+                onChange={(e) => setRememberMe(e.target.checked)}
                 className="ml-2"
               />
-              <label htmlFor="rememberMe" className="text-sm text-black">השאר מחובר</label>
+              <label htmlFor="rememberMe" className="text-sm text-black">
+                השאר מחובר
+              </label>
             </div>
+
             <button
               onClick={handleLogin}
-              className="bg-[#e60000] text-white px-3 py-1 rounded hover:bg-red-700 text-sm w-full flex items-center justify-center"
+              className="bg-[#e60000] text-white px-3 py-2 rounded hover:bg-red-700 text-sm w-full"
             >
-              {isLoadingLogin
-                ? <span className="loader mr-2 w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                : 'התחבר'}
+              התחבר
             </button>
-            {loginError && <p className="text-red-600 mt-1 text-xs">{loginError}</p>}
-            {loginSuccess && <p className="text-green-600 mt-1 text-xs">התחברת בהצלחה!</p>}
 
-            <div className="mt-3 text-xs text-center space-x-1 flex flex-wrap justify-center">
-              <button
-                onClick={() => { setShowRegister(true); setShowReset(false); setShowChangePassword(false); }}
-                className="text-blue-600 underline"
-              >צור חשבון</button>
-              <span>|</span>
-              <button
-                onClick={() => { setShowReset(true); setShowRegister(false); setShowChangePassword(false); }}
-                className="text-blue-600 underline"
-              >שכחתי סיסמה</button>
-              <span>|</span>
-              <button
-                onClick={() => { setShowChangePassword(true); setShowReset(false); setShowRegister(false); }}
-                className="text-blue-600 underline"
-              >שנה סיסמה</button>
+            {loginError && <p className="text-red-600 mt-1 text-xs">{loginError}</p>}
+            {statusMsg && <p className="text-green-600 mt-1 text-xs">{statusMsg}</p>}
+
+            <div className="mt-3 flex justify-center gap-3 text-xs">
+              <button onClick={() => setActiveForm('register')} className="text-blue-600 underline">
+                צור חשבון
+              </button>
+              <button onClick={() => setActiveForm('reset')} className="text-blue-600 underline">
+                שכחתי סיסמה
+              </button>
             </div>
           </>
         )}
 
         {/* === טפסים פנימיים === */}
-        {showReset && (
-          <div ref={resetRef} className="mt-4 bg-gray-100 p-3 rounded text-right text-sm relative">
-            <button onClick={() => setShowReset(false)} className="absolute top-2 left-2 text-gray-500 hover:text-black">✖</button>
-            <h4 className="font-semibold mb-2 pr-6">שכחתי סיסמה</h4>
-            <input
-              type="email"
-              placeholder="אימייל לאיפוס"
-              value={resetEmail}
-              onChange={e => setResetEmail(e.target.value)}
-              className="w-full px-2 py-1 mb-2 border border-gray-300 rounded"
-            />
-            <button onClick={handleForgotPassword} className="bg-blue-600 text-white px-3 py-1 rounded text-sm">
-              {isLoadingReset ? 'שולח...' : 'שלח סיסמה חדשה'}
-            </button>
-            {resetStatus && <p className="text-green-600 mt-2 text-xs">{resetStatus}</p>}
-          </div>
-        )}
-
-        {showRegister && (
-          <div ref={registerRef} className="mt-4 bg-gray-100 p-3 rounded text-right text-sm relative">
-            <button onClick={() => setShowRegister(false)} className="absolute top-2 left-2 text-gray-500 hover:text-black">✖</button>
-            <h4 className="font-semibold mb-2 pr-6">צור חשבון</h4>
+        {activeForm === 'register' && (
+          <FormBox
+            title="צור חשבון"
+            onClose={() => setActiveForm(null)}
+            onSubmit={() => handleAction('register')}
+            refEl={refs.register}
+          >
             <input
               type="email"
               placeholder="אימייל"
-              value={registerEmail}
-              onChange={e => setRegisterEmail(e.target.value)}
-              className="w-full px-2 py-1 mb-2 border border-gray-300 rounded"
+              value={formData.registerEmail}
+              onChange={(e) =>
+                setFormData((f) => ({ ...f, registerEmail: e.target.value }))
+              }
+              onKeyDown={(e) => e.key === 'Enter' && handleAction('register')}
+              className="w-full px-3 py-2 mb-2 border border-gray-300 rounded text-right text-sm focus:ring-1 focus:ring-red-500"
             />
-
             <PasswordField
               placeholder="סיסמה"
-              value={registerPassword}
-              onChange={e => setRegisterPassword(e.target.value)}
+              value={formData.registerPassword}
+              onChange={(e) =>
+                setFormData((f) => ({ ...f, registerPassword: e.target.value }))
+              }
+              onEnter={() => handleAction('register')}
               className="mb-2"
             />
-
             <PasswordField
               placeholder="אימות סיסמה"
-              value={registerConfirm}
-              onChange={e => setRegisterConfirm(e.target.value)}
+              value={formData.registerConfirm}
+              onChange={(e) =>
+                setFormData((f) => ({ ...f, registerConfirm: e.target.value }))
+              }
+              onEnter={() => handleAction('register')}
               className="mb-2"
             />
-
-            <button onClick={handleRegister} className="bg-green-600 text-white px-3 py-1 rounded text-sm">
-              {isLoadingRegister ? 'נרשם...' : 'הרשמה'}
-            </button>
-            {registerStatus && <p className="text-green-600 mt-2 text-xs">{registerStatus}</p>}
-          </div>
+            <SubmitButton text="הרשמה" color="green" />
+          </FormBox>
         )}
 
-        {showChangePassword && (
-          <div ref={changePassRef} className="mt-4 bg-gray-100 p-3 rounded text-right text-sm relative">
-            <button onClick={() => setShowChangePassword(false)} className="absolute top-2 left-2 text-gray-500 hover:text-black">✖</button>
-            <h4 className="font-semibold mb-2 pr-6">שנה סיסמה</h4>
+        {activeForm === 'reset' && (
+          <FormBox
+            title="שכחתי סיסמה"
+            onClose={() => setActiveForm(null)}
+            onSubmit={() => handleAction('reset')}
+            refEl={refs.reset}
+          >
+            <input
+              type="email"
+              placeholder="אימייל לאיפוס"
+              value={formData.resetEmail}
+              onChange={(e) =>
+                setFormData((f) => ({ ...f, resetEmail: e.target.value }))
+              }
+              onKeyDown={(e) => e.key === 'Enter' && handleAction('reset')}
+              className="w-full px-3 py-2 mb-2 border border-gray-300 rounded text-right text-sm focus:ring-1 focus:ring-red-500"
+            />
+            <SubmitButton text="שלח סיסמה חדשה" color="blue" />
+          </FormBox>
+        )}
 
+        {activeForm === 'change' && (
+          <FormBox
+            title="שנה סיסמה"
+            onClose={() => setActiveForm(null)}
+            onSubmit={() => handleAction('change')}
+            refEl={refs.change}
+          >
             <PasswordField
               placeholder="סיסמה נוכחית"
-              value={currentPassword}
-              onChange={e => setCurrentPassword(e.target.value)}
+              value={formData.currentPassword}
+              onChange={(e) =>
+                setFormData((f) => ({ ...f, currentPassword: e.target.value }))
+              }
+              onEnter={() => handleAction('change')}
               className="mb-2"
             />
-
             <PasswordField
               placeholder="סיסמה חדשה"
-              value={newPassword}
-              onChange={e => setNewPassword(e.target.value)}
+              value={formData.newPassword}
+              onChange={(e) =>
+                setFormData((f) => ({ ...f, newPassword: e.target.value }))
+              }
+              onEnter={() => handleAction('change')}
               className="mb-2"
             />
-
-            <button onClick={handleChangePassword} className="bg-yellow-600 text-white px-3 py-1 rounded text-sm">
-              {isLoadingChangePassword ? 'מעדכן...' : 'עדכן סיסמה'}
-            </button>
-            {changeStatus && <p className="text-green-600 mt-2 text-xs">{changeStatus}</p>}
-          </div>
+            <SubmitButton text="עדכן סיסמה" color="yellow" />
+          </FormBox>
         )}
       </div>
     </div>
+  );
+}
+
+/* === רכיבי משנה === */
+function FormBox({ title, children, onClose, onSubmit, refEl }) {
+  return (
+    <div
+      ref={refEl}
+      className="mt-4 bg-gray-100 p-3 rounded text-right text-sm relative"
+    >
+      <button
+        onClick={onClose}
+        className="absolute top-2 left-2 text-gray-500 hover:text-black"
+      >
+        ✖
+      </button>
+      <h4 className="font-semibold mb-2 pr-6">{title}</h4>
+      {children}
+      <div className="mt-2 text-center">
+        <button
+          onClick={onSubmit}
+          className="bg-gray-800 text-white px-3 py-1 rounded text-sm hover:bg-gray-900"
+        >
+          אישור
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function SubmitButton({ text, color }) {
+  const colors = {
+    green: 'bg-green-600 hover:bg-green-700',
+    blue: 'bg-blue-600 hover:bg-blue-700',
+    yellow: 'bg-yellow-600 hover:bg-yellow-700'
+  };
+  return (
+    <button
+      type="button"
+      className={`${colors[color]} text-white px-3 py-2 rounded text-sm w-full`}
+    >
+      {text}
+    </button>
   );
 }
