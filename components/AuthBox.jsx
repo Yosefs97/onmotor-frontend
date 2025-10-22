@@ -1,6 +1,6 @@
 // components/AuthBox.jsx
 'use client';
-
+import PasswordField from '@/components/PasswordField';
 import React, { useState, useEffect, useRef } from 'react';
 import useIsMobile from '@/hooks/useIsMobile';
 import { FaChevronUp } from 'react-icons/fa';
@@ -268,11 +268,11 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
               onChange={e => setEmail(e.target.value)}
               className="w-[90%] px-2 py-1 mb-2 border border-gray-300 rounded text-right text-sm"
             />
-            <input
+            <PasswordField
               type="password"
               placeholder="סיסמה"
               value={password}
-              onChange={e => setPassword(e.target.value)}
+              onChange={(e) => setPassword(e.target.value)}
               className="w-[90%] px-2 py-1 mb-2 border border-gray-300 rounded text-right text-sm"
             />
             <div className="flex items-center justify-start mb-2">
