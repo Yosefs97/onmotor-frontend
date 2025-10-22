@@ -10,7 +10,8 @@ export default function ManufacturerGrid() {
   const [manufacturers, setManufacturers] = useState([]);
   const [loading, setLoading] = useState(true);
   const containerRef = useRef(null);
-  const [hasUserScrolled, setHasUserScrolled] = useState(false);
+  const animationRef = useRef(null);
+  const [hasScrolled, setHasScrolled] = useState(false);
 
   useEffect(() => {
     async function fetchManufacturers() {
@@ -32,42 +33,45 @@ export default function ManufacturerGrid() {
     fetchManufacturers();
   }, []);
 
-  // 🎬 אנימציית "רמז גלילה" עדינה
+  // 🎬 אנימציית "רמז גלילה"
   useEffect(() => {
     const el = containerRef.current;
-    if (!el || hasUserScrolled) return;
+    if (!el) return;
 
-    let startTime = null;
-    const distance = 80; // כמה פיקסלים לזוז
-    const duration = 1500; // משך האנימציה הכולל (מילישניות)
+    let start = null;
+    let direction = 1; // ימינה ואז שמאלה
+    const maxOffset = 60; // כמה פיקסלים לזוז
+    const duration = 1000; // כמה מהר
 
     const animate = (timestamp) => {
-      if (!startTime) startTime = timestamp;
-      const progress = timestamp - startTime;
-      const half = duration / 2;
+      if (!start) start = timestamp;
+      const progress = timestamp - start;
 
-      if (progress < half) {
-        // גלילה ימינה
-        el.scrollLeft = (progress / half) * distance;
-      } else if (progress < duration) {
-        // גלילה שמאלה חזרה
-        el.scrollLeft = distance - ((progress - half) / half) * distance;
+      // תנועה חלקה קדימה ואחורה
+      const offset = Math.sin((progress / duration) * Math.PI) * maxOffset * direction;
+      el.scrollLeft = offset;
+
+      if (!hasScrolled && progress < duration * 2) {
+        animationRef.current = requestAnimationFrame(animate);
       } else {
-        el.scrollLeft = 0;
-        return; // עצירה בסוף
+        cancelAnimationFrame(animationRef.current);
       }
-      requestAnimationFrame(animate);
     };
 
-    // מתחילים את האנימציה
-    requestAnimationFrame(animate);
+    // מאזינים לגלילה כדי לעצור את האנימציה
+    const handleUserScroll = () => {
+      setHasScrolled(true);
+      cancelAnimationFrame(animationRef.current);
+    };
 
-    // אם המשתמש גולל בעצמו — מפסיקים כל תנועה
-    const handleScroll = () => setHasUserScrolled(true);
-    el.addEventListener('scroll', handleScroll, { once: true });
+    el.addEventListener('scroll', handleUserScroll, { once: true });
+    animationRef.current = requestAnimationFrame(animate);
 
-    return () => el.removeEventListener('scroll', handleScroll);
-  }, [hasUserScrolled]);
+    return () => {
+      el.removeEventListener('scroll', handleUserScroll);
+      cancelAnimationFrame(animationRef.current);
+    };
+  }, [hasScrolled]);
 
   if (loading) return <p className="text-center py-8">טוען יצרנים...</p>;
   if (!manufacturers.length) return <p className="text-center py-8">לא נמצאו יצרנים</p>;
@@ -78,14 +82,14 @@ export default function ManufacturerGrid() {
 
       <div
         ref={containerRef}
-        className="flex overflow-x-auto space-x-4 pb-4 px-2 snap-x snap-mandatory scroll-smooth bg-[#e60000] rounded-lg"
+        className="flex overflow-x-auto space-x-4 pb-4 px-2 red-600 snap-x snap-mandatory bg-[#e60000] rounded-lg scroll-smooth"
       >
         {manufacturers.map((m) => (
           <Link
             key={m.id}
             href={`/shop/vendor/${m.handle}`}
             data-name={m.title}
-            className="min-w-[160px] flex-shrink-0 border border-white/50 bg-white rounded-lg p-4 shadow hover:shadow-xl transition snap-start"
+            className="min-w-[160px] flex-shrink-0 border rounded-lg p-4 shadow hover:shadow-lg transition snap-start bg-white"
           >
             {m.image?.url && (
               <div className="relative w-full h-24 mb-2">
