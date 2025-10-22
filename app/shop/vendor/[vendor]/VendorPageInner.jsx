@@ -103,7 +103,7 @@ export default function VendorPage() {
 
       {!loading && (
         <div>
-          <ScrollSearchBar placeholder={`החלק שמאלה או חפש דגם${vendor}`} containerRef={containerRef} />
+          <ScrollSearchBar placeholder={`החלק שמאלה או חפש דגם ${vendor}`} containerRef={containerRef} />
 
           <div
             ref={containerRef}

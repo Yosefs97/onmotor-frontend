@@ -48,7 +48,7 @@ export default function ScrollSearchBar({ placeholder, containerRef }) {
         placeholder={placeholder}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        className="border-2 border-[#e60000] rounded px-3 py-1 text-sm w-48 text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#e60000]"
+        className="border-2 border-[#e60000] rounded px-3 py-1 text-sm w-54 text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#e60000]"
       />
     </div>
   );
