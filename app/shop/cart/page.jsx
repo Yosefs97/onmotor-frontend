@@ -138,7 +138,7 @@ export default function CartPage() {
                   </div>
 
                   {/* 🔢 כפתורי כמות */}
-                  <div className="flex border rounded-md overflow-hidden">
+                  <div className="flex border rounded-md overflow-hidden text-gray-900">
                     <button
                       onClick={() => updateQuantity(node.id, node.quantity - 1)}
                       className="px-3 py-1 border-l hover:bg-gray-100 text-gray-900"
