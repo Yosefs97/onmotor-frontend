@@ -106,7 +106,7 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
   }
 
   if (articles.length === 0) {
-    return <p className="text-center text-gray-500">אין עדיין כתבות בקטגוריה זו</p>;
+    return <p className="text-center text-gray-500">אין עדיין כתבות בקטגוריה88 זו</p>;
   }
 
   // ✅ לוגיקת קיבוץ
