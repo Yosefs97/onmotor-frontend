@@ -82,7 +82,7 @@ export default function ManufacturerGrid() {
 
       <div
         ref={containerRef}
-        className="flex overflow-x-auto space-x-4 pb-4 px-2 snap-x snap-mandatory scroll-smooth"
+        className="flex overflow-x-auto space-x-4 pb-4 px-2 red-600 snap-x snap-mandatory scroll-smooth"
       >
         {manufacturers.map((m) => (
           <Link
