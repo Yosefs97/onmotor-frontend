@@ -57,12 +57,12 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
 
         // ✅ סינון לפי תת־קטגוריה
         if (subcategoryKey) {
-          url += `&filters[subcategory][$eq]=${subcategoryKey}`;
+          url += `&filters[subcategory][$in]=${subcategoryKey}`;
         }
 
         // ✅ סינון לפי תת־תת קטגוריה (Values)
         if (guideSubKey) {
-          url += `&filters[Values][$eq]=${guideSubKey}`;
+          url += `&filters[Values][$in]=${guideSubKey}`;
         }
 
         const res = await fetch(url);
