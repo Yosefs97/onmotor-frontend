@@ -111,7 +111,7 @@ export default function CartPage() {
             <MobileShopFilterBar onFilterChange={handleFilterChange} />
           </div>
 
-          <h1 className="text-2xl font-bold">עגלה</h1>
+          <h1 className="text-2xl font-bold text-gray-900">עגלה</h1>
 
           {!cart || cart.lines.edges.length === 0 ? (
             <div>העגלה ריקה</div>
@@ -141,11 +141,11 @@ export default function CartPage() {
                   <div className="flex border rounded-md overflow-hidden">
                     <button
                       onClick={() => updateQuantity(node.id, node.quantity - 1)}
-                      className="px-3 py-1 border-l hover:bg-gray-100"
+                      className="px-3 py-1 border-l hover:bg-gray-100 text-gray-900"
                     >
                       -
                     </button>
-                    <div className="px-4 py-1 text-center">{node.quantity}</div>
+                    <div className="px-4 py-1 text-center text-gray-900">{node.quantity}</div>
                     <button
                       onClick={() => updateQuantity(node.id, node.quantity + 1)}
                       className="px-3 py-1 border-r hover:bg-gray-100"
@@ -166,7 +166,7 @@ export default function CartPage() {
 
               {/* סה״כ ותשלום */}
               <div className="flex items-center justify-between border-t pt-4">
-                <div className="text-xl font-bold">
+                <div className="text-xl font-bold text-gray-900">
                   סה"כ: {cart.estimatedCost.totalAmount.amount}{' '}
                   {cart.estimatedCost.totalAmount.currencyCode}
                 </div>

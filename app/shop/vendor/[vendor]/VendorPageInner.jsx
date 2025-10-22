@@ -93,7 +93,7 @@ export default function VendorPage() {
                     />
                   </div>
                 )}
-                <p className="text-center font-semibold">{m.name}</p>
+                <p className="text-center font-semibold text-gray-900">{m.name}</p>
               </Link>
             ))}
           </div>
