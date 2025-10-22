@@ -24,7 +24,7 @@ export default function PageContainer({ title, breadcrumbs = [], children }) {
 
         {/* 🔶 כותרת ראשית */}
         {title && (
-          <h1 className="text-2xl sm:text-3xl font-bold text-black-100 mb-2 border-b-2 border-[#e60000] pb-1">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2 border-b-2 border-[#e60000] pb-1">
             {title}
           </h1>
         )}
