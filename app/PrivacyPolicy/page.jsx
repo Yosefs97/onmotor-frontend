@@ -1,4 +1,6 @@
 // app/PrivacyPolicy/page.jsx
+'use client';
+
 export const metadata = {
   title: 'מדיניות פרטיות | OnMotor Media',
   description: 'מדיניות פרטיות האתר OnMotor Media – הגנה על פרטיות המשתמשים בהתאם לחוק.',
@@ -26,7 +28,6 @@ export const metadata = {
   },
 };
 
-'use client';
 import React from 'react';
 import PageContainer from '@/components/PageContainer';
 import PrivacyPolicy from '@/components/PrivacyPolicy';
