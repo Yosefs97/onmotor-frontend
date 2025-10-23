@@ -21,7 +21,7 @@ export default function SearchBar({ onSelect = () => {} }) {
   const [activeIndex, setActiveIndex] = useState(-1);
   const [suggestions, setSuggestions] = useState([]);
 
-  // ✅ שליפה אסינכרונית בהתחלה
+  // ✅ שליפה אסינכרונית של הצעות
   useEffect(() => {
     async function fetchSuggestions() {
       const data = await generateSearchSuggestions();
@@ -99,6 +99,13 @@ export default function SearchBar({ onSelect = () => {} }) {
       <div className="relative w-full">
         <input
           dir="rtl"
+          id="site-search"
+          name="site-search"
+          type="search"
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck="false"
+          aria-label="חיפוש באתר OnMotor Media"
           value={query}
           onChange={handleChange}
           onFocus={() => setIsFocused(true)}
