@@ -22,6 +22,7 @@ export async function POST(request) {
       return new Response(JSON.stringify({ error: 'Password must contain uppercase, lowercase, and number' }), { status: 400 });
     }
 
+    // 1. שליחת הבקשה ל-Strapi לשינוי סיסמה
     const res = await fetch(`${STRAPI_API_URL}/api/auth/change-password`, {
       method: 'POST',
       headers: {
@@ -36,7 +37,17 @@ export async function POST(request) {
     });
 
     const data = await res.json();
-    if (!res.ok) throw new Error(data?.error?.message || 'Error changing password');
+
+    // 2. ❗ התיקון: טיפול בתגובה כושלת מ-Strapi (למשל, 400 בגלל Invalid credentials)
+    if (!res.ok) {
+      // אחזור הודעת השגיאה מתוך התגובה של Strapi
+      const errorMessage = data?.error?.message || 'Error changing password';
+
+      // החזרת הודעת השגיאה וקוד הסטטוס המקורי של Strapi (כגון 400) ללקוח.
+      // זה מונע את קריסת הקוד ל-catch והחזרת 500 שגויה.
+      return new Response(JSON.stringify({ error: errorMessage }), { status: res.status });
+    }
+    // 3. אם res.ok הוא true, ממשיכים לשליחת המייל
 
     // שליפת המשתמש המחובר
     const meRes = await fetch(`${STRAPI_API_URL}/api/users/me`, {
@@ -66,6 +77,7 @@ export async function POST(request) {
 
     return new Response(JSON.stringify({ success: true }), { status: 200 });
   } catch (err) {
+    // בלוק זה מטפל רק בשגיאות שאינן קשורות לתגובה מ-Strapi (למשל, שגיאת רשת, שגיאה בקריאת JSON).
     console.error('❌ Change-password error:', err);
     return new Response(JSON.stringify({ error: err.message || 'Internal Server Error' }), { status: 500 });
   }
