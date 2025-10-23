@@ -27,7 +27,7 @@ export default function Footer() {
         </div>
 
         {/* צד שמאל: אייקונים */}
-        <div className="flex justify-center md:justify-end gap-4 text-2xl">
+        <div className="flex justify-center md:justify-center gap-4 text-2xl">
           <a
             href="https://facebook.com/OnMotorMedia"
             target="_blank"
