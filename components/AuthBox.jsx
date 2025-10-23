@@ -95,6 +95,7 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
       body.email = formData.resetEmail;
       url = '/api/user/forgot-password';
     } else if (type === 'change') {
+      body.email = user?.email;
       body.currentPassword = formData.currentPassword;
       body.newPassword = formData.newPassword;
       url = '/api/user/change-password';
@@ -329,7 +330,7 @@ function FormBox({ title, children, onClose, refEl }) {
   );
 }
 
-function SubmitButton({ text, color, onClick }) {
+function SubmitButton({ text, color, onClick, type = 'button' }) {
   const colors = {
     green: 'bg-green-600 hover:bg-green-700',
     blue: 'bg-blue-600 hover:bg-blue-700',
@@ -337,7 +338,7 @@ function SubmitButton({ text, color, onClick }) {
   };
   return (
     <button
-      type="button"
+      type="{type}"
       onClick={onClick}
       className={`${colors[color]} text-white px-3 py-2 rounded text-sm w-full`}
     >
