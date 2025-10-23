@@ -37,11 +37,13 @@ export async function POST(request) {
     }
 
     // ✅ יצירת עוגייה מאובטחת
+    // ❗ תיקון SameSite: שינוי ל-'Lax' כדי לאפשר העברה אמינה בתוך אותו הדומיין.
+    // ❗ הסרת 'domain' המפורש: הדפדפן ישתמש אוטומטית ב-'www.onmotormedia.com'.
     const cookie = serialize('token', data.jwt, {
       httpOnly: true,
-      secure: NODE_ENV === 'production',
-      sameSite: 'none', // מאפשר קרוס-דומיין
-      domain: '.onmotormedia.com', // עובד עם כל הסאב דומיינים
+      // secure מוגדר כ-true ב-production, וזה חיוני מכיוון שהאתר משתמש ב-HTTPS.
+      secure: NODE_ENV === 'production', 
+      sameSite: 'Lax', // ❗ תיקון כאן: שינוי מ-'none' ל-'Lax'
       path: '/',
       maxAge: 60 * 60 * 24 * 7, // 7 ימים
     });
