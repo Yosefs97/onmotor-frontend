@@ -152,7 +152,7 @@ export default function MobileMenu() {
 
               {/* ✅ כפתור מדיניות האתר מתחת להרשמה */}
               <div className="mt-3">
-                <LegalLinks isMobile={true} />
+                <LegalLinks isMobile={true} onLinkClick={closeMenu}/>
               </div>
             </div>
           </div>

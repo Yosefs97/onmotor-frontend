@@ -4,7 +4,7 @@ import React from 'react';
 
 export default function TermsOfService({ onClose, onAgree }) {
   return (
-    <div className="mt-2 border border-gray-300 rounded-lg p-4 bg-white text-sm text-right shadow-md relative max-h-[70vh] overflow-y-auto">
+    <div className="mt-2 border border-gray-300 text-gray-900 rounded-lg p-4 bg-white text-sm text-right shadow-md relative max-h-[70vh] overflow-y-auto">
       <button
         onClick={onClose}
         className="absolute top-1 left-2 text-gray-500 hover:text-black text-lg"

@@ -37,7 +37,7 @@ export default function DataDeletionInstructionsPage() {
           בקשת מחיקת נתונים
         </h1>
 
-        <p className="text-sm leading-relaxed mb-3">
+        <p className="text-sm  leading-relaxed mb-3">
           אנו ב־<strong>OnMotor Media</strong> מכבדים את פרטיות המשתמשים ופועלים לפי הנחיות פייסבוק ו־GDPR.
           אם ברצונך למחוק את הנתונים שלך או את התגובות שפרסמת דרך פייסבוק באתר,
           ניתן לשלוח בקשה למחיקה לפי ההוראות שלהלן.
