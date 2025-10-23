@@ -1,14 +1,13 @@
-//components\Header.jsx
+// components/Header.jsx
 'use client';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import NavigationMenu from './NavigationMenu';
 import SearchBar from './SearchBar';
 import SocialIcons from './SocialIcons';
-import { useAuthModal } from '@/contexts/AuthModalProvider';
+import AuthStatusButton from './AuthStatusButton';
 
 export default function Header() {
-  const { user, openModal, hydrated } = useAuthModal();
   const logoRef = useRef(null);
   const lettersRef = useRef([]);
   const containerRef = useRef(null);
@@ -94,30 +93,9 @@ export default function Header() {
         className="flex flex-row-reverse items-center gap-2 min-w-0 cursor-pointer"
         onClick={handleClick}
       >
+        {/* ✅ כפתור התחברות/התנתקות הופרד לרכיב נפרד */}
         <div className="hidden lg:block z-50" dir="rtl">
-          {!hydrated ? (
-            <div className="w-[80px] h-[32px]" />
-          ) : user?.email ? (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                openModal('inline', 'התנתקות');
-              }}
-              className="bg-green-600 text-white px-3 py-1 rounded text-sm font-bold whitespace-nowrap"
-            >
-              {user?.email?.charAt(0).toUpperCase()} מחובר
-            </button>
-          ) : (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                openModal('inline', 'התחברות / הרשמה');
-              }}
-              className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm font-bold whitespace-nowrap"
-            >
-              התחבר
-            </button>
-          )}
+          <AuthStatusButton />
         </div>
 
         <img
@@ -129,7 +107,10 @@ export default function Header() {
         />
 
         <div className="truncate overflow-visible">
-          <h1 dir="ltr" className="text-2xl lg:text-4xl font-bold whitespace-nowrap z-50 flex">
+          <h1
+            dir="ltr"
+            className="text-2xl lg:text-4xl font-bold whitespace-nowrap z-50 flex"
+          >
             {logoText.map((part, i) => (
               <span
                 key={i}
