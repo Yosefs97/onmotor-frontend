@@ -22,7 +22,7 @@ export default function Footer() {
       {/* ✅ שורה עליונה - קישורי מדיניות + אייקונים */}
       <div className="flex justify-between items-center border-b border-gray-800 pb-1 mb-2">
         {/* צד ימין: קישורי מדיניות */}
-        <div className="mr-[1cm]">
+        <div className="hidden md:block mr-[1cm]">
           <LegalLinks layout="horizontal" />
         </div>
 
