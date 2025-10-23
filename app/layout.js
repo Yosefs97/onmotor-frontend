@@ -36,10 +36,15 @@ export default function RootLayout({ children }) {
               window.NagishLiConfig = {
                 version: "2.3",
                 language: "he",
-                position: "left-bottom",
+                // הגדרת מיקום משתנה: שמאל למטה + קיזוז למעלה
+                position: "bl", // Bottom Left - המיקום הדיפולטי
+                bottomOffset: "50px", // שינוי: קיזוז של 50 פיקסלים מהתחתית
+                
                 color: "blue",
                 compact: false,
                 accordion: false,
+                closeButton: true, // שינוי: הוספת כפתור סגירה (X)
+                
                 declarationLink: "https://www.onmotormedia.com/accessibility-statement.html",
                 declarationName: "סבג יוסף",
                 declarationPhone: "0522304604",
