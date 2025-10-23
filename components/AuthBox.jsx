@@ -266,28 +266,45 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
 
         {activeForm === 'change' && (
           <FormBox title="שנה סיסמה" onClose={() => setActiveForm(null)} refEl={refs.change}>
-            <PasswordField
-              placeholder="סיסמה נוכחית"
-              value={formData.currentPassword}
-              onChange={(e) =>
-                setFormData((f) => ({ ...f, currentPassword: e.target.value }))
-              }
-              onEnter={() => handleAction('change')}
-              className="mb-2"
-            />
-            <PasswordField
-              placeholder="סיסמה חדשה"
-              value={formData.newPassword}
-              onChange={(e) =>
-                setFormData((f) => ({ ...f, newPassword: e.target.value }))
-              }
-              onEnter={() => handleAction('change')}
-              className="mb-2"
-            />
-            <SubmitButton text="עדכן סיסמה" color="yellow" onClick={() => handleAction('change')} />
-            {statusMsg && <p className="text-green-600 mt-2 text-xs">{statusMsg}</p>}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleAction('change');
+              }}
+              autoComplete="off"
+              className="space-y-2"
+            >
+              <PasswordField
+                id="current-password"
+                name="currentPassword"
+                placeholder="סיסמה נוכחית"
+                autoComplete="current-password"
+                value={formData.currentPassword}
+                onChange={(e) =>
+                  setFormData((f) => ({ ...f, currentPassword: e.target.value }))
+                }
+                className="mb-2"
+              />
+
+              <PasswordField
+                id="new-password"
+                name="newPassword"
+                placeholder="סיסמה חדשה"
+                autoComplete="new-password"
+                value={formData.newPassword}
+                onChange={(e) =>
+                  setFormData((f) => ({ ...f, newPassword: e.target.value }))
+                }
+                className="mb-2"
+              />
+
+              <SubmitButton text="עדכן סיסמה" color="yellow" type="submit" />
+
+              {statusMsg && <p className="text-green-600 mt-2 text-xs">{statusMsg}</p>}
+            </form>
           </FormBox>
         )}
+
       </div>
     </div>
   );
