@@ -11,7 +11,38 @@ dir:"This setting is relevant ONLY if you're moving or changing the name of the 
 url_missing:"Your website url is required for the installation code.",contact:"If you don't have any accessibility statement page in your website, as of NagishLi version 2.3 it is possible to provide contact details that will be shown in the built-in accessibility statement.\nIt is recommended to provide at least one detail (besides your name), so that people will be able to contact you regarding your website accessibility-related matters.",statement_exist:"It's not possible to use the details for the built-in accessiblity statement if you're using a link to your accessibility statement. The details that was entered will be added to the installation code only if the field \"Accessiblity Statement\" is empty.",
 email_error:"The E-Mail address you entered was invalid."};
 function generateCode(){var b="",t=document.getElementById("nagishli-code"),d=document.getElementById("url").value,r=document.getElementById("version").value,f=document.getElementById("language").value,a=document.getElementById("position").value,g=document.getElementById("statement").value,m=document.getElementById("color").value,n=document.getElementById("compact").value,p=document.getElementById("accordion").value,q=document.getElementById("license").value,e=document.getElementById("directory").value,
-h=document.getElementById("name").value,k=document.getElementById("phone").value,c=document.getElementById("email").value,l=document.getElementById("fax").value;if(""==d)return alert(msgs.url_missing),document.getElementById("url").focus(),!1;String.prototype.endsWith||(String.prototype.endsWith=function(b,a){if(void 0===a||a>this.length)a=this.length;return this.substring(a-b.length,a)===b});if("default"!=f||"default"!=a||""!=g||"default"!=m||"0"!=n||"0"!=p||""!=q||""!=e||""!=h||""!=k||""!=c||""!=
-l){b+="<script>\n";"default"!=f&&(b+='nl_lang = "'+f+'";\n');"default"!=a&&(b+='nl_pos = "'+a+'";\n');""!=g&&(b+='nl_link = "'+g+'";\n');"default"!=m&&(b+='nl_color = "'+m+'";\n');"0"!=n&&(b+='nl_compact = "'+n+'";\n');"0"!=p&&(b+='nl_accordion = "'+p+'";\n');""!=q&&(b+='nl_lic = "'+q+'";\n');""!=e&&(e=e.endsWith("/")?e:e+"/",b+='nl_dir = "'+e+'";\n');if(""!=h||""!=k||""!=c||""!=l)if(""==g){f=function(a,b,c){a=(a+"").indexOf(b,c||0);return-1===a?!1:a};a="";""!=h&&(a+="n:"+h+"|");""!=k&&(a+="p:"+k+
-"|");if(""!=c)if(!1!==f(c,"@"))a=!1!==f(d,c.split("@")[1])?a+("u:"+c.split("@")[0]+"|"):a+("u:"+c.split("@")[0]+"+d:"+c.split("@")[1]+"|");else return alert(msgs.email_error),document.getElementById("email").focus(),!1;""!=l&&(a+="f:"+l+"|");b+='nl_contact = "'+a.slice(0,-1)+'";\n'}else alert(msgs.statement_exist);b+="\x3c/script>\n"}d=d.endsWith("/")?d.slice(0,-1):d;t.value=b+('<script src="'+d+"/nagishli.js"+(""!=r?"?v="+r:"")+'" charset="utf-8" defer>\x3c/script>');document.getElementsByClassName("hide")[0].style.display=
+h=document.getElementById("name").value,k=document.getElementById("phone").value,c=document.getElementById("email").value,l=document.getElementById("fax").value,z=document.getElementById("close_btn").value; /* *** קריאת הערך החדש: close_btn *** */
+
+if(""==d)return alert(msgs.url_missing),document.getElementById("url").focus(),!1;String.prototype.endsWith||(String.prototype.endsWith=function(b,a){if(void 0===a||a>this.length)a=this.length;return this.substring(a-b.length,a)===b});
+
+/* *** עדכון התנאי לבדיקת כל המשתנים כולל nl_close (z) *** */
+if("default"!=f||"default"!=a||""!=g||"default"!=m||"0"!=n||"0"!=p||""!=q||""!=e||""!=h||""!=k||""!=c||""!=l||"0"!=z){
+    b+="<script>\n";
+    
+    "default"!=f&&(b+='nl_lang = "'+f+'";\n');
+
+    // *** לוגיקה לטיפול במיקום 'bb' והוספת offset ***
+    if (a == "bb") {
+        b+='nl_pos = "bl";\n'; 
+        b+='nl_bottom_offset = "50px";\n'; // גובה הקיזוז מהתחתית
+    } else if ("default" != a) {
+        b+='nl_pos = "'+a+'";\n';
+    }
+    
+    /* *** לוגיקה חדשה: הוספת nl_close *** */
+    "0"!=z&&(b+='nl_close = "'+z+'";\n');
+    /* *** סוף לוגיקה חדשה *** */
+
+    ""!=g&&(b+='nl_link = "'+g+'";\n');
+    "default"!=m&&(b+='nl_color = "'+m+'";\n');
+    "0"!=n&&(b+='nl_compact = "'+n+'";\n');
+    "0"!=p&&(b+='nl_accordion = "'+p+'";\n');
+    ""!=q&&(b+='nl_lic = "'+q+'";\n');
+    ""!=e&&(e=e.endsWith("/")?e:e+"/",b+='nl_dir = "'+e+'";\n');
+
+    if(""!=h||""!=k||""!=c||""!=l)if(""==g){f=function(a,b,c){a=(a+"").indexOf(b,c||0);return-1===a?!1:a};a="";""!=h&&(a+="n:"+h+"|");""!=k&&(a+="p:"+k+
+    "|");if(""!=c)if(!1!==f(c,"@"))a=!1!==f(d,c.split("@")[1])?a+("u:"+c.split("@")[0]+"|"):a+("u:"+c.split("@")[0]+"+d:"+c.split("@")[1]+"|");else return alert(msgs.email_error),document.getElementById("email").focus(),!1;""!=l&&(a+="f:"+l+"|");b+='nl_contact = "'+a.slice(0,-1)+'";\n'}else alert(msgs.statement_exist);
+    b+="\x3c/script>\n"
+}
+d=d.endsWith("/")?d.slice(0,-1):d;t.value=b+('<script src="'+d+"/nagishli.js"+(""!=r?"?v="+r:"")+'" charset="utf-8" defer>\x3c/script>');document.getElementsByClassName("hide")[0].style.display=
 "block"};
