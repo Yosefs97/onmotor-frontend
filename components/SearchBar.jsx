@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useId } from "react";
 import { useRouter } from 'next/navigation';
 import Fuse from 'fuse.js';
 import Image from 'next/image';
@@ -21,7 +21,9 @@ export default function SearchBar({ onSelect = () => {} }) {
   const [activeIndex, setActiveIndex] = useState(-1);
   const [suggestions, setSuggestions] = useState([]);
 
-  // ✅ שליפה אסינכרונית של הצעות
+  // 🆔 useId מבטיח מזהה ייחודי לכל מופע רכיב
+  const inputId = useId();
+
   useEffect(() => {
     async function fetchSuggestions() {
       const data = await generateSearchSuggestions();
@@ -79,13 +81,11 @@ export default function SearchBar({ onSelect = () => {} }) {
 
     const parts = [];
     let lastIndex = 0;
-
     match.indices.forEach(([start, end], i) => {
       parts.push(text.slice(lastIndex, start));
       parts.push(<mark key={i} className="bg-yellow-300 px-0.5">{text.slice(start, end + 1)}</mark>);
       lastIndex = end + 1;
     });
-
     parts.push(text.slice(lastIndex));
     return parts;
   };
@@ -96,22 +96,29 @@ export default function SearchBar({ onSelect = () => {} }) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setTimeout(() => setIsHovered(false), 150)}
     >
-      <div className="relative w-full">
+      <form
+        autoComplete="off"
+        onSubmit={(e) => e.preventDefault()}
+        className="relative w-full"
+      >
+        {/* ✅ label משויך לשדה לפי id ייחודי */}
+        <label htmlFor={inputId} className="sr-only">
+          חיפוש באתר OnMotor Media
+        </label>
+
         <input
           dir="rtl"
-          id="site-search"
-          name="site-search"
-          type="search"
-          autoComplete="off"
+          id={inputId}
+          name={`search-input-${inputId}`}
+          type="text"
+          autoComplete="new-password"
           autoCorrect="off"
           spellCheck="false"
-          aria-label="חיפוש באתר OnMotor Media"
           value={query}
           onChange={handleChange}
           onFocus={() => setIsFocused(true)}
           onKeyDown={(e) => {
             if (!showResults.length) return;
-
             if (e.key === 'ArrowDown') {
               e.preventDefault();
               setActiveIndex((prev) => (prev + 1) % showResults.length);
@@ -130,8 +137,10 @@ export default function SearchBar({ onSelect = () => {} }) {
           placeholder="חפש באתר..."
           className="text-right text-white placeholder-white p-1 pr-1 rounded border border-red-600 w-full transition-all duration-300"
         />
+
         {(query.trim() || showResults.length > 0) && (
           <button
+            type="button"
             onClick={closeSearch}
             className="absolute left-2 top-1/2 -translate-y-1/2 text-white hover:text-red-600 text-xl"
             aria-label="נקה וסגור חיפוש"
@@ -139,7 +148,7 @@ export default function SearchBar({ onSelect = () => {} }) {
             <IoClose />
           </button>
         )}
-      </div>
+      </form>
 
       {showResults.length > 0 && (
         <ul
@@ -149,6 +158,7 @@ export default function SearchBar({ onSelect = () => {} }) {
           {isPopular && (
             <div className="flex justify-end p-2 border-b border-gray-200">
               <button
+                type="button"
                 onClick={closeSearch}
                 className="text-white hover:text-red-600 transition text-xl"
                 aria-label="סגור הצעות פופולריות"
@@ -167,12 +177,7 @@ export default function SearchBar({ onSelect = () => {} }) {
             >
               {item.image && (
                 <div className="relative w-10 h-10 flex-shrink-0 rounded overflow-hidden">
-                  <Image
-                    src={item.image}
-                    alt={item.title}
-                    fill
-                    className="object-cover"
-                  />
+                  <Image src={item.image} alt={item.title} fill className="object-cover" />
                 </div>
               )}
               <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
