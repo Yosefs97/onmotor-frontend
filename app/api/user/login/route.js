@@ -1,7 +1,7 @@
 // app/api/user/login/route.js
 import { serialize } from 'cookie';
 
-const { STRAPI_API_URL, NODE_ENV } = process.env;
+const { STRAPI_API_URL } = process.env;
 
 export async function POST(request) {
   try {
@@ -36,14 +36,12 @@ export async function POST(request) {
       );
     }
 
-    // ✅ יצירת עוגייה מאובטחת
-    // ❗ תיקון SameSite: שינוי ל-'Lax' כדי לאפשר העברה אמינה בתוך אותו הדומיין.
-    // ❗ הסרת 'domain' המפורש: הדפדפן ישתמש אוטומטית ב-'www.onmotormedia.com'.
+    // יצירת עוגייה מאובטחת
+    // הגדרה קבועה: secure: true ו-sameSite: 'Lax' לתאימות מלאה לסביבת HTTPS באותו דומיין.
     const cookie = serialize('token', data.jwt, {
       httpOnly: true,
-      // secure מוגדר כ-true ב-production, וזה חיוני מכיוון שהאתר משתמש ב-HTTPS.
-      secure: NODE_ENV === 'production', 
-      sameSite: 'Lax', // ❗ תיקון כאן: שינוי מ-'none' ל-'Lax'
+      secure: true, // חובה ל-HTTPS
+      sameSite: 'Lax', // מומלץ לבקשות פנימיות
       path: '/',
       maxAge: 60 * 60 * 24 * 7, // 7 ימים
     });

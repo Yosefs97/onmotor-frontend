@@ -71,12 +71,24 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
   };
 
   const handleLogout = async () => {
+    // 1. קריאה לשרת למחיקת ה-Cookie JWT
+    try {
+      await fetch('/api/user/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch (error) {
+      console.error("שגיאה במחיקת Cookie השרת:", error);
+      // ממשיכים להתנתקות מקומית גם אם מחיקת הקוקי נכשלה
+    }
+
+    // 2. מחיקה מקומית (localStorage ו-Context)
     await logoutUser();
     localStorage.clear();
     setUser(null);
     setEmail('');
     setPassword('');
-    setStatusMsg(''); // ✅ מנקה את ההודעה
+    setStatusMsg('התנתקת בהצלחה.'); 
     setLoginError('');
   };
 
@@ -95,7 +107,7 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
       body.email = formData.resetEmail;
       url = '/api/user/forgot-password';
     } else if (type === 'change') {
-      body.email = user?.email;
+      // השרת מזהה את המשתמש באמצעות ה-JWT, לכן שולחים רק סיסמאות
       body.currentPassword = formData.currentPassword;
       body.newPassword = formData.newPassword;
       url = '/api/user/change-password';
@@ -338,7 +350,7 @@ function SubmitButton({ text, color, onClick, type = 'button' }) {
   };
   return (
     <button
-      type="{type}"
+      type={type}
       onClick={onClick}
       className={`${colors[color]} text-white px-3 py-2 rounded text-sm w-full`}
     >
