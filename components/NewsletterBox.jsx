@@ -1,7 +1,9 @@
+// components/NewsletterBox.jsx
 'use client';
 import React, { useState, useEffect } from 'react';
 import useIsMobile from '@/hooks/useIsMobile';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import PrivacyPolicy from '@/components/PrivacyPolicy';
 
 export default function NewsletterBox({ mode = 'inline' }) {
   const isMobile = useIsMobile();
@@ -34,7 +36,7 @@ export default function NewsletterBox({ mode = 'inline' }) {
       {isMobile && mode === 'side' && (
         <button
           onClick={() => setIsOpen(false)}
-          className="text-sm bg-white text-black px-3 py-3  shadow hover:bg-gray-200 transition"
+          className="text-sm bg-white text-black px-3 py-3 shadow hover:bg-gray-200 transition"
         >
           סגור ניוזלטר <FaChevronUp className="inline" />
         </button>
@@ -71,35 +73,20 @@ export default function NewsletterBox({ mode = 'inline' }) {
                 className="text-blue-600 underline hover:text-blue-800"
                 onClick={() => setShowTerms(true)}
               >
-                תנאי השימוש של האתר
+                מדיניות פרטיות המידע
               </button>
             </label>
           </div>
 
-          {/* תנאי השימוש נפתח מתחת */}
+          {/* ✅ מדיניות פרטיות נפתחת מתחת */}
           {showTerms && (
-            <div className="mt-2 border border-gray-300 rounded-lg p-3 bg-white text-sm text-right shadow-md relative">
-              <button
-                onClick={() => setShowTerms(false)}
-                className="absolute top-1 left-2 text-gray-500 hover:text-black text-lg"
-              >
-                ✖
-              </button>
-              <h3 className="text-sm font-bold mb-2">תנאי השימוש</h3>
-              <p className="text-sm leading-relaxed mb-4">
-                שימוש באתר OnMotor Media כפוף להסכמה לתנאי השימוש. נא לא לפרסם תכנים פוגעניים, לא חוקיים או כאלו הפוגעים בזכויות יוצרים.
-                המשתמש אחראי לתוכן שהוא מפרסם.
-              </p>
-              <button
-                onClick={() => {
-                  setAgreed(true);
-                  setShowTerms(false);
-                }}
-                className="bg-[#e60000] text-white w-full py-1 rounded hover:bg-red-700"
-              >
-                אישור
-              </button>
-            </div>
+            <PrivacyPolicy
+              onClose={() => setShowTerms(false)}
+              onAgree={() => {
+                setAgreed(true);
+                setShowTerms(false);
+              }}
+            />
           )}
 
           {/* כפתור וואטסאפ */}
@@ -110,7 +97,7 @@ export default function NewsletterBox({ mode = 'inline' }) {
             onClick={(e) => {
               if (!agreed || !email) {
                 e.preventDefault();
-                alert('יש להזין מייל ולאשר תנאי שימוש');
+                alert('יש להזין מייל ולאשר את מדיניות הפרטיות');
               } else {
                 setSuccess(true);
                 setTimeout(() => setSuccess(false), 3000);
