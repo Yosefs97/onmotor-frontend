@@ -37,18 +37,18 @@ export default function DataDeletionInstructionsPage() {
           בקשת מחיקת נתונים
         </h1>
 
-        <p className="text-sm  leading-relaxed mb-3">
+        <p className="text-sm text-gray-900 leading-relaxed mb-3">
           אנו ב־<strong>OnMotor Media</strong> מכבדים את פרטיות המשתמשים ופועלים לפי הנחיות פייסבוק ו־GDPR.
           אם ברצונך למחוק את הנתונים שלך או את התגובות שפרסמת דרך פייסבוק באתר,
           ניתן לשלוח בקשה למחיקה לפי ההוראות שלהלן.
         </p>
 
         <h2 className="font-bold text-[#e60000] mb-2">כיצד לבקש מחיקת נתונים</h2>
-        <ul className="list-disc pr-5 mb-4 text-sm leading-relaxed">
+        <ul className="list-disc text-gray-900 pr-5 mb-4 text-sm leading-relaxed">
           <li>שלח דוא"ל לכתובת: <a href="mailto:onmotormedia@gmail.com" className="text-blue-600 underline">onmotormedia@gmail.com</a></li>
           <li>בכותרת המייל כתוב: <strong>"בקשה למחיקת נתוני פייסבוק"</strong></li>
           <li>בגוף ההודעה ציין:
-            <ul className="list-decimal pr-5 mt-1">
+            <ul className="list-decimal text-gray-900 pr-5 mt-1">
               <li>שמך המלא כפי שמופיע בפייסבוק.</li>
               <li>קישור לתגובה או לפוסט שבו הופיעו הנתונים שברצונך למחוק.</li>
               <li>הצהרה שאתה מבקש למחוק את המידע בהתאם לחוקי הפרטיות.</li>
@@ -56,11 +56,11 @@ export default function DataDeletionInstructionsPage() {
           </li>
         </ul>
 
-        <p className="text-sm mb-3">
+        <p className="text-sm text-gray-900 mb-3">
           עם קבלת הבקשה, צוות OnMotor Media יבחן את הפנייה ויפעל למחיקת הנתונים הרלוונטיים בתוך 14 ימי עסקים.
         </p>
 
-        <p className="text-sm text-gray-600 italic">
+        <p className="text-sm text-gray-700 italic">
           דף זה נועד לעמוד בדרישות פייסבוק בנושא מחיקת נתוני משתמשים מאפליקציות צד שלישי,
           והוא אינו מיועד למחיקת חשבון או הרשמות אחרות באתר.
         </p>
