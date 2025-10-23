@@ -6,6 +6,7 @@ import NavigationMenu from './NavigationMenu';
 import SearchBar from './SearchBar';
 import MobileSocialMenu from './MobileSocialMenu';
 import AuthBox from './AuthBox';
+import LegalLinks from '@/components/LegalLinks';
 import { getCurrentUser } from '@/utils/auth';
 import { gsap } from 'gsap';
 import { useSwipeable } from 'react-swipeable';
@@ -14,6 +15,7 @@ export default function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [showAuthBox, setShowAuthBox] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showPolicies, setShowPolicies] = useState(false);
   const authBoxRef = useRef(null);
   const menuRef = useRef(null);
 
@@ -106,10 +108,10 @@ export default function MobileMenu() {
             </div>
           </div>
 
-          {/* ⚙️ גוף התפריט – גובה מחושב וגלילה פנימית */}
+          {/* ⚙️ גוף התפריט */}
           <div
             className="flex-1 px-2 mt-3 space-y-4 overflow-y-auto"
-            style={{ maxHeight: 'calc(100vh - 110px)' }} // ← חישוב כדי שתחתית תוצג תמיד
+            style={{ maxHeight: 'calc(100vh - 110px)' }}
           >
             <div dir="rtl" className="relative z-[1]">
               <NavigationMenu mobile onClose={closeMenu} />
@@ -119,6 +121,7 @@ export default function MobileMenu() {
               <MobileSocialMenu />
             </div>
 
+            {/* 🔐 התחברות / הרשמה + מדיניות */}
             <div className="w-full mt-auto pb-6" ref={authBoxRef}>
               <button
                 onClick={() => setShowAuthBox(!showAuthBox)}
@@ -134,6 +137,7 @@ export default function MobileMenu() {
                 )}
               </button>
 
+              {/* תיבת ההתחברות */}
               <div
                 className={`overflow-hidden transition-all duration-500 ease-in-out ${
                   showAuthBox
@@ -144,6 +148,11 @@ export default function MobileMenu() {
                 <div className="bg-white text-black p-4 rounded shadow-md relative z-[2]">
                   <AuthBox mode="inline" />
                 </div>
+              </div>
+
+              {/* ✅ כפתור מדיניות האתר מתחת להרשמה */}
+              <div className="mt-3">
+                <LegalLinks isMobile={true} />
               </div>
             </div>
           </div>
