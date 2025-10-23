@@ -207,7 +207,7 @@ export default async function ArticlePage({ params }) {
         <Gallery images={article.gallery} />
         <Tags tags={article.tags} />
         <SimilarArticles currentSlug={article.slug} category={article.category} />
-        <CommentsSection articleUrl={`https://onmotor-media.com${article.href}`} />
+        <CommentsSection articleUrl={`https://www.onmotormedia.com${article.href}`} />
       </div>
     </PageContainer>
   );
