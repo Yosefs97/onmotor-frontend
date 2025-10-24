@@ -1,4 +1,3 @@
-//components\CategoryPage.jsx
 'use client';
 import React, { useEffect, useState } from 'react';
 import SectionWithHeader from './SectionWithHeader';
@@ -79,27 +78,42 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
           });
         }
 
-        const mapped = data.map((a) => ({
-          id: a.id,
-          title: a.title,
-          slug: a.slug,
-          image: a.image?.url ? `${API_URL}${a.image.url}` : '/default-image.jpg',
-          imageAlt: a.imageAlt || '',
-          category: a.category || 'general',
-          subcategory: Array.isArray(a.subcategory)
-            ? a.subcategory
-            : [a.subcategory ?? 'general'],
-          Values: Array.isArray(a.Values)
-            ? a.Values
-            : [a.Values ?? null],
-          description: a.description,
-          headline: a.headline || a.title,
-          subdescription: a.subdescription,
-          href: `/articles/${a.slug}`,
-          tags: a.tags || [],
-          date: a.date || '',
-          time: a.time || '00:00',
-        }));
+        const mapped = data.map((a) => {
+          // --- ⭐️ לוגיקה חדשה: משיכת תמונה ראשית מהגלריה ⭐️ ---
+          const mainImageData = a.gallery?.[0];
+          const image = mainImageData?.url 
+                        ? `${API_URL}${mainImageData.url}` 
+                        : '/default-image.jpg';
+          // שימוש בשדה 'imageAlt' הייעודי, עם פולבאק לטקסט הפנימי של התמונה
+          const imageAlt = a.imageAlt || mainImageData?.alternativeText || '';
+          // --- ⭐️ סוף לוגיקה חדשה ⭐️ ---
+          
+          return {
+            id: a.id,
+            title: a.title,
+            slug: a.slug,
+
+            // --- ⭐️ שימוש בלוגיקה החדשה ⭐️ ---
+            image: image,
+            imageAlt: imageAlt,
+            // --- ⭐️ סוף שימוש ⭐️ ---
+
+            category: a.category || 'general',
+            subcategory: Array.isArray(a.subcategory)
+              ? a.subcategory
+              : [a.subcategory ?? 'general'],
+            Values: Array.isArray(a.Values)
+              ? a.Values
+              : [a.Values ?? null],
+            description: a.description,
+            headline: a.headline || a.title,
+            subdescription: a.subdescription,
+            href: `/articles/${a.slug}`,
+            tags: a.tags || [],
+            date: a.date || '',
+            time: a.time || '00:00',
+          };
+        });
         // ✅ מיון לפי תאריך + שעה + דקה (מהחדש לישן)
         const sorted = mapped.sort((a, b) => {
           const aDateTime = new Date(`${a.date}T${a.time}`);
