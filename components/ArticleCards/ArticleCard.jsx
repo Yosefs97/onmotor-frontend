@@ -1,10 +1,10 @@
-// components/ArticleCards/ArticleCard.jsx
 'use client';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
-const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
+// 🛑 הערה: המשתנה הזה כבר לא נחוץ בקובץ זה, כי ה-URL המלא מגיע מהאב
+// const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 
 export default function ArticleCard({ article, size = 'small' }) {
   const [isTouched, setIsTouched] = useState(false);
@@ -19,15 +19,10 @@ export default function ArticleCard({ article, size = 'small' }) {
 
   const handleTouchStart = () => setIsTouched(true);
 
-  // 🟢 נבנה תמיד כתובת תמונה תקינה
-  let imageUrl = '';
-  if (typeof article.image === 'string') {
-    imageUrl = article.image;
-  } else if (article.image?.url) {
-    imageUrl = `${API_URL}${article.image.url}`;
-  } else if (article.cover?.data?.attributes?.url) {
-    imageUrl = `${API_URL}${article.cover.data.attributes.url}`;
-  }
+  // --- ⭐️ לוגיקה חדשה ופשוטה ⭐️ ---
+  // אנחנו סומכים על רכיב האב (CategoryPage) שכבר הכין לנו URL תקין
+  const imageUrl = article.image || '/default-image.jpg'; // פולבאק סופי למקרה ש-article.image ריק
+  // --- ⭐️ סוף לוגיקה חדשה ⭐️ ---
 
   const imageAltText = article.imageAlt || article.title || 'Article image';
 
@@ -57,7 +52,7 @@ export default function ArticleCard({ article, size = 'small' }) {
         {imageUrl ? (
           <div className="relative w-full h-full">
             <Image
-              src={imageUrl}
+              src={imageUrl} // ⭐️ שימוש ישיר ב-URL הנקי
               alt={imageAltText}
               fill
               sizes="(max-width: 768px) 100vw, 50vw"
