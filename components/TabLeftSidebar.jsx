@@ -64,7 +64,7 @@ export default function TabLeftSidebar() {
       }
     }
 
-    // --- ⭐️ לוגיקת תמונות חדשה בהתאם לבקשתך ⭐️ ---
+    // --- ⭐️ לוגיקת תמונות ⭐️ ---
     let img = null;
     const gallery = a.gallery; // מגיע מ-populate=*
 
@@ -81,7 +81,7 @@ export default function TabLeftSidebar() {
         img = `${API_URL}${imgData.url}`;
       }
     } else {
-      // "פופולרי" וכל השאר: השאר את הלוגיקה המקורית
+      // "פופולרי" וכל השאר: השאר את הלוגיקה המקורית (משיכה משדה image)
       if (a.image?.data?.attributes?.url) {
         img = `${API_URL}${a.image.data.attributes.url}`;
       } else if (a.image?.url) {
@@ -89,7 +89,7 @@ export default function TabLeftSidebar() {
       }
     }
 
-    // פולבאק כללי אם שום לוגיקה לא מצאה תמונה
+    // פולבאק כללי אם שום לוגיקה לא מצאה תמונה (רלוונטי בעיקר לכתבות)
     if (!img && gallery?.[0]?.url) {
       img = `${API_URL}${gallery[0].url}`;
     }
@@ -97,14 +97,14 @@ export default function TabLeftSidebar() {
     if (img && img.trim() === '') {
       img = null;
     }
-    // --- ⭐️ סוף הלוגיקה החדשה ⭐️ ---
+    // --- ⭐️ סוף הלוגיקה ⭐️ ---
 
     return {
       id: obj.id,
       title: a.title || a.name || '',
       slug: a.slug || '',
       description: a.description || '',
-      image: img, // ⭐️ שימוש בתוצאה מהלוגיקה החדשה
+      image: img, // ⭐️ התמונה מסטראפי (אם קיימת)
       date: a.date?.split('T')[0] || a.publishedAt?.split('T')[0] || '',
       url: a.url || '',
       views: a.views ?? null,
@@ -117,7 +117,6 @@ export default function TabLeftSidebar() {
       try {
         const res = await fetch(`${API_URL}/api/articles?sort=date:desc&populate=*`);
         const data = (await res.json()).data || [];
-        // --- ⭐️ תיקון: העברת type ייחודי ללוגיקת התמונות ⭐️ ---
         setLatestArticles(data.map((a) => normalizeItem(a, 'latest-article')));
       } catch (err) {
         console.error('שגיאה בטעינת אחרונים:', err);
@@ -130,7 +129,6 @@ export default function TabLeftSidebar() {
          `${API_URL}/api/articles?filters[tags_txt][$contains]=iroads&sort=date:desc&populate=*`
         );
         const data = (await res.json()).data || [];
-        // --- ⭐️ תיקון: העברת type ייחודי ללוגיקת התמונות ⭐️ ---
         setOnRoadArticles(data.map((a) => normalizeItem(a, 'onroad-article')));
       } catch (err) {
         console.error("שגיאה בטעינת 'בדרכים':", err);
@@ -154,16 +152,17 @@ export default function TabLeftSidebar() {
 
         const withPreview = await Promise.all(
           data.map(async (item) => {
-            // ⭐️ קורא ל-normalizeItem עם 'popular', הלוגיקה נשמרת
             const norm = normalizeItem(item, 'popular'); 
 
-            // ✅ אם אין תמונה ב-Strapi – ננסה למשוך מ-preview
+            // --- ⭐️ תיקון: "רק אם אין תמונה מסטראפי, נסה למשוך מ-preview" ⭐️ ---
+            // החזרנו את התנאי לקדמותו
             if (!norm.image && norm.url) {
               try {
                 const previewRes = await fetch(
                   `/api/preview?url=${encodeURIComponent(norm.url)}`
                 );
                 const previewJson = await previewRes.json();
+                
                 if (previewJson?.image) {
                   norm.image = previewJson.image;
                 }
@@ -171,6 +170,7 @@ export default function TabLeftSidebar() {
                 console.error('Preview fetch error:', err);
               }
             }
+            // --- ⭐️ סוף התיקון ⭐️ ---
 
             // ✅ fallback סופי
             if (!norm.image) {
