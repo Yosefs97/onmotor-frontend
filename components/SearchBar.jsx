@@ -1,4 +1,3 @@
-//components\SearchBar.jsx
 'use client';
 import React, { useState, useEffect, useId } from "react";
 import { useRouter } from 'next/navigation';
@@ -6,8 +5,6 @@ import Fuse from 'fuse.js';
 import Image from 'next/image';
 import { IoClose } from "react-icons/io5";
 import generateSearchSuggestions from "@/lib/generateSearchSuggestions";
-
-
 
 export default function SearchBar({ onSelect = () => {} }) {
   const router = useRouter();
@@ -39,7 +36,11 @@ export default function SearchBar({ onSelect = () => {} }) {
   });
 
   const isPopular = !query.trim();
-  const showResults = (isFocused || isHovered) && (isPopular ? popularSuggestions : filtered);
+  
+  // --- ⭐️ כאן התיקון ⭐️ ---
+  // החלפנו את 'popularSuggestions' (שלא מוגדר) ב-'suggestions' (שמכיל את הנתונים)
+  const showResults = (isFocused || isHovered) && (isPopular ? suggestions : filtered);
+  // --- ⭐️ סוף התיקון ⭐️ ---
 
   const handleChange = (e) => {
     const value = e.target.value;
