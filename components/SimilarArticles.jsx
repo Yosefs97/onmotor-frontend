@@ -1,4 +1,3 @@
-// components/SimilarArticles.jsx
 'use client';
 import React, { useEffect, useState } from 'react';
 import ArticleCard from '@/components/ArticleCards/ArticleCard';
@@ -17,17 +16,29 @@ export default function SimilarArticles({ currentSlug, category }) {
         const json = await res.json();
         const data = json.data || [];
 
-        const mapped = data.map((a) => ({
-          id: a.id,
-          title: a.title,
-          slug: a.slug,
-          href: `/articles/${a.slug}`,
-          headline: a.headline || a.title,
-          description: a.description || '',
-          date: a.date,
-          image: a.image || a.cover || null,
-          imageAlt: a.imageAlt || a.title,
-        }));
+        const mapped = data.map((a) => {
+          // --- ⭐️ לוגיקה חדשה: משיכת תמונה ראשית מהגלריה ⭐️ ---
+          const mainImageData = a.gallery?.[0];
+          const image = mainImageData?.url 
+                          ? `${API_URL}${mainImageData.url}` 
+                          : '/default-image.jpg';
+          const imageAlt = a.imageAlt || mainImageData?.alternativeText || a.title;
+          // --- ⭐️ סוף לוגיקה חדשה ⭐️ ---
+
+          return {
+            id: a.id,
+            title: a.title,
+            slug: a.slug,
+            href: `/articles/${a.slug}`,
+            headline: a.headline || a.title,
+            description: a.description || '',
+            date: a.date,
+            // --- ⭐️ שימוש בלוגיקה החדשה ⭐️ ---
+            image: image,
+            imageAlt: imageAlt,
+            // --- ⭐️ סוף שימוש ⭐️ ---
+          };
+        });
 
         setSimilar(mapped);
       } catch (err) {

@@ -1,5 +1,3 @@
-//components\ArticleHeader.jsx
-
 'use client';
 import React from 'react';
 import ArticleShare from './ArticleShare';
@@ -8,13 +6,17 @@ export default function ArticleHeader({
   author = "מערכת OnMotor",
   date = "22.06.2025",
   time = "10:00",
-  image,
-  imageSrc,
+  image, // ⭐️ זה ה-prop החשוב
+  // imageSrc, // 🛑 הוסר, לא נחוץ יותר
   imageAlt = "תמונה ראשית",
   title = "כותרת כתבה",
   subdescription = "",
 }) {
-  const finalImage = imageSrc || image ||imageAlt|| "/images/default-article.jpg";
+  
+  // --- ⭐️ לוגיקה חדשה ופשוטה ⭐️ ---
+  // אנו מקבלים URL מוכן מהקומפוננטה-האב (ArticlePage.jsx)
+  const finalImage = image || "/images/default-article.jpg";
+  // --- ⭐️ סוף לוגיקה ⭐️ ---
 
   return (
     <div className="flex flex-col gap-4 mb-6 text-gray-800 text-right">

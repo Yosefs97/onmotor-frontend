@@ -1,4 +1,3 @@
-// components/MainGridContentDesktop.jsx
 'use client';
 import React, { useEffect, useState } from 'react';
 import ArticleCard from './ArticleCards/ArticleCard';
@@ -17,23 +16,35 @@ export default function MainGridContentDesktop() {
         const json = await res.json();
 
         const mapped =
-          json.data?.map((a) => ({
-            id: a.id,
-            title: a.title,
-            slug: a.slug,
-            image: a.image?.url ? `${API_URL}${a.image.url}` : '/default-image.jpg',
-            imageAlt: a.imageAlt || '',
-            category: a.category || 'general',
-            date: a.date,
-            subcategory: Array.isArray(a.subcategory)
-              ? a.subcategory
-              : [a.subcategory ?? 'general'],
-            description: a.description,
-            headline: a.headline || a.title,
-            subdescription: a.subdescription,
-            href: `/articles/${a.slug}`,
-            tags: a.tags || [],
-          })) || [];
+          json.data?.map((a) => {
+            // --- ⭐️ לוגיקה חדשה: משיכת תמונה ראשית מהגלריה ⭐️ ---
+            const mainImageData = a.gallery?.[0];
+            const image = mainImageData?.url 
+                            ? `${API_URL}${mainImageData.url}` 
+                            : '/default-image.jpg';
+            const imageAlt = a.imageAlt || mainImageData?.alternativeText || '';
+            // --- ⭐️ סוף לוגיקה חדשה ⭐️ ---
+
+            return {
+              id: a.id,
+              title: a.title,
+              slug: a.slug,
+              // --- ⭐️ שימוש בלוגיקה החדשה ⭐️ ---
+              image: image,
+              imageAlt: imageAlt,
+              // --- ⭐️ סוף שימוש ⭐️ ---
+              category: a.category || 'general',
+              date: a.date,
+              subcategory: Array.isArray(a.subcategory)
+                ? a.subcategory
+                : [a.subcategory ?? 'general'],
+              description: a.description,
+              headline: a.headline || a.title,
+              subdescription: a.subdescription,
+              href: `/articles/${a.slug}`,
+              tags: a.tags || [],
+            };
+          }) || [];
 
         setArticles(mapped);
       } catch (err) {
@@ -47,12 +58,12 @@ export default function MainGridContentDesktop() {
   }, []);
 
   // סדר קבוע של קטגוריות
-const desiredOrder = ['news', 'reviews', 'blog', 'gear'];
+  const desiredOrder = ['news', 'reviews', 'blog', 'gear'];
 
-// יצירת רשימת קטגוריות מהמאמרים + מיון לפי הסדר הרצוי
-const categories = [...new Set(articles.map((a) => a.category))].sort(
-  (a, b) => desiredOrder.indexOf(a) - desiredOrder.indexOf(b)
-);
+  // יצירת רשימת קטגוריות מהמאמרים + מיון לפי הסדר הרצוי
+  const categories = [...new Set(articles.map((a) => a.category))].sort(
+    (a, b) => desiredOrder.indexOf(a) - desiredOrder.indexOf(b)
+  );
 
 
   return (
