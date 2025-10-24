@@ -2,7 +2,7 @@
 import './globals.css';
 import { AuthModalProvider } from '@/contexts/AuthModalProvider';
 import ClientLayout from '@/components/ClientLayout';
-import ZoomWrapper from '@/components/ZoomWrapper';
+
 import ScrollToTopButton from '@/components/ScrollToTopButton';
 import Script from 'next/script'; // הייבוא הזה כבר היה קיים וטוב
 import { Heebo } from 'next/font/google'; // ייבוא חדש לפונט
@@ -29,9 +29,9 @@ export default function RootLayout({ children }) {
       <body className="pt-[0px] flex flex-col min-h-screen">
         <AuthModalProvider>
           <ScrollToTopButton />
-          <ZoomWrapper>
+          
             <ClientLayout>{children}</ClientLayout>
-          </ZoomWrapper>
+          
         </AuthModalProvider>
 
         {/* זה התיקון הקריטי: 
