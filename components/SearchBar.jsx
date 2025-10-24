@@ -1,3 +1,4 @@
+//components\SearchBar.jsx
 'use client';
 import React, { useState, useEffect, useId } from "react";
 import { useRouter } from 'next/navigation';
@@ -6,11 +7,7 @@ import Image from 'next/image';
 import { IoClose } from "react-icons/io5";
 import generateSearchSuggestions from "@/lib/generateSearchSuggestions";
 
-const popularSuggestions = [
-  { title: "Yamaha MT-07 החדש", path: "/news/yamaha-mt07-2025", image: "/articles/yamaha-mt07.jpg" },
-  { title: "רכיבה בלילה בישראל", path: "/news/night-ride", image: "/articles/night-ride.jpg" },
-  { title: "סקירת קסדת Arai", path: "/reviews/gear/arai-helmet", image: "/articles/arai-helmet.png" },
-];
+
 
 export default function SearchBar({ onSelect = () => {} }) {
   const router = useRouter();

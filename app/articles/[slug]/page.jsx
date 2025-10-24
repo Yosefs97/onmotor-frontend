@@ -1,4 +1,3 @@
-// app/articles/[slug]/page.jsx
 export const dynamic = 'force-dynamic';
 
 import PageContainer from "@/components/PageContainer";
@@ -27,11 +26,26 @@ export default async function ArticlePage({ params }) {
 
   const data = rawArticle;
 
+  // --- ⭐️ לוגיקה חדשה לתמונה ראשית ⭐️ ---
+  // 1. ננסה לשלוף את התמונה הראשונה מהגלריה
+  const mainImageData = data.gallery?.[0]; 
+
+  // 2. נגדיר את התמונה הראשית והטקסט החלופי
+  const mainImage = mainImageData?.url 
+                    ? `${API_URL}${mainImageData.url}` 
+                    : "/default-image.jpg"; // תמונת פולבאק אם הגלריה ריקה
+  const mainImageAlt = mainImageData?.alternativeText || "תמונה ראשית";
+  // --- ⭐️ סוף לוגיקה חדשה ⭐️ ---
+
   const article = {
     title: data.title || "כתבה ללא כותרת",
     description: data.description || "אין תיאור זמין",
-    image: data.image?.url ? `${API_URL}${data.image.url}` : "/default-image.jpg",
-    imageAlt: data.image?.alternativeText || "תמונה ראשית",
+    
+    // --- ⭐️ שימוש במשתנים החדשים ⭐️ ---
+    image: mainImage,
+    imageAlt: mainImageAlt,
+    // --- ⭐️ סוף שימוש ⭐️ ---
+
     author: data.author || "מערכת OnMotor",
     date: data.date || "2025-06-22",
     time: data.time || "10:00",
@@ -88,11 +102,7 @@ export default async function ArticlePage({ params }) {
     if (typeof block === "string") {
       const cleanText = block.trim();
 
-      if (cleanText.startsWith("[[img:") && cleanText.endsWith("]]")) {
-        const parts = cleanText.slice(6, -2).split("||");
-        const [src, alt = "", caption = ""] = parts;
-        return <InlineImage key={i} src={src} alt={alt} caption={caption} />;
-      }
+      // --- 🛑 הוסרה הלוגיקה של [[img...]] 🛑 ---
 
       const hasHTMLTags = /<\/?[a-z][\s\S]*>/i.test(cleanText);
       if (hasHTMLTags) {
@@ -155,6 +165,24 @@ export default async function ArticlePage({ params }) {
         />
       );
     }
+    
+    // ---- ⭐️ הוספה חדשה: טיפול בבלוק תמונה ⭐️ ----
+    if (block.type === "image") {
+      const { image } = block;
+      if (!image || !image.url) return null; // אם אין תמונה, אל תרנדר כלום
+
+      // הרכבת ה-URL המלא (חשוב!)
+      const src = image.url.startsWith('http') 
+                  ? image.url 
+                  : `${API_URL}${image.url}`;
+                  
+      const alt = image.alternativeText || "תמונה בתוך הכתבה";
+      const caption = image.caption || ""; // תמיכה בכיתוב תמונה אם קיים
+
+      // שימוש חוזר בקומפוננטה שכבר יש לך
+      return <InlineImage key={i} src={src} alt={alt} caption={caption} />;
+    }
+    // ---- ⭐️ סוף התוספת ⭐️ ----
 
     // ---- כותרות ----
     if (block.type === "heading") {

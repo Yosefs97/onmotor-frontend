@@ -1,4 +1,595 @@
 ///
+//components\CategoryPage.jsx
+'use client';
+import React, { useEffect, useState } from 'react';
+import SectionWithHeader from './SectionWithHeader';
+import LimitedArticles from './LimitedArticles';
+import { labelMap } from '@/utils/labelMap';
+
+const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
+
+// קיבוץ לפי תת קטגוריות רגילות
+function groupBySubcategory(articles) {
+  return articles.reduce((acc, article) => {
+    const subcategories = Array.isArray(article.subcategory)
+      ? article.subcategory
+      : [article.subcategory];
+
+    subcategories.forEach((subcat) => {
+      if (!acc[subcat]) acc[subcat] = [];
+      acc[subcat].push(article);
+    });
+
+    return acc;
+  }, {});
+}
+
+// קיבוץ לפי Values (לתתי־תתי קטגוריות של מדריכים)
+function groupByValues(articles) {
+  return articles.reduce((acc, article) => {
+    const values = Array.isArray(article.Values)
+      ? article.Values
+      : [article.Values];
+
+    values.forEach((val) => {
+      if (!acc[val]) acc[val] = [];
+      acc[val].push(article);
+    });
+
+    return acc;
+  }, {});
+}
+
+export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null, guideSubKey = null }) {
+  const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchArticles() {
+      try {
+        let url = `${API_URL}/api/articles?populate=*`;
+
+        // ✅ סינון לפי קטגוריה ראשית
+        if (categoryKey) {
+          url += `&filters[category][$eq]=${categoryKey}`;
+        }
+
+        const res = await fetch(url);
+        const json = await res.json();
+        let data = json.data || [];
+
+        // ✅ סינון בצד הלקוח לפי תת־קטגוריה (בגלל מגבלת SQLite)
+        if (subcategoryKey) {
+          data = data.filter((a) => {
+            const sub = a.subcategory;
+            if (!sub) return false;
+            if (Array.isArray(sub)) return sub.includes(subcategoryKey);
+            if (typeof sub === 'string') return sub.includes(subcategoryKey);
+            return false;
+          });
+        }
+
+        // ✅ סינון לפי תת־תת קטגוריה (Values)
+        if (guideSubKey) {
+          data = data.filter((a) => {
+            const vals = a.Values;
+            if (!vals) return false;
+            if (Array.isArray(vals)) return vals.includes(guideSubKey);
+            if (typeof vals === 'string') return vals.includes(guideSubKey);
+            return false;
+          });
+        }
+
+        const mapped = data.map((a) => ({
+          id: a.id,
+          title: a.title,
+          slug: a.slug,
+          image: a.image?.url ? `${API_URL}${a.image.url}` : '/default-image.jpg',
+          imageAlt: a.imageAlt || '',
+          category: a.category || 'general',
+          subcategory: Array.isArray(a.subcategory)
+            ? a.subcategory
+            : [a.subcategory ?? 'general'],
+          Values: Array.isArray(a.Values)
+            ? a.Values
+            : [a.Values ?? null],
+          description: a.description,
+          headline: a.headline || a.title,
+          subdescription: a.subdescription,
+          href: `/articles/${a.slug}`,
+          tags: a.tags || [],
+          date: a.date || '',
+          time: a.time || '00:00',
+        }));
+        // ✅ מיון לפי תאריך + שעה + דקה (מהחדש לישן)
+        const sorted = mapped.sort((a, b) => {
+          const aDateTime = new Date(`${a.date}T${a.time}`);
+          const bDateTime = new Date(`${b.date}T${b.time}`);
+          return bDateTime - aDateTime;
+        });
+
+        setArticles(sorted);
+
+        
+      } catch (err) {
+        console.error('שגיאה בטעינת כתבות:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchArticles();
+  }, [categoryKey, subcategoryKey, guideSubKey]);
+
+  if (loading) {
+    return <p className="text-center text-gray-500">טוען כתבות...</p>;
+  }
+
+  if (articles.length === 0) {
+    return <p className="text-center text-gray-500">אין עדיין כתבות בקטגוריה זו</p>;
+  }
+
+  // ✅ לוגיקת קיבוץ
+  const grouped =
+    guideSubKey
+      ? { [guideSubKey]: articles }
+      : subcategoryKey === 'guides'
+        ? groupByValues(articles)
+        : subcategoryKey
+          ? { [subcategoryKey]: articles }
+          : groupBySubcategory(articles);
+
+  const hebTitle = guideSubKey
+    ? `${labelMap['guides']} - ${labelMap[guideSubKey] || guideSubKey}`
+    : subcategoryKey
+      ? labelMap[subcategoryKey] || subcategoryKey
+      : labelMap[categoryKey] || categoryKey;
+
+  const shouldShowMainTitle =
+    subcategoryKey !== null || guideSubKey !== null || Object.keys(grouped).length === 1;
+
+  return (
+    <div className="max-w-screen-xl mx-auto px-0">
+      <div className="flex flex-col gap-0" dir="rtl">
+        {!subcategoryKey && !guideSubKey && shouldShowMainTitle && (
+          <SectionWithHeader
+            title={hebTitle}
+            href={`/${categoryKey}`}
+            variant="main"
+          />
+        )}
+
+        {Object.entries(grouped).map(([subKey, subArticles]) => (
+          <div key={subKey} className="bg-white shadow">
+            {!guideSubKey && Object.keys(grouped).length > 1 && (
+              <SectionWithHeader
+                title={labelMap[subKey] || subKey}
+                href={
+                  subcategoryKey === 'guides'
+                    ? `/${categoryKey}/${subcategoryKey}/${subKey}`
+                    : `/${categoryKey}/${subKey}`
+                }
+                variant="category"
+              />
+            )}
+
+            <LimitedArticles articles={subArticles} initialCount={2} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+///
+//components\SearchBar.jsx
+'use client';
+import React, { useState, useEffect, useId } from "react";
+import { useRouter } from 'next/navigation';
+import Fuse from 'fuse.js';
+import Image from 'next/image';
+import { IoClose } from "react-icons/io5";
+import generateSearchSuggestions from "@/lib/generateSearchSuggestions";
+
+
+
+export default function SearchBar({ onSelect = () => {} }) {
+  const router = useRouter();
+  const [query, setQuery] = useState('');
+  const [filtered, setFiltered] = useState([]);
+  const [isFocused, setIsFocused] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const [suggestions, setSuggestions] = useState([]);
+
+  // 🆔 useId מבטיח מזהה ייחודי לכל מופע רכיב
+  const inputId = useId();
+
+  useEffect(() => {
+    async function fetchSuggestions() {
+      const data = await generateSearchSuggestions();
+      setSuggestions(data);
+    }
+    fetchSuggestions();
+  }, []);
+
+  const fuse = new Fuse(suggestions, {
+    keys: ['title'],
+    threshold: 0.3,
+    includeMatches: true,
+    minMatchCharLength: 1,
+    ignoreLocation: true,
+    useExtendedSearch: true,
+  });
+
+  const isPopular = !query.trim();
+  const showResults = (isFocused || isHovered) && (isPopular ? popularSuggestions : filtered);
+
+  const handleChange = (e) => {
+    const value = e.target.value;
+    setQuery(value);
+    setActiveIndex(-1);
+
+    if (!value.trim()) {
+      setFiltered([]);
+      return;
+    }
+
+    const results = fuse.search(value.trim());
+    setFiltered(results.map(result => ({
+      ...result.item,
+      matches: result.matches
+    })));
+  };
+
+  const handleSelect = (path) => {
+    router.push(path);
+    onSelect();
+    closeSearch();
+  };
+
+  const closeSearch = () => {
+    setQuery('');
+    setFiltered([]);
+    setIsFocused(false);
+    setIsHovered(false);
+    setActiveIndex(-1);
+  };
+
+  const highlightMatch = (text, matches) => {
+    const match = matches?.find(m => m.key === 'title');
+    if (!match || !match.indices.length) return text;
+
+    const parts = [];
+    let lastIndex = 0;
+    match.indices.forEach(([start, end], i) => {
+      parts.push(text.slice(lastIndex, start));
+      parts.push(<mark key={i} className="bg-yellow-300 px-0.5">{text.slice(start, end + 1)}</mark>);
+      lastIndex = end + 1;
+    });
+    parts.push(text.slice(lastIndex));
+    return parts;
+  };
+
+  return (
+    <div
+      className="relative lg:w-72 text-right"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setTimeout(() => setIsHovered(false), 150)}
+    >
+      <form
+        autoComplete="off"
+        onSubmit={(e) => e.preventDefault()}
+        className="relative w-full"
+      >
+        {/* ✅ label משויך לשדה לפי id ייחודי */}
+        <label htmlFor={inputId} className="sr-only">
+          חיפוש באתר OnMotor Media
+        </label>
+
+        <input
+          dir="rtl"
+          id={inputId}
+          name={`search-input-${inputId}`}
+          type="text"
+          autoComplete="new-password"
+          autoCorrect="off"
+          spellCheck="false"
+          value={query}
+          onChange={handleChange}
+          onFocus={() => setIsFocused(true)}
+          onKeyDown={(e) => {
+            if (!showResults.length) return;
+            if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              setActiveIndex((prev) => (prev + 1) % showResults.length);
+            } else if (e.key === 'ArrowUp') {
+              e.preventDefault();
+              setActiveIndex((prev) => (prev - 1 + showResults.length) % showResults.length);
+            } else if (e.key === 'Enter') {
+              e.preventDefault();
+              const selected = showResults[activeIndex];
+              if (selected) handleSelect(selected.path);
+            } else if (e.key === 'Escape') {
+              e.preventDefault();
+              closeSearch();
+            }
+          }}
+          placeholder="חפש באתר..."
+          className="text-right text-white placeholder-white p-1 pr-1 rounded border border-red-600 w-full transition-all duration-300"
+        />
+
+        {(query.trim() || showResults.length > 0) && (
+          <button
+            type="button"
+            onClick={closeSearch}
+            className="absolute left-2 top-1/2 -translate-y-1/2 text-white hover:text-red-600 text-xl"
+            aria-label="נקה וסגור חיפוש"
+          >
+            <IoClose />
+          </button>
+        )}
+      </form>
+
+      {showResults.length > 0 && (
+        <ul
+          dir="rtl"
+          className="absolute top-full mt-0 right-0 bg-white border border-gray-300 rounded shadow-lg z-50 w-full text-sm text-black max-h-60 overflow-y-auto"
+        >
+          {isPopular && (
+            <div className="flex justify-end p-2 border-b border-gray-200">
+              <button
+                type="button"
+                onClick={closeSearch}
+                className="text-white hover:text-red-600 transition text-xl"
+                aria-label="סגור הצעות פופולריות"
+              >
+                <IoClose />
+              </button>
+            </div>
+          )}
+
+          {showResults.map((item, idx) => (
+            <li
+              key={idx}
+              onClick={() => handleSelect(item.path)}
+              className={`flex items-center gap-2 cursor-pointer px-3 py-2
+                ${idx === activeIndex ? 'bg-gray-200 font-bold' : 'hover:bg-gray-100'}`}
+            >
+              {item.image && (
+                <div className="relative w-10 h-10 flex-shrink-0 rounded overflow-hidden">
+                  <Image src={item.image} alt={item.title} fill className="object-cover" />
+                </div>
+              )}
+              <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
+                {highlightMatch(item.title, item.matches || [])}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+
+///
+// app/articles/[slug]/page.jsx
+export const dynamic = 'force-dynamic';
+
+import PageContainer from "@/components/PageContainer";
+import ArticleHeader from "@/components/ArticleHeader";
+import SimpleKeyValueTable from "@/components/SimpleKeyValueTable";
+import Tags from "@/components/Tags";
+import SimilarArticles from "@/components/SimilarArticles";
+import { notFound } from "next/navigation";
+import CommentsSection from "@/components/CommentsSection";
+import Gallery from "@/components/Gallery";
+import { labelMap } from "@/utils/labelMap";
+import InlineImage from "@/components/InlineImage";
+import EmbedContent from "@/components/EmbedContent";
+
+const API_URL = process.env.STRAPI_API_URL;
+
+export default async function ArticlePage({ params }) {
+  const res = await fetch(
+    `${API_URL}/api/articles?filters[slug][$eq]=${params.slug}&populate=*`,
+    { next: { revalidate: 0 } }
+  );
+
+  const json = await res.json();
+  const rawArticle = json.data?.[0];
+  if (!rawArticle) return notFound();
+
+  const data = rawArticle;
+
+  const article = {
+    title: data.title || "כתבה ללא כותרת",
+    description: data.description || "אין תיאור זמין",
+    image: data.image?.url ? `${API_URL}${data.image.url}` : "/default-image.jpg",
+    imageAlt: data.image?.alternativeText || "תמונה ראשית",
+    author: data.author || "מערכת OnMotor",
+    date: data.date || "2025-06-22",
+    time: data.time || "10:00",
+    tags: data.tags || [],
+    content: data.content || "",
+    tableData: data.tableData || {},
+    href: `/articles/${params.slug}`,
+    category: data.category || "general",
+    subcategory: Array.isArray(data.subcategory)
+      ? data.subcategory[0]
+      : data.subcategory,
+    values: Array.isArray(data.Values)
+      ? data.Values
+      : data.Values
+      ? [data.Values]
+      : [],
+    headline: data.headline || data.title,
+    subdescription: data.subdescription || "",
+    slug: params.slug,
+    gallery:
+      data.gallery?.map((img) => ({
+        src: `${API_URL}${img.url}`,
+        alt: img.alternativeText || "תמונה מהגלריה",
+      })) || [],
+    font_family: data.font_family || "Heebo, sans-serif",
+  };
+
+  // ✅ פירורי לחם
+  const breadcrumbs = [{ label: "דף הבית", href: "/" }];
+  if (article.category) {
+    breadcrumbs.push({
+      label: labelMap[article.category] || article.category,
+      href: `/${article.category}`,
+    });
+  }
+  if (article.subcategory) {
+    breadcrumbs.push({
+      label: labelMap[article.subcategory] || article.subcategory,
+      href: `/${article.category}/${article.subcategory}`,
+    });
+  }
+  if (article.values?.length > 0) {
+    const valueKey = article.values[0];
+    breadcrumbs.push({
+      label: labelMap[valueKey] || valueKey,
+      href: `/${article.category}/${article.subcategory}/${valueKey}`,
+    });
+  }
+  breadcrumbs.push({ label: article.title });
+
+  // ✅ רינדור בלוקים כולל קישורים, תמונות והטמעות
+  const renderParagraph = (block, i) => {
+    // ---- טקסט רגיל (string) ----
+    if (typeof block === "string") {
+      const cleanText = block.trim();
+
+      if (cleanText.startsWith("[[img:") && cleanText.endsWith("]]")) {
+        const parts = cleanText.slice(6, -2).split("||");
+        const [src, alt = "", caption = ""] = parts;
+        return <InlineImage key={i} src={src} alt={alt} caption={caption} />;
+      }
+
+      const hasHTMLTags = /<\/?[a-z][\s\S]*>/i.test(cleanText);
+      if (hasHTMLTags) {
+        return (
+          <p
+            key={i}
+            className="article-text text-gray-800 text-[18px] leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: cleanText }}
+          />
+        );
+      }
+
+      const urlMatch = cleanText.match(/https?:\/\/[^\s]+/);
+      if (urlMatch) return <EmbedContent key={i} url={urlMatch[0]} />;
+
+      return (
+        <p
+          key={i}
+          className="article-text text-gray-800 text-[18px] leading-relaxed"
+          dangerouslySetInnerHTML={{ __html: cleanText.replace(/\n/g, "<br/>") }}
+        />
+      );
+    }
+
+    // ---- Rich Text מ-Strapi ----
+    if (block.type === "paragraph" && block.children) {
+      const html = block.children
+        .map((child) => {
+          // ✅ תמיכה בקישור שמגיע כ־block שלם מסוג link
+          if (child.type === "link" && child.url) {
+            const label =
+              (child.children && child.children[0]?.text) || child.url;
+            const href = child.url.startsWith("http")
+              ? child.url
+              : `${child.url.startsWith("/") ? child.url : "/" + child.url}`;
+            return `<a href="${href}" target="_blank" rel="noopener noreferrer"
+              class="text-blue-600 underline hover:text-blue-800 transition-colors duration-150">${label}</a>`;
+          }
+
+          // ✅ טקסט רגיל עם עיצוב
+          let text = child.text || "";
+          if (child.bold) text = `<strong>${text}</strong>`;
+          if (child.italic) text = `<em>${text}</em>`;
+          if (child.underline) text = `<u>${text}</u>`;
+          return text;
+        })
+        .join("");
+
+      const cleanHtml = html.replace(/<[^>]+>/g, "").trim();
+      const urlMatch = cleanHtml.match(/https?:\/\/[^\s"']+/);
+      if (urlMatch && cleanHtml === urlMatch[0]) {
+        return <EmbedContent key={i} url={urlMatch[0]} />;
+      }
+
+      return (
+        <p
+          key={i}
+          className="article-text text-gray-800 text-[18px] leading-relaxed"
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+      );
+    }
+
+    // ---- כותרות ----
+    if (block.type === "heading") {
+      const level = block.level || 2;
+      const Tag = `h${Math.min(level, 3)}`;
+      const text = block.children?.map((c) => c.text).join("") || "";
+      return (
+        <Tag
+          key={i}
+          className="font-bold text-2xl text-gray-900 mt-4 mb-2"
+          dangerouslySetInnerHTML={{ __html: text }}
+        />
+      );
+    }
+
+    return null;
+  };
+
+  // ✅ בניית הפסקאות
+  let paragraphs = [];
+  if (typeof article.content === "string") {
+    paragraphs = article.content.split("\n\n");
+  } else if (Array.isArray(article.content)) {
+    paragraphs = article.content;
+  }
+
+  return (
+    <PageContainer title={article.title} breadcrumbs={breadcrumbs}>
+      <div
+        className="mx-auto max-w-[740px] space-y-2 text-right leading-relaxed text-base text-gray-800 px-2"
+        style={{ fontFamily: article.font_family }}
+      >
+        <ArticleHeader
+          author={article.author}
+          date={article.date}
+          time={article.time}
+          image={article.image}
+          imageAlt={article.imageAlt}
+          title={article.headline}
+          subdescription={article.subdescription}
+        />
+
+        {article.description && (
+          <p className="font-bold text-2xl text-gray-600">{article.description}</p>
+        )}
+
+        {paragraphs.map(renderParagraph)}
+
+        {article.tableData && <SimpleKeyValueTable data={article.tableData} />}
+        <Gallery images={article.gallery} />
+        <Tags tags={article.tags} />
+        <SimilarArticles currentSlug={article.slug} category={article.category} />
+        <CommentsSection articleUrl={`https://www.onmotormedia.com${article.href}`} />
+      </div>
+    </PageContainer>
+  );
+}
+///
+
+///
 //components\Header.jsx
 'use client';
 import React, { useEffect, useRef, useState } from 'react';
