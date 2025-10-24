@@ -1,4 +1,3 @@
-// /app/api/preview/route.js
 import { NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
 
@@ -16,13 +15,37 @@ export async function GET(req) {
 
     let image = null;
 
-    // ✅ YouTube thumbnails
+    // --- ⭐️ תיקון: הוספת תמיכה ב-YouTube Shorts ⭐️ ---
     if (url.includes('youtube.com') || url.includes('youtu.be')) {
-      const videoId = url.includes('v=')
-        ? new URL(url).searchParams.get('v')
-        : url.split('/').pop();
-      image = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+      try {
+        const urlObj = new URL(url);
+        let videoId = null;
+
+        if (urlObj.hostname.includes('youtube.com')) {
+          // 1. קישור רגיל: ...watch?v=VIDEO_ID
+          videoId = urlObj.searchParams.get('v');
+          
+          // 2. ⭐️ קישור Shorts: ...youtube.com/shorts/VIDEO_ID
+          if (!videoId && urlObj.pathname.includes('/shorts/')) {
+            videoId = urlObj.pathname.split('/shorts/')[1];
+          }
+
+        } else if (urlObj.hostname.includes('youtu.be')) {
+          // 3. קישור מקוצר: ...youtu.be/VIDEO_ID
+          videoId = urlObj.pathname.substring(1);
+        }
+
+        // ניקוי סופי (מסיר פרמטרים כמו ?si=...)
+        if (videoId) {
+          videoId = videoId.split('?')[0];
+          image = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+        }
+      } catch (err) {
+        console.error('YouTube URL parsing error:', err);
+        image = null; 
+      }
     }
+    // --- ⭐️ סוף התיקון ⭐️ ---
 
     // ✅ TikTok thumbnail
     else if (url.includes('tiktok.com')) {
@@ -93,14 +116,12 @@ export async function GET(req) {
         const html = await res.text();
         const $ = cheerio.load(html);
 
-        // ננסה למצוא קודם OG / Twitter image
         image =
           $('meta[property="og:image"]').attr('content') ||
           $('meta[name="twitter:image"]').attr('content') ||
-          $('meta[property="og:image:url"]').attr('content') ||
+          $('meta[property="og:image:url"]').Gg('content') ||
           null;
 
-        // ✅ אם לא מצאנו — ננסה להביא favicon (לוגו האתר)
         if (!image) {
           const favicon =
             $('link[rel="icon"]').attr('href') ||
@@ -109,7 +130,6 @@ export async function GET(req) {
             null;
 
           if (favicon) {
-            // אם הנתיב יחסי — נוסיף את הדומיין
             if (favicon.startsWith('/')) {
               const baseUrl = new URL(url).origin;
               image = baseUrl + favicon;
