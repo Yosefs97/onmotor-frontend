@@ -1,4 +1,3 @@
-// components/TabLeftSidebar.jsx
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
@@ -65,23 +64,47 @@ export default function TabLeftSidebar() {
       }
     }
 
-    // 👇 ניקוי של כתובת תמונה
+    // --- ⭐️ לוגיקת תמונות חדשה בהתאם לבקשתך ⭐️ ---
     let img = null;
-    if (a.image?.data?.attributes?.url) {
-      img = `${API_URL}${a.image.data.attributes.url}`;
-    } else if (a.image?.url) {
-      img = `${API_URL}${a.image.url}`;
+    const gallery = a.gallery; // מגיע מ-populate=*
+
+    if (type === 'latest-article') {
+      // "אחרונים": נסה תמונה שנייה (index 1), אם אין, חזור לראשונה (index 0)
+      const imgData = gallery?.[1] || gallery?.[0];
+      if (imgData?.url) {
+        img = `${API_URL}${imgData.url}`;
+      }
+    } else if (type === 'onroad-article') {
+      // "בדרכים": נסה תמונה שלישית (index 2), אם אין, חזור לראשונה (index 0)
+      const imgData = gallery?.[2] || gallery?.[0];
+      if (imgData?.url) {
+        img = `${API_URL}${imgData.url}`;
+      }
+    } else {
+      // "פופולרי" וכל השאר: השאר את הלוגיקה המקורית
+      if (a.image?.data?.attributes?.url) {
+        img = `${API_URL}${a.image.data.attributes.url}`;
+      } else if (a.image?.url) {
+        img = `${API_URL}${a.image.url}`;
+      }
     }
+
+    // פולבאק כללי אם שום לוגיקה לא מצאה תמונה
+    if (!img && gallery?.[0]?.url) {
+      img = `${API_URL}${gallery[0].url}`;
+    }
+    
     if (img && img.trim() === '') {
       img = null;
     }
+    // --- ⭐️ סוף הלוגיקה החדשה ⭐️ ---
 
     return {
       id: obj.id,
       title: a.title || a.name || '',
       slug: a.slug || '',
       description: a.description || '',
-      image: img,
+      image: img, // ⭐️ שימוש בתוצאה מהלוגיקה החדשה
       date: a.date?.split('T')[0] || a.publishedAt?.split('T')[0] || '',
       url: a.url || '',
       views: a.views ?? null,
@@ -94,7 +117,8 @@ export default function TabLeftSidebar() {
       try {
         const res = await fetch(`${API_URL}/api/articles?sort=date:desc&populate=*`);
         const data = (await res.json()).data || [];
-        setLatestArticles(data.map((a) => normalizeItem(a, 'article')));
+        // --- ⭐️ תיקון: העברת type ייחודי ללוגיקת התמונות ⭐️ ---
+        setLatestArticles(data.map((a) => normalizeItem(a, 'latest-article')));
       } catch (err) {
         console.error('שגיאה בטעינת אחרונים:', err);
       }
@@ -104,10 +128,10 @@ export default function TabLeftSidebar() {
       try {
         const res = await fetch(
          `${API_URL}/api/articles?filters[tags_txt][$contains]=iroads&sort=date:desc&populate=*`
-
         );
         const data = (await res.json()).data || [];
-        setOnRoadArticles(data.map((a) => normalizeItem(a, 'article')));
+        // --- ⭐️ תיקון: העברת type ייחודי ללוגיקת התמונות ⭐️ ---
+        setOnRoadArticles(data.map((a) => normalizeItem(a, 'onroad-article')));
       } catch (err) {
         console.error("שגיאה בטעינת 'בדרכים':", err);
       }
@@ -130,7 +154,8 @@ export default function TabLeftSidebar() {
 
         const withPreview = await Promise.all(
           data.map(async (item) => {
-            const norm = normalizeItem(item, 'popular');
+            // ⭐️ קורא ל-normalizeItem עם 'popular', הלוגיקה נשמרת
+            const norm = normalizeItem(item, 'popular'); 
 
             // ✅ אם אין תמונה ב-Strapi – ננסה למשוך מ-preview
             if (!norm.image && norm.url) {
