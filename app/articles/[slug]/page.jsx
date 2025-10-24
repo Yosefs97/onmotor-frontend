@@ -12,10 +12,16 @@ import { labelMap } from "@/utils/labelMap";
 import InlineImage from "@/components/InlineImage";
 import EmbedContent from "@/components/EmbedContent";
 
+// --- ⭐️ תיקון: הגדרת שני משתני סביבה ⭐️ ---
+// 1. URL לשימוש פנימי של השרת (ל-fetch)
 const API_URL = process.env.STRAPI_API_URL;
+// 2. URL ציבורי לשימוש הדפדפן (לטעינת תמונות)
+const PUBLIC_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || API_URL;
+// --- ⭐️ סוף התיקון ⭐️ ---
 
 export default async function ArticlePage({ params }) {
   const res = await fetch(
+    // ⭐️ שימוש ב-API_URL הרגיל (הפנימי) עבור fetch
     `${API_URL}/api/articles?filters[slug][$eq]=${params.slug}&populate=*`,
     { next: { revalidate: 0 } }
   );
@@ -27,24 +33,21 @@ export default async function ArticlePage({ params }) {
   const data = rawArticle;
 
   // --- ⭐️ לוגיקה חדשה לתמונה ראשית ⭐️ ---
-  // 1. ננסה לשלוף את התמונה הראשונה מהגלריה
   const mainImageData = data.gallery?.[0]; 
 
-  // 2. נגדיר את התמונה הראשית והטקסט החלופי
+  // ⭐️ תיקון: שימוש ב-PUBLIC_API_URL לבניית כתובת התמונה
   const mainImage = mainImageData?.url 
-                    ? `${API_URL}${mainImageData.url}` 
-                    : "/default-image.jpg"; // תמונת פולבאק אם הגלריה ריקה
+                    ? `${PUBLIC_API_URL}${mainImageData.url}` 
+                    : "/default-image.jpg";
   const mainImageAlt = mainImageData?.alternativeText || "תמונה ראשית";
-  // --- ⭐️ סוף לוגיקה חדשה ⭐️ ---
+  // --- ⭐️ סוף התיקון ⭐️ ---
 
   const article = {
     title: data.title || "כתבה ללא כותרת",
     description: data.description || "אין תיאור זמין",
     
-    // --- ⭐️ שימוש במשתנים החדשים ⭐️ ---
     image: mainImage,
     imageAlt: mainImageAlt,
-    // --- ⭐️ סוף שימוש ⭐️ ---
 
     author: data.author || "מערכת OnMotor",
     date: data.date || "2025-06-22",
@@ -66,8 +69,9 @@ export default async function ArticlePage({ params }) {
     subdescription: data.subdescription || "",
     slug: params.slug,
     gallery:
+      // ⭐️ תיקון: שימוש ב-PUBLIC_API_URL לבניית כתובות הגלריה
       data.gallery?.map((img) => ({
-        src: `${API_URL}${img.url}`,
+        src: `${PUBLIC_API_URL}${img.url}`,
         alt: img.alternativeText || "תמונה מהגלריה",
       })) || [],
     font_family: data.font_family || "Heebo, sans-serif",
@@ -96,13 +100,12 @@ export default async function ArticlePage({ params }) {
   }
   breadcrumbs.push({ label: article.title });
 
-  // ✅ רינדור בלוקים כולל קישורים, תמונות והטמעות
+  // ✅ רינדור בלוקים
   const renderParagraph = (block, i) => {
     // ---- טקסט רגיל (string) ----
     if (typeof block === "string") {
+      // ... (קוד זהה)
       const cleanText = block.trim();
-
-      // --- 🛑 הוסרה הלוגיקה של [[img...]] 🛑 ---
 
       const hasHTMLTags = /<\/?[a-z][\s\S]*>/i.test(cleanText);
       if (hasHTMLTags) {
@@ -114,10 +117,8 @@ export default async function ArticlePage({ params }) {
           />
         );
       }
-
       const urlMatch = cleanText.match(/https?:\/\/[^\s]+/);
       if (urlMatch) return <EmbedContent key={i} url={urlMatch[0]} />;
-
       return (
         <p
           key={i}
@@ -129,9 +130,9 @@ export default async function ArticlePage({ params }) {
 
     // ---- Rich Text מ-Strapi ----
     if (block.type === "paragraph" && block.children) {
+      // ... (קוד זהה)
       const html = block.children
         .map((child) => {
-          // ✅ תמיכה בקישור שמגיע כ־block שלם מסוג link
           if (child.type === "link" && child.url) {
             const label =
               (child.children && child.children[0]?.text) || child.url;
@@ -141,8 +142,6 @@ export default async function ArticlePage({ params }) {
             return `<a href="${href}" target="_blank" rel="noopener noreferrer"
               class="text-blue-600 underline hover:text-blue-800 transition-colors duration-150">${label}</a>`;
           }
-
-          // ✅ טקסט רגיל עם עיצוב
           let text = child.text || "";
           if (child.bold) text = `<strong>${text}</strong>`;
           if (child.italic) text = `<em>${text}</em>`;
@@ -150,13 +149,11 @@ export default async function ArticlePage({ params }) {
           return text;
         })
         .join("");
-
       const cleanHtml = html.replace(/<[^>]+>/g, "").trim();
-      const urlMatch = cleanHtml.match(/https?:\/\/[^\s"']+/);
+      const urlMatch = cleanHtml.match(/httpsS?:\/\/[^\s"']+/);
       if (urlMatch && cleanHtml === urlMatch[0]) {
         return <EmbedContent key={i} url={urlMatch[0]} />;
       }
-
       return (
         <p
           key={i}
@@ -166,26 +163,26 @@ export default async function ArticlePage({ params }) {
       );
     }
     
-    // ---- ⭐️ הוספה חדשה: טיפול בבלוק תמונה ⭐️ ----
+    // ---- בלוק תמונה ⭐️ ----
     if (block.type === "image") {
       const { image } = block;
-      if (!image || !image.url) return null; // אם אין תמונה, אל תרנדר כלום
+      if (!image || !image.url) return null;
 
-      // הרכבת ה-URL המלא (חשוב!)
+      // ⭐️ תיקון: שימוש ב-PUBLIC_API_URL לבניית כתובת התמונה הפנימית
       const src = image.url.startsWith('http') 
                   ? image.url 
-                  : `${API_URL}${image.url}`;
+                  : `${PUBLIC_API_URL}${image.url}`;
                   
       const alt = image.alternativeText || "תמונה בתוך הכתבה";
-      const caption = image.caption || ""; // תמיכה בכיתוב תמונה אם קיים
+      const caption = image.caption || "";
 
-      // שימוש חוזר בקומפוננטה שכבר יש לך
       return <InlineImage key={i} src={src} alt={alt} caption={caption} />;
     }
-    // ---- ⭐️ סוף התוספת ⭐️ ----
+    // ---- ⭐️ סוף התיקון ⭐️ ----
 
     // ---- כותרות ----
     if (block.type === "heading") {
+      // ... (קוד זהה)
       const level = block.level || 2;
       const Tag = `h${Math.min(level, 3)}`;
       const text = block.children?.map((c) => c.text).join("") || "";
