@@ -28,36 +28,7 @@ export default function RootLayout({ children }) {
           </ZoomWrapper>
         </AuthModalProvider>
 
-        {/* 🟦 תוסף נגיש לי - גרסה 2.3 */}
-        <Script src="/nagishli/nagishli.js" strategy="afterInteractive" />
-        <Script id="nagishli-init" strategy="afterInteractive">
-          {`
-            window.addEventListener("load", function() {
-              window.NagishLiConfig = {
-                version: "2.3",
-                language: "he",
-                // הגדרת מיקום משתנה: שמאל למטה + קיזוז למעלה
-                position: "bl", // Bottom Left - המיקום הדיפולטי
-                bottomOffset: "50px", // שינוי: קיזוז של 50 פיקסלים מהתחתית
-                
-                color: "blue",
-                compact: false,
-                accordion: false,
-                closeButton: true, // שינוי: הוספת כפתור סגירה (X)
-                
-                declarationLink: "https://www.onmotormedia.com/accessibility-statement.html",
-                declarationName: "סבג יוסף",
-                declarationPhone: "0522304604",
-                declarationEmail: "onmotormedia@gmail.com",
-                declarationFax: "",
-                assetsFolder: "https://www.onmotormedia.com/nagishli/"
-              };
-              if (typeof window.nagishliInit === "function") {
-                window.nagishliInit(window.NagishLiConfig);
-              }
-            });
-          `}
-        </Script>
+       <script src="https://cdn.enable.co.il/licenses/enable-L491236ornf8p4x2-1025-75004/init.js"></script>
       </body>
     </html>
   );
