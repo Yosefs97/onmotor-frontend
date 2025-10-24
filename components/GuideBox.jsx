@@ -15,8 +15,9 @@ export default function GuideBox() {
   useEffect(() => {
     async function fetchArticles() {
       try {
+        // --- ⭐️ תיקון 1: שינינו את populate=image ל-populate=gallery ⭐️ ---
         const res = await fetch(
-          `${API_URL}/api/articles?filters[Values][$null]=false&populate=image`
+          `${API_URL}/api/articles?filters[Values][$null]=false&populate=gallery`
         );
         const json = await res.json();
         setArticles(json.data || []);
@@ -40,6 +41,14 @@ export default function GuideBox() {
   const current = articles[currentIndex];
   const values = Array.isArray(current.Values) ? current.Values : [current.Values];
 
+  // --- ⭐️ תיקון 2: הוספנו לוגיקה לשליפת התמונה מהגלריה ⭐️ ---
+  const mainImageData = current.gallery?.[0];
+  const imageUrl = mainImageData?.url 
+                   ? `${API_URL}${mainImageData.url}` 
+                   : null; // אם אין תמונה, נציג את ה-div האפור
+  const imageAlt = mainImageData?.alternativeText || current.title || "תמונת מדריך";
+  // --- ⭐️ סוף התיקון ⭐️ ---
+
   return (
     <div className="bg-white shadow-md rounded-md overflow-hidden relative mb-4">
       {/* ✅ כותרת עם לינק לדף מדריכים */}
@@ -61,10 +70,12 @@ export default function GuideBox() {
           >
             <Link href={`/articles/${current.slug}`}>
               <div className="w-full h-full cursor-pointer">
-                {current.image?.url ? (
+                
+                {/* --- ⭐️ תיקון 3: שימוש במשתנים החדשים ⭐️ --- */}
+                {imageUrl ? (
                   <Image
-                    src={`${API_URL}${current.image.url}`}
-                    alt={current.title}
+                    src={imageUrl}
+                    alt={imageAlt}
                     width={400}
                     height={250}
                     className="w-full h-40 object-cover"
@@ -72,6 +83,8 @@ export default function GuideBox() {
                 ) : (
                   <div className="w-full h-40 bg-gray-200" />
                 )}
+                {/* --- ⭐️ סוף התיקון ⭐️ --- */}
+                
                 <p className="p-2 text-sm font-semibold text-gray-800">
                   {current.title}
                 </p>
