@@ -1,3 +1,4 @@
+// app/articles/[slug]/page.jsx
 export const dynamic = 'force-dynamic';
 
 import PageContainer from "@/components/PageContainer";
@@ -12,16 +13,26 @@ import { labelMap } from "@/utils/labelMap";
 import InlineImage from "@/components/InlineImage";
 import EmbedContent from "@/components/EmbedContent";
 
-// --- ⭐️ תיקון: הגדרת שני משתני סביבה ⭐️ ---
-// 1. URL לשימוש פנימי של השרת (ל-fetch)
+// ✅ הגדרת בסיס לכתובות מדיה
 const API_URL = process.env.STRAPI_API_URL;
-// 2. URL ציבורי לשימוש הדפדפן (לטעינת תמונות)
 const PUBLIC_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || API_URL;
-// --- ⭐️ סוף התיקון ⭐️ ---
+
+// ✅ פונקציה קטנה שמתקנת נתיבי תמונות יחסיים
+function fixRelativeImages(html) {
+  if (!html) return html;
+  return html.replace(
+    /<img\s+[^>]*src=["'](?!https?:\/\/)([^"']+)["']/g,
+    (match, src) => {
+      const fullSrc = src.startsWith('/')
+        ? `${PUBLIC_API_URL}${src}`
+        : `${PUBLIC_API_URL}/uploads/${src}`;
+      return match.replace(src, fullSrc);
+    }
+  );
+}
 
 export default async function ArticlePage({ params }) {
   const res = await fetch(
-    // ⭐️ שימוש ב-API_URL הרגיל (הפנימי) עבור fetch
     `${API_URL}/api/articles?filters[slug][$eq]=${params.slug}&populate=*`,
     { next: { revalidate: 0 } }
   );
@@ -32,22 +43,22 @@ export default async function ArticlePage({ params }) {
 
   const data = rawArticle;
 
-  // --- ⭐️ לוגיקה חדשה לתמונה ראשית ⭐️ ---
-  const mainImageData = data.gallery?.[0]; 
-
-  // ⭐️ תיקון: שימוש ב-PUBLIC_API_URL לבניית כתובת התמונה
-  const mainImage = mainImageData?.url 
-                    ? `${PUBLIC_API_URL}${mainImageData.url}` 
-                    : "/default-image.jpg";
-  const mainImageAlt = mainImageData?.alternativeText || "תמונה ראשית";
-  // --- ⭐️ סוף התיקון ⭐️ ---
-
   const article = {
     title: data.title || "כתבה ללא כותרת",
     description: data.description || "אין תיאור זמין",
-    
-    image: mainImage,
-    imageAlt: mainImageAlt,
+
+    // ✅ תמונה ראשית מהגלריה או מהשדה image
+    image:
+      data.gallery?.[0]?.url
+        ? `${PUBLIC_API_URL}${data.gallery[0].url}`
+        : data.image?.url
+        ? `${PUBLIC_API_URL}${data.image.url}`
+        : "/default-image.jpg",
+
+    imageAlt:
+      data.gallery?.[0]?.alternativeText ||
+      data.image?.alternativeText ||
+      "תמונה ראשית",
 
     author: data.author || "מערכת OnMotor",
     date: data.date || "2025-06-22",
@@ -69,9 +80,10 @@ export default async function ArticlePage({ params }) {
     subdescription: data.subdescription || "",
     slug: params.slug,
     gallery:
-      // ⭐️ תיקון: שימוש ב-PUBLIC_API_URL לבניית כתובות הגלריה
       data.gallery?.map((img) => ({
-        src: `${PUBLIC_API_URL}${img.url}`,
+        src: img.url.startsWith("http")
+          ? img.url
+          : `${PUBLIC_API_URL}${img.url}`,
         alt: img.alternativeText || "תמונה מהגלריה",
       })) || [],
     font_family: data.font_family || "Heebo, sans-serif",
@@ -100,37 +112,52 @@ export default async function ArticlePage({ params }) {
   }
   breadcrumbs.push({ label: article.title });
 
-  // ✅ רינדור בלוקים
+  // ✅ רינדור בלוקים כולל קישורים, תמונות והטמעות
   const renderParagraph = (block, i) => {
     // ---- טקסט רגיל (string) ----
     if (typeof block === "string") {
-      // ... (קוד זהה)
       const cleanText = block.trim();
 
-      const hasHTMLTags = /<\/?[a-z][\s\S]*>/i.test(cleanText);
+      // תמונות בפורמט [[img:...]] (עדיין נתמך)
+      if (cleanText.startsWith("[[img:") && cleanText.endsWith("]]")) {
+        const parts = cleanText.slice(6, -2).split("||");
+        const [src, alt = "", caption = ""] = parts;
+        const fixedSrc = src.startsWith("http")
+          ? src
+          : `${PUBLIC_API_URL}${src}`;
+        return <InlineImage key={i} src={fixedSrc} alt={alt} caption={caption} />;
+      }
+
+      // תמונות מהעורך (Rich Text)
+      const fixedText = fixRelativeImages(cleanText);
+
+      const hasHTMLTags = /<\/?[a-z][\s\S]*>/i.test(fixedText);
       if (hasHTMLTags) {
         return (
           <p
             key={i}
             className="article-text text-gray-800 text-[18px] leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: cleanText }}
+            dangerouslySetInnerHTML={{ __html: fixedText }}
           />
         );
       }
-      const urlMatch = cleanText.match(/https?:\/\/[^\s]+/);
+
+      const urlMatch = fixedText.match(/https?:\/\/[^\s]+/);
       if (urlMatch) return <EmbedContent key={i} url={urlMatch[0]} />;
+
       return (
         <p
           key={i}
           className="article-text text-gray-800 text-[18px] leading-relaxed"
-          dangerouslySetInnerHTML={{ __html: cleanText.replace(/\n/g, "<br/>") }}
+          dangerouslySetInnerHTML={{
+            __html: fixedText.replace(/\n/g, "<br/>"),
+          }}
         />
       );
     }
 
     // ---- Rich Text מ-Strapi ----
     if (block.type === "paragraph" && block.children) {
-      // ... (קוד זהה)
       const html = block.children
         .map((child) => {
           if (child.type === "link" && child.url) {
@@ -142,18 +169,17 @@ export default async function ArticlePage({ params }) {
             return `<a href="${href}" target="_blank" rel="noopener noreferrer"
               class="text-blue-600 underline hover:text-blue-800 transition-colors duration-150">${label}</a>`;
           }
+
           let text = child.text || "";
           if (child.bold) text = `<strong>${text}</strong>`;
           if (child.italic) text = `<em>${text}</em>`;
           if (child.underline) text = `<u>${text}</u>`;
-          return text;
+
+          // ✅ גם כאן נתקן תמונות במלל
+          return fixRelativeImages(text);
         })
         .join("");
-      const cleanHtml = html.replace(/<[^>]+>/g, "").trim();
-      const urlMatch = cleanHtml.match(/httpsS?:\/\/[^\s"']+/);
-      if (urlMatch && cleanHtml === urlMatch[0]) {
-        return <EmbedContent key={i} url={urlMatch[0]} />;
-      }
+
       return (
         <p
           key={i}
@@ -162,35 +188,18 @@ export default async function ArticlePage({ params }) {
         />
       );
     }
-    
-    // ---- בלוק תמונה ⭐️ ----
-    if (block.type === "image") {
-      const { image } = block;
-      if (!image || !image.url) return null;
-
-      // ⭐️ תיקון: שימוש ב-PUBLIC_API_URL לבניית כתובת התמונה הפנימית
-      const src = image.url.startsWith('http') 
-                  ? image.url 
-                  : `${PUBLIC_API_URL}${image.url}`;
-                  
-      const alt = image.alternativeText || "תמונה בתוך הכתבה";
-      const caption = image.caption || "";
-
-      return <InlineImage key={i} src={src} alt={alt} caption={caption} />;
-    }
-    // ---- ⭐️ סוף התיקון ⭐️ ----
 
     // ---- כותרות ----
     if (block.type === "heading") {
-      // ... (קוד זהה)
       const level = block.level || 2;
       const Tag = `h${Math.min(level, 3)}`;
       const text = block.children?.map((c) => c.text).join("") || "";
+      const fixedText = fixRelativeImages(text); // ✅ גם בכותרת
       return (
         <Tag
           key={i}
           className="font-bold text-2xl text-gray-900 mt-4 mb-2"
-          dangerouslySetInnerHTML={{ __html: text }}
+          dangerouslySetInnerHTML={{ __html: fixedText }}
         />
       );
     }
@@ -199,12 +208,9 @@ export default async function ArticlePage({ params }) {
   };
 
   // ✅ בניית הפסקאות
-  let paragraphs = [];
-  if (typeof article.content === "string") {
-    paragraphs = article.content.split("\n\n");
-  } else if (Array.isArray(article.content)) {
-    paragraphs = article.content;
-  }
+  const paragraphs = Array.isArray(article.content)
+    ? article.content
+    : article.content.split("\n\n");
 
   return (
     <PageContainer title={article.title} breadcrumbs={breadcrumbs}>
