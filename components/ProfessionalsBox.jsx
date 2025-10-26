@@ -189,10 +189,7 @@ export default function ProfessionalsBox() {
                 </a>
               )}
 
-              {/* שם בעל המקצוע */}
-              <div className="absolute bottom-0 w-full bg-black/50 text-red-600 p-2 text-xl font-bold">
-                {current.title_pros || '—'}
-              </div>
+              
             </div>
           </motion.div>
         </AnimatePresence>
