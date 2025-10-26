@@ -13,9 +13,19 @@ import { labelMap } from "@/utils/labelMap";
 import InlineImage from "@/components/InlineImage";
 import EmbedContent from "@/components/EmbedContent";
 
-// ✅ משתני סביבה
 const API_URL = process.env.STRAPI_API_URL;
 const PUBLIC_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || API_URL;
+const PLACEHOLDER_IMG = "/default-image.jpg";
+
+// ✅ בדיקה אם תמונה קיימת בשרת
+async function isImageAvailable(url) {
+  try {
+    const res = await fetch(url, { method: "HEAD", cache: "no-store" });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
 
 // ✅ פונקציה שמתקנת נתיבי תמונות יחסיים בתוך HTML
 function fixRelativeImages(html) {
@@ -23,12 +33,22 @@ function fixRelativeImages(html) {
   return html.replace(
     /<img\s+[^>]*src=["'](?!https?:\/\/)([^"']+)["']/g,
     (match, src) => {
-      const fullSrc = src.startsWith('/')
+      const fullSrc = src.startsWith("/")
         ? `${PUBLIC_API_URL}${src}`
         : `${PUBLIC_API_URL}/uploads/${src}`;
       return match.replace(src, fullSrc);
     }
   );
+}
+
+// ✅ פונקציה עם fallback כמו ב־TabLeftSidebar.jsx
+async function resolveImageUrl(rawUrl) {
+  if (!rawUrl) return PLACEHOLDER_IMG;
+  const fullUrl = rawUrl.startsWith("http")
+    ? rawUrl
+    : `${PUBLIC_API_URL}${rawUrl.startsWith("/") ? rawUrl : `/uploads/${rawUrl}`}`;
+  const exists = await isImageAvailable(fullUrl);
+  return exists ? fullUrl : PLACEHOLDER_IMG;
 }
 
 export default async function ArticlePage({ params }) {
@@ -48,25 +68,25 @@ export default async function ArticlePage({ params }) {
     ? data.gallery.data.map((item) => item.attributes)
     : data.gallery || [];
 
-  // ✅ תמונה ראשית: מהתמונה הראשונה בגלריה (אם קיימת)
+  // ✅ תמונה ראשית: מגלריה או מהשדה הראשי
   const mainImageData = galleryItems[0];
-  const mainImage = mainImageData?.url
-    ? `${PUBLIC_API_URL}${mainImageData.url}`
-    : data.image?.url
-    ? `${PUBLIC_API_URL}${data.image.url}`
-    : "/default-image.jpg";
+  const mainImage = await resolveImageUrl(
+    mainImageData?.url ||
+    data.image?.url
+  );
+
   const mainImageAlt =
     mainImageData?.alternativeText ||
     data.image?.alternativeText ||
     "תמונה ראשית";
 
   // ✅ גלריה מלאה
-  const gallery = galleryItems.map((img) => ({
-    src: img.url?.startsWith("http")
-      ? img.url
-      : `${PUBLIC_API_URL}${img.url}`,
-    alt: img.alternativeText || "תמונה מהגלריה",
-  }));
+  const gallery = await Promise.all(
+    galleryItems.map(async (img) => ({
+      src: await resolveImageUrl(img.url),
+      alt: img.alternativeText || "תמונה מהגלריה",
+    }))
+  );
 
   const article = {
     title: data.title || "כתבה ללא כותרת",
@@ -150,37 +170,6 @@ export default async function ArticlePage({ params }) {
       );
     }
 
-    // ---- פסקאות של Strapi ----
-    if (block.type === "paragraph" && block.children) {
-      const html = block.children
-        .map((child) => {
-          if (child.type === "link" && child.url) {
-            const label =
-              (child.children && child.children[0]?.text) || child.url;
-            const href = child.url.startsWith("http")
-              ? child.url
-              : `${child.url.startsWith("/") ? child.url : "/" + child.url}`;
-            return `<a href="${href}" target="_blank" rel="noopener noreferrer"
-              class="text-blue-600 underline hover:text-blue-800 transition-colors duration-150">${label}</a>`;
-          }
-
-          let text = child.text || "";
-          if (child.bold) text = `<strong>${text}</strong>`;
-          if (child.italic) text = `<em>${text}</em>`;
-          if (child.underline) text = `<u>${text}</u>`;
-          return fixRelativeImages(text);
-        })
-        .join("");
-
-      return (
-        <p
-          key={i}
-          className="article-text text-gray-800 text-[18px] leading-relaxed"
-          dangerouslySetInnerHTML={{ __html: html }}
-        />
-      );
-    }
-
     // ---- כותרות ----
     if (block.type === "heading") {
       const level = block.level || 2;
@@ -195,27 +184,29 @@ export default async function ArticlePage({ params }) {
       );
     }
 
-    // ✅ בלוק תמונה מתוך העורך של Strapi
+    // ✅ בלוק תמונה מתוך העורך של Strapi (כמו בטאבים)
     if (block.type === "image") {
       const imageData =
         block.image?.data?.attributes || block.image?.attributes || block.image;
 
       if (!imageData?.url) return null;
 
-      const src = imageData.url.startsWith("http")
-        ? imageData.url
-        : `${PUBLIC_API_URL}${imageData.url}`;
-
       const alt = imageData.alternativeText || "תמונה מתוך הכתבה";
       const caption = imageData.caption || "";
 
-      return <InlineImage key={i} src={src} alt={alt} caption={caption} />;
+      return (
+        <InlineImage
+          key={i}
+          src={imageData.url.startsWith("http") ? imageData.url : `${PUBLIC_API_URL}${imageData.url}`}
+          alt={alt}
+          caption={caption}
+        />
+      );
     }
 
     return null;
   };
 
-  // ✅ בניית הפסקאות
   const paragraphs = Array.isArray(article.content)
     ? article.content
     : article.content.split("\n\n");
