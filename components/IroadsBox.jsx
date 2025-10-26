@@ -1,4 +1,3 @@
-// C:\Users\yosef\Desktop\onmotor-frontend\components\IroadsBox.jsx
 'use client';
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,10 +13,9 @@ export default function IroadsBox() {
   useEffect(() => {
     async function fetchArticles() {
       try {
+        // --- ⭐️ תיקון 1: שינינו את populate=image ל-populate=* ⭐️ ---
         const res = await fetch(
-          `${API_URL}/api/articles?filters[tags_txt][$contains]=iroads&populate=image`
-
-
+          `${API_URL}/api/articles?filters[tags_txt][$contains]=iroads&populate=*`
         );
         const json = await res.json();
         setArticles(json.data || []);
@@ -50,12 +48,7 @@ export default function IroadsBox() {
   const slides = [{ type: 'logo' }, ...rawArticles];
   const current = slides[currentIndex];
 
-  const getImageUrl = (img) => {
-    if (!img) return null;
-    if (img.data?.attributes?.url) return `${API_URL}${img.data.attributes.url}`;
-    if (img.url) return `${API_URL}${img.url}`;
-    return null;
-  };
+  // --- 🛑 מחקנו את הפונקציה הישנה getImageUrl 🛑 ---
 
   return (
     <div className="bg-white shadow-md rounded-md overflow-hidden relative mb-4">
@@ -106,23 +99,35 @@ export default function IroadsBox() {
                 </a>
               </div>
             ) : (
-              <Link href={current.slug ? `/articles/${current.slug}` : '#'}>
-                <div className="relative w-full h-full cursor-pointer">
-                  {getImageUrl(current.image) ? (
-                    <Image
-                      src={getImageUrl(current.image)}
-                      alt={current.title || 'כתבה'}
-                      fill
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gray-200" />
-                  )}
-                  <div className="absolute bottom-0 w-full bg-black/50 text-white p-2 text-sm font-semibold">
-                    {current.title || 'ללא כותרת'}
-                  </div>
-                </div>
-              </Link>
+              // --- ⭐️ תיקון 2: הטמענו את הלוגיקה החדשה ישירות כאן ⭐️ ---
+              (() => {
+                // "בדרכים": נסה תמונה שלישית (index 2), אם אין, חזור לראשונה (index 0)
+                const gallery = current.gallery;
+                const imgData = gallery?.[2] || gallery?.[0];
+                const imageUrl = imgData?.url ? `${API_URL}${imgData.url}` : null;
+                const imageAlt = imgData?.alternativeText || current.title || 'כתבה';
+
+                return (
+                  <Link href={current.slug ? `/articles/${current.slug}` : '#'}>
+                    <div className="relative w-full h-full cursor-pointer">
+                      {imageUrl ? (
+                        <Image
+                          src={imageUrl}
+                          alt={imageAlt}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-200" />
+                      )}
+                      <div className="absolute bottom-0 w-full bg-black/50 text-white p-2 text-sm font-semibold">
+                        {current.title || 'ללא כותרת'}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })()
+              // --- ⭐️ סוף התיקון ⭐️ ---
             )}
           </motion.div>
         </AnimatePresence>
