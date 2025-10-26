@@ -71,8 +71,7 @@ export default async function ArticlePage({ params }) {
   // ✅ תמונה ראשית: מגלריה או מהשדה הראשי
   const mainImageData = galleryItems[0];
   const mainImage = await resolveImageUrl(
-    mainImageData?.url ||
-    data.image?.url
+    mainImageData?.url || data.image?.url
   );
 
   const mainImageAlt =
@@ -170,6 +169,27 @@ export default async function ArticlePage({ params }) {
       );
     }
 
+    // ---- פסקאות (Rich Text) ----
+    if (block.type === "paragraph" && block.children) {
+      const html = block.children
+        .map((child) => {
+          let text = child.text || "";
+          if (child.bold) text = `<strong>${text}</strong>`;
+          if (child.italic) text = `<em>${text}</em>`;
+          if (child.underline) text = `<u>${text}</u>`;
+          return fixRelativeImages(text);
+        })
+        .join("");
+
+      return (
+        <p
+          key={i}
+          className="article-text text-gray-800 text-[18px] leading-relaxed"
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+      );
+    }
+
     // ---- כותרות ----
     if (block.type === "heading") {
       const level = block.level || 2;
@@ -188,7 +208,6 @@ export default async function ArticlePage({ params }) {
     if (block.type === "image") {
       const imageData =
         block.image?.data?.attributes || block.image?.attributes || block.image;
-
       if (!imageData?.url) return null;
 
       const alt = imageData.alternativeText || "תמונה מתוך הכתבה";
@@ -197,7 +216,11 @@ export default async function ArticlePage({ params }) {
       return (
         <InlineImage
           key={i}
-          src={imageData.url.startsWith("http") ? imageData.url : `${PUBLIC_API_URL}${imageData.url}`}
+          src={
+            imageData.url.startsWith("http")
+              ? imageData.url
+              : `${PUBLIC_API_URL}${imageData.url}`
+          }
           alt={alt}
           caption={caption}
         />
