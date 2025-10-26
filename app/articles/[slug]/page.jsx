@@ -13,11 +13,11 @@ import { labelMap } from "@/utils/labelMap";
 import InlineImage from "@/components/InlineImage";
 import EmbedContent from "@/components/EmbedContent";
 
-// ✅ הגדרת בסיס לכתובות מדיה
+// ✅ משתני סביבה
 const API_URL = process.env.STRAPI_API_URL;
 const PUBLIC_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || API_URL;
 
-// ✅ פונקציה קטנה שמתקנת נתיבי תמונות יחסיים
+// ✅ פונקציה שמתקנת נתיבי תמונות יחסיים
 function fixRelativeImages(html) {
   if (!html) return html;
   return html.replace(
@@ -43,23 +43,36 @@ export default async function ArticlePage({ params }) {
 
   const data = rawArticle;
 
+  // ✅ הפקת נתוני הגלריה באופן אחיד (תמיכה גם ב-Strapi v4)
+  const galleryItems = data.gallery?.data
+    ? data.gallery.data.map((item) => item.attributes)
+    : data.gallery || [];
+
+  // ✅ תמונה ראשית: מהתמונה הראשונה בגלריה (אם יש)
+  const mainImageData = galleryItems[0];
+  const mainImage = mainImageData?.url
+    ? `${PUBLIC_API_URL}${mainImageData.url}`
+    : data.image?.url
+    ? `${PUBLIC_API_URL}${data.image.url}`
+    : "/default-image.jpg";
+  const mainImageAlt =
+    mainImageData?.alternativeText ||
+    data.image?.alternativeText ||
+    "תמונה ראשית";
+
+  // ✅ הגלריה כרגיל
+  const gallery = galleryItems.map((img) => ({
+    src: img.url?.startsWith("http")
+      ? img.url
+      : `${PUBLIC_API_URL}${img.url}`,
+    alt: img.alternativeText || "תמונה מהגלריה",
+  }));
+
   const article = {
     title: data.title || "כתבה ללא כותרת",
     description: data.description || "אין תיאור זמין",
-
-    // ✅ תמונה ראשית מהגלריה או מהשדה image
-    image:
-      data.gallery?.[0]?.url
-        ? `${PUBLIC_API_URL}${data.gallery[0].url}`
-        : data.image?.url
-        ? `${PUBLIC_API_URL}${data.image.url}`
-        : "/default-image.jpg",
-
-    imageAlt:
-      data.gallery?.[0]?.alternativeText ||
-      data.image?.alternativeText ||
-      "תמונה ראשית",
-
+    image: mainImage,
+    imageAlt: mainImageAlt,
     author: data.author || "מערכת OnMotor",
     date: data.date || "2025-06-22",
     time: data.time || "10:00",
@@ -79,13 +92,7 @@ export default async function ArticlePage({ params }) {
     headline: data.headline || data.title,
     subdescription: data.subdescription || "",
     slug: params.slug,
-    gallery:
-      data.gallery?.map((img) => ({
-        src: img.url.startsWith("http")
-          ? img.url
-          : `${PUBLIC_API_URL}${img.url}`,
-        alt: img.alternativeText || "תמונה מהגלריה",
-      })) || [],
+    gallery,
     font_family: data.font_family || "Heebo, sans-serif",
   };
 
@@ -112,37 +119,23 @@ export default async function ArticlePage({ params }) {
   }
   breadcrumbs.push({ label: article.title });
 
-  // ✅ רינדור בלוקים כולל קישורים, תמונות והטמעות
+  // ✅ רינדור בלוקים של תוכן
   const renderParagraph = (block, i) => {
-    // ---- טקסט רגיל (string) ----
     if (typeof block === "string") {
-      const cleanText = block.trim();
+      const cleanText = fixRelativeImages(block.trim());
+      const hasHTMLTags = /<\/?[a-z][\s\S]*>/i.test(cleanText);
 
-      // תמונות בפורמט [[img:...]] (עדיין נתמך)
-      if (cleanText.startsWith("[[img:") && cleanText.endsWith("]]")) {
-        const parts = cleanText.slice(6, -2).split("||");
-        const [src, alt = "", caption = ""] = parts;
-        const fixedSrc = src.startsWith("http")
-          ? src
-          : `${PUBLIC_API_URL}${src}`;
-        return <InlineImage key={i} src={fixedSrc} alt={alt} caption={caption} />;
-      }
-
-      // תמונות מהעורך (Rich Text)
-      const fixedText = fixRelativeImages(cleanText);
-
-      const hasHTMLTags = /<\/?[a-z][\s\S]*>/i.test(fixedText);
       if (hasHTMLTags) {
         return (
           <p
             key={i}
             className="article-text text-gray-800 text-[18px] leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: fixedText }}
+            dangerouslySetInnerHTML={{ __html: cleanText }}
           />
         );
       }
 
-      const urlMatch = fixedText.match(/https?:\/\/[^\s]+/);
+      const urlMatch = cleanText.match(/https?:\/\/[^\s]+/);
       if (urlMatch) return <EmbedContent key={i} url={urlMatch[0]} />;
 
       return (
@@ -150,13 +143,12 @@ export default async function ArticlePage({ params }) {
           key={i}
           className="article-text text-gray-800 text-[18px] leading-relaxed"
           dangerouslySetInnerHTML={{
-            __html: fixedText.replace(/\n/g, "<br/>"),
+            __html: cleanText.replace(/\n/g, "<br/>"),
           }}
         />
       );
     }
 
-    // ---- Rich Text מ-Strapi ----
     if (block.type === "paragraph" && block.children) {
       const html = block.children
         .map((child) => {
@@ -169,13 +161,10 @@ export default async function ArticlePage({ params }) {
             return `<a href="${href}" target="_blank" rel="noopener noreferrer"
               class="text-blue-600 underline hover:text-blue-800 transition-colors duration-150">${label}</a>`;
           }
-
           let text = child.text || "";
           if (child.bold) text = `<strong>${text}</strong>`;
           if (child.italic) text = `<em>${text}</em>`;
           if (child.underline) text = `<u>${text}</u>`;
-
-          // ✅ גם כאן נתקן תמונות במלל
           return fixRelativeImages(text);
         })
         .join("");
@@ -189,17 +178,15 @@ export default async function ArticlePage({ params }) {
       );
     }
 
-    // ---- כותרות ----
     if (block.type === "heading") {
       const level = block.level || 2;
       const Tag = `h${Math.min(level, 3)}`;
       const text = block.children?.map((c) => c.text).join("") || "";
-      const fixedText = fixRelativeImages(text); // ✅ גם בכותרת
       return (
         <Tag
           key={i}
           className="font-bold text-2xl text-gray-900 mt-4 mb-2"
-          dangerouslySetInnerHTML={{ __html: fixedText }}
+          dangerouslySetInnerHTML={{ __html: fixRelativeImages(text) }}
         />
       );
     }
@@ -229,7 +216,9 @@ export default async function ArticlePage({ params }) {
         />
 
         {article.description && (
-          <p className="font-bold text-2xl text-gray-600">{article.description}</p>
+          <p className="font-bold text-2xl text-gray-600">
+            {article.description}
+          </p>
         )}
 
         {paragraphs.map(renderParagraph)}
@@ -237,8 +226,13 @@ export default async function ArticlePage({ params }) {
         {article.tableData && <SimpleKeyValueTable data={article.tableData} />}
         <Gallery images={article.gallery} />
         <Tags tags={article.tags} />
-        <SimilarArticles currentSlug={article.slug} category={article.category} />
-        <CommentsSection articleUrl={`https://www.onmotormedia.com${article.href}`} />
+        <SimilarArticles
+          currentSlug={article.slug}
+          category={article.category}
+        />
+        <CommentsSection
+          articleUrl={`https://www.onmotormedia.com${article.href}`}
+        />
       </div>
     </PageContainer>
   );
