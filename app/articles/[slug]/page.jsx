@@ -17,7 +17,7 @@ import EmbedContent from "@/components/EmbedContent";
 const API_URL = process.env.STRAPI_API_URL;
 const PUBLIC_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || API_URL;
 
-// ✅ פונקציה שמתקנת נתיבי תמונות יחסיים
+// ✅ פונקציה שמתקנת נתיבי תמונות יחסיים בתוך HTML
 function fixRelativeImages(html) {
   if (!html) return html;
   return html.replace(
@@ -43,12 +43,12 @@ export default async function ArticlePage({ params }) {
 
   const data = rawArticle;
 
-  // ✅ הפקת נתוני הגלריה באופן אחיד (תמיכה גם ב-Strapi v4)
+  // ✅ טיפול נכון בגלריה גם ב-Strapi v4
   const galleryItems = data.gallery?.data
     ? data.gallery.data.map((item) => item.attributes)
     : data.gallery || [];
 
-  // ✅ תמונה ראשית: מהתמונה הראשונה בגלריה (אם יש)
+  // ✅ תמונה ראשית: מהתמונה הראשונה בגלריה (אם קיימת)
   const mainImageData = galleryItems[0];
   const mainImage = mainImageData?.url
     ? `${PUBLIC_API_URL}${mainImageData.url}`
@@ -60,7 +60,7 @@ export default async function ArticlePage({ params }) {
     data.image?.alternativeText ||
     "תמונה ראשית";
 
-  // ✅ הגלריה כרגיל
+  // ✅ גלריה מלאה
   const gallery = galleryItems.map((img) => ({
     src: img.url?.startsWith("http")
       ? img.url
@@ -119,8 +119,9 @@ export default async function ArticlePage({ params }) {
   }
   breadcrumbs.push({ label: article.title });
 
-  // ✅ רינדור בלוקים של תוכן
+  // ✅ רינדור בלוקים של תוכן (כולל בלוק תמונה של Strapi)
   const renderParagraph = (block, i) => {
+    // ---- טקסט רגיל ----
     if (typeof block === "string") {
       const cleanText = fixRelativeImages(block.trim());
       const hasHTMLTags = /<\/?[a-z][\s\S]*>/i.test(cleanText);
@@ -149,6 +150,7 @@ export default async function ArticlePage({ params }) {
       );
     }
 
+    // ---- פסקאות של Strapi ----
     if (block.type === "paragraph" && block.children) {
       const html = block.children
         .map((child) => {
@@ -161,6 +163,7 @@ export default async function ArticlePage({ params }) {
             return `<a href="${href}" target="_blank" rel="noopener noreferrer"
               class="text-blue-600 underline hover:text-blue-800 transition-colors duration-150">${label}</a>`;
           }
+
           let text = child.text || "";
           if (child.bold) text = `<strong>${text}</strong>`;
           if (child.italic) text = `<em>${text}</em>`;
@@ -178,6 +181,7 @@ export default async function ArticlePage({ params }) {
       );
     }
 
+    // ---- כותרות ----
     if (block.type === "heading") {
       const level = block.level || 2;
       const Tag = `h${Math.min(level, 3)}`;
@@ -189,6 +193,23 @@ export default async function ArticlePage({ params }) {
           dangerouslySetInnerHTML={{ __html: fixRelativeImages(text) }}
         />
       );
+    }
+
+    // ✅ בלוק תמונה מתוך העורך של Strapi
+    if (block.type === "image") {
+      const imageData =
+        block.image?.data?.attributes || block.image?.attributes || block.image;
+
+      if (!imageData?.url) return null;
+
+      const src = imageData.url.startsWith("http")
+        ? imageData.url
+        : `${PUBLIC_API_URL}${imageData.url}`;
+
+      const alt = imageData.alternativeText || "תמונה מתוך הכתבה";
+      const caption = imageData.caption || "";
+
+      return <InlineImage key={i} src={src} alt={alt} caption={caption} />;
     }
 
     return null;
