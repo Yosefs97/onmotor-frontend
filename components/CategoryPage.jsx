@@ -1,3 +1,4 @@
+// components/CategoryPage.jsx
 'use client';
 import React, { useEffect, useState } from 'react';
 import SectionWithHeader from './SectionWithHeader';
@@ -5,6 +6,13 @@ import LimitedArticles from './LimitedArticles';
 import { labelMap } from '@/utils/labelMap';
 
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
+
+// ✅ פונקציה שמוודאת כתובת תקינה לתמונה (כולל Cloudinary)
+function resolveImageUrl(rawUrl) {
+  if (!rawUrl) return '/default-image.jpg';
+  if (rawUrl.startsWith('http')) return rawUrl;
+  return `${API_URL}${rawUrl.startsWith('/') ? rawUrl : `/uploads/${rawUrl}`}`;
+}
 
 // קיבוץ לפי תת קטגוריות רגילות
 function groupBySubcategory(articles) {
@@ -56,7 +64,7 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
         const json = await res.json();
         let data = json.data || [];
 
-        // ✅ סינון בצד הלקוח לפי תת־קטגוריה (בגלל מגבלת SQLite)
+        // ✅ סינון בצד הלקוח לפי תת־קטגוריה
         if (subcategoryKey) {
           data = data.filter((a) => {
             const sub = a.subcategory;
@@ -67,7 +75,7 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
           });
         }
 
-        // ✅ סינון לפי תת־תת קטגוריה (Values)
+        // ✅ סינון לפי Values
         if (guideSubKey) {
           data = data.filter((a) => {
             const vals = a.Values;
@@ -78,26 +86,19 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
           });
         }
 
+        // ✅ מיפוי כתבות עם טיפול בתמונות
         const mapped = data.map((a) => {
-          // --- ⭐️ לוגיקה חדשה: משיכת תמונה ראשית מהגלריה ⭐️ ---
           const mainImageData = a.gallery?.[0];
-          const image = mainImageData?.url 
-                        ? `${API_URL}${mainImageData.url}` 
-                        : '/default-image.jpg';
-          // שימוש בשדה 'imageAlt' הייעודי, עם פולבאק לטקסט הפנימי של התמונה
-          const imageAlt = a.imageAlt || mainImageData?.alternativeText || '';
-          // --- ⭐️ סוף לוגיקה חדשה ⭐️ ---
-          
+          const rawUrl = mainImageData?.url || a.image?.url;
+          const image = resolveImageUrl(rawUrl);
+          const imageAlt = a.imageAlt || mainImageData?.alternativeText || 'תמונה מהכתבה';
+
           return {
             id: a.id,
             title: a.title,
             slug: a.slug,
-
-            // --- ⭐️ שימוש בלוגיקה החדשה ⭐️ ---
-            image: image,
-            imageAlt: imageAlt,
-            // --- ⭐️ סוף שימוש ⭐️ ---
-
+            image,
+            imageAlt,
             category: a.category || 'general',
             subcategory: Array.isArray(a.subcategory)
               ? a.subcategory
@@ -114,7 +115,8 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
             time: a.time || '00:00',
           };
         });
-        // ✅ מיון לפי תאריך + שעה + דקה (מהחדש לישן)
+
+        // ✅ מיון לפי תאריך (מהחדש לישן)
         const sorted = mapped.sort((a, b) => {
           const aDateTime = new Date(`${a.date}T${a.time}`);
           const bDateTime = new Date(`${b.date}T${b.time}`);
@@ -122,8 +124,6 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
         });
 
         setArticles(sorted);
-
-        
       } catch (err) {
         console.error('שגיאה בטעינת כתבות:', err);
       } finally {
