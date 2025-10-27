@@ -17,16 +17,6 @@ const API_URL = process.env.STRAPI_API_URL;
 const PUBLIC_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || API_URL;
 const PLACEHOLDER_IMG = "/default-image.jpg";
 
-// ✅ בדיקה אם תמונה קיימת בשרת
-async function isImageAvailable(url) {
-  try {
-    const res = await fetch(url, { method: "HEAD", cache: "no-store" });
-    return res.ok;
-  } catch {
-    return false;
-  }
-}
-
 // ✅ פונקציה שמתקנת נתיבי תמונות יחסיים בתוך HTML
 function fixRelativeImages(html) {
   if (!html) return html;
@@ -41,14 +31,15 @@ function fixRelativeImages(html) {
   );
 }
 
-// ✅ פונקציה עם fallback כמו ב־TabLeftSidebar.jsx
-async function resolveImageUrl(rawUrl) {
+// ✅ פונקציה פשוטה ויציבה לשימוש עם Cloudinary
+function resolveImageUrl(rawUrl) {
   if (!rawUrl) return PLACEHOLDER_IMG;
-  const fullUrl = rawUrl.startsWith("http")
-    ? rawUrl
-    : `${PUBLIC_API_URL}${rawUrl.startsWith("/") ? rawUrl : `/uploads/${rawUrl}`}`;
-  const exists = await isImageAvailable(fullUrl);
-  return exists ? fullUrl : PLACEHOLDER_IMG;
+
+  // אם זה לינק חיצוני (Cloudinary, CDN וכו') – נחזיר אותו ישירות
+  if (rawUrl.startsWith("http")) return rawUrl;
+
+  // אחרת, נרכיב כתובת מלאה מהשרת
+  return `${PUBLIC_API_URL}${rawUrl.startsWith("/") ? rawUrl : `/uploads/${rawUrl}`}`;
 }
 
 export default async function ArticlePage({ params }) {
@@ -63,14 +54,14 @@ export default async function ArticlePage({ params }) {
 
   const data = rawArticle;
 
-  // ✅ טיפול נכון בגלריה גם ב-Strapi v4
+  // ✅ טיפול בגלריה גם ב-Strapi v4
   const galleryItems = data.gallery?.data
     ? data.gallery.data.map((item) => item.attributes)
     : data.gallery || [];
 
-  // ✅ תמונה ראשית: מגלריה או מהשדה הראשי
+  // ✅ תמונה ראשית
   const mainImageData = galleryItems[0];
-  const mainImage = await resolveImageUrl(
+  const mainImage = resolveImageUrl(
     mainImageData?.url || data.image?.url
   );
 
@@ -80,12 +71,10 @@ export default async function ArticlePage({ params }) {
     "תמונה ראשית";
 
   // ✅ גלריה מלאה
-  const gallery = await Promise.all(
-    galleryItems.map(async (img) => ({
-      src: await resolveImageUrl(img.url),
-      alt: img.alternativeText || "תמונה מהגלריה",
-    }))
-  );
+  const gallery = galleryItems.map((img) => ({
+    src: resolveImageUrl(img.url),
+    alt: img.alternativeText || "תמונה מהגלריה",
+  }));
 
   const article = {
     title: data.title || "כתבה ללא כותרת",
@@ -138,7 +127,7 @@ export default async function ArticlePage({ params }) {
   }
   breadcrumbs.push({ label: article.title });
 
-  // ✅ רינדור בלוקים של תוכן (כולל בלוק תמונה של Strapi)
+  // ✅ רינדור בלוקים של תוכן (כולל בלוק תמונה)
   const renderParagraph = (block, i) => {
     // ---- טקסט רגיל ----
     if (typeof block === "string") {
@@ -204,7 +193,7 @@ export default async function ArticlePage({ params }) {
       );
     }
 
-    // ✅ בלוק תמונה מתוך העורך של Strapi (כמו בטאבים)
+    // ✅ בלוק תמונה מתוך העורך של Strapi
     if (block.type === "image") {
       const imageData =
         block.image?.data?.attributes || block.image?.attributes || block.image;

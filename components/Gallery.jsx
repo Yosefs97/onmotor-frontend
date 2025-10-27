@@ -1,5 +1,8 @@
+// components/Gallery.jsx
 'use client';
 import React, { useState } from 'react';
+
+const PUBLIC_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 
 export default function Gallery({ images = [] }) {
   const [current, setCurrent] = useState(0);
@@ -9,14 +12,21 @@ export default function Gallery({ images = [] }) {
   const next = () => setCurrent((current + 1) % images.length);
   const prev = () => setCurrent((current - 1 + images.length) % images.length);
 
+  // ✅ פונקציה שמתקנת URL במקרה של נתיב יחסי
+  const getImageUrl = (src) => {
+    if (!src) return '/default-image.jpg';
+    if (src.startsWith('http')) return src;
+    return `${PUBLIC_API_URL}${src.startsWith('/') ? src : `/uploads/${src}`}`;
+  };
+
   return (
     <div className="mt-8 w-full flex flex-col items-center gap-4">
       {/* תמונה ראשית גדולה */}
       <div className="relative w-full max-w-3xl aspect-[3/2] overflow-hidden rounded shadow-lg">
         <img
-          src={images[current].src}
+          src={getImageUrl(images[current].src)}
           alt={images[current].alt || `תמונה ${current + 1}`}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover transition-opacity duration-300"
         />
         <button
           onClick={prev}
@@ -37,9 +47,11 @@ export default function Gallery({ images = [] }) {
         {images.map((img, i) => (
           <img
             key={i}
-            src={img.src}
+            src={getImageUrl(img.src)}
             alt={img.alt || `תמונה ${i + 1}`}
-            className={`w-20 h-16 object-cover rounded cursor-pointer transition ring-offset-2 ${i === current ? 'ring-2 ring-blue-500' : ''}`}
+            className={`w-20 h-16 object-cover rounded cursor-pointer transition ring-offset-2 ${
+              i === current ? 'ring-2 ring-blue-500' : ''
+            }`}
             onClick={() => setCurrent(i)}
           />
         ))}
