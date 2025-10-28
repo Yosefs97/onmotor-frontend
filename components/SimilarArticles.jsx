@@ -1,29 +1,45 @@
+// components/SimilarArticles.jsx
 'use client';
 import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import ArticleCard from '@/components/ArticleCards/ArticleCard';
 
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 
+// ✅ פונקציה לתיקון כתובת תמונה (תמיכה ב־Cloudinary ובנתיבים יחסיים)
+function resolveImageUrl(rawUrl) {
+  if (!rawUrl) return '/default-image.jpg';
+  if (rawUrl.startsWith('http')) return rawUrl;
+  return `${API_URL}${rawUrl.startsWith('/') ? rawUrl : `/uploads/${rawUrl}`}`;
+}
+
 export default function SimilarArticles({ currentSlug, category }) {
   const [similar, setSimilar] = useState([]);
+  const [currentGroup, setCurrentGroup] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
 
+  // ✅ בדיקה אם מדובר במובייל
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // ✅ שליפת כתבות דומות
   useEffect(() => {
     async function fetchSimilarArticles() {
       try {
         const res = await fetch(
-          `${API_URL}/api/articles?populate=*&filters[slug][$ne]=${currentSlug}&filters[category][$eq]=${category}&pagination[limit]=3`
+          `${API_URL}/api/articles?populate=*&filters[slug][$ne]=${currentSlug}&filters[category][$eq]=${category}`
         );
         const json = await res.json();
         const data = json.data || [];
 
         const mapped = data.map((a) => {
-          // --- ⭐️ לוגיקה חדשה: משיכת תמונה ראשית מהגלריה ⭐️ ---
           const mainImageData = a.gallery?.[0];
-          const image = mainImageData?.url 
-                          ? `${API_URL}${mainImageData.url}` 
-                          : '/default-image.jpg';
+          const image = resolveImageUrl(mainImageData?.url || a.image?.url);
           const imageAlt = a.imageAlt || mainImageData?.alternativeText || a.title;
-          // --- ⭐️ סוף לוגיקה חדשה ⭐️ ---
 
           return {
             id: a.id,
@@ -33,10 +49,8 @@ export default function SimilarArticles({ currentSlug, category }) {
             headline: a.headline || a.title,
             description: a.description || '',
             date: a.date,
-            // --- ⭐️ שימוש בלוגיקה החדשה ⭐️ ---
-            image: image,
-            imageAlt: imageAlt,
-            // --- ⭐️ סוף שימוש ⭐️ ---
+            image,
+            imageAlt,
           };
         });
 
@@ -49,16 +63,84 @@ export default function SimilarArticles({ currentSlug, category }) {
     fetchSimilarArticles();
   }, [currentSlug, category]);
 
+  // ✅ חישוב קבוצות כתבות (3 לדסקטופ, 2 למובייל)
+  const groupSize = isMobile ? 2 : 3;
+  const groups = [];
+  for (let i = 0; i < similar.length; i += groupSize) {
+    groups.push(similar.slice(i, i + groupSize));
+  }
+
+  // ✅ מעבר אוטומטי כל 6 שניות
+  useEffect(() => {
+    if (groups.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentGroup((prev) => (prev + 1) % groups.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [groups.length]);
+
   if (!similar.length) return null;
 
+  const nextGroup = () =>
+    setCurrentGroup((prev) => (prev + 1) % groups.length);
+  const prevGroup = () =>
+    setCurrentGroup((prev) => (prev - 1 + groups.length) % groups.length);
+
   return (
-    <div className="mt-0">
-      <h4 className="text-xl font-semibold mb-4 border-b border-gray-700 pb-0">כתבות דומות</h4>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {similar.map((article) => (
-          <ArticleCard key={article.slug || article.id} article={article} />
-        ))}
+    <div className="mt-10 relative bg-white p-4 rounded-md shadow-md">
+      <h4 className="text-xl font-semibold mb-4 border-b border-gray-300 pb-2">
+        כתבות דומות
+      </h4>
+
+      <div className="overflow-hidden relative">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentGroup}
+            initial={{ x: 200, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -200, opacity: 0 }}
+            transition={{ duration: 0.6 }}
+            className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-3'} gap-4`}
+          >
+            {groups[currentGroup].map((article) => (
+              <ArticleCard key={article.slug || article.id} article={article} />
+            ))}
+          </motion.div>
+        </AnimatePresence>
+
+        {/* חיצים ימינה / שמאלה */}
+        {groups.length > 1 && (
+          <>
+            <button
+              onClick={prevGroup}
+              className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full transition"
+            >
+              ‹
+            </button>
+            <button
+              onClick={nextGroup}
+              className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full transition"
+            >
+              ›
+            </button>
+          </>
+        )}
       </div>
+
+      {/* נקודות אינדיקציה */}
+      {groups.length > 1 && (
+        <div className="flex justify-center space-x-2 mt-3">
+          {groups.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentGroup(idx)}
+              className={`w-2 h-2 rounded-full ${
+                idx === currentGroup ? 'bg-red-600' : 'bg-gray-400'
+              }`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
