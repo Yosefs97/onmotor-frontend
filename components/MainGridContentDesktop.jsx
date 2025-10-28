@@ -1,9 +1,17 @@
+// components/MainGridContentDesktop.jsx
 'use client';
 import React, { useEffect, useState } from 'react';
 import ArticleCard from './ArticleCards/ArticleCard';
 import SectionWithHeader from './SectionWithHeader';
 
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
+
+/* ✅ פונקציה מאוחדת לתמונות (Strapi / Cloudinary / קישורים חיצוניים) */
+function resolveImageUrl(rawUrl) {
+  if (!rawUrl) return '/default-image.jpg';
+  if (rawUrl.startsWith('http')) return rawUrl; // Cloudinary או אתר חיצוני
+  return `${API_URL}${rawUrl.startsWith('/') ? rawUrl : `/uploads/${rawUrl}`}`;
+}
 
 export default function MainGridContentDesktop() {
   const [articles, setArticles] = useState([]);
@@ -17,32 +25,48 @@ export default function MainGridContentDesktop() {
 
         const mapped =
           json.data?.map((a) => {
-            // --- ⭐️ לוגיקה חדשה: משיכת תמונה ראשית מהגלריה ⭐️ ---
-            const mainImageData = a.gallery?.[0];
-            const image = mainImageData?.url 
-                            ? `${API_URL}${mainImageData.url}` 
-                            : '/default-image.jpg';
-            const imageAlt = a.imageAlt || mainImageData?.alternativeText || '';
-            // --- ⭐️ סוף לוגיקה חדשה ⭐️ ---
+            const attrs = a.attributes || a;
+
+            // --- ⭐️ לוגיקת תמונות אחידה ⭐️ ---
+            let imageUrl = null;
+
+            // עדיפות 1: תמונה ראשית בשדה image
+            if (attrs.image?.data?.attributes?.url) {
+              imageUrl = attrs.image.data.attributes.url;
+            } 
+            // עדיפות 2: תמונה ישירה בשדה image.url
+            else if (attrs.image?.url) {
+              imageUrl = attrs.image.url;
+            } 
+            // עדיפות 3: תמונה ראשונה מהגלריה
+            else if (attrs.gallery?.[0]?.url) {
+              imageUrl = attrs.gallery[0].url;
+            }
+
+            const image = resolveImageUrl(imageUrl);
+            const imageAlt =
+              attrs.imageAlt ||
+              attrs.gallery?.[0]?.alternativeText ||
+              'תמונה ראשית';
+
+            // --- ⭐️ סוף לוגיקת תמונות ⭐️ ---
 
             return {
               id: a.id,
-              title: a.title,
-              slug: a.slug,
-              // --- ⭐️ שימוש בלוגיקה החדשה ⭐️ ---
-              image: image,
-              imageAlt: imageAlt,
-              // --- ⭐️ סוף שימוש ⭐️ ---
-              category: a.category || 'general',
-              date: a.date,
-              subcategory: Array.isArray(a.subcategory)
-                ? a.subcategory
-                : [a.subcategory ?? 'general'],
-              description: a.description,
-              headline: a.headline || a.title,
-              subdescription: a.subdescription,
-              href: `/articles/${a.slug}`,
-              tags: a.tags || [],
+              title: attrs.title,
+              slug: attrs.slug,
+              image,
+              imageAlt,
+              category: attrs.category || 'general',
+              date: attrs.date,
+              subcategory: Array.isArray(attrs.subcategory)
+                ? attrs.subcategory
+                : [attrs.subcategory ?? 'general'],
+              description: attrs.description,
+              headline: attrs.headline || attrs.title,
+              subdescription: attrs.subdescription,
+              href: `/articles/${attrs.slug}`,
+              tags: attrs.tags || [],
             };
           }) || [];
 
@@ -60,11 +84,10 @@ export default function MainGridContentDesktop() {
   // סדר קבוע של קטגוריות
   const desiredOrder = ['news', 'reviews', 'blog', 'gear'];
 
-  // יצירת רשימת קטגוריות מהמאמרים + מיון לפי הסדר הרצוי
+  // יצירת רשימת קטגוריות מהמפות
   const categories = [...new Set(articles.map((a) => a.category))].sort(
     (a, b) => desiredOrder.indexOf(a) - desiredOrder.indexOf(b)
   );
-
 
   return (
     <div className="bg-white p-0 shadow space-y-0">
