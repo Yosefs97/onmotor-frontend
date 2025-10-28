@@ -1,3 +1,4 @@
+// components/IroadsBox.jsx
 'use client';
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -6,14 +7,21 @@ import Link from 'next/link';
 
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 
+/* ✅ פונקציה אחידה לפתרון כתובת תמונה (Cloudinary / Strapi / URL מלא) */
+function resolveImageUrl(rawUrl) {
+  if (!rawUrl) return '/default-image.jpg';
+  if (rawUrl.startsWith('http')) return rawUrl; // Cloudinary או חיצוני
+  return `${API_URL}${rawUrl.startsWith('/') ? rawUrl : `/uploads/${rawUrl}`}`;
+}
+
 export default function IroadsBox() {
   const [articles, setArticles] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  /* ✅ שליפת כתבות עם תגית iroads */
   useEffect(() => {
     async function fetchArticles() {
       try {
-        // --- ⭐️ תיקון 1: שינינו את populate=image ל-populate=* ⭐️ ---
         const res = await fetch(
           `${API_URL}/api/articles?filters[tags_txt][$contains]=iroads&populate=*`
         );
@@ -26,6 +34,7 @@ export default function IroadsBox() {
     fetchArticles();
   }, []);
 
+  /* ✅ מעבר אוטומטי בין שקופיות */
   useEffect(() => {
     if (articles.length === 0) return;
     const interval = setInterval(() => {
@@ -48,18 +57,16 @@ export default function IroadsBox() {
   const slides = [{ type: 'logo' }, ...rawArticles];
   const current = slides[currentIndex];
 
-  // --- 🛑 מחקנו את הפונקציה הישנה getImageUrl 🛑 ---
-
   return (
     <div className="bg-white shadow-md rounded-md overflow-hidden relative mb-4">
-      {/* ✅ כותרת עליונה תואמת ל-GuideBox */}
+      {/* ✅ כותרת עליונה */}
       <Link href="https://www.iroads.co.il/" target="_blank">
         <h3 className="bg-red-600 text-white font-bold text-lg px-3 py-2 cursor-pointer hover:bg-red-700 transition text-right">
           בכבישי הארץ
         </h3>
       </Link>
 
-      {/* קרוסלה */}
+      {/* ✅ קרוסלה */}
       <div className="relative h-72">
         <AnimatePresence mode="wait">
           <motion.div
@@ -72,7 +79,7 @@ export default function IroadsBox() {
           >
             {current.type === 'logo' ? (
               <div className="relative w-full h-full">
-                {/* כפתור בחלק העליון */}
+                {/* ✅ כפתור תלונה */}
                 <a
                   href="https://www.iroads.co.il/support-form/"
                   target="_blank"
@@ -82,6 +89,7 @@ export default function IroadsBox() {
                   לחצו להגשת תלונה
                 </a>
 
+                {/* ✅ לוגו / וידאו */}
                 <a
                   href="https://www.iroads.co.il/"
                   target="_blank"
@@ -99,41 +107,45 @@ export default function IroadsBox() {
                 </a>
               </div>
             ) : (
-              // --- ⭐️ תיקון 2: הטמענו את הלוגיקה החדשה ישירות כאן ⭐️ ---
+              // ✅ שקופית כתבה
               (() => {
-                // "בדרכים": נסה תמונה שלישית (index 2), אם אין, חזור לראשונה (index 0)
-                const gallery = current.gallery;
+                const attrs = current;
+                const gallery = attrs.gallery;
+
+                // ניסיון שליפה: תמונה שלישית (index 2) או ראשונה
                 const imgData = gallery?.[2] || gallery?.[0];
-                const imageUrl = imgData?.url ? `${API_URL}${imgData.url}` : null;
-                const imageAlt = imgData?.alternativeText || current.title || 'כתבה';
+                const imageUrl = imgData?.url
+                  ? resolveImageUrl(imgData.url)
+                  : attrs.image?.url
+                  ? resolveImageUrl(attrs.image.url)
+                  : '/default-image.jpg';
+
+                const imageAlt =
+                  imgData?.alternativeText || attrs.title || 'כתבה';
 
                 return (
-                  <Link href={current.slug ? `/articles/${current.slug}` : '#'}>
+                  <Link href={attrs.slug ? `/articles/${attrs.slug}` : '#'}>
                     <div className="relative w-full h-full cursor-pointer">
-                      {imageUrl ? (
-                        <Image
-                          src={imageUrl}
-                          alt={imageAlt}
-                          fill
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gray-200" />
-                      )}
+                      <Image
+                        src={imageUrl}
+                        alt={imageAlt}
+                        fill
+                        className="object-cover"
+                        loading="lazy"
+                      />
                       <div className="absolute bottom-0 w-full bg-black/50 text-white p-2 text-sm font-semibold">
-                        {current.title || 'ללא כותרת'}
+                        {attrs.title || 'ללא כותרת'}
                       </div>
                     </div>
                   </Link>
                 );
               })()
-              // --- ⭐️ סוף התיקון ⭐️ ---
             )}
           </motion.div>
         </AnimatePresence>
       </div>
 
-      {/* חיצי ניווט */}
+      {/* ✅ חיצים */}
       <button
         onClick={() =>
           setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length)
@@ -149,7 +161,7 @@ export default function IroadsBox() {
         ›
       </button>
 
-      {/* נקודות אינדיקציה */}
+      {/* ✅ נקודות אינדיקציה */}
       <div className="flex justify-center space-x-2 py-2">
         {slides.map((_, idx) => (
           <button
