@@ -6,6 +6,14 @@ import Link from 'next/link';
 
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 
+/* ✅ אחידות לכל סוגי המדיה */
+function resolveMediaUrl(rawUrl) {
+  if (!rawUrl) return null;
+  if (rawUrl.startsWith('http')) return rawUrl; // Cloudinary או חיצוני
+  return `${API_URL}${rawUrl.startsWith('/') ? rawUrl : `/uploads/${rawUrl}`}`;
+}
+
+/* ✅ נרמול קישורי דרייב */
 function normalizeDriveUrl(url) {
   if (!url) return null;
   if (/^[a-zA-Z0-9_-]{20,}$/.test(url)) return `/api/drive-proxy?id=${url}`;
@@ -97,49 +105,60 @@ export default function ProfessionalsBox() {
   if (!current) return null;
 
   const article = findArticleByTag(current.tag_name);
-  const mediaUrl = normalizeDriveUrl(current?.mediaUrl || '');
-  const imageUrl = current?.image?.url
-    ? `${API_URL}${current.image.url}`
-    : current?.image?.[0]?.url
-    ? `${API_URL}${current.image[0].url}`
-    : null;
+
+  // ✅ נרמול כל סוגי המדיה
+  const driveUrl = normalizeDriveUrl(current?.mediaUrl || '');
+  const imageUrl =
+    current?.image?.url
+      ? resolveMediaUrl(current.image.url)
+      : Array.isArray(current?.image) && current.image[0]?.url
+      ? resolveMediaUrl(current.image[0].url)
+      : null;
+
+  const videoUrl =
+    Array.isArray(current?.video) && current.video[0]?.url
+      ? resolveMediaUrl(current.video[0].url)
+      : current?.video?.url
+      ? resolveMediaUrl(current.video.url)
+      : null;
+
+  // ✅ עדיפות: Google Drive / mediaUrl → video → image
+  const finalUrl = driveUrl || videoUrl || imageUrl;
+
+  const isVideo =
+    (finalUrl && finalUrl.endsWith('.mp4')) ||
+    finalUrl?.includes('youtube') ||
+    finalUrl?.includes('vimeo');
 
   const getMediaElement = () => {
-    if (mediaUrl) {
-      const isVideo =
-        mediaUrl.endsWith('.mp4') ||
-        mediaUrl.includes('youtube') ||
-        mediaUrl.includes('vimeo');
-      return isVideo ? (
+    if (!finalUrl) {
+      return (
+        <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">
+          אין מדיה זמינה
+        </div>
+      );
+    }
+
+    if (isVideo) {
+      return (
         <video
-          src={mediaUrl}
+          src={finalUrl}
           autoPlay
           loop
           muted
           playsInline
           className="w-full h-full object-cover"
         />
-      ) : (
-        <img
-          src={mediaUrl}
-          alt={current.title_pros || 'בעל מקצוע'}
-          className="w-full h-full object-cover"
-        />
       );
     }
-    if (imageUrl) {
-      return (
-        <img
-          src={imageUrl}
-          alt={current.title_pros || 'בעל מקצוע'}
-          className="w-full h-full object-cover"
-        />
-      );
-    }
+
     return (
-      <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">
-        אין מדיה זמינה
-      </div>
+      <img
+        src={finalUrl}
+        alt={current.title_pros || 'בעל מקצוע'}
+        className="w-full h-full object-cover"
+        loading="lazy"
+      />
     );
   };
 
@@ -188,14 +207,12 @@ export default function ProfessionalsBox() {
                   לאתר של {current.title_pros}
                 </a>
               )}
-
-              
             </div>
           </motion.div>
         </AnimatePresence>
       </div>
 
-      {/* חיצים */}
+      {/* ✅ חיצים */}
       <button
         onClick={() =>
           setCurrentIndex((prev) => (prev - 1 + pros.length) % pros.length)
@@ -211,7 +228,7 @@ export default function ProfessionalsBox() {
         ›
       </button>
 
-      {/* נקודות */}
+      {/* ✅ נקודות */}
       <div className="flex justify-center space-x-2 py-2">
         {pros.map((_, idx) => (
           <button
