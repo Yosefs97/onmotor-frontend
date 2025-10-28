@@ -4,9 +4,16 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
-import { labelMap } from '@/utils/labelMap';  // ✅ תרגום לערכים
+import { labelMap } from '@/utils/labelMap';
 
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
+
+// ✅ פונקציה שמוודאת שהכתובת תקינה (כולל Cloudinary)
+function resolveImageUrl(rawUrl) {
+  if (!rawUrl) return '/default-image.jpg';
+  if (rawUrl.startsWith('http')) return rawUrl;
+  return `${API_URL}${rawUrl.startsWith('/') ? rawUrl : `/uploads/${rawUrl}`}`;
+}
 
 export default function GuideBox() {
   const [articles, setArticles] = useState([]);
@@ -15,7 +22,6 @@ export default function GuideBox() {
   useEffect(() => {
     async function fetchArticles() {
       try {
-        // --- ⭐️ תיקון 1: שינינו את populate=image ל-populate=gallery ⭐️ ---
         const res = await fetch(
           `${API_URL}/api/articles?filters[Values][$null]=false&populate=gallery`
         );
@@ -41,17 +47,14 @@ export default function GuideBox() {
   const current = articles[currentIndex];
   const values = Array.isArray(current.Values) ? current.Values : [current.Values];
 
-  // --- ⭐️ תיקון 2: הוספנו לוגיקה לשליפת התמונה מהגלריה ⭐️ ---
+  // ✅ שימוש בפונקציה החדשה במקום חיבור ישיר
   const mainImageData = current.gallery?.[0];
-  const imageUrl = mainImageData?.url 
-                   ? `${API_URL}${mainImageData.url}` 
-                   : null; // אם אין תמונה, נציג את ה-div האפור
+  const imageUrl = mainImageData?.url ? resolveImageUrl(mainImageData.url) : null;
   const imageAlt = mainImageData?.alternativeText || current.title || "תמונת מדריך";
-  // --- ⭐️ סוף התיקון ⭐️ ---
 
   return (
     <div className="bg-white shadow-md rounded-md overflow-hidden relative mb-4">
-      {/* ✅ כותרת עם לינק לדף מדריכים */}
+      {/* כותרת עם לינק לדף מדריכים */}
       <Link href="/blog/guides">
         <h3 className="bg-red-600 text-white font-bold text-lg px-3 py-2 cursor-pointer hover:bg-red-700 transition">
           מדריכים
@@ -70,8 +73,6 @@ export default function GuideBox() {
           >
             <Link href={`/articles/${current.slug}`}>
               <div className="w-full h-full cursor-pointer">
-                
-                {/* --- ⭐️ תיקון 3: שימוש במשתנים החדשים ⭐️ --- */}
                 {imageUrl ? (
                   <Image
                     src={imageUrl}
@@ -83,12 +84,9 @@ export default function GuideBox() {
                 ) : (
                   <div className="w-full h-40 bg-gray-200" />
                 )}
-                {/* --- ⭐️ סוף התיקון ⭐️ --- */}
-                
                 <p className="p-2 text-sm font-semibold text-gray-800">
                   {current.title}
                 </p>
-                {/* ✅ הצגת הערכים בעברית */}
                 {values.map((val, idx) => (
                   <p key={idx} className="px-2 text-xs text-gray-500">
                     {labelMap[val] || val}
