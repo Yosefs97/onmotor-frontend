@@ -1,27 +1,30 @@
+// components/TabLeftSidebar.jsx
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import useIsMobile from '@/hooks/useIsMobile';
 
-
 const tabs = ['אחרונים', 'בדרכים', 'פופולרי'];
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 
+/* ✅ פונקציה מאוחדת לשחזור תמונות מכל מקור (Cloudinary / Strapi / יחסית) */
+function resolveImageUrl(rawUrl) {
+  if (!rawUrl) return '/default-image.jpg';
+  if (rawUrl.startsWith('http')) return rawUrl; // Cloudinary או אתר חיצוני
+  return `${API_URL}${rawUrl.startsWith('/') ? rawUrl : `/uploads/${rawUrl}`}`;
+}
 
-// 👇 פונקציה שמוציאה שם אתר נקי מתוך כתובת
+/* 👇 פונקציה שמוציאה שם אתר נקי מתוך כתובת */
 function extractDomainName(url) {
   try {
     const host = new URL(url).hostname.replace('www.', '');
     const parts = host.split('.');
-
     let base = '';
     if (parts.length >= 3 && ['co', 'org', 'net'].includes(parts[parts.length - 2])) {
-      base = parts[parts.length - 3]; // לדוגמה: ynet.co.il → ynet
+      base = parts[parts.length - 3];
     } else {
-      base = parts[0]; // לדוגמה: example.com → example
+      base = parts[0];
     }
-
-    // אות ראשונה גדולה
     return base.charAt(0).toUpperCase() + base.slice(1);
   } catch {
     return 'Website';
@@ -37,74 +40,53 @@ export default function TabLeftSidebar() {
   const [activeTab, setActiveTab] = useState('אחרונים');
   const [latestArticles, setLatestArticles] = useState([]);
   const [onRoadArticles, setOnRoadArticles] = useState([]);
-  const [viralContent, setViralContent] = useState([]);
   const [popularContent, setPopularContent] = useState([]);
+  const [viralContent, setViralContent] = useState([]);
   const [victims, setVictims] = useState([]);
   const [isPaused, setIsPaused] = useState(false);
 
-  // פונקציה לעיבוד אובייקט כתבה/פריט מכל סוג
+  /* ✅ normalizeItem מעודכן לשיטת Cloudinary */
   const normalizeItem = (obj, type = 'article') => {
     const a = obj.attributes || obj;
 
-    // 👇 קביעת מקור לפי ה-URL
+    // קביעת מקור (YouTube, TikTok וכו')
     let autoSource = '';
     if (a.url) {
-      if (a.url.includes('youtube.com') || a.url.includes('youtu.be')) {
-        autoSource = 'YouTube';
-      } else if (a.url.includes('tiktok.com')) {
-        autoSource = 'TikTok';
-      } else if (a.url.includes(process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN)) {
-        autoSource = 'Shopify';
-      } else if (a.url.includes('instagram.com')) {
-        autoSource = 'Instagram';
-      } else if (a.url.includes('facebook.com')) {
-        autoSource = 'Facebook';
-      } else {
-        autoSource = extractDomainName(a.url);
-      }
+      if (a.url.includes('youtube.com') || a.url.includes('youtu.be')) autoSource = 'YouTube';
+      else if (a.url.includes('tiktok.com')) autoSource = 'TikTok';
+      else if (a.url.includes('instagram.com')) autoSource = 'Instagram';
+      else if (a.url.includes('facebook.com')) autoSource = 'Facebook';
+      else autoSource = extractDomainName(a.url);
     }
 
-    // --- ⭐️ לוגיקת תמונות ⭐️ ---
+    /* --- ⭐️ לוגיקת תמונות אחידה ⭐️ --- */
     let img = null;
-    const gallery = a.gallery; // מגיע מ-populate=*
+    const gallery = a.gallery || [];
 
     if (type === 'latest-article') {
-      // "אחרונים": נסה תמונה שנייה (index 1), אם אין, חזור לראשונה (index 0)
       const imgData = gallery?.[1] || gallery?.[0];
-      if (imgData?.url) {
-        img = `${API_URL}${imgData.url}`;
-      }
+      img = resolveImageUrl(imgData?.url);
     } else if (type === 'onroad-article') {
-      // "בדרכים": נסה תמונה שלישית (index 2), אם אין, חזור לראשונה (index 0)
       const imgData = gallery?.[2] || gallery?.[0];
-      if (imgData?.url) {
-        img = `${API_URL}${imgData.url}`;
-      }
+      img = resolveImageUrl(imgData?.url);
     } else {
-      // "פופולרי" וכל השאר: השאר את הלוגיקה המקורית (משיכה משדה image)
-      if (a.image?.data?.attributes?.url) {
-        img = `${API_URL}${a.image.data.attributes.url}`;
-      } else if (a.image?.url) {
-        img = `${API_URL}${a.image.url}`;
-      }
+      img = resolveImageUrl(
+        a.image?.data?.attributes?.url ||
+        a.image?.url ||
+        gallery?.[0]?.url
+      );
     }
 
-    // פולבאק כללי אם שום לוגיקה לא מצאה תמונה (רלוונטי בעיקר לכתבות)
-    if (!img && gallery?.[0]?.url) {
-      img = `${API_URL}${gallery[0].url}`;
-    }
-    
-    if (img && img.trim() === '') {
-      img = null;
-    }
-    // --- ⭐️ סוף הלוגיקה ⭐️ ---
+    // fallback למקרה שאין בכלל
+    if (!img) img = '/default-image.jpg';
+    /* --- ⭐️ סוף לוגיקת תמונות ⭐️ --- */
 
     return {
       id: obj.id,
       title: a.title || a.name || '',
       slug: a.slug || '',
       description: a.description || '',
-      image: img, // ⭐️ התמונה מסטראפי (אם קיימת)
+      image: img,
       date: a.date?.split('T')[0] || a.publishedAt?.split('T')[0] || '',
       url: a.url || '',
       views: a.views ?? null,
@@ -112,6 +94,7 @@ export default function TabLeftSidebar() {
     };
   };
 
+  /* ✅ שליפות מה־API */
   useEffect(() => {
     const fetchLatest = async () => {
       try {
@@ -125,23 +108,11 @@ export default function TabLeftSidebar() {
 
     const fetchOnRoad = async () => {
       try {
-        const res = await fetch(
-         `${API_URL}/api/articles?filters[tags_txt][$contains]=iroads&sort=date:desc&populate=*`
-        );
+        const res = await fetch(`${API_URL}/api/articles?filters[tags_txt][$contains]=iroads&sort=date:desc&populate=*`);
         const data = (await res.json()).data || [];
         setOnRoadArticles(data.map((a) => normalizeItem(a, 'onroad-article')));
       } catch (err) {
         console.error("שגיאה בטעינת 'בדרכים':", err);
-      }
-    };
-
-    const fetchViral = async () => {
-      try {
-        const res = await fetch(`${API_URL}/api/viral-contents?sort=views:desc&populate=*`);
-        const data = (await res.json()).data || [];
-        setViralContent(data.map((v) => normalizeItem(v, 'viral')));
-      } catch (err) {
-        console.error('שגיאה בטעינת ויראלי:', err);
       }
     };
 
@@ -152,31 +123,25 @@ export default function TabLeftSidebar() {
 
         const withPreview = await Promise.all(
           data.map(async (item) => {
-            const norm = normalizeItem(item, 'popular'); 
+            const norm = normalizeItem(item, 'popular');
 
-            // --- ⭐️ תיקון: "רק אם אין תמונה מסטראפי, נסה למשוך מ-preview" ⭐️ ---
-            // החזרנו את התנאי לקדמותו
-            if (!norm.image && norm.url) {
+            /* --- ⭐️ לוגיקת משיכה חכמה לטאב פופולרי ⭐️ --- */
+            // 1. אם יש תמונה ב־Strapi (כולל Cloudinary) – השתמש בה
+            if (norm.image && norm.image !== '/default-image.jpg') return norm;
+
+            // 2. אם אין תמונה ב־Strapi, נסה למשוך מ־preview API (Google metadata)
+            if (norm.url) {
               try {
-                const previewRes = await fetch(
-                  `/api/preview?url=${encodeURIComponent(norm.url)}`
-                );
+                const previewRes = await fetch(`/api/preview?url=${encodeURIComponent(norm.url)}`);
                 const previewJson = await previewRes.json();
-                
-                if (previewJson?.image) {
-                  norm.image = previewJson.image;
-                }
+                if (previewJson?.image) norm.image = previewJson.image;
               } catch (err) {
                 console.error('Preview fetch error:', err);
               }
             }
-            // --- ⭐️ סוף התיקון ⭐️ ---
 
-            // ✅ fallback סופי
-            if (!norm.image) {
-              norm.image = '/default-image.jpg';
-            }
-
+            // 3. fallback אחרון
+            if (!norm.image) norm.image = '/default-image.jpg';
             return norm;
           })
         );
@@ -184,6 +149,16 @@ export default function TabLeftSidebar() {
         setPopularContent(withPreview);
       } catch (err) {
         console.error('שגיאה בטעינת פופולרי:', err);
+      }
+    };
+
+    const fetchViral = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/viral-contents?sort=views:desc&populate=*`);
+        const data = (await res.json()).data || [];
+        setViralContent(data.map((v) => normalizeItem(v, 'viral')));
+      } catch (err) {
+        console.error('שגיאה בטעינת ויראלי:', err);
       }
     };
 
@@ -199,11 +174,12 @@ export default function TabLeftSidebar() {
 
     fetchLatest();
     fetchOnRoad();
-    fetchViral();
     fetchPopular();
+    fetchViral();
     fetchVictims();
   }, []);
 
+  /* ✅ גלילה אנכית מתמשכת */
   useEffect(() => {
     if (isMobile) return;
     const container = scrollContainerRef.current;
@@ -211,7 +187,6 @@ export default function TabLeftSidebar() {
 
     const speed = 1;
     let frame;
-
     const step = () => {
       if (!isPaused) {
         container.scrollTop += speed;
@@ -228,11 +203,12 @@ export default function TabLeftSidebar() {
   useEffect(() => {
     if (!isMobile || !sidebarRef.current || !hasInteracted) return;
     setTimeout(() => {
-    const y = sidebarRef.current.getBoundingClientRect().top + window.scrollY - 100; // 🔴 כאן 100px זה ההפרש
-    window.scrollTo({ top: y, behavior: 'smooth' });
-  }, 0);
-}, [activeTab, isMobile, hasInteracted]);
+      const y = sidebarRef.current.getBoundingClientRect().top + window.scrollY - 100;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }, 0);
+  }, [activeTab, isMobile, hasInteracted]);
 
+  /* ✅ רינדור הפריטים לפי טאב */
   const getStyledContent = (items) => {
     return items.map((item, i) => {
       const even = i % 2 === 0;
@@ -256,15 +232,11 @@ export default function TabLeftSidebar() {
           </div>
           <div className="flex flex-col text-right">
             <p className="font-bold text-sm line-clamp-1">{item.title}</p>
-            <p
-              className={`text-xs ${even ? 'text-gray-700' : 'text-gray-300'} line-clamp-2`}
-            >
+            <p className={`text-xs ${even ? 'text-gray-700' : 'text-gray-300'} line-clamp-2`}>
               {item.description}
             </p>
             {item.date && (
-              <span
-                className={`text-xs ${even ? 'text-gray-500' : 'text-gray-400'} mt-1`}
-              >
+              <span className={`text-xs ${even ? 'text-gray-500' : 'text-gray-400'} mt-1`}>
                 {item.date}
               </span>
             )}
@@ -280,25 +252,17 @@ export default function TabLeftSidebar() {
       );
     });
   };
-  
 
   let content = [];
-  if (activeTab === 'אחרונים') {
-    content = getStyledContent(latestArticles);
-  } else if (activeTab === 'בדרכים') {
-    content = getStyledContent(onRoadArticles);
-  } else if (activeTab === 'פופולרי') {
-    content = getStyledContent(popularContent);
-  } else {
-    content = getStyledContent(viralContent);
-  }
+  if (activeTab === 'אחרונים') content = getStyledContent(latestArticles);
+  else if (activeTab === 'בדרכים') content = getStyledContent(onRoadArticles);
+  else if (activeTab === 'פופולרי') content = getStyledContent(popularContent);
+  else content = getStyledContent(viralContent);
 
   return (
     <div
       ref={sidebarRef}
-      className={`flex flex-col min-h-0 bg-white shadow-md w-full text-sm ${
-        isMobile ? 'w-screen rounded-none' : ''
-      }`}
+      className={`flex flex-col min-h-0 bg-white shadow-md w-full text-sm ${isMobile ? 'w-screen rounded-none' : ''}`}
     >
       <div
         className="flex border-b text-sm font-semibold bg-white sticky top-0 z-10 shadow-sm"
@@ -321,6 +285,7 @@ export default function TabLeftSidebar() {
           </button>
         ))}
       </div>
+
       <div
         ref={scrollContainerRef}
         onMouseEnter={() => setIsPaused(true)}
@@ -330,8 +295,6 @@ export default function TabLeftSidebar() {
       >
         {content}
       </div>
-        
-      
     </div>
   );
 }
