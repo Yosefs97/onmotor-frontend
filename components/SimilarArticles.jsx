@@ -118,7 +118,7 @@ export default function SimilarArticles({ currentSlug, category }) {
             </button>
             <button
               onClick={nextGroup}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-red-600/30 hover:bg-red-600/60 text-white p-3 rounded-full text-2xl transition"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-red-600/90 hover:bg-red-600/60 text-white p-3 rounded-full text-2xl transition"
               aria-label="הבא"
             >
               ‹
