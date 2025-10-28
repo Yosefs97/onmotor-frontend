@@ -6,7 +6,7 @@ import ArticleCard from '@/components/ArticleCards/ArticleCard';
 
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 
-// ✅ פונקציה לתיקון כתובת תמונה (תמיכה ב־Cloudinary ובנתיבים יחסיים)
+// ✅ תיקון כתובת תמונה (תמיכה ב־Cloudinary ובנתיבים יחסיים)
 function resolveImageUrl(rawUrl) {
   if (!rawUrl) return '/default-image.jpg';
   if (rawUrl.startsWith('http')) return rawUrl;
@@ -18,7 +18,7 @@ export default function SimilarArticles({ currentSlug, category }) {
   const [currentGroup, setCurrentGroup] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
-  // ✅ בדיקה אם מדובר במובייל
+  // ✅ זיהוי מובייל
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     handleResize();
@@ -63,14 +63,14 @@ export default function SimilarArticles({ currentSlug, category }) {
     fetchSimilarArticles();
   }, [currentSlug, category]);
 
-  // ✅ חישוב קבוצות כתבות (3 לדסקטופ, 2 למובייל)
+  // ✅ חישוב קבוצות (3 לדסקטופ, 2 למובייל)
   const groupSize = isMobile ? 2 : 3;
   const groups = [];
   for (let i = 0; i < similar.length; i += groupSize) {
     groups.push(similar.slice(i, i + groupSize));
   }
 
-  // ✅ מעבר אוטומטי כל 6 שניות
+  // ✅ מעבר אוטומטי כל 6 שניות (גם במחשב)
   useEffect(() => {
     if (groups.length <= 1) return;
     const interval = setInterval(() => {
@@ -81,10 +81,8 @@ export default function SimilarArticles({ currentSlug, category }) {
 
   if (!similar.length) return null;
 
-  const nextGroup = () =>
-    setCurrentGroup((prev) => (prev + 1) % groups.length);
-  const prevGroup = () =>
-    setCurrentGroup((prev) => (prev - 1 + groups.length) % groups.length);
+  const nextGroup = () => setCurrentGroup((prev) => (prev + 1) % groups.length);
+  const prevGroup = () => setCurrentGroup((prev) => (prev - 1 + groups.length) % groups.length);
 
   return (
     <div className="mt-10 relative bg-white p-4 rounded-md shadow-md">
@@ -108,18 +106,20 @@ export default function SimilarArticles({ currentSlug, category }) {
           </motion.div>
         </AnimatePresence>
 
-        {/* חיצים ימינה / שמאלה */}
+        {/* ✅ חיצים ימינה / שמאלה - אדומים שקופים */}
         {groups.length > 1 && (
           <>
             <button
               onClick={prevGroup}
-              className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full transition"
+              className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-red-600/30 hover:bg-red-600/60 text-white p-3 rounded-full text-2xl transition"
+              aria-label="הקודם"
             >
               ‹
             </button>
             <button
               onClick={nextGroup}
-              className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full transition"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-red-600/30 hover:bg-red-600/60 text-white p-3 rounded-full text-2xl transition"
+              aria-label="הבא"
             >
               ›
             </button>
@@ -127,14 +127,14 @@ export default function SimilarArticles({ currentSlug, category }) {
         )}
       </div>
 
-      {/* נקודות אינדיקציה */}
+      {/* ✅ נקודות אינדיקציה בתחתית */}
       {groups.length > 1 && (
         <div className="flex justify-center space-x-2 mt-3">
           {groups.map((_, idx) => (
             <button
               key={idx}
               onClick={() => setCurrentGroup(idx)}
-              className={`w-2 h-2 rounded-full ${
+              className={`w-3 h-3 rounded-full transition ${
                 idx === currentGroup ? 'bg-red-600' : 'bg-gray-400'
               }`}
             />
