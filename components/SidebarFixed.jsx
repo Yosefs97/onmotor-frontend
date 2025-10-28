@@ -5,28 +5,32 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ResponsiveBoxGrid from './ResponsiveBoxGrid';
 import BoxWrapper from './BoxWrapper';
 
-
-
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 
-// פונקציה להמרת לינקים/ID של דרייב לנתיב Proxy
+/* ✅ פונקציה מאוחדת לזיהוי כתובת מדיה (Cloudinary / Strapi / חיצוני) */
+function resolveMediaUrl(rawUrl) {
+  if (!rawUrl) return null;
+  if (rawUrl.startsWith('http')) return rawUrl;
+  return `${API_URL}${rawUrl.startsWith('/') ? rawUrl : `/uploads/${rawUrl}`}`;
+}
+
+/* ✅ פונקציה לנרמול לינקים מ-Google Drive */
 function normalizeDriveUrl(url) {
   if (!url) return url;
 
-  // אם הכנסתי ישירות File ID (20+ תווים אלפאנומריים)
+  // אם זה ID בלבד
   if (/^[a-zA-Z0-9_-]{20,}$/.test(url)) {
     return `/api/drive-proxy?id=${url}`;
   }
 
-  // אם זה לינק בפורמט /file/d/.../view
-  if (url.includes("drive.google.com/file/d/")) {
+  // אם זה לינק רגיל של דרייב
+  if (url.includes('drive.google.com/file/d/')) {
     const match = url.match(/\/d\/([^/]+)/);
     if (match && match[1]) {
       return `/api/drive-proxy?id=${match[1]}`;
     }
   }
 
-  // אם זה כבר קישור תקין (לא דרייב) – מחזירים כמו שהוא
   return url;
 }
 
@@ -34,12 +38,12 @@ export default function SidebarFixed() {
   const [ads, setAds] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // ✅ טעינת תוכן מ-Strapi
+  /* ✅ טעינת מודעות מ-Strapi */
   useEffect(() => {
     async function fetchAds() {
       try {
         const res = await fetch(
-          `${API_URL}/api/sidebar-middles?populate[image][fields][0]=url&populate[video][fields][0]=url`
+          `${API_URL}/api/sidebar-middles?populate=image&populate=video`
         );
         const json = await res.json();
         setAds(json.data || []);
@@ -50,7 +54,7 @@ export default function SidebarFixed() {
     fetchAds();
   }, []);
 
-  // ✅ קרוסלה אינסופית – החלפה כל 5 שניות
+  /* ✅ קרוסלה מתחלפת כל 5 שניות */
   useEffect(() => {
     if (ads.length > 2) {
       const interval = setInterval(() => {
@@ -60,63 +64,50 @@ export default function SidebarFixed() {
     }
   }, [ads]);
 
-  // עוזר לשלוף מודעה לפי אינדקס
+  /* ✅ החזרת מודעה לפי אינדקס */
   const getAdAt = (index) => {
     if (!ads.length) return null;
     return ads[index % ads.length];
   };
 
-  // ✅ רנדר של מודעה
+  /* ✅ כרטיס מודעה עם לוגיקת תמונה חדשה */
   const AdCard = ({ ad }) => {
     if (!ad) return null;
 
-    const attrs = ad; // הנתונים מגיעים ישירות מ-Strapi
+    const attrs = ad; // הנתונים מגיעים מ-Strapi
 
-    // שדות המדיה
-    const mediaUrl = normalizeDriveUrl(attrs.mediaUrl || null);
+    // נורמליזציה של כל הנתיבים
+    const driveUrl = normalizeDriveUrl(attrs.mediaUrl || null);
 
-    const videoUrl =
-      Array.isArray(attrs.video) && attrs.video.length > 0
-        ? `${API_URL}${attrs.video[0].url}`
-        : null;
+    // תמונה מ-Strapi (Cloudinary או יחסית)
+    const imageUrl = Array.isArray(attrs.image) && attrs.image.length > 0
+      ? resolveMediaUrl(attrs.image[0].url)
+      : resolveMediaUrl(attrs.image?.url);
 
-    const imageUrl =
-      Array.isArray(attrs.image) && attrs.image.length > 0
-        ? `${API_URL}${attrs.image[0].url}`
-        : null;
+    // וידאו מ-Strapi
+    const videoUrl = Array.isArray(attrs.video) && attrs.video.length > 0
+      ? resolveMediaUrl(attrs.video[0].url)
+      : resolveMediaUrl(attrs.video?.url);
 
-    // סדר עדיפויות: mediaUrl > video > image
+    // ✅ סדר עדיפויות: mediaUrl (דרייב/חיצוני) > video > image
+    let finalUrl = driveUrl || videoUrl || imageUrl;
+    let isVideo =
+      (finalUrl && finalUrl.endsWith('.mp4')) ||
+      finalUrl?.includes('youtube') ||
+      finalUrl?.includes('vimeo');
+
     let content = null;
-    if (mediaUrl) {
-      const isVideo =
-        mediaUrl.endsWith('.mp4') ||
-        mediaUrl.includes('youtube') ||
-        mediaUrl.includes('vimeo');
 
-      if (isVideo) {
-        content = (
-          <video
-            src={mediaUrl}
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full h-full object-cover"
-          />
-        );
-      } else {
-        content = (
-          <img
-            src={mediaUrl}
-            alt={attrs.title || 'ad'}
-            className="w-full h-full object-cover"
-          />
-        );
-      }
-    } else if (videoUrl) {
+    if (!finalUrl) {
+      content = (
+        <div className="w-full h-full bg-gray-800 flex items-center justify-center text-white">
+          אין מדיה זמינה
+        </div>
+      );
+    } else if (isVideo) {
       content = (
         <video
-          src={videoUrl}
+          src={finalUrl}
           autoPlay
           loop
           muted
@@ -124,25 +115,20 @@ export default function SidebarFixed() {
           className="w-full h-full object-cover"
         />
       );
-    } else if (imageUrl) {
-      content = (
-        <img
-          src={imageUrl}
-          alt={attrs.title || 'ad'}
-          className="w-full h-full object-cover"
-        />
-      );
     } else {
       content = (
-        <div className="w-full h-full bg-gray-800 flex items-center justify-center text-white">
-          אין מדיה זמינה
-        </div>
+        <img
+          src={finalUrl}
+          alt={attrs.title || 'ad'}
+          className="w-full h-full object-cover"
+          loading="lazy"
+        />
       );
     }
 
     return (
       <div className="border-[3px] border-[#e60000] rounded-xl overflow-hidden shadow-lg bg-black">
-        <div className=" w-full aspect-video">{content}</div>
+        <div className="w-full aspect-video">{content}</div>
 
         {/* כותרת */}
         {attrs.title && (
@@ -179,7 +165,6 @@ export default function SidebarFixed() {
   return (
     <div className="relative bg-gray-900 py-4 sticky top-25">
       <ResponsiveBoxGrid>
-        {/* 🟣 קרוסלה דו-קומתית */}
         <BoxWrapper>
           <div className="overflow-hidden flex flex-col gap-4">
             <AnimatePresence mode="wait">
@@ -188,7 +173,7 @@ export default function SidebarFixed() {
                 initial={{ y: 50, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: -50, opacity: 0 }}
-                transition={{ duration: 1, }}
+                transition={{ duration: 1 }}
               >
                 <AdCard ad={getAdAt(currentIndex)} />
               </motion.div>
@@ -205,8 +190,6 @@ export default function SidebarFixed() {
           </div>
         </BoxWrapper>
       </ResponsiveBoxGrid>
-      
-
     </div>
   );
 }
