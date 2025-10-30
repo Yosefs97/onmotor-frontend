@@ -1,3 +1,4 @@
+// components/Gallery.jsx
 'use client';
 import React, { useState, useEffect, useMemo } from 'react';
 
@@ -30,17 +31,22 @@ export default function Gallery({
         const data = await res.json();
 
         if (active && Array.isArray(data.images)) {
+          // ✅ מסננים תמונות אמיתיות ומתקנים כתובות "מוזרות" כמו של KTM
           const valid = data.images
             .map((img) => ({
               src: img.src?.trim(),
               alt: img.alt || '',
             }))
-            .filter(
-              (img) =>
-                img.src &&
-                img.src.startsWith('http') &&
-                /\.(jpg|jpeg|png|webp|gif)$/i.test(img.src)
-            );
+            .filter((img) => {
+              if (!img.src || !img.src.startsWith('http')) return false;
+              const lower = img.src.toLowerCase();
+              return (
+                /\.(jpg|jpeg|png|webp|gif)$/i.test(lower) ||
+                lower.includes('/1200/2400/.jpg') ||
+                lower.includes('.jpg') ||
+                lower.includes('.jpeg')
+              );
+            });
 
           console.log(`✅ ${valid.length} external images loaded`);
           setExternalMediaImages(valid);
@@ -74,30 +80,32 @@ export default function Gallery({
 
     const combined = [...strapiImages, ...externalLinks, ...externalMediaImages];
 
+    // ✅ סינון כפילויות
     const unique = combined.filter(
       (img, i, arr) =>
         img.src &&
         arr.findIndex((x) => x.src === img.src) === i &&
-        /\.(jpg|jpeg|png|gif|webp)$/i.test(img.src)
+        (/\.(jpg|jpeg|png|gif|webp)$/i.test(img.src) ||
+          img.src.includes('/1200/2400/.jpg'))
     );
 
     return unique;
   }, [images, externalImageUrls, externalMediaImages]);
-
-  // ✅ אם סיים טעינה אבל אין תמונות
-  if (!loading && !allImages.length) {
-    return (
-      <div className="text-center text-gray-500 py-8">
-        לא נמצאו תמונות בגלריה.
-      </div>
-    );
-  }
 
   // ✅ אם עדיין טוען
   if (loading) {
     return (
       <div className="text-center text-gray-500 py-8">
         טוען את הגלריה...
+      </div>
+    );
+  }
+
+  // ✅ אם סיים טעינה אבל אין תמונות
+  if (!allImages.length) {
+    return (
+      <div className="text-center text-gray-500 py-8">
+        לא נמצאו תמונות בגלריה.
       </div>
     );
   }
@@ -115,7 +123,7 @@ export default function Gallery({
   return (
     <div className="mt-8 w-full flex flex-col items-center gap-4">
       {/* תמונה ראשית */}
-      <div className="relative w-full max-w-3xl aspect-[3/2] overflow-hidden rounded shadow-lg">
+      <div className="relative w-full max-w-3xl aspect-[3/2] overflow-hidden rounded shadow-lg bg-gray-100">
         <img
           key={current}
           src={getImageUrl(allImages[current].src)}
