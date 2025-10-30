@@ -6,14 +6,38 @@ const PUBLIC_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 
 export default function Gallery({
   images = [],
-  externalImageUrls = [],
-  externalMediaUrl = null,
+  externalImageUrls = [], // יכול להיות מערך או טקסט עם שורות
+  externalMediaUrl = null, // קישור לעמוד מדיה
 }) {
   const [current, setCurrent] = useState(0);
   const [externalMediaImages, setExternalMediaImages] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ שליפת תמונות ממקור חיצוני (KTM או כל אתר אחר)
+  // ✅ אם התקבל שדה טקסט מ-Strapi — מפרקים אותו לשורות
+  const parsedExternalUrls = useMemo(() => {
+    if (typeof externalImageUrls === 'string') {
+      return externalImageUrls
+        .split(/\r?\n|,/)
+        .map((url) => url.trim())
+        .filter(
+          (url) =>
+            url &&
+            (url.startsWith('http://') || url.startsWith('https://')) &&
+            /\.(jpg|jpeg|png|gif|webp|avif)$/i.test(url)
+        );
+    }
+    if (Array.isArray(externalImageUrls)) {
+      return externalImageUrls.filter(
+        (url) =>
+          typeof url === 'string' &&
+          url.trim() !== '' &&
+          (url.startsWith('http://') || url.startsWith('https://'))
+      );
+    }
+    return [];
+  }, [externalImageUrls]);
+
+  // ✅ טעינת תמונות חיצוניות מדף יצרן (אם יש externalMediaUrl)
   useEffect(() => {
     let active = true;
 
@@ -30,15 +54,18 @@ export default function Gallery({
         const data = await res.json();
 
         if (active && Array.isArray(data.images)) {
-          // לא מסננים כלום — מציגים הכל
           const valid = data.images
             .map((img) => ({
               src: img.src?.trim(),
               alt: img.alt || '',
             }))
-            .filter((img) => img.src && img.src.startsWith('http'));
+            .filter(
+              (img) =>
+                img.src &&
+                img.src.startsWith('http') &&
+                /\.(jpg|jpeg|png|webp|gif)$/i.test(img.src)
+            );
 
-          console.log(`✅ Loaded ${valid.length} external images`);
           setExternalMediaImages(valid);
         }
       } catch (err) {
@@ -54,7 +81,7 @@ export default function Gallery({
     };
   }, [externalMediaUrl]);
 
-  // ✅ מאחד את כל מקורות התמונות
+  // ✅ מאחד את כל סוגי התמונות
   const allImages = useMemo(() => {
     const strapiImages = (images || [])
       .map((img) => ({
@@ -63,29 +90,39 @@ export default function Gallery({
       }))
       .filter((img) => img.src);
 
-    const externalLinks = (externalImageUrls || [])
-      .filter((url) => typeof url === 'string' && url.trim() !== '')
-      .map((url) => ({ src: url.trim(), alt: '' }));
+    const externalLinks = parsedExternalUrls.map((url) => ({
+      src: url,
+      alt: '',
+    }));
 
-    // לא מסנן לפי סיומות בכלל
     const combined = [...strapiImages, ...externalLinks, ...externalMediaImages];
 
-    // ✅ מסיר כפילויות בלבד
     const unique = combined.filter(
-      (img, i, arr) => img.src && arr.findIndex((x) => x.src === img.src) === i
+      (img, i, arr) =>
+        img.src &&
+        arr.findIndex((x) => x.src === img.src) === i &&
+        /\.(jpg|jpeg|png|gif|webp|avif)$/i.test(img.src)
     );
 
     return unique;
-  }, [images, externalImageUrls, externalMediaImages]);
+  }, [images, parsedExternalUrls, externalMediaImages]);
 
-  // ✅ טעינה
+  // ✅ אם עדיין טוען
   if (loading) {
-    return <div className="text-center text-gray-500 py-8">טוען את הגלריה...</div>;
+    return (
+      <div className="text-center text-gray-500 py-8">
+        טוען את הגלריה...
+      </div>
+    );
   }
 
-  // ✅ אין תמונות בכלל
+  // ✅ אם סיים טעינה אבל אין תמונות
   if (!allImages.length) {
-    return <div className="text-center text-gray-500 py-8">לא נמצאו תמונות בגלריה.</div>;
+    return (
+      <div className="text-center text-gray-500 py-8">
+        לא נמצאו תמונות בגלריה.
+      </div>
+    );
   }
 
   const next = () => setCurrent((prev) => (prev + 1) % allImages.length);
@@ -109,7 +146,9 @@ export default function Gallery({
           className="w-full h-full object-cover transition-opacity duration-500"
           onError={(e) => {
             e.target.onerror = null;
-            e.target.src = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+            e.target.src =
+              'data:image/svg+xml;charset=UTF-8,' +
+              encodeURIComponent(`
               <svg xmlns="http://www.w3.org/2000/svg" width="800" height="600">
                 <rect width="100%" height="100%" fill="#ddd"/>
                 <text x="50%" y="50%" font-size="40" fill="#555" text-anchor="middle" dominant-baseline="middle">
@@ -118,7 +157,6 @@ export default function Gallery({
               </svg>
             `);
           }}
-
         />
         <button
           onClick={prev}
@@ -145,7 +183,6 @@ export default function Gallery({
               i === current ? 'ring-2 ring-blue-500' : ''
             }`}
             onClick={() => setCurrent(i)}
-            onError={(e) => (e.target.src = '/default-image.jpg')}
           />
         ))}
       </div>
