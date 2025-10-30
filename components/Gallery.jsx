@@ -1,18 +1,32 @@
 // components/Gallery.jsx
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 
 const PUBLIC_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 
-export default function Gallery({ images = [] }) {
+export default function Gallery({ images = [], externalImageUrls = [] }) {
   const [current, setCurrent] = useState(0);
 
-  if (!images.length) return null;
+  // ✅ מאחד בין תמונות מ-Strapi לתמונות מקישורים חיצוניים
+  const allImages = useMemo(() => {
+    const strapiImages = images.map(img => ({
+      src: img?.url || img?.src,
+      alt: img?.alternativeText || img?.alt || '',
+    }));
 
-  const next = () => setCurrent((current + 1) % images.length);
-  const prev = () => setCurrent((current - 1 + images.length) % images.length);
+    const externalImages = externalImageUrls
+      .filter(url => typeof url === 'string' && url.trim() !== '')
+      .map(url => ({ src: url.trim(), alt: '' }));
 
-  // ✅ פונקציה שמתקנת URL במקרה של נתיב יחסי
+    return [...strapiImages, ...externalImages];
+  }, [images, externalImageUrls]);
+
+  if (!allImages.length) return null;
+
+  const next = () => setCurrent((current + 1) % allImages.length);
+  const prev = () => setCurrent((current - 1 + allImages.length) % allImages.length);
+
+  // ✅ מתקנת URL יחסי
   const getImageUrl = (src) => {
     if (!src) return '/default-image.jpg';
     if (src.startsWith('http')) return src;
@@ -21,11 +35,11 @@ export default function Gallery({ images = [] }) {
 
   return (
     <div className="mt-8 w-full flex flex-col items-center gap-4">
-      {/* תמונה ראשית גדולה */}
+      {/* תמונה ראשית */}
       <div className="relative w-full max-w-3xl aspect-[3/2] overflow-hidden rounded shadow-lg">
         <img
-          src={getImageUrl(images[current].src)}
-          alt={images[current].alt || `תמונה ${current + 1}`}
+          src={getImageUrl(allImages[current].src)}
+          alt={allImages[current].alt || `תמונה ${current + 1}`}
           className="w-full h-full object-cover transition-opacity duration-300"
         />
         <button
@@ -44,7 +58,7 @@ export default function Gallery({ images = [] }) {
 
       {/* תמונות ממוזערות */}
       <div className="flex gap-2 mt-2 overflow-x-auto px-2 scrollbar-hide">
-        {images.map((img, i) => (
+        {allImages.map((img, i) => (
           <img
             key={i}
             src={getImageUrl(img.src)}

@@ -15,9 +15,10 @@ import EmbedContent from "@/components/EmbedContent";
 
 const API_URL = process.env.STRAPI_API_URL;
 const PUBLIC_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || API_URL;
+const SITE_URL = "https://www.onmotormedia.com";
 const PLACEHOLDER_IMG = "/default-image.jpg";
 
-// ✅ פונקציה שמתקנת נתיבי תמונות יחסיים בתוך HTML
+// ✅ מתקנת נתיבי תמונות יחסיים בתוך HTML
 function fixRelativeImages(html) {
   if (!html) return html;
   return html.replace(
@@ -31,14 +32,10 @@ function fixRelativeImages(html) {
   );
 }
 
-// ✅ פונקציה פשוטה ויציבה לשימוש עם Cloudinary
+// ✅ פונקציה פשוטה לתיקון קישורי מדיה
 function resolveImageUrl(rawUrl) {
   if (!rawUrl) return PLACEHOLDER_IMG;
-
-  // אם זה לינק חיצוני (Cloudinary, CDN וכו') – נחזיר אותו ישירות
   if (rawUrl.startsWith("http")) return rawUrl;
-
-  // אחרת, נרכיב כתובת מלאה מהשרת
   return `${PUBLIC_API_URL}${rawUrl.startsWith("/") ? rawUrl : `/uploads/${rawUrl}`}`;
 }
 
@@ -54,31 +51,37 @@ export default async function ArticlePage({ params }) {
 
   const data = rawArticle;
 
-  // ✅ טיפול בגלריה גם ב-Strapi v4
+  // ✅ טיפול בגלריה (תמונות מקומיות)
   const galleryItems = data.gallery?.data
     ? data.gallery.data.map((item) => item.attributes)
     : data.gallery || [];
 
-  // ✅ תמונה ראשית
-  const mainImageData = galleryItems[0];
-  const mainImage = resolveImageUrl(
-    mainImageData?.url || data.image?.url
-  );
-
-  const mainImageAlt =
-    mainImageData?.alternativeText ||
-    data.image?.alternativeText ||
-    "תמונה ראשית";
-
-  // ✅ גלריה מלאה
+  // ✅ גלריה רגילה
   const gallery = galleryItems.map((img) => ({
     src: resolveImageUrl(img.url),
     alt: img.alternativeText || "תמונה מהגלריה",
   }));
 
+  // ✅ קריאה לשדות חדשים
+  const externalImageUrls = Array.isArray(data.externalImageUrls)
+    ? data.externalImageUrls
+    : data.externalImageUrls
+    ? [data.externalImageUrls]
+    : [];
+
+  const externalMediaUrl = data.externalMediaUrl || null; // קישור לעמוד יצרן (כמו KTM)
+
+  // ✅ תמונה ראשית
+  const mainImageData = galleryItems[0];
+  const mainImage = resolveImageUrl(mainImageData?.url || data.image?.url);
+  const mainImageAlt =
+    mainImageData?.alternativeText ||
+    data.image?.alternativeText ||
+    "תמונה ראשית";
+
   const article = {
     title: data.title || "כתבה ללא כותרת",
-    description: data.description || "אין תיאור זמין",
+    description: data.description || "",
     image: mainImage,
     imageAlt: mainImageAlt,
     author: data.author || "מערכת OnMotor",
@@ -101,6 +104,8 @@ export default async function ArticlePage({ params }) {
     subdescription: data.subdescription || "",
     slug: params.slug,
     gallery,
+    externalImageUrls,
+    externalMediaUrl,
     font_family: data.font_family || "Heebo, sans-serif",
   };
 
@@ -127,14 +132,13 @@ export default async function ArticlePage({ params }) {
   }
   breadcrumbs.push({ label: article.title });
 
-  // ✅ רינדור בלוקים של תוכן (כולל בלוק תמונה)
+  // ✅ רינדור תוכן עיקרי
   const renderParagraph = (block, i) => {
-    // ---- טקסט רגיל ----
     if (typeof block === "string") {
       const cleanText = fixRelativeImages(block.trim());
       const hasHTMLTags = /<\/?[a-z][\s\S]*>/i.test(cleanText);
 
-      if (hasHTMLTags) {
+      if (hasHTMLTags)
         return (
           <p
             key={i}
@@ -142,7 +146,6 @@ export default async function ArticlePage({ params }) {
             dangerouslySetInnerHTML={{ __html: cleanText }}
           />
         );
-      }
 
       const urlMatch = cleanText.match(/https?:\/\/[^\s]+/);
       if (urlMatch) return <EmbedContent key={i} url={urlMatch[0]} />;
@@ -158,7 +161,6 @@ export default async function ArticlePage({ params }) {
       );
     }
 
-    // ---- פסקאות (Rich Text) ----
     if (block.type === "paragraph" && block.children) {
       const html = block.children
         .map((child) => {
@@ -179,7 +181,6 @@ export default async function ArticlePage({ params }) {
       );
     }
 
-    // ---- כותרות ----
     if (block.type === "heading") {
       const level = block.level || 2;
       const Tag = `h${Math.min(level, 3)}`;
@@ -193,7 +194,6 @@ export default async function ArticlePage({ params }) {
       );
     }
 
-    // ✅ בלוק תמונה מתוך העורך של Strapi
     if (block.type === "image") {
       const imageData =
         block.image?.data?.attributes || block.image?.attributes || block.image;
@@ -240,23 +240,23 @@ export default async function ArticlePage({ params }) {
         />
 
         {article.description && (
-          <p className="font-bold text-2xl text-gray-600">
-            {article.description}
-          </p>
+          <p className="font-bold text-2xl text-gray-600">{article.description}</p>
         )}
 
         {paragraphs.map(renderParagraph)}
 
         {article.tableData && <SimpleKeyValueTable data={article.tableData} />}
-        <Gallery images={article.gallery} />
+
+        {/* ✅ שילוב מלא: גלריה מקומית + קישורים + דפי יצרן */}
+        <Gallery
+          images={article.gallery}
+          externalImageUrls={article.externalImageUrls}
+          externalMediaUrl={article.externalMediaUrl}
+        />
+
         <Tags tags={article.tags} />
-        <SimilarArticles
-          currentSlug={article.slug}
-          category={article.category}
-        />
-        <CommentsSection
-          articleUrl={`https://www.onmotormedia.com${article.href}`}
-        />
+        <SimilarArticles currentSlug={article.slug} category={article.category} />
+        <CommentsSection articleUrl={`${SITE_URL}${article.href}`} />
       </div>
     </PageContainer>
   );
