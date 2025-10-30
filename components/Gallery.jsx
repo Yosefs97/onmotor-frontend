@@ -10,30 +10,35 @@ export default function Gallery({
 }) {
   const [current, setCurrent] = useState(0);
   const [externalMediaImages, setExternalMediaImages] = useState([]);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  // ✅ טעינת תמונות חיצוניות מדף יצרן (אם יש externalMediaUrl)
+  // ✅ טעינת תמונות חיצוניות מדף יצרן (כמו KTM Press)
   useEffect(() => {
+    let isCancelled = false;
+
     async function fetchExternalMedia() {
       if (!externalMediaUrl) return;
+
       try {
-        console.log('📡 Fetching external media from:', externalMediaUrl);
         const res = await fetch(
           `/api/fetch-external-images?url=${encodeURIComponent(externalMediaUrl)}`
         );
         const data = await res.json();
 
-        if (Array.isArray(data.images) && data.images.length > 0) {
-          const validImages = data.images
+        if (!isCancelled && Array.isArray(data.images)) {
+          const valid = data.images
             .map((img) => ({
               src: img.src?.trim(),
               alt: img.alt || '',
             }))
-            .filter((img) => img.src && img.src.startsWith('http'));
+            .filter(
+              (img) =>
+                img.src &&
+                img.src.startsWith('http') &&
+                /\.(jpg|jpeg|png|webp|gif)$/i.test(img.src)
+            );
 
-          console.log('✅ External media images loaded:', validImages.length);
-          setExternalMediaImages(validImages);
-        } else {
-          console.warn('⚠️ No valid external images found for', externalMediaUrl);
+          setExternalMediaImages(valid);
         }
       } catch (err) {
         console.error('❌ Error fetching external media images:', err);
@@ -41,44 +46,56 @@ export default function Gallery({
     }
 
     fetchExternalMedia();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [externalMediaUrl]);
 
-  // ✅ מאחד בין כל סוגי התמונות
+  // ✅ מאחד את כל סוגי התמונות
   const allImages = useMemo(() => {
-    const strapiImages = images
+    const strapiImages = (images || [])
       .map((img) => ({
         src: img?.url || img?.src,
         alt: img?.alternativeText || img?.alt || '',
       }))
       .filter((img) => img.src);
 
-    const externalLinks = externalImageUrls
+    const externalLinks = (externalImageUrls || [])
       .filter((url) => typeof url === 'string' && url.trim() !== '')
       .map((url) => ({ src: url.trim(), alt: '' }))
       .filter((img) => img.src.startsWith('http'));
 
     const combined = [...strapiImages, ...externalLinks, ...externalMediaImages];
 
-    // מסנן כפילויות ונתיבים לא חוקיים
     const unique = combined.filter(
-      (img, index, self) =>
+      (img, i, arr) =>
         img.src &&
-        img.src.length > 10 &&
-        self.findIndex((i) => i.src === img.src) === index
+        arr.findIndex((x) => x.src === img.src) === i &&
+        /\.(jpg|jpeg|png|gif|webp)$/i.test(img.src)
     );
 
     return unique;
   }, [images, externalImageUrls, externalMediaImages]);
 
-  if (!allImages.length) {
-    console.warn('⚠️ No images to display in gallery.');
-    return null;
+  // ✅ טעינה ראשונית
+  useEffect(() => {
+    if (allImages.length > 0) {
+      setIsLoaded(true);
+    }
+  }, [allImages.length]);
+
+  if (!isLoaded || !allImages.length) {
+    return (
+      <div className="text-center text-gray-500 py-8">
+        טוען גלריה...
+      </div>
+    );
   }
 
-  const next = () => setCurrent((current + 1) % allImages.length);
-  const prev = () => setCurrent((current - 1 + allImages.length) % allImages.length);
+  const next = () => setCurrent((prev) => (prev + 1) % allImages.length);
+  const prev = () => setCurrent((prev) => (prev - 1 + allImages.length) % allImages.length);
 
-  // ✅ תיקון URL יחסי
   const getImageUrl = (src) => {
     if (!src || typeof src !== 'string') return '/default-image.jpg';
     const trimmed = src.trim();
@@ -91,30 +108,30 @@ export default function Gallery({
       {/* תמונה ראשית */}
       <div className="relative w-full max-w-3xl aspect-[3/2] overflow-hidden rounded shadow-lg">
         <img
+          key={current}
           src={getImageUrl(allImages[current].src)}
           alt={allImages[current].alt || `תמונה ${current + 1}`}
-          className="w-full h-full object-cover transition-opacity duration-300"
+          className="w-full h-full object-cover transition-opacity duration-500"
           onError={(e) => {
             e.target.src = '/default-image.jpg';
-            console.warn('🖼️ Image failed to load:', allImages[current].src);
           }}
         />
         <button
           onClick={prev}
-          className="absolute top-1/2 left-4 transform -translate-y-1/2 text-white bg-black/30 hover:bg-black/50 text-3xl px-3 py-1 rounded-full transition"
+          className="absolute top-1/2 left-4 transform -translate-y-1/2 text-white bg-black/40 hover:bg-black/60 text-3xl px-3 py-1 rounded-full transition"
         >
           ◀
         </button>
         <button
           onClick={next}
-          className="absolute top-1/2 right-4 transform -translate-y-1/2 text-white bg-black/30 hover:bg-black/50 text-3xl px-3 py-1 rounded-full transition"
+          className="absolute top-1/2 right-4 transform -translate-y-1/2 text-white bg-black/40 hover:bg-black/60 text-3xl px-3 py-1 rounded-full transition"
         >
           ▶
         </button>
       </div>
 
       {/* תמונות ממוזערות */}
-      <div className="flex gap-2 mt-2 overflow-x-auto px-2 scrollbar-hide">
+      <div className="flex gap-2 mt-3 overflow-x-auto px-2 scrollbar-hide">
         {allImages.map((img, i) => (
           <img
             key={i}
@@ -126,7 +143,6 @@ export default function Gallery({
             onClick={() => setCurrent(i)}
             onError={(e) => {
               e.target.src = '/default-image.jpg';
-              console.warn('🖼️ Thumbnail failed to load:', img.src);
             }}
           />
         ))}
