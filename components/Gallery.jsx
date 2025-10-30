@@ -10,22 +10,26 @@ export default function Gallery({
 }) {
   const [current, setCurrent] = useState(0);
   const [externalMediaImages, setExternalMediaImages] = useState([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // ✅ טעינת תמונות חיצוניות מדף יצרן (כמו KTM Press)
+  // ✅ טעינת תמונות חיצוניות מדף יצרן (אם יש externalMediaUrl)
   useEffect(() => {
-    let isCancelled = false;
+    let active = true;
 
     async function fetchExternalMedia() {
-      if (!externalMediaUrl) return;
+      if (!externalMediaUrl) {
+        setLoading(false);
+        return;
+      }
 
       try {
+        console.log('📡 Fetching external media from:', externalMediaUrl);
         const res = await fetch(
           `/api/fetch-external-images?url=${encodeURIComponent(externalMediaUrl)}`
         );
         const data = await res.json();
 
-        if (!isCancelled && Array.isArray(data.images)) {
+        if (active && Array.isArray(data.images)) {
           const valid = data.images
             .map((img) => ({
               src: img.src?.trim(),
@@ -38,21 +42,23 @@ export default function Gallery({
                 /\.(jpg|jpeg|png|webp|gif)$/i.test(img.src)
             );
 
+          console.log(`✅ ${valid.length} external images loaded`);
           setExternalMediaImages(valid);
         }
       } catch (err) {
         console.error('❌ Error fetching external media images:', err);
+      } finally {
+        if (active) setLoading(false);
       }
     }
 
     fetchExternalMedia();
-
     return () => {
-      isCancelled = true;
+      active = false;
     };
   }, [externalMediaUrl]);
 
-  // ✅ מאחד את כל סוגי התמונות
+  // ✅ מאחד בין כל סוגי התמונות
   const allImages = useMemo(() => {
     const strapiImages = (images || [])
       .map((img) => ({
@@ -78,17 +84,20 @@ export default function Gallery({
     return unique;
   }, [images, externalImageUrls, externalMediaImages]);
 
-  // ✅ טעינה ראשונית
-  useEffect(() => {
-    if (allImages.length > 0) {
-      setIsLoaded(true);
-    }
-  }, [allImages.length]);
-
-  if (!isLoaded || !allImages.length) {
+  // ✅ אם סיים טעינה אבל אין תמונות
+  if (!loading && !allImages.length) {
     return (
       <div className="text-center text-gray-500 py-8">
-        טוען גלריה...
+        לא נמצאו תמונות בגלריה.
+      </div>
+    );
+  }
+
+  // ✅ אם עדיין טוען
+  if (loading) {
+    return (
+      <div className="text-center text-gray-500 py-8">
+        טוען את הגלריה...
       </div>
     );
   }
@@ -112,9 +121,7 @@ export default function Gallery({
           src={getImageUrl(allImages[current].src)}
           alt={allImages[current].alt || `תמונה ${current + 1}`}
           className="w-full h-full object-cover transition-opacity duration-500"
-          onError={(e) => {
-            e.target.src = '/default-image.jpg';
-          }}
+          onError={(e) => (e.target.src = '/default-image.jpg')}
         />
         <button
           onClick={prev}
@@ -141,9 +148,7 @@ export default function Gallery({
               i === current ? 'ring-2 ring-blue-500' : ''
             }`}
             onClick={() => setCurrent(i)}
-            onError={(e) => {
-              e.target.src = '/default-image.jpg';
-            }}
+            onError={(e) => (e.target.src = '/default-image.jpg')}
           />
         ))}
       </div>
