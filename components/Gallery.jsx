@@ -1,32 +1,62 @@
 // components/Gallery.jsx
 'use client';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
 const PUBLIC_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 
-export default function Gallery({ images = [], externalImageUrls = [] }) {
+export default function Gallery({
+  images = [],
+  externalImageUrls = [],
+  externalMediaUrl = null, // קישור לעמוד מדיה (כמו KTM Press)
+}) {
   const [current, setCurrent] = useState(0);
+  const [externalMediaImages, setExternalMediaImages] = useState([]);
 
-  // ✅ מאחד בין תמונות מ-Strapi לתמונות מקישורים חיצוניים
+  // ✅ טעינת תמונות חיצוניות מדף יצרן (אם יש externalMediaUrl)
+  useEffect(() => {
+    async function fetchExternalMedia() {
+      if (!externalMediaUrl) return;
+      try {
+        const res = await fetch(
+          `/api/fetch-external-images?url=${encodeURIComponent(externalMediaUrl)}`
+        );
+        const data = await res.json();
+        if (Array.isArray(data.images) && data.images.length > 0) {
+          setExternalMediaImages(
+            data.images.map((img) => ({
+              src: img.src,
+              alt: img.alt || '',
+            }))
+          );
+        }
+      } catch (err) {
+        console.error('❌ Error fetching external media images:', err);
+      }
+    }
+
+    fetchExternalMedia();
+  }, [externalMediaUrl]);
+
+  // ✅ מאחד בין כל סוגי התמונות
   const allImages = useMemo(() => {
-    const strapiImages = images.map(img => ({
+    const strapiImages = images.map((img) => ({
       src: img?.url || img?.src,
       alt: img?.alternativeText || img?.alt || '',
     }));
 
-    const externalImages = externalImageUrls
-      .filter(url => typeof url === 'string' && url.trim() !== '')
-      .map(url => ({ src: url.trim(), alt: '' }));
+    const externalLinks = externalImageUrls
+      .filter((url) => typeof url === 'string' && url.trim() !== '')
+      .map((url) => ({ src: url.trim(), alt: '' }));
 
-    return [...strapiImages, ...externalImages];
-  }, [images, externalImageUrls]);
+    return [...strapiImages, ...externalLinks, ...externalMediaImages];
+  }, [images, externalImageUrls, externalMediaImages]);
 
   if (!allImages.length) return null;
 
   const next = () => setCurrent((current + 1) % allImages.length);
   const prev = () => setCurrent((current - 1 + allImages.length) % allImages.length);
 
-  // ✅ מתקנת URL יחסי
+  // ✅ תיקון URL יחסי
   const getImageUrl = (src) => {
     if (!src) return '/default-image.jpg';
     if (src.startsWith('http')) return src;
