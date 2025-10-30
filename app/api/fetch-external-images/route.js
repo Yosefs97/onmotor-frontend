@@ -1,3 +1,4 @@
+// app/api/fetch-external-images/route.js
 import { fetchExternalImages } from '@/lib/fetchExternalImages';
 
 export async function GET(req) {
