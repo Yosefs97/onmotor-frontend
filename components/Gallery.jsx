@@ -1,4 +1,3 @@
-// components/Gallery.jsx
 'use client';
 import React, { useState, useEffect, useMemo } from 'react';
 
@@ -17,17 +16,24 @@ export default function Gallery({
     async function fetchExternalMedia() {
       if (!externalMediaUrl) return;
       try {
+        console.log('📡 Fetching external media from:', externalMediaUrl);
         const res = await fetch(
           `/api/fetch-external-images?url=${encodeURIComponent(externalMediaUrl)}`
         );
         const data = await res.json();
+
         if (Array.isArray(data.images) && data.images.length > 0) {
-          setExternalMediaImages(
-            data.images.map((img) => ({
-              src: img.src,
+          const validImages = data.images
+            .map((img) => ({
+              src: img.src?.trim(),
               alt: img.alt || '',
             }))
-          );
+            .filter((img) => img.src && img.src.startsWith('http'));
+
+          console.log('✅ External media images loaded:', validImages.length);
+          setExternalMediaImages(validImages);
+        } else {
+          console.warn('⚠️ No valid external images found for', externalMediaUrl);
         }
       } catch (err) {
         console.error('❌ Error fetching external media images:', err);
@@ -39,28 +45,45 @@ export default function Gallery({
 
   // ✅ מאחד בין כל סוגי התמונות
   const allImages = useMemo(() => {
-    const strapiImages = images.map((img) => ({
-      src: img?.url || img?.src,
-      alt: img?.alternativeText || img?.alt || '',
-    }));
+    const strapiImages = images
+      .map((img) => ({
+        src: img?.url || img?.src,
+        alt: img?.alternativeText || img?.alt || '',
+      }))
+      .filter((img) => img.src);
 
     const externalLinks = externalImageUrls
       .filter((url) => typeof url === 'string' && url.trim() !== '')
-      .map((url) => ({ src: url.trim(), alt: '' }));
+      .map((url) => ({ src: url.trim(), alt: '' }))
+      .filter((img) => img.src.startsWith('http'));
 
-    return [...strapiImages, ...externalLinks, ...externalMediaImages];
+    const combined = [...strapiImages, ...externalLinks, ...externalMediaImages];
+
+    // מסנן כפילויות ונתיבים לא חוקיים
+    const unique = combined.filter(
+      (img, index, self) =>
+        img.src &&
+        img.src.length > 10 &&
+        self.findIndex((i) => i.src === img.src) === index
+    );
+
+    return unique;
   }, [images, externalImageUrls, externalMediaImages]);
 
-  if (!allImages.length) return null;
+  if (!allImages.length) {
+    console.warn('⚠️ No images to display in gallery.');
+    return null;
+  }
 
   const next = () => setCurrent((current + 1) % allImages.length);
   const prev = () => setCurrent((current - 1 + allImages.length) % allImages.length);
 
   // ✅ תיקון URL יחסי
   const getImageUrl = (src) => {
-    if (!src) return '/default-image.jpg';
-    if (src.startsWith('http')) return src;
-    return `${PUBLIC_API_URL}${src.startsWith('/') ? src : `/uploads/${src}`}`;
+    if (!src || typeof src !== 'string') return '/default-image.jpg';
+    const trimmed = src.trim();
+    if (trimmed.startsWith('http')) return trimmed;
+    return `${PUBLIC_API_URL}${trimmed.startsWith('/') ? trimmed : `/uploads/${trimmed}`}`;
   };
 
   return (
@@ -71,6 +94,10 @@ export default function Gallery({
           src={getImageUrl(allImages[current].src)}
           alt={allImages[current].alt || `תמונה ${current + 1}`}
           className="w-full h-full object-cover transition-opacity duration-300"
+          onError={(e) => {
+            e.target.src = '/default-image.jpg';
+            console.warn('🖼️ Image failed to load:', allImages[current].src);
+          }}
         />
         <button
           onClick={prev}
@@ -97,6 +124,10 @@ export default function Gallery({
               i === current ? 'ring-2 ring-blue-500' : ''
             }`}
             onClick={() => setCurrent(i)}
+            onError={(e) => {
+              e.target.src = '/default-image.jpg';
+              console.warn('🖼️ Thumbnail failed to load:', img.src);
+            }}
           />
         ))}
       </div>
