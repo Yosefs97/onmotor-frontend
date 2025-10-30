@@ -10,26 +10,22 @@ export default function Gallery({
 }) {
   const [current, setCurrent] = useState(0);
   const [externalMediaImages, setExternalMediaImages] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  // ✅ טעינת תמונות חיצוניות מדף יצרן (אם יש externalMediaUrl)
+  // ✅ טעינת תמונות חיצוניות מדף יצרן (כמו KTM Press)
   useEffect(() => {
-    let active = true;
+    let isCancelled = false;
 
     async function fetchExternalMedia() {
-      if (!externalMediaUrl) {
-        setLoading(false);
-        return;
-      }
+      if (!externalMediaUrl) return;
 
       try {
-        console.log('📡 Fetching external media from:', externalMediaUrl);
         const res = await fetch(
           `/api/fetch-external-images?url=${encodeURIComponent(externalMediaUrl)}`
         );
         const data = await res.json();
 
-        if (active && Array.isArray(data.images)) {
+        if (!isCancelled && Array.isArray(data.images)) {
           const valid = data.images
             .map((img) => ({
               src: img.src?.trim(),
@@ -42,23 +38,21 @@ export default function Gallery({
                 /\.(jpg|jpeg|png|webp|gif)$/i.test(img.src)
             );
 
-          console.log(`✅ ${valid.length} external images loaded`);
           setExternalMediaImages(valid);
         }
       } catch (err) {
         console.error('❌ Error fetching external media images:', err);
-      } finally {
-        if (active) setLoading(false);
       }
     }
 
     fetchExternalMedia();
+
     return () => {
-      active = false;
+      isCancelled = true;
     };
   }, [externalMediaUrl]);
 
-  // ✅ מאחד בין כל סוגי התמונות
+  // ✅ מאחד את כל סוגי התמונות
   const allImages = useMemo(() => {
     const strapiImages = (images || [])
       .map((img) => ({
@@ -84,20 +78,17 @@ export default function Gallery({
     return unique;
   }, [images, externalImageUrls, externalMediaImages]);
 
-  // ✅ אם סיים טעינה אבל אין תמונות
-  if (!loading && !allImages.length) {
-    return (
-      <div className="text-center text-gray-500 py-8">
-        לא נמצאו תמונות בגלריה.
-      </div>
-    );
-  }
+  // ✅ טעינה ראשונית
+  useEffect(() => {
+    if (allImages.length > 0) {
+      setIsLoaded(true);
+    }
+  }, [allImages.length]);
 
-  // ✅ אם עדיין טוען
-  if (loading) {
+  if (!isLoaded || !allImages.length) {
     return (
       <div className="text-center text-gray-500 py-8">
-        טוען את הגלריה...
+        טוען גלריה...
       </div>
     );
   }
@@ -121,7 +112,9 @@ export default function Gallery({
           src={getImageUrl(allImages[current].src)}
           alt={allImages[current].alt || `תמונה ${current + 1}`}
           className="w-full h-full object-cover transition-opacity duration-500"
-          onError={(e) => (e.target.src = '/default-image.jpg')}
+          onError={(e) => {
+            e.target.src = '/default-image.jpg';
+          }}
         />
         <button
           onClick={prev}
@@ -148,7 +141,9 @@ export default function Gallery({
               i === current ? 'ring-2 ring-blue-500' : ''
             }`}
             onClick={() => setCurrent(i)}
-            onError={(e) => (e.target.src = '/default-image.jpg')}
+            onError={(e) => {
+              e.target.src = '/default-image.jpg';
+            }}
           />
         ))}
       </div>
