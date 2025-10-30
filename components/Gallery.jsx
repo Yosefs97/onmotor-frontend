@@ -7,13 +7,13 @@ const PUBLIC_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 export default function Gallery({
   images = [],
   externalImageUrls = [],
-  externalMediaUrl = null, // קישור לעמוד מדיה (כמו KTM Press)
+  externalMediaUrl = null,
 }) {
   const [current, setCurrent] = useState(0);
   const [externalMediaImages, setExternalMediaImages] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ טעינת תמונות חיצוניות מדף יצרן
+  // ✅ שליפת תמונות ממקור חיצוני (KTM או כל אתר אחר)
   useEffect(() => {
     let active = true;
 
@@ -24,31 +24,21 @@ export default function Gallery({
       }
 
       try {
-        console.log('📡 Fetching external media from:', externalMediaUrl);
         const res = await fetch(
           `/api/fetch-external-images?url=${encodeURIComponent(externalMediaUrl)}`
         );
         const data = await res.json();
 
         if (active && Array.isArray(data.images)) {
-          // ✅ מאפשר גם תמונות עם נתיבים "מוזרים" כמו /1200/2400/.jpg
+          // לא מסננים כלום — מציגים הכל
           const valid = data.images
             .map((img) => ({
               src: img.src?.trim(),
               alt: img.alt || '',
             }))
-            .filter((img) => {
-              if (!img.src || !img.src.startsWith('http')) return false;
-              const lower = img.src.toLowerCase();
-              return (
-                /\.(jpg|jpeg|png|webp|gif)$/i.test(lower) ||
-                lower.includes('/1200/2400/.jpg') ||
-                lower.includes('/1200/2400/') ||
-                lower.endsWith('.jpg')
-              );
-            });
+            .filter((img) => img.src && img.src.startsWith('http'));
 
-          console.log(`✅ ${valid.length} external images loaded`);
+          console.log(`✅ Loaded ${valid.length} external images`);
           setExternalMediaImages(valid);
         }
       } catch (err) {
@@ -64,7 +54,7 @@ export default function Gallery({
     };
   }, [externalMediaUrl]);
 
-  // ✅ מאחד בין כל סוגי התמונות
+  // ✅ מאחד את כל מקורות התמונות
   const allImages = useMemo(() => {
     const strapiImages = (images || [])
       .map((img) => ({
@@ -75,38 +65,27 @@ export default function Gallery({
 
     const externalLinks = (externalImageUrls || [])
       .filter((url) => typeof url === 'string' && url.trim() !== '')
-      .map((url) => ({ src: url.trim(), alt: '' }))
-      .filter((img) => img.src.startsWith('http'));
+      .map((url) => ({ src: url.trim(), alt: '' }));
 
+    // לא מסנן לפי סיומות בכלל
     const combined = [...strapiImages, ...externalLinks, ...externalMediaImages];
 
-    // ✅ לא מסנן החוצה את KTM
+    // ✅ מסיר כפילויות בלבד
     const unique = combined.filter(
-      (img, i, arr) =>
-        img.src &&
-        arr.findIndex((x) => x.src === img.src) === i &&
-        (/\.(jpg|jpeg|png|gif|webp)$/i.test(img.src) ||
-          img.src.includes('/1200/2400/') ||
-          img.src.endsWith('.jpg'))
+      (img, i, arr) => img.src && arr.findIndex((x) => x.src === img.src) === i
     );
 
     return unique;
   }, [images, externalImageUrls, externalMediaImages]);
 
+  // ✅ טעינה
   if (loading) {
-    return (
-      <div className="text-center text-gray-500 py-8">
-        טוען את הגלריה...
-      </div>
-    );
+    return <div className="text-center text-gray-500 py-8">טוען את הגלריה...</div>;
   }
 
+  // ✅ אין תמונות בכלל
   if (!allImages.length) {
-    return (
-      <div className="text-center text-gray-500 py-8">
-        לא נמצאו תמונות בגלריה.
-      </div>
-    );
+    return <div className="text-center text-gray-500 py-8">לא נמצאו תמונות בגלריה.</div>;
   }
 
   const next = () => setCurrent((prev) => (prev + 1) % allImages.length);
