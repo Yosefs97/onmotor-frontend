@@ -13,7 +13,7 @@ export default function Gallery({
   const [externalMediaImages, setExternalMediaImages] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ טעינת תמונות חיצוניות מדף יצרן (אם יש externalMediaUrl)
+  // ✅ טעינת תמונות חיצוניות מדף יצרן
   useEffect(() => {
     let active = true;
 
@@ -31,7 +31,7 @@ export default function Gallery({
         const data = await res.json();
 
         if (active && Array.isArray(data.images)) {
-          // ✅ מסננים תמונות אמיתיות ומתקנים כתובות "מוזרות" כמו של KTM
+          // ✅ מאפשר גם תמונות עם נתיבים "מוזרים" כמו /1200/2400/.jpg
           const valid = data.images
             .map((img) => ({
               src: img.src?.trim(),
@@ -43,8 +43,8 @@ export default function Gallery({
               return (
                 /\.(jpg|jpeg|png|webp|gif)$/i.test(lower) ||
                 lower.includes('/1200/2400/.jpg') ||
-                lower.includes('.jpg') ||
-                lower.includes('.jpeg')
+                lower.includes('/1200/2400/') ||
+                lower.endsWith('.jpg')
               );
             });
 
@@ -80,19 +80,19 @@ export default function Gallery({
 
     const combined = [...strapiImages, ...externalLinks, ...externalMediaImages];
 
-    // ✅ סינון כפילויות
+    // ✅ לא מסנן החוצה את KTM
     const unique = combined.filter(
       (img, i, arr) =>
         img.src &&
         arr.findIndex((x) => x.src === img.src) === i &&
         (/\.(jpg|jpeg|png|gif|webp)$/i.test(img.src) ||
-          img.src.includes('/1200/2400/.jpg'))
+          img.src.includes('/1200/2400/') ||
+          img.src.endsWith('.jpg'))
     );
 
     return unique;
   }, [images, externalImageUrls, externalMediaImages]);
 
-  // ✅ אם עדיין טוען
   if (loading) {
     return (
       <div className="text-center text-gray-500 py-8">
@@ -101,7 +101,6 @@ export default function Gallery({
     );
   }
 
-  // ✅ אם סיים טעינה אבל אין תמונות
   if (!allImages.length) {
     return (
       <div className="text-center text-gray-500 py-8">
