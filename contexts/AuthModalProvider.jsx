@@ -1,9 +1,9 @@
-// contexts/AuthModalProvider.jsx
 'use client';
 
 import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import AuthBox from '@/components/AuthBox';
+import { getCurrentUser } from '@/utils/auth'; // ✅ נוספה האזנה למצב התחברות
 
 const AuthModalContext = createContext();
 
@@ -20,6 +20,7 @@ export function AuthModalProvider({ children }) {
   const modalRef = useRef(null);
   const router = useRouter();
 
+  // ✅ פתיחת מודאל
   const openModal = (newMode = 'inline', newTitle = 'התחברות / הרשמה') => {
     setIsOpen(false);
     setTimeout(() => {
@@ -29,8 +30,10 @@ export function AuthModalProvider({ children }) {
     }, 0);
   };
 
+  // ✅ סגירת מודאל
   const closeModal = () => setIsOpen(false);
 
+  // ✅ סגירת מודאל בעת קליק מחוץ או גלילה
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (modalRef.current && !modalRef.current.contains(event.target)) {
@@ -53,30 +56,31 @@ export function AuthModalProvider({ children }) {
     };
   }, [isOpen]);
 
+  // ✅ האזנה ל־Event מהמערכת (Login/Logout)
   useEffect(() => {
-  const fetchUser = async () => {
-    try {
-      const res = await fetch('/api/user/me');
-      const data = await res.json();
-      if (res.ok) {
-        setUser(data.user);
-      } else {
-        setUser(null);
-      }
-    } catch {
-      setUser(null);
-    } finally {
+    const handleAuthChange = () => {
+      const currentUser = getCurrentUser();
+      setUser(currentUser);
       setHydrated(true);
-    }
-  };
+      console.log('🔄 Auth state updated:', currentUser ? 'מחובר' : 'מנותק');
+    };
 
-  fetchUser();
-}, []);
+    // טוען את המשתמש מיד בהפעלה
+    handleAuthChange();
+
+    // מאזין לאירוע שינוי התחברות
+    window.addEventListener('auth', handleAuthChange);
+
+    return () => {
+      window.removeEventListener('auth', handleAuthChange);
+    };
+  }, []);
 
   return (
-    <AuthModalContext.Provider value={{ isOpen, openModal, closeModal, mode, title, user, setUser,hydrated }}>
+    <AuthModalContext.Provider value={{ isOpen, openModal, closeModal, mode, title, user, setUser, hydrated }}>
       {children}
 
+      {/* Inline mode */}
       {mode === 'inline' && isOpen && (
         <div className="fixed top-[80px] left-4 z-50 w-[360px] max-h-[1000px]">
           <div className="border rounded-lg shadow-md p-4 bg-white">
@@ -89,6 +93,7 @@ export function AuthModalProvider({ children }) {
         </div>
       )}
 
+      {/* Modal mode */}
       {mode === 'modal' && isOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
           <div className="bg-white rounded shadow-lg max-w-sm w-full p-6 relative">
