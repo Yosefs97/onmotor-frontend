@@ -107,7 +107,18 @@ export default function Gallery({
           src={getImageUrl(allImages[current].src)}
           alt={allImages[current].alt || `תמונה ${current + 1}`}
           className="w-full h-full object-cover transition-opacity duration-500"
-          onError={(e) => (e.target.src = '/default-image.jpg')}
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
+              <svg xmlns="http://www.w3.org/2000/svg" width="800" height="600">
+                <rect width="100%" height="100%" fill="#ddd"/>
+                <text x="50%" y="50%" font-size="40" fill="#555" text-anchor="middle" dominant-baseline="middle">
+                  אין תמונה
+                </text>
+              </svg>
+            `);
+          }}
+
         />
         <button
           onClick={prev}
