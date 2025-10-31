@@ -124,7 +124,7 @@ export default function Gallery({
   };
 
   return (
-    <div className="mt-8 w-full flex flex-col items-center gap-4">
+    <div className="mt-8 w-full flex flex-col items-center gap-0">
       {/* תמונה ראשית */}
       <div className="relative w-full max-w-3xl aspect-[3/2] overflow-hidden rounded shadow-lg bg-gray-100">
         <img
