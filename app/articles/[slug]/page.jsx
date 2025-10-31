@@ -69,15 +69,32 @@ export default async function ArticlePage({ params }) {
     ? [data.externalImageUrls]
     : [];
 
-  const externalMediaUrl = data.externalMediaUrl || null; // קישור לעמוד יצרן (כמו KTM)
+  const externalMediaUrl = data.externalMediaUrl || null;
 
-  // ✅ תמונה ראשית
-  const mainImageData = galleryItems[0];
-  const mainImage = resolveImageUrl(mainImageData?.url || data.image?.url);
-  const mainImageAlt =
-    mainImageData?.alternativeText ||
-    data.image?.alternativeText ||
-    "תמונה ראשית";
+  // ✅ תמונה ראשית — כולל תמיכה ב-external_media_links
+  let mainImage = PLACEHOLDER_IMG;
+  let mainImageAlt = "תמונה ראשית";
+
+  // 1️⃣ קודם נבדוק את הגלריה המקומית
+  if (galleryItems?.length > 0 && galleryItems[0]?.url) {
+    mainImage = resolveImageUrl(galleryItems[0].url);
+    mainImageAlt = galleryItems[0].alternativeText || "תמונה ראשית";
+  }
+  // 2️⃣ אם אין גלריה — נבדוק את שדה התמונה הראשית ב־Strapi
+  else if (data.image?.url) {
+    mainImage = resolveImageUrl(data.image.url);
+    mainImageAlt = data.image.alternativeText || "תמונה ראשית";
+  }
+  // 3️⃣ אם גם זה לא קיים — נבדוק את השדה החדש external_media_links
+  else if (
+    Array.isArray(data.external_media_links) &&
+    data.external_media_links.length > 1 &&
+    typeof data.external_media_links[1] === "string" &&
+    data.external_media_links[1].startsWith("http")
+  ) {
+    mainImage = data.external_media_links[1].trim();
+    mainImageAlt = "תמונה ראשית מהמדיה החיצונית";
+  }
 
   const article = {
     title: data.title || "כתבה ללא כותרת",
@@ -133,23 +150,50 @@ export default async function ArticlePage({ params }) {
   }
   breadcrumbs.push({ label: article.title });
 
-  // ✅ רינדור תוכן עיקרי
+  // ✅ רינדור תוכן עיקרי (כולל קישורים, תמונות, Embed)
   const renderParagraph = (block, i) => {
+    // טקסט רגיל
     if (typeof block === "string") {
       const cleanText = fixRelativeImages(block.trim());
       const hasHTMLTags = /<\/?[a-z][\s\S]*>/i.test(cleanText);
 
-      if (hasHTMLTags)
+      if (hasHTMLTags) {
         return (
-          <p
+          <div
             key={i}
             className="article-text text-gray-800 text-[18px] leading-relaxed"
             dangerouslySetInnerHTML={{ __html: cleanText }}
           />
         );
+      }
 
       const urlMatch = cleanText.match(/https?:\/\/[^\s]+/);
-      if (urlMatch) return <EmbedContent key={i} url={urlMatch[0]} />;
+      if (urlMatch) {
+        const url = urlMatch[0].trim();
+
+        // תמונה ישירה
+        if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
+          return <InlineImage key={i} src={url} alt="תמונה מתוך הכתבה" caption="" />;
+        }
+
+        // מדיה חיצונית
+        if (
+          /(youtube\.com|youtu\.be|facebook\.com|instagram\.com|tiktok\.com|x\.com|twitter\.com)/i.test(
+            url
+          )
+        ) {
+          return <EmbedContent key={i} url={url} />;
+        }
+
+        // קישור רגיל
+        return (
+          <p key={i} className="article-text text-blue-600 underline">
+            <a href={url} target="_blank" rel="noopener noreferrer">
+              {url}
+            </a>
+          </p>
+        );
+      }
 
       return (
         <p
@@ -162,6 +206,7 @@ export default async function ArticlePage({ params }) {
       );
     }
 
+    // בלוק מסוג פסקה (Rich Text)
     if (block.type === "paragraph" && block.children) {
       const html = block.children
         .map((child) => {
@@ -169,9 +214,31 @@ export default async function ArticlePage({ params }) {
           if (child.bold) text = `<strong>${text}</strong>`;
           if (child.italic) text = `<em>${text}</em>`;
           if (child.underline) text = `<u>${text}</u>`;
+
+          // קישורים מתוך בלוק
+          if (child.type === "link" || child.url) {
+            const href = child.url || "#";
+            text = `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline hover:text-blue-800">${text}</a>`;
+          }
+
           return fixRelativeImages(text);
         })
         .join("");
+
+      const urlMatch = html.match(/https?:\/\/[^\s"']+/);
+      if (urlMatch) {
+        const url = urlMatch[0];
+        if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
+          return <InlineImage key={i} src={url} alt="תמונה" caption="" />;
+        }
+        if (
+          /(youtube\.com|youtu\.be|facebook\.com|instagram\.com|tiktok\.com|x\.com|twitter\.com)/i.test(
+            url
+          )
+        ) {
+          return <EmbedContent key={i} url={url} />;
+        }
+      }
 
       return (
         <p
@@ -182,6 +249,7 @@ export default async function ArticlePage({ params }) {
       );
     }
 
+    // כותרות
     if (block.type === "heading") {
       const level = block.level || 2;
       const Tag = `h${Math.min(level, 3)}`;
@@ -195,14 +263,13 @@ export default async function ArticlePage({ params }) {
       );
     }
 
+    // תמונה מתוך בלוק Strapi
     if (block.type === "image") {
       const imageData =
         block.image?.data?.attributes || block.image?.attributes || block.image;
       if (!imageData?.url) return null;
-
       const alt = imageData.alternativeText || "תמונה מתוך הכתבה";
       const caption = imageData.caption || "";
-
       return (
         <InlineImage
           key={i}
@@ -248,7 +315,6 @@ export default async function ArticlePage({ params }) {
 
         {article.tableData && <SimpleKeyValueTable data={article.tableData} />}
 
-        {/* ✅ שילוב מלא: גלריה מקומית + קישורים + דפי יצרן */}
         <Gallery
           images={article.gallery}
           externalImageUrls={article.externalImageUrls}
