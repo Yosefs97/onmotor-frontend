@@ -134,7 +134,7 @@ export default async function ArticlePage({ params }) {
     typeof data.external_media_links[1] === "string" &&
     data.external_media_links[1].startsWith("http")
   ) {
-    mainImage = data.external_media_links[0].trim();
+    mainImage = data.external_media_links[1].trim();
     mainImageAlt = "תמונה ראשית מהמדיה החיצונית";
   }
 
