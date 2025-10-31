@@ -106,6 +106,7 @@ export default async function ArticlePage({ params }) {
     gallery,
     externalImageUrls,
     externalMediaUrl,
+    external_media_links: data.external_media_links || [],
     font_family: data.font_family || "Heebo, sans-serif",
   };
 
@@ -252,6 +253,7 @@ export default async function ArticlePage({ params }) {
           images={article.gallery}
           externalImageUrls={article.externalImageUrls}
           externalMediaUrl={article.externalMediaUrl}
+          external_media_links={article.external_media_links}
         />
 
         <Tags tags={article.tags} />

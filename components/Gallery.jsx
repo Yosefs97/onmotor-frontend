@@ -17,12 +17,26 @@ function extractUrls(input) {
   return [];
 }
 
-export default function Gallery({ images = [], externalImageUrls = [] }) {
+export default function Gallery({
+  images = [],
+  externalImageUrls = [],
+  external_media_links = [], // 🔹 נוסיף תמיכה בשדה החדש מ-Strapi
+}) {
   const [current, setCurrent] = useState(0);
   const [externalMediaImages, setExternalMediaImages] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const urls = useMemo(() => extractUrls(externalImageUrls), [externalImageUrls]);
+  // 🧠 איחוד של שני השדות האפשריים — החדש והישן
+  const mergedExternal = useMemo(() => {
+    // אם השדה החדש הוא מערך אמיתי (JSON)
+    if (Array.isArray(external_media_links) && external_media_links.length > 0) {
+      return external_media_links;
+    }
+    // אחרת נשתמש בשדה הישן (טקסט)
+    return externalImageUrls;
+  }, [external_media_links, externalImageUrls]);
+
+  const urls = useMemo(() => extractUrls(mergedExternal), [mergedExternal]);
   const imageExtensions = /\.(jpg|jpeg|png|gif|webp)$/i;
   const directLinks = urls.filter((url) => imageExtensions.test(url));
   const pagesToScrape = urls.filter((url) => !imageExtensions.test(url) && url.startsWith('http'));
