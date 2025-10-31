@@ -135,15 +135,17 @@ export default function Gallery({
           className="w-full h-full object-cover transition-opacity duration-500"
           onError={setInlineFallback}
         />
+        {/* 🔄 שינוי: הקטנת החיצים מ-text-3xl ל-text-xl והתאמת ריפוד */}
         <button
           onClick={prev}
-          className="absolute top-1/2 left-2 -translate-y-1/2 text-white bg-black/40 hover:bg-black/60 text-xl px-1 py-1 rounded-full transition"
+          className="absolute top-1/2 left-1 -translate-y-1/2 text-white bg-black/40 hover:bg-black/60 text-xl px-1.5 py-0.5 rounded-full transition"
         >
           ◀
         </button>
+        {/* 🔄 שינוי: הקטנת החיצים מ-text-3xl ל-text-xl והתאמת ריפוד */}
         <button
           onClick={next}
-          className="absolute top-1/2 right-2 -translate-y-1/2 text-white bg-black/40 hover:bg-black/60 text-3xl px-1 py-1 rounded-full transition"
+          className="absolute top-1/2 right-1 -translate-y-1/2 text-white bg-black/40 hover:bg-black/60 text-xl px-1.5 py-0.5 rounded-full transition"
         >
           ▶
         </button>
