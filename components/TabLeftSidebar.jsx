@@ -3,16 +3,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import useIsMobile from '@/hooks/useIsMobile';
+import { getMainImage, resolveImageUrl } from '@/utils/resolveMainImage';
 
 const tabs = ['אחרונים', 'בדרכים', 'פופולרי'];
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
-
-/* ✅ פונקציה מאוחדת לשחזור תמונות מכל מקור (Cloudinary / Strapi / יחסית) */
-function resolveImageUrl(rawUrl) {
-  if (!rawUrl) return '/default-image.jpg';
-  if (rawUrl.startsWith('http')) return rawUrl; // Cloudinary או אתר חיצוני
-  return `${API_URL}${rawUrl.startsWith('/') ? rawUrl : `/uploads/${rawUrl}`}`;
-}
 
 /* 👇 פונקציה שמוציאה שם אתר נקי מתוך כתובת */
 function extractDomainName(url) {
@@ -45,11 +39,11 @@ export default function TabLeftSidebar() {
   const [victims, setVictims] = useState([]);
   const [isPaused, setIsPaused] = useState(false);
 
-  /* ✅ normalizeItem מעודכן לשיטת Cloudinary */
+  /* ✅ normalizeItem – עכשיו עם getMainImage() */
   const normalizeItem = (obj, type = 'article') => {
     const a = obj.attributes || obj;
 
-    // קביעת מקור (YouTube, TikTok וכו')
+    // קביעת מקור (YouTube, TikTok וכו’)
     let autoSource = '';
     if (a.url) {
       if (a.url.includes('youtube.com') || a.url.includes('youtu.be')) autoSource = 'YouTube';
@@ -59,34 +53,15 @@ export default function TabLeftSidebar() {
       else autoSource = extractDomainName(a.url);
     }
 
-    /* --- ⭐️ לוגיקת תמונות אחידה ⭐️ --- */
-    let img = null;
-    const gallery = a.gallery || [];
-
-    if (type === 'latest-article') {
-      const imgData = gallery?.[1] || gallery?.[0];
-      img = resolveImageUrl(imgData?.url);
-    } else if (type === 'onroad-article') {
-      const imgData = gallery?.[2] || gallery?.[0];
-      img = resolveImageUrl(imgData?.url);
-    } else {
-      img = resolveImageUrl(
-        a.image?.data?.attributes?.url ||
-        a.image?.url ||
-        gallery?.[0]?.url
-      );
-    }
-
-    // fallback למקרה שאין בכלל
-    if (!img) img = '/default-image.jpg';
-    /* --- ⭐️ סוף לוגיקת תמונות ⭐️ --- */
+    // ✅ שימוש בפונקציה המרכזית לבחירת תמונה
+    const { mainImage } = getMainImage(a);
 
     return {
       id: obj.id,
       title: a.title || a.name || '',
       slug: a.slug || '',
       description: a.description || '',
-      image: img,
+      image: mainImage,
       date: a.date?.split('T')[0] || a.publishedAt?.split('T')[0] || '',
       url: a.url || '',
       views: a.views ?? null,
@@ -125,11 +100,9 @@ export default function TabLeftSidebar() {
           data.map(async (item) => {
             const norm = normalizeItem(item, 'popular');
 
-            /* --- ⭐️ לוגיקת משיכה חכמה לטאב פופולרי ⭐️ --- */
-            // 1. אם יש תמונה ב־Strapi (כולל Cloudinary) – השתמש בה
             if (norm.image && norm.image !== '/default-image.jpg') return norm;
 
-            // 2. אם אין תמונה ב־Strapi, נסה למשוך מ־preview API (Google metadata)
+            // נסה להביא תצוגה מקדימה (metadata) אם אין תמונה
             if (norm.url) {
               try {
                 const previewRes = await fetch(`/api/preview?url=${encodeURIComponent(norm.url)}`);
@@ -140,7 +113,6 @@ export default function TabLeftSidebar() {
               }
             }
 
-            // 3. fallback אחרון
             if (!norm.image) norm.image = '/default-image.jpg';
             return norm;
           })
