@@ -4,22 +4,28 @@ import React, { useState, useEffect, useMemo } from 'react';
 
 const PUBLIC_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 
-// מחלץ כתובות URL מכל מחרוזת (גם אם הופרדו בשורות/פסיקים/רווחים)
+// מחלץ כתובות URL תקניות מכל מחרוזת או מערך
 function extractUrls(input) {
-  if (!input) return [];
-  if (Array.isArray(input)) {
-    return input
-      .map(s => (typeof s === 'string' ? s.trim() : ''))
-      .filter(Boolean);
-  }
-  if (typeof input === 'string') {
-    // מפרק לפי שורות/פסיקים/נקודה-פסיק/רווחים, וגם מזהה URL-ים עם Regex
-    const bySeparators = input.split(/[\r\n,; ]+/).filter(Boolean);
-    const byRegex = [...input.matchAll(/https?:\/\/[^\s"']+/gi)].map(m => m[0]);
-    return Array.from(new Set([...bySeparators, ...byRegex])).map(s => s.trim());
-  }
-  return [];
+  if (!input) return [];
+
+  // אם זה מערך — ננקה ונחזיר
+  if (Array.isArray(input)) {
+    return input
+      .map((s) => (typeof s === "string" ? s.trim() : ""))
+      .filter(Boolean);
+  }
+
+  // אם זה מחרוזת — נשתמש ב־regex בלבד, בלי split
+  if (typeof input === "string") {
+    // מחפש את כל הקישורים שמתחילים ב־http/https
+    const matches = input.match(/https?:\/\/[^\s,;'"<>]+/gi);
+    if (!matches) return [];
+    return [...new Set(matches.map((s) => s.trim()))];
+  }
+
+  return [];
 }
+
 
 export default function Gallery({
   images = [],
