@@ -132,7 +132,7 @@ export default function Gallery({
           src={getImageUrl(allImages[current].src)}
           alt={allImages[current].alt || `תמונה ${current + 1}`}
           loading="eager"
-          className="w-full h-full object-cover transition-opacity duration-500"
+          className="w-full h-full object-contain transition-opacity duration-500 bg-white p-2"
           onError={setInlineFallback}
         />
         
