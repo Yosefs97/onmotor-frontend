@@ -114,7 +114,7 @@ export default function Gallery({
   const setInlineFallback = (e) => {
     e.currentTarget.onerror = null;
     e.currentTarget.src = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-      <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800">
+      <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1000">
         <rect width="100%" height="100%" fill="#e5e7eb"/>
         <text x="50%" y="50%" font-size="42" fill="#6b7280" text-anchor="middle" dominant-baseline="middle">
           אין תמונה
