@@ -39,6 +39,53 @@ function resolveImageUrl(rawUrl) {
   return `${PUBLIC_API_URL}${rawUrl.startsWith("/") ? rawUrl : `/uploads/${rawUrl}`}`;
 }
 
+// ✅ פונקציות עזר לקישורים ב־Rich Text
+function normalizeHref(href) {
+  if (!href) return '#';
+  if (/^https?:\/\//i.test(href) || href.startsWith('mailto:') || href.startsWith('tel:')) return href;
+  return href.startsWith('/') ? href : `/${href}`;
+}
+
+function isExternal(href) {
+  return /^https?:\/\//i.test(href);
+}
+
+function renderMarks(text, node) {
+  let t = text ?? '';
+  if (node?.bold) t = `<strong>${t}</strong>`;
+  if (node?.italic) t = `<em>${t}</em>`;
+  if (node?.underline) t = `<u>${t}</u>`;
+  return t;
+}
+
+function toHtmlFromStrapiChildren(children) {
+  if (!Array.isArray(children)) return '';
+  return children.map((node) => {
+    // צומת קישור
+    if (node?.type === 'link' || node?.url) {
+      const href = normalizeHref(node.url || '#');
+      const inner = node.children?.length
+        ? toHtmlFromStrapiChildren(node.children)
+        : renderMarks(node.text || '', node);
+      const target = isExternal(href) ? '_blank' : '_self';
+      const rel = isExternal(href) ? 'noopener noreferrer' : '';
+      return `<a href="${href}" target="${target}" rel="${rel}" class="text-blue-600 underline hover:text-blue-800">${inner}</a>`;
+    }
+
+    // טקסט רגיל
+    if (typeof node?.text === 'string') {
+      return renderMarks(node.text, node);
+    }
+
+    // אם יש ילדים נוספים
+    if (node?.children?.length) {
+      return toHtmlFromStrapiChildren(node.children);
+    }
+
+    return '';
+  }).join('');
+}
+
 export default async function ArticlePage({ params }) {
   const res = await fetch(
     `${API_URL}/api/articles?filters[slug][$eq]=${params.slug}&populate=*`,
@@ -71,28 +118,23 @@ export default async function ArticlePage({ params }) {
 
   const externalMediaUrl = data.externalMediaUrl || null;
 
-  // ✅ תמונה ראשית — כולל תמיכה ב-external_media_links
+  // ✅ תמונה ראשית — כולל external_media_links
   let mainImage = PLACEHOLDER_IMG;
   let mainImageAlt = "תמונה ראשית";
 
-  // 1️⃣ קודם נבדוק את הגלריה המקומית
   if (galleryItems?.length > 0 && galleryItems[0]?.url) {
     mainImage = resolveImageUrl(galleryItems[0].url);
     mainImageAlt = galleryItems[0].alternativeText || "תמונה ראשית";
-  }
-  // 2️⃣ אם אין גלריה — נבדוק את שדה התמונה הראשית ב־Strapi
-  else if (data.image?.url) {
+  } else if (data.image?.url) {
     mainImage = resolveImageUrl(data.image.url);
     mainImageAlt = data.image.alternativeText || "תמונה ראשית";
-  }
-  // 3️⃣ אם גם זה לא קיים — נבדוק את השדה החדש external_media_links
-  else if (
+  } else if (
     Array.isArray(data.external_media_links) &&
-    data.external_media_links.length > 1 &&
-    typeof data.external_media_links[1] === "string" &&
-    data.external_media_links[1].startsWith("http")
+    data.external_media_links.length > 0 &&
+    typeof data.external_media_links[0] === "string" &&
+    data.external_media_links[0].startsWith("http")
   ) {
-    mainImage = data.external_media_links[1].trim();
+    mainImage = data.external_media_links[0].trim();
     mainImageAlt = "תמונה ראשית מהמדיה החיצונית";
   }
 
@@ -170,13 +212,9 @@ export default async function ArticlePage({ params }) {
       const urlMatch = cleanText.match(/https?:\/\/[^\s]+/);
       if (urlMatch) {
         const url = urlMatch[0].trim();
-
-        // תמונה ישירה
         if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
           return <InlineImage key={i} src={url} alt="תמונה מתוך הכתבה" caption="" />;
         }
-
-        // מדיה חיצונית
         if (
           /(youtube\.com|youtu\.be|facebook\.com|instagram\.com|tiktok\.com|x\.com|twitter\.com)/i.test(
             url
@@ -184,13 +222,9 @@ export default async function ArticlePage({ params }) {
         ) {
           return <EmbedContent key={i} url={url} />;
         }
-
-        // קישור רגיל
         return (
           <p key={i} className="article-text text-blue-600 underline">
-            <a href={url} target="_blank" rel="noopener noreferrer">
-              {url}
-            </a>
+            <a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
           </p>
         );
       }
@@ -199,31 +233,15 @@ export default async function ArticlePage({ params }) {
         <p
           key={i}
           className="article-text text-gray-800 text-[18px] leading-relaxed"
-          dangerouslySetInnerHTML={{
-            __html: cleanText.replace(/\n/g, "<br/>"),
-          }}
+          dangerouslySetInnerHTML={{ __html: cleanText.replace(/\n/g, "<br/>") }}
         />
       );
     }
 
-    // בלוק מסוג פסקה (Rich Text)
+    // בלוק מסוג פסקה (Rich Text מ-Strapi)
     if (block.type === "paragraph" && block.children) {
-      const html = block.children
-        .map((child) => {
-          let text = child.text || "";
-          if (child.bold) text = `<strong>${text}</strong>`;
-          if (child.italic) text = `<em>${text}</em>`;
-          if (child.underline) text = `<u>${text}</u>`;
-
-          // קישורים מתוך בלוק
-          if (child.type === "link" || child.url) {
-            const href = child.url || "#";
-            text = `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline hover:text-blue-800">${text}</a>`;
-          }
-
-          return fixRelativeImages(text);
-        })
-        .join("");
+      let html = toHtmlFromStrapiChildren(block.children);
+      html = fixRelativeImages(html);
 
       const urlMatch = html.match(/https?:\/\/[^\s"']+/);
       if (urlMatch) {
