@@ -4,16 +4,20 @@ import React, { useState, useEffect, useMemo } from 'react';
 
 const PUBLIC_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 
-// ✅ מחלץ כתובות URL תקניות מכל מחרוזת או מערך
+// ✅ מחלץ כתובות URL תקניות מכל מחרוזת או מערך (גרסה משופרת)
 function extractUrls(input) {
   if (!input) return [];
+
   if (Array.isArray(input)) {
     return input.map((s) => (typeof s === 'string' ? s.trim() : '')).filter(Boolean);
   }
+
   if (typeof input === 'string') {
+    // מחפש כל קישור שמתחיל ב-http/https עד סוף השורה
     const matches = input.match(/https?:\/\/[^\s]+/g);
     return matches ? matches.map((m) => m.trim()) : [];
   }
+
   return [];
 }
 
@@ -22,25 +26,30 @@ export default function Gallery({ images = [], externalImageUrls = [] }) {
   const [externalMediaImages, setExternalMediaImages] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 🔹 חילוץ כל סוגי הקישורים
-  const urls = useMemo(() => extractUrls(externalImageUrls), [externalImageUrls]);
-  const imageExtensions = /\.(jpg|jpeg|png|gif|webp)$/i;
-  const directLinks = urls.filter((url) => imageExtensions.test(url));
-  const pagesToScrape = urls.filter((url) => !imageExtensions.test(url) && url.startsWith('http'));
+  // 🔹 מפריד בין קישורי תמונה ישירים לבין דפים
+  const { directLinks, pagesToScrape } = useMemo(() => {
+    const urls = extractUrls(externalImageUrls);
+    const imageExtensions = /\.(jpg|jpeg|png|gif|webp)$/i;
 
-  // ✅ נטען מדיה חיצונית רק אם יש דפים (אם יש רק קישורים ישירים — נסיים מיידית)
+    const direct = urls.filter((url) => imageExtensions.test(url));
+    const pages = urls.filter((url) => !imageExtensions.test(url) && url.startsWith('http'));
+
+    return { directLinks: direct, pagesToScrape: pages };
+  }, [externalImageUrls]);
+
+  // ✅ נשתמש במערך ישירות, בלי join/split
   useEffect(() => {
     let active = true;
 
     async function fetchAllExternalMedia() {
-      // אם יש רק תמונות ישירות — אין צורך בטעינה
       if (!pagesToScrape.length) {
         setLoading(false);
         return;
       }
 
+      setLoading(true);
+
       try {
-        setLoading(true);
         const allResults = await Promise.all(
           pagesToScrape.map((url) =>
             fetch(`/api/fetch-external-images?url=${encodeURIComponent(url)}`).then((res) =>
@@ -70,7 +79,7 @@ export default function Gallery({ images = [], externalImageUrls = [] }) {
     };
   }, [pagesToScrape]);
 
-  // 🧩 מאחד את כל התמונות מכל המקורות
+  // 🧩 מאחד את כל סוגי התמונות למערך אחד
   const allImages = useMemo(() => {
     const strapiImages = (images || [])
       .map((img) => ({
@@ -86,11 +95,6 @@ export default function Gallery({ images = [], externalImageUrls = [] }) {
       (img, i, arr) => img.src && arr.findIndex((x) => x.src === img.src) === i
     );
   }, [images, directLinks, externalMediaImages]);
-
-  // 🟢 ברגע שיש רק תמונות ישירות — נבטל טעינה
-  useEffect(() => {
-    if (directLinks.length && !pagesToScrape.length) setLoading(false);
-  }, [directLinks, pagesToScrape]);
 
   if (loading) {
     return <div className="text-center text-gray-500 py-8">טוען את הגלריה...</div>;
