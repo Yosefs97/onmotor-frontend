@@ -68,7 +68,7 @@ export default function ArticleCard({ article, size = 'small' }) {
         <div
           className={`absolute bottom-0 w-full text-white ${paddingSize} transition-all duration-300
             ${isMobile
-              ? 'bg-[#e60000]/70'
+              ? 'bg-[#e60000]/20'
               : isTouched
                 ? 'bg-[#e60000]/150'
                 : 'bg-gradient-to-t from-black/90 via-black/70 to-transparent  group-hover:bg-[#e60000]/80'
