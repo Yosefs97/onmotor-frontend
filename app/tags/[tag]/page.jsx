@@ -1,3 +1,4 @@
+// app/tags/[tag]/page.jsx
 'use client';
 
 import { useParams } from 'next/navigation';
@@ -5,8 +6,17 @@ import { useEffect, useState } from 'react';
 import PageContainer from '@/components/PageContainer';
 import ArticleCard from '@/components/ArticleCards/ArticleCard';
 
-const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || process.env.STRAPI_API_URL;
+const PLACEHOLDER_IMG = '/default-image.jpg';
 
+// פונקציה לתיקון כתובת תמונה
+function resolveImageUrl(rawUrl) {
+  if (!rawUrl) return PLACEHOLDER_IMG;
+  if (rawUrl.startsWith('http')) return rawUrl;
+  return `${API_URL}${rawUrl.startsWith('/') ? rawUrl : `/uploads/${rawUrl}`}`;
+}
+
+// פונקציה לניקוי תגית לטובת התאמה לשדה
 function slugify(text) {
   return text
     .toString()
@@ -36,13 +46,34 @@ export default function TagPage() {
         });
 
         const normalized = filtered.map(a => {
-          // --- ⭐️ לוגיקה חדשה: משיכת תמונה ראשית מהגלריה ⭐️ ---
-          const mainImageData = a.gallery?.[0];
-          const image = mainImageData?.url 
-                          ? `${API_URL}${mainImageData.url}` 
-                          : '/default-image.jpg';
-          const imageAlt = a.imageAlt || mainImageData?.alternativeText || a.title;
-          // --- ⭐️ סוף לוגיקה חדשה ⭐️ ---
+          // 🎯 לוגיקת בחירת תמונה אחידה עם עמוד הכתבה
+          let mainImage = PLACEHOLDER_IMG;
+          let mainImageAlt = a.title || 'תמונה ראשית';
+
+          // 1️⃣ קודם נבדוק את הגלריה
+          const galleryItem = a.gallery?.[0];
+          if (galleryItem?.url) {
+            mainImage = resolveImageUrl(galleryItem.url);
+            mainImageAlt = galleryItem.alternativeText || mainImageAlt;
+          }
+          // 2️⃣ אם אין גלריה — נבדוק את שדה התמונה הראשית
+          else if (a.image?.url) {
+            mainImage = resolveImageUrl(a.image.url);
+            mainImageAlt = a.image.alternativeText || mainImageAlt;
+          }
+          // 3️⃣ אם גם זה לא קיים — נבדוק את external_media_links
+          else if (
+            Array.isArray(a.external_media_links) &&
+            a.external_media_links.length > 0
+          ) {
+            const externalLinks = a.external_media_links.filter(l => typeof l === 'string' && l.startsWith('http'));
+            if (externalLinks.length > 1) {
+              mainImage = externalLinks[1].trim(); // הקישור השני
+            } else if (externalLinks.length > 0) {
+              mainImage = externalLinks[0].trim(); // fallback לראשון
+            }
+            mainImageAlt = 'תמונה ראשית מהמדיה החיצונית';
+          }
 
           return {
             id: a.id,
@@ -52,10 +83,8 @@ export default function TagPage() {
             headline: a.headline || a.title,
             description: a.description || '',
             date: a.date || new Date().toISOString(),
-            // --- ⭐️ שימוש בלוגיקה החדשה ⭐️ ---
-            image: image,
-            imageAlt: imageAlt,
-            // --- ⭐️ סוף שימוש ⭐️ ---
+            image: mainImage,
+            imageAlt: mainImageAlt,
           };
         });
 
