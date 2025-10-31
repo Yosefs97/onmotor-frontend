@@ -145,7 +145,7 @@ export default function Gallery({
         {/* 🔄 שינוי: הקטנת החיצים מ-text-3xl ל-text-xl והתאמת ריפוד */}
         <button
           onClick={next}
-          className="absolute top-1/2 right-1 transform -translate-y-1/2 text-white bg-black/30 hover:bg-black/50 text-xl px-1 py-1 rounded-full transition"
+          className="absolute top-1/2 right-9 transform -translate-y-1/2 text-white bg-black/30 hover:bg-black/50 text-lg px-1 py-1 rounded-full transition"
         >
           ▶
         </button>
