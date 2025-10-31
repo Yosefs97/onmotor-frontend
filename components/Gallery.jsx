@@ -131,9 +131,6 @@ export default function Gallery({
           key={current}
           src={getImageUrl(allImages[current].src)}
           alt={allImages[current].alt || `תמונה ${current + 1}`}
-          // ❌ הורדו שורות אלו - הן גרמו לחסימה על ידי השרת של KTM
-          // referrerPolicy="no-referrer"
-          // crossOrigin="anonymous"
           loading="eager"
           className="w-full h-full object-cover transition-opacity duration-500"
           onError={setInlineFallback}
@@ -159,9 +156,6 @@ export default function Gallery({
             key={i}
             src={getImageUrl(img.src)}
             alt={img.alt || `תמונה ${i + 1}`}
-            // ❌ הורדו שורות אלו גם כאן
-            // referrerPolicy="no-referrer"
-            // crossOrigin="anonymous"
             loading="lazy"
             className={`w-20 h-16 object-cover rounded cursor-pointer transition ring-offset-2 ${
               i === current ? 'ring-2 ring-blue-500' : ''
