@@ -5,25 +5,21 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { labelMap } from '@/utils/labelMap';
+import { getMainImage } from '@/utils/resolveMainImage';
 
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
-
-// ✅ פונקציה שמוודאת שהכתובת תקינה (כולל Cloudinary)
-function resolveImageUrl(rawUrl) {
-  if (!rawUrl) return '/default-image.jpg';
-  if (rawUrl.startsWith('http')) return rawUrl;
-  return `${API_URL}${rawUrl.startsWith('/') ? rawUrl : `/uploads/${rawUrl}`}`;
-}
 
 export default function GuideBox() {
   const [articles, setArticles] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  /* ✅ שליפת כתבות עם ערך במשתנה Values */
   useEffect(() => {
     async function fetchArticles() {
       try {
         const res = await fetch(
-          `${API_URL}/api/articles?filters[Values][$null]=false&populate=gallery`
+          `${API_URL}/api/articles?filters[Values][$null]=false&populate=*`,
+          { cache: 'no-store' }
         );
         const json = await res.json();
         setArticles(json.data || []);
@@ -34,6 +30,7 @@ export default function GuideBox() {
     fetchArticles();
   }, []);
 
+  /* ✅ מעבר אוטומטי בין כתבות */
   useEffect(() => {
     if (articles.length === 0) return;
     const interval = setInterval(() => {
@@ -44,13 +41,11 @@ export default function GuideBox() {
 
   if (articles.length === 0) return null;
 
-  const current = articles[currentIndex];
+  const current = articles[currentIndex].attributes || articles[currentIndex];
   const values = Array.isArray(current.Values) ? current.Values : [current.Values];
 
-  // ✅ שימוש בפונקציה החדשה במקום חיבור ישיר
-  const mainImageData = current.gallery?.[0];
-  const imageUrl = mainImageData?.url ? resolveImageUrl(mainImageData.url) : null;
-  const imageAlt = mainImageData?.alternativeText || current.title || "תמונת מדריך";
+  // ✅ שימוש בפונקציה האחידה לבחירת תמונה
+  const { mainImage, mainImageAlt } = getMainImage(current);
 
   return (
     <div className="bg-white shadow-md rounded-md overflow-hidden relative mb-4">
@@ -61,6 +56,7 @@ export default function GuideBox() {
         </h3>
       </Link>
 
+      {/* ✅ קרוסלת מדריכים */}
       <div className="relative h-56">
         <AnimatePresence mode="wait">
           <motion.div
@@ -73,17 +69,13 @@ export default function GuideBox() {
           >
             <Link href={`/articles/${current.slug}`}>
               <div className="w-full h-full cursor-pointer">
-                {imageUrl ? (
-                  <Image
-                    src={imageUrl}
-                    alt={imageAlt}
-                    width={400}
-                    height={250}
-                    className="w-full h-40 object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-40 bg-gray-200" />
-                )}
+                <Image
+                  src={mainImage}
+                  alt={mainImageAlt || current.title || 'תמונת מדריך'}
+                  width={400}
+                  height={250}
+                  className="w-full h-40 object-cover"
+                />
                 <p className="p-2 text-sm font-semibold text-gray-800">
                   {current.title}
                 </p>
@@ -98,7 +90,7 @@ export default function GuideBox() {
         </AnimatePresence>
       </div>
 
-      {/* חיצי ניווט */}
+      {/* ✅ חיצי ניווט */}
       <button
         onClick={() =>
           setCurrentIndex((prev) => (prev - 1 + articles.length) % articles.length)
@@ -114,7 +106,7 @@ export default function GuideBox() {
         ›
       </button>
 
-      {/* נקודות אינדיקציה */}
+      {/* ✅ נקודות אינדיקציה */}
       <div className="flex justify-center space-x-2 py-2">
         {articles.map((_, idx) => (
           <button
