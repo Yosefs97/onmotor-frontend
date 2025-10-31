@@ -130,9 +130,9 @@ export default async function ArticlePage({ params }) {
     mainImageAlt = data.image.alternativeText || "תמונה ראשית";
   } else if (
     Array.isArray(data.external_media_links) &&
-    data.external_media_links.length > 0 &&
-    typeof data.external_media_links[0] === "string" &&
-    data.external_media_links[0].startsWith("http")
+    data.external_media_links.length > 1 &&
+    typeof data.external_media_links[1] === "string" &&
+    data.external_media_links[1].startsWith("http")
   ) {
     mainImage = data.external_media_links[0].trim();
     mainImageAlt = "תמונה ראשית מהמדיה החיצונית";
