@@ -4,48 +4,10 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
+import { getMainImage, resolveImageUrl } from '@/utils/resolveMainImage';
 
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || process.env.STRAPI_API_URL;
 const PLACEHOLDER_IMG = '/default-image.jpg';
-
-/* ✅ פונקציה אחידה לפתרון כתובת תמונה (Cloudinary / Strapi / URL מלא) */
-function resolveImageUrl(rawUrl) {
-  if (!rawUrl) return PLACEHOLDER_IMG;
-  if (rawUrl.startsWith('http')) return rawUrl;
-  return `${API_URL}${rawUrl.startsWith('/') ? rawUrl : `/uploads/${rawUrl}`}`;
-}
-
-/* ✅ פונקציה אחידה לבחירת תמונה עיקרית מכל סוג */
-function getMainImage(attrs) {
-  let mainImage = PLACEHOLDER_IMG;
-  let mainImageAlt = attrs.title || 'תמונה ראשית';
-
-  // 1️⃣ גלריה (תמונה שלישית או ראשונה)
-  const galleryImg = attrs.gallery?.[2] || attrs.gallery?.[0];
-  if (galleryImg?.url) {
-    mainImage = resolveImageUrl(galleryImg.url);
-    mainImageAlt = galleryImg.alternativeText || mainImageAlt;
-  }
-  // 2️⃣ תמונה ראשית
-  else if (attrs.image?.url) {
-    mainImage = resolveImageUrl(attrs.image.url);
-    mainImageAlt = attrs.image.alternativeText || mainImageAlt;
-  }
-  // 3️⃣ external_media_links
-  else if (Array.isArray(attrs.external_media_links) && attrs.external_media_links.length > 0) {
-    const validLinks = attrs.external_media_links.filter(
-      (l) => typeof l === 'string' && l.startsWith('http')
-    );
-    if (validLinks.length > 1) {
-      mainImage = validLinks[1].trim(); // השני
-    } else if (validLinks.length > 0) {
-      mainImage = validLinks[0].trim(); // הראשון
-    }
-    mainImageAlt = 'תמונה מהמדיה החיצונית';
-  }
-
-  return { mainImage, mainImageAlt };
-}
 
 export default function IroadsBox() {
   const [articles, setArticles] = useState([]);
@@ -150,8 +112,8 @@ export default function IroadsBox() {
                   <Link href={attrs.slug ? `/articles/${attrs.slug}` : '#'}>
                     <div className="relative w-full h-full cursor-pointer">
                       <Image
-                        src={mainImage}
-                        alt={mainImageAlt}
+                        src={mainImage || PLACEHOLDER_IMG}
+                        alt={mainImageAlt || 'תמונה'}
                         fill
                         className="object-cover"
                         loading="lazy"
