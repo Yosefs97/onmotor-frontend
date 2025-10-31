@@ -5,16 +5,17 @@ import SectionWithHeader from './SectionWithHeader';
 import LimitedArticles from './LimitedArticles';
 import { labelMap } from '@/utils/labelMap';
 
-const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || process.env.STRAPI_API_URL;
+const PLACEHOLDER_IMG = '/default-image.jpg';
 
 // ✅ פונקציה שמוודאת כתובת תקינה לתמונה (כולל Cloudinary)
 function resolveImageUrl(rawUrl) {
-  if (!rawUrl) return '/default-image.jpg';
+  if (!rawUrl) return PLACEHOLDER_IMG;
   if (rawUrl.startsWith('http')) return rawUrl;
   return `${API_URL}${rawUrl.startsWith('/') ? rawUrl : `/uploads/${rawUrl}`}`;
 }
 
-// קיבוץ לפי תת קטגוריות רגילות
+// קיבוץ לפי תת־קטגוריות רגילות
 function groupBySubcategory(articles) {
   return articles.reduce((acc, article) => {
     const subcategories = Array.isArray(article.subcategory)
@@ -30,7 +31,7 @@ function groupBySubcategory(articles) {
   }, {});
 }
 
-// קיבוץ לפי Values (לתתי־תתי קטגוריות של מדריכים)
+// קיבוץ לפי Values (לתתי־תתי־קטגוריות של מדריכים)
 function groupByValues(articles) {
   return articles.reduce((acc, article) => {
     const values = Array.isArray(article.Values)
@@ -86,19 +87,41 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
           });
         }
 
-        // ✅ מיפוי כתבות עם טיפול בתמונות
+        // ✅ מיפוי כתבות עם לוגיקת תמונה אחידה
         const mapped = data.map((a) => {
-          const mainImageData = a.gallery?.[0];
-          const rawUrl = mainImageData?.url || a.image?.url;
-          const image = resolveImageUrl(rawUrl);
-          const imageAlt = a.imageAlt || mainImageData?.alternativeText || 'תמונה מהכתבה';
+          let mainImage = PLACEHOLDER_IMG;
+          let mainImageAlt = a.title || 'תמונה ראשית';
+
+          // 1️⃣ גלריה
+          const galleryItem = a.gallery?.[0];
+          if (galleryItem?.url) {
+            mainImage = resolveImageUrl(galleryItem.url);
+            mainImageAlt = galleryItem.alternativeText || mainImageAlt;
+          }
+          // 2️⃣ תמונה ראשית
+          else if (a.image?.url) {
+            mainImage = resolveImageUrl(a.image.url);
+            mainImageAlt = a.image.alternativeText || mainImageAlt;
+          }
+          // 3️⃣ external_media_links
+          else if (Array.isArray(a.external_media_links) && a.external_media_links.length > 0) {
+            const validLinks = a.external_media_links.filter(
+              (l) => typeof l === 'string' && l.startsWith('http')
+            );
+            if (validLinks.length > 1) {
+              mainImage = validLinks[1].trim(); // השני
+            } else if (validLinks.length > 0) {
+              mainImage = validLinks[0].trim(); // הראשון
+            }
+            mainImageAlt = 'תמונה ראשית מהמדיה החיצונית';
+          }
 
           return {
             id: a.id,
             title: a.title,
             slug: a.slug,
-            image,
-            imageAlt,
+            image: mainImage,
+            imageAlt: mainImageAlt,
             category: a.category || 'general',
             subcategory: Array.isArray(a.subcategory)
               ? a.subcategory
@@ -116,7 +139,7 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
           };
         });
 
-        // ✅ מיון לפי תאריך (מהחדש לישן)
+        // ✅ מיון מהחדש לישן
         const sorted = mapped.sort((a, b) => {
           const aDateTime = new Date(`${a.date}T${a.time}`);
           const bDateTime = new Date(`${b.date}T${b.time}`);
