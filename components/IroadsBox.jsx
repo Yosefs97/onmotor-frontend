@@ -5,13 +5,46 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 
-const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || process.env.STRAPI_API_URL;
+const PLACEHOLDER_IMG = '/default-image.jpg';
 
 /* ✅ פונקציה אחידה לפתרון כתובת תמונה (Cloudinary / Strapi / URL מלא) */
 function resolveImageUrl(rawUrl) {
-  if (!rawUrl) return '/default-image.jpg';
-  if (rawUrl.startsWith('http')) return rawUrl; // Cloudinary או חיצוני
+  if (!rawUrl) return PLACEHOLDER_IMG;
+  if (rawUrl.startsWith('http')) return rawUrl;
   return `${API_URL}${rawUrl.startsWith('/') ? rawUrl : `/uploads/${rawUrl}`}`;
+}
+
+/* ✅ פונקציה אחידה לבחירת תמונה עיקרית מכל סוג */
+function getMainImage(attrs) {
+  let mainImage = PLACEHOLDER_IMG;
+  let mainImageAlt = attrs.title || 'תמונה ראשית';
+
+  // 1️⃣ גלריה (תמונה שלישית או ראשונה)
+  const galleryImg = attrs.gallery?.[2] || attrs.gallery?.[0];
+  if (galleryImg?.url) {
+    mainImage = resolveImageUrl(galleryImg.url);
+    mainImageAlt = galleryImg.alternativeText || mainImageAlt;
+  }
+  // 2️⃣ תמונה ראשית
+  else if (attrs.image?.url) {
+    mainImage = resolveImageUrl(attrs.image.url);
+    mainImageAlt = attrs.image.alternativeText || mainImageAlt;
+  }
+  // 3️⃣ external_media_links
+  else if (Array.isArray(attrs.external_media_links) && attrs.external_media_links.length > 0) {
+    const validLinks = attrs.external_media_links.filter(
+      (l) => typeof l === 'string' && l.startsWith('http')
+    );
+    if (validLinks.length > 1) {
+      mainImage = validLinks[1].trim(); // השני
+    } else if (validLinks.length > 0) {
+      mainImage = validLinks[0].trim(); // הראשון
+    }
+    mainImageAlt = 'תמונה מהמדיה החיצונית';
+  }
+
+  return { mainImage, mainImageAlt };
 }
 
 export default function IroadsBox() {
@@ -23,7 +56,8 @@ export default function IroadsBox() {
     async function fetchArticles() {
       try {
         const res = await fetch(
-          `${API_URL}/api/articles?filters[tags_txt][$contains]=iroads&populate=*`
+          `${API_URL}/api/articles?filters[tags_txt][$contains]=iroads&populate=*`,
+          { cache: 'no-store' }
         );
         const json = await res.json();
         setArticles(json.data || []);
@@ -89,7 +123,7 @@ export default function IroadsBox() {
                   לחצו להגשת תלונה
                 </a>
 
-                {/* ✅ לוגו / וידאו */}
+                {/* ✅ וידאו רקע */}
                 <a
                   href="https://www.iroads.co.il/"
                   target="_blank"
@@ -110,25 +144,14 @@ export default function IroadsBox() {
               // ✅ שקופית כתבה
               (() => {
                 const attrs = current;
-                const gallery = attrs.gallery;
-
-                // ניסיון שליפה: תמונה שלישית (index 2) או ראשונה
-                const imgData = gallery?.[2] || gallery?.[0];
-                const imageUrl = imgData?.url
-                  ? resolveImageUrl(imgData.url)
-                  : attrs.image?.url
-                  ? resolveImageUrl(attrs.image.url)
-                  : '/default-image.jpg';
-
-                const imageAlt =
-                  imgData?.alternativeText || attrs.title || 'כתבה';
+                const { mainImage, mainImageAlt } = getMainImage(attrs);
 
                 return (
                   <Link href={attrs.slug ? `/articles/${attrs.slug}` : '#'}>
                     <div className="relative w-full h-full cursor-pointer">
                       <Image
-                        src={imageUrl}
-                        alt={imageAlt}
+                        src={mainImage}
+                        alt={mainImageAlt}
                         fill
                         className="object-cover"
                         loading="lazy"
