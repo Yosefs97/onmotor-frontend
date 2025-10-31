@@ -138,14 +138,14 @@ export default function Gallery({
         {/* 🔄 שינוי: הקטנת החיצים מ-text-3xl ל-text-xl והתאמת ריפוד */}
         <button
           onClick={prev}
-          className="absolute top-1/2 left-1 -translate-y-1/2 text-white bg-black/40 hover:bg-black/60 text-xl px-0.5 py-0.5 rounded-full transition"
+          className="absolute top-1/2 left-4 transform -translate-y-1/2 text-white bg-black/30 hover:bg-black/50 text-3xl px-3 py-1 rounded-full transition"
         >
           ◀
         </button>
         {/* 🔄 שינוי: הקטנת החיצים מ-text-3xl ל-text-xl והתאמת ריפוד */}
         <button
           onClick={next}
-          className="absolute top-1/2 right-1 -translate-y-1/2 text-white bg-black/40 hover:bg-black/60 text-xl px-0.5 py-0.5 rounded-full transition"
+          className="absolute top-1/2 right-9 -translate-y-1/2 text-white bg-black/40 hover:bg-black/60 text-xl px-0.5 py-0.5 rounded-full transition"
         >
           ▶
         </button>
