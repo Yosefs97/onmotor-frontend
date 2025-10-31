@@ -25,6 +25,8 @@ const nextConfig = {
       "husqvarna-motorcycles.com",
       "gasgas.com",
       "ducati.com",
+      "global.yamaha-motor.com", // ✅ כבר כאן מהפעם הקודמת
+      "hondanews.eu", // ✅ הוספנו את הונדה
       "yamaha-motor.eu",
       "honda.com",
       "bmw-motorrad.com",

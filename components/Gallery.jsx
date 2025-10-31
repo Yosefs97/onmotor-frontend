@@ -4,21 +4,14 @@ import React, { useState, useEffect, useMemo } from 'react';
 
 const PUBLIC_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 
-// מחלץ כתובות URL מכל מחרוזת (גם אם הופרדו בשורות/פסיקים/רווחים)
+// 🔄 שינוי: פונקציה פשוטה ואמינה יותר המבוססת על Regex בלבד
 function extractUrls(input) {
-  if (!input) return [];
-  if (Array.isArray(input)) {
-    return input
-      .map(s => (typeof s === 'string' ? s.trim() : ''))
-      .filter(Boolean);
-  }
-  if (typeof input === 'string') {
-    // מפרק לפי שורות/פסיקים/נקודה-פסיק/רווחים, וגם מזהה URL-ים עם Regex
-    const bySeparators = input.split(/[\r\n,; ]+/).filter(Boolean);
-    const byRegex = [...input.matchAll(/https?:\/\/[^\s"']+/gi)].map(m => m[0]);
-    return Array.from(new Set([...bySeparators, ...byRegex])).map(s => s.trim());
-  }
-  return [];
+  if (!input || typeof input !== 'string') return [];
+  // מוצא את כל הקישורים שמתחילים ב-http/https ואינם מכילים רווחים או מירכאות
+  const matches = [...input.matchAll(/https?:\/\/[^\s"']+/gi)];
+  const urls = matches.map(m => m[0]);
+  // מסיר כפילויות ושומר על הסדר
+  return Array.from(new Set(urls)).map(s => s.trim());
 }
 
 export default function Gallery({
@@ -31,7 +24,9 @@ export default function Gallery({
 
   const { directLinks, pagesToScrape } = useMemo(() => {
     const urls = extractUrls(externalImageUrls);
-    const imageExtensions = /\.(jpg|jpeg|png|gif|webp)$/i;
+    
+    // 🔄 שינוי: Regex גמיש יותר שמתמודד גם עם פרמטרים ב-URL (כמו ?v=2)
+    const imageExtensions = /\.(jpg|jpeg|png|gif|webp)([\?#].*)?$/i;
 
     const direct = urls.filter(url => imageExtensions.test(url));
     const pages = urls.filter(url => !imageExtensions.test(url) && url.startsWith('http'));
@@ -101,9 +96,6 @@ export default function Gallery({
     return <div className="text-center text-gray-500 py-8">לא נמצאו תמונות בגלריה.</div>;
   }
 
-  const next = () => setCurrent(prev => (prev + 1) % allImages.length);
-  const prev = () => setCurrent(prev => (prev - 1 + allImages.length) % allImages.length);
-
   const getImageUrl = (src) => {
     if (!src || typeof src !== 'string') return '';
     const s = src.trim();
@@ -135,7 +127,7 @@ export default function Gallery({
           className="w-full h-full object-cover transition-opacity duration-500"
           onError={setInlineFallback}
         />
-        
+        {/* ❌ הכפתורים הוסרו */}
       </div>
 
       {/* תמונות ממוזערות */}
