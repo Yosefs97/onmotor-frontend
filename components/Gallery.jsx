@@ -137,13 +137,13 @@ export default function Gallery({
         />
         <button
           onClick={prev}
-          className="absolute top-1/2 left-4 -translate-y-1/2 text-white bg-black/40 hover:bg-black/60 text-xl px-3 py-1 rounded-full transition"
+          className="absolute top-1/2 left-2 -translate-y-1/2 text-white bg-black/40 hover:bg-black/60 text-xl px-1 py-1 rounded-full transition"
         >
           ◀
         </button>
         <button
           onClick={next}
-          className="absolute top-1/2 right-4 -translate-y-1/2 text-white bg-black/40 hover:bg-black/60 text-3xl px-3 py-1 rounded-full transition"
+          className="absolute top-1/2 right-2 -translate-y-1/2 text-white bg-black/40 hover:bg-black/60 text-3xl px-1 py-1 rounded-full transition"
         >
           ▶
         </button>
