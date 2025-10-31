@@ -4,11 +4,12 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ArticleCard from '@/components/ArticleCards/ArticleCard';
 
-const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || process.env.STRAPI_API_URL;
+const PLACEHOLDER_IMG = '/default-image.jpg';
 
-// ✅ תיקון כתובת תמונה (תמיכה ב־Cloudinary ובנתיבים יחסיים)
+// ✅ פונקציה לתיקון כתובת תמונה
 function resolveImageUrl(rawUrl) {
-  if (!rawUrl) return '/default-image.jpg';
+  if (!rawUrl) return PLACEHOLDER_IMG;
   if (rawUrl.startsWith('http')) return rawUrl;
   return `${API_URL}${rawUrl.startsWith('/') ? rawUrl : `/uploads/${rawUrl}`}`;
 }
@@ -31,15 +32,42 @@ export default function SimilarArticles({ currentSlug, category }) {
     async function fetchSimilarArticles() {
       try {
         const res = await fetch(
-          `${API_URL}/api/articles?populate=*&filters[slug][$ne]=${currentSlug}&filters[category][$eq]=${category}`
+          `${API_URL}/api/articles?populate=*&filters[slug][$ne]=${currentSlug}&filters[category][$eq]=${category}`,
+          { cache: 'no-store' }
         );
         const json = await res.json();
         const data = json.data || [];
 
         const mapped = data.map((a) => {
-          const mainImageData = a.gallery?.[0];
-          const image = resolveImageUrl(mainImageData?.url || a.image?.url);
-          const imageAlt = a.imageAlt || mainImageData?.alternativeText || a.title;
+          let mainImage = PLACEHOLDER_IMG;
+          let mainImageAlt = a.title || 'תמונה ראשית';
+
+          // 1️⃣ גלריה
+          const galleryItem = a.gallery?.[0];
+          if (galleryItem?.url) {
+            mainImage = resolveImageUrl(galleryItem.url);
+            mainImageAlt = galleryItem.alternativeText || mainImageAlt;
+          }
+          // 2️⃣ תמונה ראשית
+          else if (a.image?.url) {
+            mainImage = resolveImageUrl(a.image.url);
+            mainImageAlt = a.image.alternativeText || mainImageAlt;
+          }
+          // 3️⃣ external_media_links
+          else if (
+            Array.isArray(a.external_media_links) &&
+            a.external_media_links.length > 0
+          ) {
+            const validLinks = a.external_media_links.filter(
+              (l) => typeof l === 'string' && l.startsWith('http')
+            );
+            if (validLinks.length > 1) {
+              mainImage = validLinks[1].trim(); // השני
+            } else if (validLinks.length > 0) {
+              mainImage = validLinks[0].trim(); // הראשון
+            }
+            mainImageAlt = 'תמונה ראשית מהמדיה החיצונית';
+          }
 
           return {
             id: a.id,
@@ -49,8 +77,8 @@ export default function SimilarArticles({ currentSlug, category }) {
             headline: a.headline || a.title,
             description: a.description || '',
             date: a.date,
-            image,
-            imageAlt,
+            image: mainImage,
+            imageAlt: mainImageAlt,
           };
         });
 
@@ -70,7 +98,7 @@ export default function SimilarArticles({ currentSlug, category }) {
     groups.push(similar.slice(i, i + groupSize));
   }
 
-  // ✅ מעבר אוטומטי כל 6 שניות (גם במחשב)
+  // ✅ מעבר אוטומטי כל 6 שניות
   useEffect(() => {
     if (groups.length <= 1) return;
     const interval = setInterval(() => {
@@ -106,7 +134,7 @@ export default function SimilarArticles({ currentSlug, category }) {
           </motion.div>
         </AnimatePresence>
 
-        {/* ✅ חיצים ימינה / שמאלה - אדומים שקופים */}
+        {/* ✅ חיצים */}
         {groups.length > 1 && (
           <>
             <button
@@ -127,7 +155,7 @@ export default function SimilarArticles({ currentSlug, category }) {
         )}
       </div>
 
-      {/* ✅ נקודות אינדיקציה בתחתית */}
+      {/* ✅ נקודות אינדיקציה */}
       {groups.length > 1 && (
         <div className="flex justify-center space-x-2 mt-3">
           {groups.map((_, idx) => (
