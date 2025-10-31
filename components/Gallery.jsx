@@ -23,13 +23,12 @@ function extractUrls(input) {
 
 export default function Gallery({
   images = [],
-  externalImageUrls = [], // ✅ זה השדה היחיד שנקבל עכשיו לקישורים חיצוניים
+  externalImageUrls = [],
 }) {
   const [current, setCurrent] = useState(0);
   const [externalMediaImages, setExternalMediaImages] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 🔄 שינוי: מפרק את ה-URLs ומחלק אותם לקישורים ישירים ולדפים לגרוטאות
   const { directLinks, pagesToScrape } = useMemo(() => {
     const urls = extractUrls(externalImageUrls);
     const imageExtensions = /\.(jpg|jpeg|png|gif|webp)$/i;
@@ -40,25 +39,21 @@ export default function Gallery({
     return { directLinks: direct, pagesToScrape: pages };
   }, [externalImageUrls]);
 
-  // 🔄 שינוי: משתמש במזהה ייחודי של הדפים לגרוטאות כדי להפעיל את ה-useEffect
   const scrapeUrlString = useMemo(() => pagesToScrape.join(','), [pagesToScrape]);
 
-  // 🔄 שינוי: טוען תמונות מדפים חיצוניים על בסיס pagesToScrape
   useEffect(() => {
     let active = true;
 
     async function fetchAllExternalMedia() {
-      // אם אין דפים לגרוטאות, נסיים את הטעינה
       if (!scrapeUrlString) {
         setLoading(false);
         return;
       }
 
-      setLoading(true); // מתחילים טעינה
+      setLoading(true);
       const urlsToFetch = scrapeUrlString.split(',');
 
       try {
-        // מבצע קריאות API במקביל לכל הדפים שצריך לגרוט
         const allResults = await Promise.all(
           urlsToFetch.map(url =>
             fetch(`/api/fetch-external-images?url=${encodeURIComponent(url)}`)
@@ -67,7 +62,6 @@ export default function Gallery({
         );
 
         if (active) {
-          // מאחד את כל התמונות מכל הדפים שנגרטו
           const combinedImages = allResults
             .flatMap(data => data.images || [])
             .map(img => ({ src: img?.src?.trim(), alt: img?.alt || '' }))
@@ -75,7 +69,6 @@ export default function Gallery({
 
           setExternalMediaImages(combinedImages);
         }
-
       } catch (e) {
         console.error('❌ fetchAllExternalMedia error:', e);
       } finally {
@@ -85,9 +78,8 @@ export default function Gallery({
 
     fetchAllExternalMedia();
     return () => { active = false; };
-  }, [scrapeUrlString]); // תלוי במחרוזת ה-URLs
+  }, [scrapeUrlString]);
 
-  // 🔄 שינוי: מאחד: Strapi images + קישורים ישירים + תמונות שנגרטו
   const allImages = useMemo(() => {
     const strapiImages = (images || [])
       .map(img => ({
@@ -96,15 +88,10 @@ export default function Gallery({
       }))
       .filter(img => !!img.src);
 
-    // משתמש בקישורים הישירים שסוננו קודם
     const externalLinks = directLinks.map(url => ({ src: url, alt: '' }));
-
-    // externalMediaImages מגיע מה-useEffect
     const combined = [...strapiImages, ...externalLinks, ...externalMediaImages];
-
-    // הסרת כפילויות
     return combined.filter((img, i, arr) => img.src && arr.findIndex(x => x.src === img.src) === i);
-  }, [images, directLinks, externalMediaImages]); // תלויות מעודכנות
+  }, [images, directLinks, externalMediaImages]);
 
   if (loading) {
     return <div className="text-center text-gray-500 py-8">טוען את הגלריה...</div>;
@@ -124,7 +111,6 @@ export default function Gallery({
     return `${PUBLIC_API_URL}${s.startsWith('/') ? s : `/uploads/${s}`}`;
   };
 
-  // Fallback inline SVG במקום default-image.jpg כדי להימנע מ-403 על קובץ חסר
   const setInlineFallback = (e) => {
     e.currentTarget.onerror = null;
     e.currentTarget.src = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
@@ -145,8 +131,9 @@ export default function Gallery({
           key={current}
           src={getImageUrl(allImages[current].src)}
           alt={allImages[current].alt || `תמונה ${current + 1}`}
-          referrerPolicy="no-referrer"
-          crossOrigin="anonymous"
+          // ❌ הורדו שורות אלו - הן גרמו לחסימה על ידי השרת של KTM
+          // referrerPolicy="no-referrer"
+          // crossOrigin="anonymous"
           loading="eager"
           className="w-full h-full object-cover transition-opacity duration-500"
           onError={setInlineFallback}
@@ -154,7 +141,7 @@ export default function Gallery({
         <button
           onClick={prev}
           className="absolute top-1/2 left-4 -translate-y-1/2 text-white bg-black/40 hover:bg-black/60 text-3xl px-3 py-1 rounded-full transition"
-T      >
+        >
           ◀
         </button>
         <button
@@ -172,8 +159,9 @@ T      >
             key={i}
             src={getImageUrl(img.src)}
             alt={img.alt || `תמונה ${i + 1}`}
-            referrerPolicy="no-referrer"
-            crossOrigin="anonymous"
+            // ❌ הורדו שורות אלו גם כאן
+            // referrerPolicy="no-referrer"
+            // crossOrigin="anonymous"
             loading="lazy"
             className={`w-20 h-16 object-cover rounded cursor-pointer transition ring-offset-2 ${
               i === current ? 'ring-2 ring-blue-500' : ''
