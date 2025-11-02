@@ -1,4 +1,7 @@
 // onmotor-frontend/app/layout.js
+// app/articles/[slug]/page.jsx
+export const dynamic = 'force-static';
+
 import './globals.css';
 import { AuthModalProvider } from '@/contexts/AuthModalProvider';
 import ClientLayout from '@/components/ClientLayout';
