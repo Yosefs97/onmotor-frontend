@@ -93,84 +93,85 @@ export async function generateMetadata({ params }) {
   const SITE_URL = "https://www.onmotormedia.com";
 
   try {
-  	const res = await fetch(
-  	  // ========= ⬇️ התיקון המרכזי כאן ⬇️ =========
-  	  // חזרנו ל-populate המקורי שלך.
-  	  // 'headline' לא צריך להיות פה, אבל 'external_media_links' כן.
-  	  `${API_URL}/api/articles?filters[slug][$eq]=${params.slug}&populate=image,gallery,external_media_links`,
-  	  { cache: "no-store" }
-  	);
-    
-    // בדיקה אם ה-API החזיר שגיאה
+    // אנו משתמשים ב-populate הבטוח שמצאת (הוא כולל external_media_links)
+    const res = await fetch(
+      `${API_URL}/api/articles?filters[slug][$eq]=${params.slug}&populate=tags,image,gallery,external_media_links`,
+      { cache: "no-store" }
+    );
+
     if (!res.ok) {
       throw new Error(`API fetch failed with status ${res.status}`);
     }
 
-  	const json = await res.json();
-  	const article = json.data?.[0]?.attributes; 
+    const json = await res.json();
+    
+    //  ========= ⬇️ התיקון הקריטי כאן ⬇️ =========
+    //  הסרנו את .attributes כדי להתאים לפונקציה ArticlePage
+    //  שנינו מניחים שה-API מחזיר מידע "שטוח"
+    const article = json.data?.[0]; 
 
-  	if (!article) {
-  	  // אם אין כתבה, חוזרים לברירת המחדל מה-layout
-  	  return {}; 
-  	}
+    if (!article) {
+      return {}; // חזרה לברירת מחדל
+    }
 
-  	const title = article.title || "OnMotor Media";
-  	
-  	// ========= ⬇️ הלוגיקה שביקשת (תיאור) ⬇️ =========
-    // עכשיו 'article.headline' יהיה זמין כי הוא שדה טקסט רגיל
-  	const description =
-  	  article.headline ||
-  	  article.description ||
-  	  article.subdescription ||
-  	  "כתבה מתוך מגזין OnMotor Media";
+    const title = article.title || "OnMotor Media";
+    
+    // עכשיו זה יעבוד, כי article הוא האובייקט הנכון
+    const description =
+      article.headline ||
+      article.description ||
+      article.subdescription ||
+      "כתבה מתוך מגזין OnMotor Media";
 
-  	let imageUrl = "https://www.onmotormedia.com/full_Logo.jpg";
-  	
-  	// ========= ⬇️ הלוגיקה שביקשת (תמונה) ⬇️ =========
-    // עכשיו 'article.external_media_links' יהיה זמין כי הוא ב-populate
-  	if (
-  	  Array.isArray(article.external_media_links) &&
-  	  article.external_media_links.length > 1 &&
-  	  article.external_media_links[1]?.startsWith("http")
-  	) {
-  	  imageUrl = article.external_media_links[1].trim();
-  	} else if (article.image?.data?.attributes?.url) {
-  	  imageUrl = `${API_URL}${article.image.data.attributes.url}`;
-  	}
+    let imageUrl = "https://www.onmotormedia.com/full_Logo.jpg";
+    
+    // וגם זה יעבוד
+    if (
+      Array.isArray(article.external_media_links) &&
+      article.external_media_links.length > 1 &&
+      article.external_media_links[1]?.startsWith("http")
+    ) {
+      imageUrl = article.external_media_links[1].trim();
+    } else if (article.image?.data?.attributes?.url) {
+      // מקרה חריג - אם שדה התמונה *כן* מקונן (לפי populate=*)
+      imageUrl = `${API_URL}${article.image.data.attributes.url}`;
+    } else if (article.image?.url) {
+      // אם שדה התמונה שטוח כמו השאר
+      imageUrl = resolveImageUrl(article.image.url);
+    }
 
-  	return {
-  	  title: `${title} | OnMotor Media`,
-  	  description,
-  	  alternates: { canonical: `${SITE_URL}/articles/${params.slug}` },
-  	  openGraph: {
-  	    title,
-  	    description,
-  	    type: "article",
-  	    locale: "he_IL",
-  	    url: `${SITE_URL}/articles/${params.slug}`,
-  	    siteName: "OnMotor Media",
-  	    images: [
-  	  	  {
-  	  	    url: imageUrl,
-  	  	    width: 1200,
-  	  	    height: 630,
-  	  	    alt: title,
-  	  	  },
-  	    ],
-  	  },
-  	  twitter: {
-  	    card: "summary_large_image",
-  	    title,
-  	    description,
-  	    images: [imageUrl],
-  	  },
-  	};
+    return {
+      title: `${title} | OnMotor Media`,
+      description,
+      alternates: { canonical: `${SITE_URL}/articles/${params.slug}` },
+      openGraph: {
+        title,
+        description,
+        type: "article",
+        locale: "he_IL",
+        url: `${SITE_URL}/articles/${params.slug}`,
+        siteName: "OnMotor Media",
+        images: [
+          {
+            url: imageUrl,
+            width: 1200,
+            height: 630,
+            alt: title,
+          },
+        ],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+        images: [imageUrl],
+      },
+    };
   } catch (err) {
-  	console.error("⚠️ Metadata generation error:", err);
-  	return {}; // במקרה של שגיאה, חזור לברירת המחדל מה-layout
+    console.error("⚠️ Metadata generation error:", err);
+    return {}; // במקרה של שגיאה, חזור לברירת המחדל מה-layout
   }
 }
-
 // ===================================================================
 //      הפונקציה הראשית של הדף - חזרה לקוד המקורי שלך
 // ===================================================================
