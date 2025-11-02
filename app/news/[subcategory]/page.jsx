@@ -7,7 +7,7 @@ import CategoryPage from '@/components/CategoryPage';
 const labelMap = {
   local: 'חדשות מקומיות',
   global: 'חדשות מהעולם',
-  mechine: 'מכונות חדשות',
+  machine: 'מכונות חדשות',
 };
 
 export default async function NewsSubcategoryPage({ params }) {
