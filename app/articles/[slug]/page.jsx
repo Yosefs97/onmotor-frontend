@@ -95,11 +95,16 @@ export async function generateMetadata({ params }) {
   try {
   	const res = await fetch(
   	  // ========= ⬇️ התיקון המרכזי כאן ⬇️ =========
-  	  // השארנו רק שדות מדיה. הסרנו את headline ו-external_media_links
-  	  // כי הם שדות רגילים שמגיעים אוטומטית ב-attributes.
-  	  `${API_URL}/api/articles?filters[slug][$eq]=${params.slug}&populate=image,gallery`,
+  	  // חזרנו ל-populate המקורי שלך.
+  	  // 'headline' לא צריך להיות פה, אבל 'external_media_links' כן.
+  	  `${API_URL}/api/articles?filters[slug][$eq]=${params.slug}&populate=image,gallery,external_media_links`,
   	  { cache: "no-store" }
   	);
+    
+    // בדיקה אם ה-API החזיר שגיאה
+    if (!res.ok) {
+      throw new Error(`API fetch failed with status ${res.status}`);
+    }
 
   	const json = await res.json();
   	const article = json.data?.[0]?.attributes; 
@@ -111,8 +116,8 @@ export async function generateMetadata({ params }) {
 
   	const title = article.title || "OnMotor Media";
   	
-  	// ========= ⬇️ הלוגיקה שביקשת ⬇️ =========
-  	// נותנים עדיפות ל-headline כפי שביקשת
+  	// ========= ⬇️ הלוגיקה שביקשת (תיאור) ⬇️ =========
+    // עכשיו 'article.headline' יהיה זמין כי הוא שדה טקסט רגיל
   	const description =
   	  article.headline ||
   	  article.description ||
@@ -120,8 +125,9 @@ export async function generateMetadata({ params }) {
   	  "כתבה מתוך מגזין OnMotor Media";
 
   	let imageUrl = "https://www.onmotormedia.com/full_Logo.jpg";
-    
-    // ========= ⬇️ הלוגיקה שביקשת לתמונה ⬇️ =========
+  	
+  	// ========= ⬇️ הלוגיקה שביקשת (תמונה) ⬇️ =========
+    // עכשיו 'article.external_media_links' יהיה זמין כי הוא ב-populate
   	if (
   	  Array.isArray(article.external_media_links) &&
   	  article.external_media_links.length > 1 &&
