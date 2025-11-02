@@ -117,10 +117,17 @@ export async function generateMetadata({ params }) {
               url: "https://www.onmotormedia.com/full_Logo.jpg",
               width: 1200,
               height: 630,
-              alt: "OnMotor Media",
+              alt: "OnMotor Media Logo",
             },
           ],
         },
+        twitter: {
+          card: "summary_large_image",
+          title: "OnMotor Media",
+          description: "מגזין הרוכבים של ישראל – חדשות, סקירות, מדריכים וקהילה",
+          images: ["https://www.onmotormedia.com/full_Logo.jpg"],
+        },
+        alternates: { canonical: SITE_URL },
       };
     }
 
@@ -144,7 +151,6 @@ export async function generateMetadata({ params }) {
     return {
       title: `${title} | OnMotor Media`,
       description,
-      alternates: { canonical: `${SITE_URL}/articles/${params.slug}` },
       openGraph: {
         title,
         description,
@@ -157,7 +163,7 @@ export async function generateMetadata({ params }) {
             url: imageUrl,
             width: 1200,
             height: 630,
-            alt: title,
+            alt: `${title} - OnMotor Media`,
           },
         ],
       },
@@ -167,12 +173,16 @@ export async function generateMetadata({ params }) {
         description,
         images: [imageUrl],
       },
+      alternates: {
+        canonical: `${SITE_URL}/articles/${params.slug}`,
+      },
     };
   } catch (err) {
     console.error("⚠️ Metadata generation error:", err);
     return { title: "OnMotor Media" };
   }
 }
+
 
 
 export default async function ArticlePage({ params }) {
@@ -300,21 +310,7 @@ export default async function ArticlePage({ params }) {
 
   return (
     <PageContainer title={article.title} breadcrumbs={breadcrumbs}>
-      {/* ✅ הוספת Head עם מטא מוחשי */}
-      <Head>
-        <title>{metaTitle}</title>
-        <meta property="og:title" content={metaTitle} />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:image" content={metaImage} />
-        <meta property="og:url" content={metaUrl} />
-        <meta property="og:type" content="article" />
-        <meta property="og:site_name" content="OnMotor Media" />
-        <link rel="canonical" href={metaUrl} />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={metaTitle} />
-        <meta name="twitter:description" content={metaDescription} />
-        <meta name="twitter:image" content={metaImage} />
-      </Head>
+      
 
       <div
         className="mx-auto max-w-[740px] space-y-2 text-right leading-relaxed text-base text-gray-800 px-2"
