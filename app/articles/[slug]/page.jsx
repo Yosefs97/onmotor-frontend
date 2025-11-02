@@ -102,7 +102,7 @@ export async function generateMetadata({ params }) {
     );
 
     const json = await res.json();
-    const article = json.data?.[0]?.attributes;
+    const article = json.data?.[0];
 
     if (!article) {
       return {
