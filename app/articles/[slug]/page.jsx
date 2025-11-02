@@ -1,5 +1,7 @@
 // app/articles/[slug]/page.jsx
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
+export const revalidate = 0;
+
 
 import PageContainer from "@/components/PageContainer";
 import ArticleHeader from "@/components/ArticleHeader";
@@ -307,6 +309,7 @@ export default async function ArticlePage({ params }) {
         <meta property="og:url" content={metaUrl} />
         <meta property="og:type" content="article" />
         <meta property="og:site_name" content="OnMotor Media" />
+        <link rel="canonical" href={metaUrl} />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={metaTitle} />
         <meta name="twitter:description" content={metaDescription} />
