@@ -12,6 +12,8 @@ import Gallery from "@/components/Gallery";
 import { labelMap } from "@/utils/labelMap";
 import InlineImage from "@/components/InlineImage";
 import EmbedContent from "@/components/EmbedContent";
+import { generateArticleMetadata } from "@/utils/generateArticleMetadata";
+
 
 const API_URL = process.env.STRAPI_API_URL;
 const PUBLIC_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || API_URL;
@@ -85,6 +87,11 @@ function toHtmlFromStrapiChildren(children) {
     return '';
   }).join('');
 }
+
+export async function generateMetadata({ params }) {
+  return generateArticleMetadata(params);
+}
+
 
 export default async function ArticlePage({ params }) {
   const res = await fetch(
