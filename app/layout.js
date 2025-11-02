@@ -6,14 +6,13 @@ import ScrollToTopButton from '@/components/ScrollToTopButton';
 import Script from 'next/script';
 import { Heebo } from 'next/font/google';
 
-// הגדרת הפונט לפי הכללים של Next.js
 const heebo = Heebo({
   subsets: ['hebrew', 'latin'],
   weight: ['400', '500', '700'],
   display: 'swap',
 });
 
-// 🧩 מידע שמסייע לגוגל להציג את הלוגו שלך
+// ✅ מטא כללי בלבד (לא כולל Open Graph!)
 export const metadata = {
   title: 'OnMotor Media',
   description: 'מגזין הרוכבים של ישראל – חדשות, סקירות, מדריכים וקהילה',
@@ -22,29 +21,13 @@ export const metadata = {
     shortcut: '/OnMotorLogonoback.png',
     apple: '/OnMotorLogonoback.png',
   },
-  openGraph: {
-    title: 'OnMotor Media',
-    description: 'מגזין הרוכבים של ישראל',
-    url: 'https://www.onmotormedia.com',
-    siteName: 'OnMotor Media',
-    images: [
-      {
-        url: 'https://www.onmotormedia.com/OnMotorLogonoback.png',
-        width: 800,
-        height: 800,
-        alt: 'OnMotor Media Logo',
-      },
-    ],
-    locale: 'he_IL',
-    type: 'website',
-  },
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="he" dir="rtl" className={heebo.className}>
       <head>
-        {/* 🧠 Structured Data - עוזר לגוגל לזהות את הלוגו שלך */}
+        {/* Structured Data - עוזר לגוגל לזהות את הלוגו שלך */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
