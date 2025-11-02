@@ -1,3 +1,4 @@
+// onmotor-frontend/app/layout.js
 import './globals.css';
 import { AuthModalProvider } from '@/contexts/AuthModalProvider';
 import ClientLayout from '@/components/ClientLayout';
@@ -11,23 +12,7 @@ const heebo = Heebo({
   display: 'swap',
 });
 
-// ✅ מטא ברירת מחדל בלבד — בלי Open Graph!
-export const metadata = {
-  metadataBase: new URL('https://www.onmotormedia.com'),
-  title: {
-    default: 'OnMotor Media',
-    template: '%s | OnMotor Media',
-  },
-  description: 'מגזין הרוכבים של ישראל – חדשות, סקירות, מדריכים וקהילה',
-  icons: {
-    icon: '/OnMotorLogonoback.png',
-    shortcut: '/OnMotorLogonoback.png',
-    apple: '/OnMotorLogonoback.png',
-  },
-  alternates: {
-    canonical: '/',
-  },
-};
+// ⚠️ הוסר ה־export const metadata כדי לא לדרוס את מטא של הכתבות!
 
 export default function RootLayout({ children }) {
   return (
