@@ -93,62 +93,56 @@ export async function generateMetadata({ params }) {
   const SITE_URL = "https://www.onmotormedia.com";
 
   try {
+    // =================================
+    // 1. נסיון שליפת המידע
+    // =================================
     const res = await fetch(
-      //  ========= ⬇️ תיקון #1 ⬇️ =========
-      // הוספנו 'headline' לרשימת ה-populate
       `${API_URL}/api/articles?filters[slug][$eq]=${params.slug}&populate=image,gallery,external_media_links,headline`,
       { cache: "no-store" }
     );
 
-    const json = await res.json();
-    
-    //  ========= ⬇️ התיקון הקריטי ⬇️ =========
-    // החזרנו את .attributes למקומו. זה היה חסר וגרם לקריסה
-    const article = json.data?.[0]?.attributes;
+    if (!res.ok) {
+      throw new Error(`API fetch failed with status ${res.status}`);
+  	}
 
-    if (!article) {
-      return {
-        title: "OnMotor Media",
-        description: "מגזין הרוכבים של ישראל – חדשות, סקירות, מדריכים וקהילה",
-        openGraph: {
-          title: "OnMotor Media",
-          description: "מגזין הרוכבים של ישראל – חדשות, סקירות, מדריכים וקהילה",
-          url: SITE_URL,
-          siteName: "OnMotor Media",
-          images: [
-            {
-              url: "https://www.onmotormedia.com/full_Logo.jpg",
-              width: 1200,
-              height: 630,
-              alt: "OnMotor Media",
-            },
-          ],
-        },
-      };
-    }
+  	const json = await res.json();
+  	
+  	// =================================
+    // 2. נסיון חילוץ המידע
+    // =================================
+    const article = json.data?.[0]?.attributes; 
 
-    const title = article.title || "OnMotor Media";
-    
-    //  ========= ⬇️ תיקון #2 ⬇️ =========
-    // נתנו עדיפות ל-headline כפי שביקשת
-    const description =
-      article.headline ||
-      article.description ||
-      article.subdescription ||
-      "כתבה מתוך מגזין OnMotor Media";
+  	if (!article) {
+  	  // זו לא קריסה, זו פשוט כתבה שלא קיימת
+      throw new Error(`Article not found for slug: ${params.slug}. (json.data[0] was empty)`);
+  	}
 
-    let imageUrl = "https://www.onmotormedia.com/full_Logo.jpg";
-    // הלוגיקה המקורית שלך לתמונה (שכבר הייתה נכונה)
-    if (
-      Array.isArray(article.external_media_links) &&
-      article.external_media_links.length > 1 &&
-      article.external_media_links[1].startsWith("http")
-    ) {
-      imageUrl = article.external_media_links[1].trim();
+  	// =================================
+    // 3. נסיון בניית המטא-דאטה
+    // =================================
+  	const title = article.title || "OnMotor Media";
+  	
+  	const description =
+  	  article.headline ||
+  	  article.description ||
+  	  article.subdescription ||
+  	  "כתבה מתוך מגזין OnMotor Media";
+
+  	let imageUrl = "https://www.onmotormedia.com/full_Logo.jpg";
+  	
+  	if (
+  	  Array.isArray(article.external_media_links) &&
+  	  article.external_media_links.length > 1 &&
+  	  article.external_media_links[1]?.startsWith("http") // וידוא בטיחותי
+  	) {
+  	  imageUrl = article.external_media_links[1].trim();
   	} else if (article.image?.data?.attributes?.url) {
   	  imageUrl = `${API_URL}${article.image.data.attributes.url}`;
   	}
 
+  	// =================================
+    // 4. הצלחה! החזרת המידע הנכון
+    // =================================
   	return {
   	  title: `${title} | OnMotor Media`,
   	  description,
@@ -176,12 +170,33 @@ export async function generateMetadata({ params }) {
   	    images: [imageUrl],
   	  },
   	};
+
   } catch (err) {
-  	console.error("⚠️ Metadata generation error:", err);
-  	return { title: "OnMotor Media" };
+  	// =================================
+    // 5. נכשל! החזרת הודעת השגיאה
+    // =================================
+  	console.error("⚠️ Metadata generation error (DEBUG MODE):", err);
+  	
+  	const errorMessage = err.message || "An unknown error occurred";
+  	
+  	return {
+  	  title: "Error in generateMetadata", // יופיע בכותרת הדפדפן
+  	  description: errorMessage, 
+  	  openGraph: {
+  	    title: "SERVER ERROR", // זה יופיע ב-og:title
+  	    description: `Debug Info: ${errorMessage.substring(0, 200)}`, // זה יופיע ב-og:description
+  	    images: [
+  	  	  { 
+  	  	    url: "https://www.onmotormedia.com/full_Logo.jpg", // לוגו ברירת מחדל
+  	  	    width: 1200,
+  	  	    height: 630,
+  	  	    alt: "Error"
+  	  	  }
+  	    ]
+  	  },
+  	};
   }
 }
-
 
 // ===================================================================
 //      הפונקציה הראשית של הדף - חזרה לקוד המקורי שלך
