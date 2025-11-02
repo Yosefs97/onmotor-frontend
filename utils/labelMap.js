@@ -1,4 +1,3 @@
-import { m } from "framer-motion/dist/types.d-DsEeKk6G";
 
 const labelMap = {
   news: 'חדשות',
