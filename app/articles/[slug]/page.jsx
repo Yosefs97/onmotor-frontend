@@ -93,21 +93,22 @@ export async function generateMetadata({ params }) {
   const SITE_URL = "https://www.onmotormedia.com";
 
   try {
-    // אנו משתמשים ב-populate הבטוח שמצאת (הוא כולל external_media_links)
+    // ========= ⬇️ התיקון הגדול כאן ⬇️ =========
+    // אנו משתמשים ב-populate=* בדיוק כמו בפונקציה ArticlePage
+    // כדי להבטיח שאנו מקבלים את אותו מבנה נתונים "שטוח"
     const res = await fetch(
-      `${API_URL}/api/articles?filters[slug][$eq]=${params.slug}&populate=tags,image,gallery,external_media_links`,
+      `${API_URL}/api/articles?filters[slug][$eq]=${params.slug}&populate=*`,
       { cache: "no-store" }
     );
 
-    if (!res.ok) {
-      throw new Error(`API fetch failed with status ${res.status}`);
-    }
+    if (!res.ok) {
+      throw new Error(`API fetch failed with status ${res.status}`);
+    }
 
     const json = await res.json();
     
-    //  ========= ⬇️ התיקון הקריטי כאן ⬇️ =========
-    //  הסרנו את .attributes כדי להתאים לפונקציה ArticlePage
-    //  שנינו מניחים שה-API מחזיר מידע "שטוח"
+    //  ========= ⬇️ התיקון השני ⬇️ =========
+    //  הסרנו את .attributes כדי להתאים למבנה ה"שטוח"
     const article = json.data?.[0]; 
 
     if (!article) {
@@ -116,7 +117,7 @@ export async function generateMetadata({ params }) {
 
     const title = article.title || "OnMotor Media";
     
-    // עכשיו זה יעבוד, כי article הוא האובייקט הנכון
+    // ========= ⬇️ הלוגיקה שביקשת (תיאור) ⬇️ =========
     const description =
       article.headline ||
       article.description ||
@@ -125,7 +126,7 @@ export async function generateMetadata({ params }) {
 
     let imageUrl = "https://www.onmotormedia.com/full_Logo.jpg";
     
-    // וגם זה יעבוד
+    // ========= ⬇️ הלוגיקה שביקשת (תמונה) ⬇️ =========
     if (
       Array.isArray(article.external_media_links) &&
       article.external_media_links.length > 1 &&
@@ -133,10 +134,10 @@ export async function generateMetadata({ params }) {
     ) {
       imageUrl = article.external_media_links[1].trim();
     } else if (article.image?.data?.attributes?.url) {
-      // מקרה חריג - אם שדה התמונה *כן* מקונן (לפי populate=*)
+      // הלוגיקה המקורית שלך ל-populate=* הניחה מבנה מקונן לתמונה
       imageUrl = `${API_URL}${article.image.data.attributes.url}`;
     } else if (article.image?.url) {
-      // אם שדה התמונה שטוח כמו השאר
+      // למקרה שהתמונה גם "שטוחה"
       imageUrl = resolveImageUrl(article.image.url);
     }
 
