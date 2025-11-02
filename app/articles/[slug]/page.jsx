@@ -93,35 +93,26 @@ export async function generateMetadata({ params }) {
   const SITE_URL = "https://www.onmotormedia.com";
 
   try {
-    // =================================
-    // 1. נסיון שליפת המידע
-    // =================================
-    const res = await fetch(
-      `${API_URL}/api/articles?filters[slug][$eq]=${params.slug}&populate=image,gallery,external_media_links,headline`,
-      { cache: "no-store" }
-    );
-
-    if (!res.ok) {
-      throw new Error(`API fetch failed with status ${res.status}`);
-  	}
+  	const res = await fetch(
+  	  // ========= ⬇️ התיקון המרכזי כאן ⬇️ =========
+  	  // השארנו רק שדות מדיה. הסרנו את headline ו-external_media_links
+  	  // כי הם שדות רגילים שמגיעים אוטומטית ב-attributes.
+  	  `${API_URL}/api/articles?filters[slug][$eq]=${params.slug}&populate=image,gallery`,
+  	  { cache: "no-store" }
+  	);
 
   	const json = await res.json();
-  	
-  	// =================================
-    // 2. נסיון חילוץ המידע
-    // =================================
-    const article = json.data?.[0]?.attributes; 
+  	const article = json.data?.[0]?.attributes; 
 
   	if (!article) {
-  	  // זו לא קריסה, זו פשוט כתבה שלא קיימת
-      throw new Error(`Article not found for slug: ${params.slug}. (json.data[0] was empty)`);
+  	  // אם אין כתבה, חוזרים לברירת המחדל מה-layout
+  	  return {}; 
   	}
 
-  	// =================================
-    // 3. נסיון בניית המטא-דאטה
-    // =================================
   	const title = article.title || "OnMotor Media";
   	
+  	// ========= ⬇️ הלוגיקה שביקשת ⬇️ =========
+  	// נותנים עדיפות ל-headline כפי שביקשת
   	const description =
   	  article.headline ||
   	  article.description ||
@@ -129,20 +120,18 @@ export async function generateMetadata({ params }) {
   	  "כתבה מתוך מגזין OnMotor Media";
 
   	let imageUrl = "https://www.onmotormedia.com/full_Logo.jpg";
-  	
+    
+    // ========= ⬇️ הלוגיקה שביקשת לתמונה ⬇️ =========
   	if (
   	  Array.isArray(article.external_media_links) &&
   	  article.external_media_links.length > 1 &&
-  	  article.external_media_links[1]?.startsWith("http") // וידוא בטיחותי
+  	  article.external_media_links[1]?.startsWith("http")
   	) {
   	  imageUrl = article.external_media_links[1].trim();
   	} else if (article.image?.data?.attributes?.url) {
   	  imageUrl = `${API_URL}${article.image.data.attributes.url}`;
   	}
 
-  	// =================================
-    // 4. הצלחה! החזרת המידע הנכון
-    // =================================
   	return {
   	  title: `${title} | OnMotor Media`,
   	  description,
@@ -170,31 +159,9 @@ export async function generateMetadata({ params }) {
   	    images: [imageUrl],
   	  },
   	};
-
   } catch (err) {
-  	// =================================
-    // 5. נכשל! החזרת הודעת השגיאה
-    // =================================
-  	console.error("⚠️ Metadata generation error (DEBUG MODE):", err);
-  	
-  	const errorMessage = err.message || "An unknown error occurred";
-  	
-  	return {
-  	  title: "Error in generateMetadata", // יופיע בכותרת הדפדפן
-  	  description: errorMessage, 
-  	  openGraph: {
-  	    title: "SERVER ERROR", // זה יופיע ב-og:title
-  	    description: `Debug Info: ${errorMessage.substring(0, 200)}`, // זה יופיע ב-og:description
-  	    images: [
-  	  	  { 
-  	  	    url: "https://www.onmotormedia.com/full_Logo.jpg", // לוגו ברירת מחדל
-  	  	    width: 1200,
-  	  	    height: 630,
-  	  	    alt: "Error"
-  	  	  }
-  	    ]
-  	  },
-  	};
+  	console.error("⚠️ Metadata generation error:", err);
+  	return {}; // במקרה של שגיאה, חזור לברירת המחדל מה-layout
   }
 }
 
