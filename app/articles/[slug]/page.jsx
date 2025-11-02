@@ -1,7 +1,5 @@
 // app/articles/[slug]/page.jsx
-export const dynamic = 'force-static';
-export const revalidate = 0;
-
+export const dynamic = 'force-dynamic';
 
 import PageContainer from "@/components/PageContainer";
 import ArticleHeader from "@/components/ArticleHeader";
@@ -14,7 +12,7 @@ import Gallery from "@/components/Gallery";
 import { labelMap } from "@/utils/labelMap";
 import InlineImage from "@/components/InlineImage";
 import EmbedContent from "@/components/EmbedContent";
-import Head from "next/head"; // ✅ נוסף כאן
+
 
 
 const API_URL = process.env.STRAPI_API_URL;
@@ -175,6 +173,7 @@ export async function generateMetadata({ params }) {
 }
 
 
+
 export default async function ArticlePage({ params }) {
   const res = await fetch(
     `${API_URL}/api/articles?filters[slug][$eq]=${params.slug}&populate=*`,
@@ -258,12 +257,6 @@ export default async function ArticlePage({ params }) {
     font_family: data.font_family || "Heebo, sans-serif",
   };
 
-  // ✅ תגיות META ידניות
-  const metaTitle = article.title || "OnMotor Media";
-  const metaDescription = article.description || "מגזין הרוכבים של ישראל";
-  const metaImage = article.image || "https://www.onmotormedia.com/full_Logo.jpg";
-  const metaUrl = `${SITE_URL}/articles/${params.slug}`;
-
   // ✅ פירורי לחם
   const breadcrumbs = [{ label: "דף הבית", href: "/" }];
   if (article.category) {
@@ -287,11 +280,117 @@ export default async function ArticlePage({ params }) {
   }
   breadcrumbs.push({ label: article.title });
 
-  // ✅ רינדור תוכן עיקרי
+  // ✅ רינדור תוכן עיקרי (כולל קישורים, תמונות, Embed)
   const renderParagraph = (block, i) => {
-    // ... (כל הפונקציה שלך כמו שהיא)
-    // (לא נחתך שום דבר כאן)
-    // ...
+    // טקסט רגיל
+    if (typeof block === "string") {
+      const cleanText = fixRelativeImages(block.trim());
+      const hasHTMLTags = /<\/?[a-z][\s\S]*>/i.test(cleanText);
+
+      if (hasHTMLTags) {
+        return (
+          <div
+            key={i}
+            className="article-text text-gray-800 text-[18px] leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: cleanText }}
+          />
+        );
+      }
+
+      const urlMatch = cleanText.match(/https?:\/\/[^\s]+/);
+      if (urlMatch) {
+        const url = urlMatch[0].trim();
+        if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
+          return <InlineImage key={i} src={url} alt="תמונה מתוך הכתבה" caption="" />;
+        }
+        if (
+          /(youtube\.com|youtu\.be|facebook\.com|instagram\.com|tiktok\.com|x\.com|twitter\.com)/i.test(
+            url
+          )
+        ) {
+          return <EmbedContent key={i} url={url} />;
+        }
+        return (
+          <p key={i} className="article-text text-blue-600 underline">
+            <a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
+          </p>
+        );
+      }
+
+      return (
+        <p
+          key={i}
+          className="article-text text-gray-800 text-[18px] leading-relaxed"
+          dangerouslySetInnerHTML={{ __html: cleanText.replace(/\n/g, "<br/>") }}
+        />
+      );
+    }
+
+    // בלוק מסוג פסקה (Rich Text מ-Strapi)
+    if (block.type === "paragraph" && block.children) {
+      let html = toHtmlFromStrapiChildren(block.children);
+      html = fixRelativeImages(html);
+
+      const urlMatch = html.match(/https?:\/\/[^\s"']+/);
+      if (urlMatch) {
+        const url = urlMatch[0];
+        if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
+          return <InlineImage key={i} src={url} alt="תמונה" caption="" />;
+        }
+        if (
+          /(youtube\.com|youtu\.be|facebook\.com|instagram\.com|tiktok\.com|x\.com|twitter\.com)/i.test(
+            url
+          )
+        ) {
+          return <EmbedContent key={i} url={url} />;
+        }
+      }
+
+      return (
+        <p
+          key={i}
+          className="article-text text-gray-800 text-[18px] leading-relaxed"
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+      );
+    }
+
+    // כותרות
+    if (block.type === "heading") {
+      const level = block.level || 2;
+      const Tag = `h${Math.min(level, 3)}`;
+      const text = block.children?.map((c) => c.text).join("") || "";
+      return (
+        <Tag
+          key={i}
+          className="font-bold text-2xl text-gray-900 mt-4 mb-2"
+          dangerouslySetInnerHTML={{ __html: fixRelativeImages(text) }}
+        />
+      );
+    }
+
+    // תמונה מתוך בלוק Strapi
+    if (block.type === "image") {
+      const imageData =
+        block.image?.data?.attributes || block.image?.attributes || block.image;
+      if (!imageData?.url) return null;
+      const alt = imageData.alternativeText || "תמונה מתוך הכתבה";
+      const caption = imageData.caption || "";
+      return (
+        <InlineImage
+          key={i}
+          src={
+            imageData.url.startsWith("http")
+              ? imageData.url
+              : `${PUBLIC_API_URL}${imageData.url}`
+          }
+          alt={alt}
+          caption={caption}
+        />
+      );
+    }
+
+    return null;
   };
 
   const paragraphs = Array.isArray(article.content)
@@ -300,22 +399,6 @@ export default async function ArticlePage({ params }) {
 
   return (
     <PageContainer title={article.title} breadcrumbs={breadcrumbs}>
-      {/* ✅ הוספת Head עם מטא מוחשי */}
-      <Head>
-        <title>{metaTitle}</title>
-        <meta property="og:title" content={metaTitle} />
-        <meta property="og:description" content={metaDescription} />
-        <meta property="og:image" content={metaImage} />
-        <meta property="og:url" content={metaUrl} />
-        <meta property="og:type" content="article" />
-        <meta property="og:site_name" content="OnMotor Media" />
-        <link rel="canonical" href={metaUrl} />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={metaTitle} />
-        <meta name="twitter:description" content={metaDescription} />
-        <meta name="twitter:image" content={metaImage} />
-      </Head>
-
       <div
         className="mx-auto max-w-[740px] space-y-2 text-right leading-relaxed text-base text-gray-800 px-2"
         style={{ fontFamily: article.font_family }}
