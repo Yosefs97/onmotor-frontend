@@ -197,7 +197,7 @@ export default async function ArticlePage({ params }) {
   // זה תואם למה ש-generateMetadata עושה (json.data?.[0]?.attributes)
   // אם הקוד שלך עובד כמו שהוא, אתה יכול להשאיר את זה כ-data.
   // אם יש שגיאות, נסה להחליף את 'data.' ב-'data.attributes.'
-  const data = rawArticle.attributes; // <-- ודא שזה המבנה הנכון
+  const data = rawArticle; // <-- ודא שזה המבנה הנכון
 
   // ✅ טיפול בגלריה (תמונות מקומיות)
   const galleryItems = data.gallery?.data
