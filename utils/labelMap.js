@@ -1,3 +1,5 @@
+import { m } from "framer-motion/dist/types.d-DsEeKk6G";
+
 const labelMap = {
   news: 'חדשות',
   reviews: 'סקירות',
@@ -6,6 +8,7 @@ const labelMap = {
   tips: 'טיפים',
   local: 'חדשות מקומיות',
   global: 'חדשות מהעולם',
+  mechine: 'מכונות חדשות',
   podcast: 'אחד על אחד (פודקאסט)',
   'in-helmet': 'בקסדה',
   paper: 'על הנייר',

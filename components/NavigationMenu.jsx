@@ -69,6 +69,7 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
       title: 'חדשות', path: '/news', links: [
         { title: 'חדשות מקומיות', path: '/news/local' },
         { title: 'חדשות מהעולם', path: '/news/global' },
+        { title: 'מכונות חדשות', path: '/news/mechine' },
       ]
     },
     {
