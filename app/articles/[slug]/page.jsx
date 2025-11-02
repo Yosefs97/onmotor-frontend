@@ -94,15 +94,17 @@ export async function generateMetadata({ params }) {
 
   try {
     const res = await fetch(
-      //  ========= ⬇️ תיקון #1 ⬇️ =========
-      // הוספנו 'headline' לרשימת ה-populate
+      //  ========= ⬇️ תיקון #1 ⬇️ =========
+      // הוספנו 'headline' לרשימת ה-populate
       `${API_URL}/api/articles?filters[slug][$eq]=${params.slug}&populate=image,gallery,external_media_links,headline`,
-      //  ========= ⬆️ תיקון #1 ⬆️ =========
       { cache: "no-store" }
     );
 
     const json = await res.json();
-    const article = json.data?.[0];
+    
+    //  ========= ⬇️ התיקון הקריטי ⬇️ =========
+    // החזרנו את .attributes למקומו. זה היה חסר וגרם לקריסה
+    const article = json.data?.[0]?.attributes;
 
     if (!article) {
       return {
@@ -126,62 +128,64 @@ export async function generateMetadata({ params }) {
     }
 
     const title = article.title || "OnMotor Media";
-    
-    //  ========= ⬇️ תיקון #2 ⬇️ =========
-    // נתנו עדיפות ל-headline עבור התיאור
+    
+    //  ========= ⬇️ תיקון #2 ⬇️ =========
+    // נתנו עדיפות ל-headline כפי שביקשת
     const description =
       article.headline ||
       article.description ||
       article.subdescription ||
       "כתבה מתוך מגזין OnMotor Media";
-    //  ========= ⬆️ תיקון #2 ⬆️ =========
 
     let imageUrl = "https://www.onmotormedia.com/full_Logo.jpg";
-    // הלוגיקה הקיימת שלך לבחירת התמונה מהמקום השני במערך נשארת
+    // הלוגיקה המקורית שלך לתמונה (שכבר הייתה נכונה)
     if (
       Array.isArray(article.external_media_links) &&
       article.external_media_links.length > 1 &&
       article.external_media_links[1].startsWith("http")
     ) {
       imageUrl = article.external_media_links[1].trim();
-    } else if (article.image?.data?.attributes?.url) {
-      imageUrl = `${API_URL}${article.image.data.attributes.url}`;
-    }
+  	} else if (article.image?.data?.attributes?.url) {
+  	  imageUrl = `${API_URL}${article.image.data.attributes.url}`;
+  	}
 
-    return {
-      title: `${title} | OnMotor Media`,
-      description,
-      alternates: { canonical: `${SITE_URL}/articles/${params.slug}` },
-      openGraph: {
-        title,
-        description,
-        type: "article",
-        locale: "he_IL",
-        url: `${SITE_URL}/articles/${params.slug}`,
-        siteName: "OnMotor Media",
-        images: [
-          {
-            url: imageUrl,
-            width: 1200,
-            height: 630,
-            alt: title,
-          },
-        ],
-      },
-      twitter: {
-        card: "summary_large_image",
-        title,
-        description,
-        images: [imageUrl],
-      },
-    };
+  	return {
+  	  title: `${title} | OnMotor Media`,
+  	  description,
+  	  alternates: { canonical: `${SITE_URL}/articles/${params.slug}` },
+  	  openGraph: {
+  	    title,
+  	    description,
+  	    type: "article",
+  	    locale: "he_IL",
+  	    url: `${SITE_URL}/articles/${params.slug}`,
+  	    siteName: "OnMotor Media",
+  	    images: [
+  	  	  {
+  	  	    url: imageUrl,
+  	  	    width: 1200,
+  	  	    height: 630,
+  	  	    alt: title,
+  	  	  },
+  	    ],
+  	  },
+  	  twitter: {
+  	    card: "summary_large_image",
+  	    title,
+  	    description,
+  	    images: [imageUrl],
+  	  },
+  	};
   } catch (err) {
-    console.error("⚠️ Metadata generation error:", err);
-    return { title: "OnMotor Media" };
+  	console.error("⚠️ Metadata generation error:", err);
+  	return { title: "OnMotor Media" };
   }
 }
 
 
+// ===================================================================
+//      הפונקציה הראשית של הדף - חזרה לקוד המקורי שלך
+// ===================================================================
 
 export default async function ArticlePage({ params }) {
   const res = await fetch(
@@ -193,11 +197,7 @@ export default async function ArticlePage({ params }) {
   const rawArticle = json.data?.[0];
   if (!rawArticle) return notFound();
 
-  // ⚠️ הערה: השתמשתי ב-rawArticle.attributes כדי לגשת לשדות
-  // זה תואם למה ש-generateMetadata עושה (json.data?.[0]?.attributes)
-  // אם הקוד שלך עובד כמו שהוא, אתה יכול להשאיר את זה כ-data.
-  // אם יש שגיאות, נסה להחליף את 'data.' ב-'data.attributes.'
-  const data = rawArticle; // <-- ודא שזה המבנה הנכון
+  const data = rawArticle; // <-- חזרנו לקוד המקורי שלך (ללא .attributes)
 
   // ✅ טיפול בגלריה (תמונות מקומיות)
   const galleryItems = data.gallery?.data
@@ -223,12 +223,13 @@ export default async function ArticlePage({ params }) {
   let mainImage = PLACEHOLDER_IMG;
   let mainImageAlt = "תמונה ראשית";
 
+  // חזרה ללוגיקת התמונה המקורית שלך
   if (galleryItems?.length > 0 && galleryItems[0]?.url) {
     mainImage = resolveImageUrl(galleryItems[0].url);
     mainImageAlt = galleryItems[0].alternativeText || "תמונה ראשית";
-  } else if (data.image?.url) { // ⚠️ ודא שזה data.image.url ולא data.image.data.attributes.url
-    mainImage = resolveImageUrl(data.image.url);
-    mainImageAlt = data.image.alternativeText || "תמונה ראשית";
+  } else if (data.image?.data?.attributes?.url) { // התאמה למבנה של populate=*
+    mainImage = resolveImageUrl(data.image.data.attributes.url);
+    mainImageAlt = data.image.data.attributes.alternativeText || "תמונה ראשית";
   } else if (
     Array.isArray(data.external_media_links) &&
     data.external_media_links.length > 1 &&
@@ -267,7 +268,7 @@ export default async function ArticlePage({ params }) {
     externalImageUrls,
     externalMediaUrl,
     external_media_links: data.external_media_links || [],
-    font_family: data.font_family || "Heebo, sans-serif",
+  	font_family: data.font_family || "Heebo, sans-serif",
   };
 
   // ✅ פירורי לחם
@@ -298,45 +299,45 @@ export default async function ArticlePage({ params }) {
     // טקסט רגיל
     if (typeof block === "string") {
       const cleanText = fixRelativeImages(block.trim());
-      const hasHTMLTags = /<\/?[a-z][\s\S]*>/i.test(cleanText);
+  	  const hasHTMLTags = /<\/?[a-z][\s\S]*>/i.test(cleanText);
 
-      if (hasHTMLTags) {
-        return (
-          <div
-            key={i}
-            className="article-text text-gray-800 text-[18px] leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: cleanText }}
-          />
-        );
-      }
+  	  if (hasHTMLTags) {
+  	    return (
+  	  	  <div
+  	  	    key={i}
+  	  	    className="article-text text-gray-800 text-[18px] leading-relaxed"
+  	  	    dangerouslySetInnerHTML={{ __html: cleanText }}
+  	  	  />
+  	    );
+  	  }
 
-      const urlMatch = cleanText.match(/https?:\/\/[^\s]+/);
-      if (urlMatch) {
-        const url = urlMatch[0].trim();
-        if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
-          return <InlineImage key={i} src={url} alt="תמונה מתוך הכתבה" caption="" />;
-        }
-        if (
-          /(youtube\.com|youtu\.be|facebook\.com|instagram\.com|tiktok\.com|x\.com|twitter\.com)/i.test(
-            url
-          )
-        ) {
-          return <EmbedContent key={i} url={url} />;
-        }
-        return (
-          <p key={i} className="article-text text-blue-600 underline">
-            <a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
-          </p>
-        );
-      }
+  	  const urlMatch = cleanText.match(/https?:\/\/[^\s]+/);
+  	  if (urlMatch) {
+  	    const url = urlMatch[0].trim();
+  	    if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
+  	  	  return <InlineImage key={i} src={url} alt="תמונה מתוך הכתבה" caption="" />;
+  	    }
+  	    if (
+  	  	  /(youtube\.com|youtu\.be|facebook\.com|instagram\.com|tiktok\.com|x\.com|twitter\.com)/i.test(
+  	  	    url
+  	  	  )
+  	    ) {
+  	  	  return <EmbedContent key={i} url={url} />;
+  	    }
+  	    return (
+  	  	  <p key={i} className="article-text text-blue-600 underline">
+  	  	    <a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
+  	  	  </p>
+  	    );
+  	  }
 
-      return (
-        <p
-          key={i}
-          className="article-text text-gray-800 text-[18px] leading-relaxed"
-          dangerouslySetInnerHTML={{ __html: cleanText.replace(/\n/g, "<br/>") }}
-        />
-      );
+  	  return (
+  	    <p
+  	  	  key={i}
+  	  	  className="article-text text-gray-800 text-[18px] leading-relaxed"
+  	  	  dangerouslySetInnerHTML={{ __html: cleanText.replace(/\n/g, "<br/>") }}
+  	    />
+  	  );
     }
 
     // בלוק מסוג פסקה (Rich Text מ-Strapi)
@@ -344,42 +345,42 @@ export default async function ArticlePage({ params }) {
       let html = toHtmlFromStrapiChildren(block.children);
       html = fixRelativeImages(html);
 
-      const urlMatch = html.match(/https?:\/\/[^\s"']+/);
-      if (urlMatch) {
-        const url = urlMatch[0];
-        if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
-          return <InlineImage key={i} src={url} alt="תמונה" caption="" />;
-        }
-        if (
-          /(youtube\.com|youtu\.be|facebook\.com|instagram\.com|tiktok\.com|x\.com|twitter\.com)/i.test(
-            url
-          )
-        ) {
-          return <EmbedContent key={i} url={url} />;
-        }
-      }
+  	  const urlMatch = html.match(/https?:\/\/[^\s"']+/);
+  	  if (urlMatch) {
+  	    const url = urlMatch[0];
+  	    if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
+  	  	  return <InlineImage key={i} src={url} alt="תמונה" caption="" />;
+  	    }
+  	    if (
+  	  	  /(youtube\.com|youtu\.be|facebook\.com|instagram\.com|tiktok\.com|x\.com|twitter\.com)/i.test(
+  	  	    url
+  	  	  )
+  	    ) {
+  	  	  return <EmbedContent key={i} url={url} />;
+  	    }
+  	  }
 
-      return (
-        <p
-          key={i}
-          className="article-text text-gray-800 text-[18px] leading-relaxed"
-          dangerouslySetInnerHTML={{ __html: html }}
-        />
-      );
+  	  return (
+  	    <p
+  	  	  key={i}
+  	  	  className="article-text text-gray-800 text-[18px] leading-relaxed"
+  	  	  dangerouslySetInnerHTML={{ __html: html }}
+  	    />
+  	  );
     }
 
     // כותרות
     if (block.type === "heading") {
       const level = block.level || 2;
       const Tag = `h${Math.min(level, 3)}`;
-      const text = block.children?.map((c) => c.text).join("") || "";
-      return (
-        <Tag
-          key={i}
-          className="font-bold text-2xl text-gray-900 mt-4 mb-2"
-          dangerouslySetInnerHTML={{ __html: fixRelativeImages(text) }}
-        />
-      );
+  	  const text = block.children?.map((c) => c.text).join("") || "";
+  	  return (
+  	    <Tag
+  	  	  key={i}
+  	  	  className="font-bold text-2xl text-gray-900 mt-4 mb-2"
+  	  	  dangerouslySetInnerHTML={{ __html: fixRelativeImages(text) }}
+  	  	  />
+  	  );
     }
 
     // תמונה מתוך בלוק Strapi
@@ -389,18 +390,18 @@ export default async function ArticlePage({ params }) {
       if (!imageData?.url) return null;
       const alt = imageData.alternativeText || "תמונה מתוך הכתבה";
       const caption = imageData.caption || "";
-      return (
-        <InlineImage
-          key={i}
-          src={
-            imageData.url.startsWith("http")
-              ? imageData.url
-              : `${PUBLIC_API_URL}${imageData.url}`
-          }
-          alt={alt}
-          caption={caption}
-        />
-      );
+  	  return (
+  	    <InlineImage
+  	  	  key={i}
+  	  	  src={
+  	  	    imageData.url.startsWith("http")
+  	  	      ? imageData.url
+  	  	      : `${PUBLIC_API_URL}${imageData.url}`
+  	  	  }
+  	  	  alt={alt}
+  	  	  caption={caption}
+  	    />
+  	  );
     }
 
     return null;
@@ -414,37 +415,37 @@ export default async function ArticlePage({ params }) {
     <PageContainer title={article.title} breadcrumbs={breadcrumbs}>
       <div
         className="mx-auto max-w-[740px] space-y-2 text-right leading-relaxed text-base text-gray-800 px-2"
-        style={{ fontFamily: article.font_family }}
+  	    style={{ fontFamily: article.font_family }}
       >
-        <ArticleHeader
-          author={article.author}
-          date={article.date}
-          time={article.time}
-          image={article.image}
-          imageAlt={article.imageAlt}
-          title={article.headline}
-          subdescription={article.subdescription}
-        />
+  	    <ArticleHeader
+  	  	  author={article.author}
+  	  	  date={article.date}
+  	  	  time={article.time}
+  	  	  image={article.image}
+  	  	  imageAlt={article.imageAlt}
+  	  	  title={article.headline}
+  	  	  subdescription={article.subdescription}
+  	    />
 
-        {article.description && (
-          <p className="font-bold text-2xl text-gray-600">{article.description}</p>
-        )}
+  	    {article.description && (
+  	      <p className="font-bold text-2xl text-gray-600">{article.description}</p>
+  	    )}
 
-        {paragraphs.map(renderParagraph)}
+  	    {paragraphs.map(renderParagraph)}
 
-        {article.tableData && <SimpleKeyValueTable data={article.tableData} />}
+  	    {article.tableData && <SimpleKeyValueTable data={article.tableData} />}
 
-        <Gallery
-          images={article.gallery}
-          externalImageUrls={article.externalImageUrls}
-          externalMediaUrl={article.externalMediaUrl}
-          external_media_links={article.external_media_links}
-        />
+  	    <Gallery
+  	  	  images={article.gallery}
+  	  	  externalImageUrls={article.externalImageUrls}
+  	  	  externalMediaUrl={article.externalMediaUrl}
+  	  	  external_media_links={article.external_media_links}
+  	    />
 
-        <Tags tags={article.tags} />
-        <SimilarArticles currentSlug={article.slug} category={article.category} />
-        <CommentsSection articleUrl={`${SITE_URL}${article.href}`} />
-      </div>
+  	    <Tags tags={article.tags} />
+  	    <SimilarArticles currentSlug={article.slug} category={article.category} />
+  	    <CommentsSection articleUrl={`${SITE_URL}${article.href}`} />
+  	  </div>
     </PageContainer>
   );
 }
