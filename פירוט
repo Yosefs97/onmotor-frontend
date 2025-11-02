@@ -1,5 +1,14 @@
 ///
+"https://cdn2.yamaha-motor.eu/prod/product-assets/2026/XS850GP/2026-Yamaha-XS850GP-EU-Legend_Yellow-Action-011-03.jpg",
+  "https://cdn2.yamaha-motor.eu/prod/product-assets/2026/XS850GP/2026-Yamaha-XS850GP-EU-Legend_Yellow-Static-005-03.jpg",
+  "https://cdn2.yamaha-motor.eu/prod/product-assets/2026/XS850GP/2026-Yamaha-XS850GP-EU-Legend_Yellow-Static-004-03.jpg",
+  "https://cdn2.yamaha-motor.eu/prod/product-assets/2026/XS850GP/2026-Yamaha-XS850GP-EU-Legend_Yellow-Action-004-03.jpg",
+  "https://cdn2.yamaha-motor.eu/prod/product-assets/2026/XS850GP/2026-Yamaha-XS850GP-EU-Legend_Yellow-360-Degrees-001-03.jpg",
+  "https://cdn2.yamaha-motor.eu/prod/product-assets/2026/XS850GP/2026-Yamaha-XS850GP-EU-NA-Detail-010-03.jpg",
+  "https://cdn2.yamaha-motor.eu/prod/product-assets/2026/XS850GP/2026-Yamaha-XS850GP-EU-Legend_Yellow-Static-008-03.jpg",
+  "https://cdn2.yamaha-motor.eu/prod/product-assets/2026/XS850GP/2026-Yamaha-XS850GP-EU-Legend_Yellow-Action-005-03.jpg",
 
+////
 
 //components\TabLeftSidebar.jsx
 'use client';
