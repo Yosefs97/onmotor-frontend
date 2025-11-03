@@ -6,6 +6,7 @@ const nextConfig = {
     domains: [
       "localhost",
       "cdn.shopify.com",
+      "www.onmotormedia.com",
       "i.ytimg.com",
       "img.youtube.com",
       "*.tiktokcdn.com",
