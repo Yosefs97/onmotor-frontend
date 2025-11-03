@@ -419,6 +419,7 @@ export default async function ArticlePage({ params }) {
   	  	  imageAlt={article.imageAlt}
   	  	  title={article.headline}
   	  	  subdescription={article.subdescription}
+  	  	  tags={article.tags}
   	    />
 
   	    {article.description && (
