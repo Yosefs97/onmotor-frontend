@@ -12,6 +12,9 @@ import Gallery from "@/components/Gallery";
 import { labelMap } from "@/utils/labelMap";
 import InlineImage from "@/components/InlineImage";
 import EmbedContent from "@/components/EmbedContent";
+import ScrollToTableButton from "@/components/ScrollToTableButton";
+import ScrollToGalleryButton from "@/components/ScrollToGalleryButton";
+
 
 
 
@@ -329,7 +332,7 @@ export default async function ArticlePage({ params }) {
   	    />
   	  );
     }
-
+    
     // בלוק מסוג פסקה (Rich Text מ-Strapi)
     if (block.type === "paragraph" && block.children) {
       let html = toHtmlFromStrapiChildren(block.children);
@@ -402,6 +405,7 @@ export default async function ArticlePage({ params }) {
     : article.content.split("\n\n");
 
   return (
+    <>
     <PageContainer title={article.title} breadcrumbs={breadcrumbs}>
       <div
         className="mx-auto max-w-[740px] space-y-2 text-right leading-relaxed text-base text-gray-800 px-2"
@@ -420,22 +424,34 @@ export default async function ArticlePage({ params }) {
   	    {article.description && (
   	      <p className="font-bold text-2xl text-gray-600">{article.description}</p>
   	    )}
-
+        {article.subdescription && (
+          <p className="second-description text-gray-700 text-[18px]">{article.subdescription}</p>
+        )}
   	    {paragraphs.map(renderParagraph)}
 
-  	    {article.tableData && <SimpleKeyValueTable data={article.tableData} />}
+  	    {article.tableData && (
+          <div className="article-table-section">
+            <SimpleKeyValueTable data={article.tableData} />
+          </div>
+        )}
 
-  	    <Gallery
-  	  	  images={article.gallery}
-  	  	  externalImageUrls={article.externalImageUrls}
-  	  	  externalMediaUrl={article.externalMediaUrl}
-  	  	  external_media_links={article.external_media_links}
-  	    />
+  	    <div className="article-gallery-section">
+          <Gallery
+            images={article.gallery}
+            externalImageUrls={article.externalImageUrls}
+            externalMediaUrl={article.externalMediaUrl}
+            external_media_links={article.external_media_links}
+          />
+        </div>
+
 
   	    <Tags tags={article.tags} />
   	    <SimilarArticles currentSlug={article.slug} category={article.category} />
   	    <CommentsSection articleUrl={`${SITE_URL}${article.href}`} />
   	  </div>
     </PageContainer>
+    <ScrollToTableButton />
+    <ScrollToGalleryButton />
+    </>
   );
 }
