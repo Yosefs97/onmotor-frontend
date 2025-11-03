@@ -1,3 +1,4 @@
+// components/SimpleKeyValueTable.jsx
 'use client';
 import React, { useState } from "react";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
@@ -73,7 +74,7 @@ export default function SimpleKeyValueTable({ data }) {
                                 {key}
                               </td>
                               <td className="text-xl border border-gray-300 px-4 py-2 w-2/3">
-                                {value}
+                                {typeof value === "object" ? JSON.stringify(value, null, 2) : value}
                               </td>
                             </tr>
                           ))}
@@ -91,7 +92,9 @@ export default function SimpleKeyValueTable({ data }) {
                 <td className="text-xl border border-gray-400 px-4 py-2 font-semibold">
                   {key}
                 </td>
-                <td className="text-xl border border-gray-400 px-4 py-2">{value}</td>
+                <td className="text-xl border border-gray-400 px-4 py-2">
+                  {typeof value === "object" ? JSON.stringify(value, null, 2) : value}
+                </td>
               </tr>
             ))
           )}
