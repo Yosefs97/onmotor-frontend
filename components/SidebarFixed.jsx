@@ -154,7 +154,7 @@ export default function SidebarFixed() {
               rel="noopener noreferrer"
               className="bg-gray-700 text-white px-3 py-1 rounded-md hover:bg-gray-800 text-sm"
             >
-              לפרסומת
+             לאתר המפרסם
             </a>
           )}
         </div>
