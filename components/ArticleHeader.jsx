@@ -1,3 +1,4 @@
+// components/ArticleHeader.jsx
 'use client';
 import React from 'react';
 import ArticleShare from './ArticleShare';
@@ -6,22 +7,23 @@ export default function ArticleHeader({
   author = "מערכת OnMotor",
   date = "22.06.2025",
   time = "10:00",
-  image, // ⭐️ זה ה-prop החשוב
-  // imageSrc, // 🛑 הוסר, לא נחוץ יותר
+  image,
   imageAlt = "תמונה ראשית",
   title = "כותרת כתבה",
   subdescription = "",
+  tags = [], // ✅ נוספה תמיכה ב-tags
 }) {
-  
   // --- ⭐️ לוגיקה חדשה ופשוטה ⭐️ ---
-  // אנו מקבלים URL מוכן מהקומפוננטה-האב (ArticlePage.jsx)
   const finalImage = image || "/images/default-article.jpg";
+
+  // ✅ נשלוף את שם הצלם מתוך האיבר הראשון של tags (אם קיים)
+  const photographer = tags.length > 0 ? tags[0] : author;
   // --- ⭐️ סוף לוגיקה ⭐️ ---
 
   return (
     <div className="flex flex-col gap-4 mb-6 text-gray-800 text-right">
       {/* 🖼️ תמונה ראשית */}
-      <div className="w-full max-h-[500px] overflow-hidden   ">
+      <div className="w-full max-h-[500px] overflow-hidden">
         <img
           src={finalImage}
           alt={imageAlt}
@@ -43,11 +45,10 @@ export default function ArticleHeader({
         <span className="text-xs font-medium text-gray-700">
           🕒 {date} | {time}
         </span>
-        <span>🎥 צילום: <span className="text-gray-800 font-semibold">{author}</span></span>
+        <span>🎥 צילום: <span className="text-gray-800 font-semibold">{photographer}</span></span>
         <span className="ml-auto text-xs text-blue-600 underline cursor-pointer hover:text-blue-800">
           עבור לגריד 🔁
         </span>
-        {/* כפתור שיתוף נוסף לצד המידע */}
         <div className="ml-auto">
           <ArticleShare />
         </div>
