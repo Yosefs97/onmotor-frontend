@@ -244,8 +244,8 @@ export default async function ArticlePage({ params }) {
   }
   breadcrumbs.push({ label: article.title });
 
-  // ✅ רינדור פסקאות ותמונות
   const renderParagraph = (block, i) => {
+    // 🧱 טקסט רגיל
     if (typeof block === "string") {
       const cleanText = fixRelativeImages(block.trim());
       const hasHTMLTags = /<\/?[a-z][\s\S]*>/i.test(cleanText);
@@ -262,17 +262,31 @@ export default async function ArticlePage({ params }) {
 
       const urlMatch = cleanText.match(/https?:\/\/[^\s]+/);
       if (urlMatch) {
-        const url = wrapHondaProxy(urlMatch[0].trim());
+        let url = urlMatch[0].trim();
+
+        // ✅ עטיפה בפרוקסי להונדה אם צריך
+        if (url.includes("hondanews.eu")) {
+          url = wrapHondaProxy(url);
+        }
+
+        // ✅ תמונות (כולל הונדה בלי סיומת)
         if (
           /\.(jpg|jpeg|png|gif|webp)$/i.test(url) ||
           url.includes("hondanews.eu/image/")
         ) {
-          return <InlineImage key={i} src={wrapHondaProxy(url)} alt="תמונה מתוך הכתבה" caption="" />;
+          return <InlineImage key={i} src={url} alt="תמונה מתוך הכתבה" caption="" />;
         }
 
-        if (/(youtube|facebook|instagram|tiktok|x\.com|twitter)/i.test(url)) {
+        // ✅ סרטונים ו־Embed
+        if (
+          /(youtube\.com|youtu\.be|facebook\.com|instagram\.com|tiktok\.com|x\.com|twitter\.com)/i.test(
+            url
+          )
+        ) {
           return <EmbedContent key={i} url={url} />;
         }
+
+        // ✅ קישורים רגילים
         return (
           <p key={i} className="article-text text-blue-600 underline">
             <a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
@@ -280,6 +294,7 @@ export default async function ArticlePage({ params }) {
         );
       }
 
+      // ✅ טקסט רגיל ללא URL
       return (
         <p
           key={i}
@@ -289,20 +304,36 @@ export default async function ArticlePage({ params }) {
       );
     }
 
+    // 🧱 בלוק מסוג פסקה (Rich Text)
     if (block.type === "paragraph" && block.children) {
       let html = toHtmlFromStrapiChildren(block.children);
       html = fixRelativeImages(html);
 
       const urlMatch = html.match(/https?:\/\/[^\s"']+/);
       if (urlMatch) {
-        const url = wrapHondaProxy(urlMatch[0]);
+        let url = urlMatch[0];
+
+        // ✅ עטיפה בפרוקסי להונדה
+        if (url.includes("hondanews.eu")) {
+          url = wrapHondaProxy(url);
+        }
+
+        // ✅ תמונה (כולל הונדה)
         if (
           /\.(jpg|jpeg|png|gif|webp)$/i.test(url) ||
           url.includes("hondanews.eu/image/")
         ) {
-          return <InlineImage key={i} src={wrapHondaProxy(url)} alt="תמונה" caption="" />;
+          return <InlineImage key={i} src={url} alt="תמונה" caption="" />;
         }
 
+        // ✅ Embed (יוטיוב, טיקטוק וכו’)
+        if (
+          /(youtube\.com|youtu\.be|facebook\.com|instagram\.com|tiktok\.com|x\.com|twitter\.com)/i.test(
+            url
+          )
+        ) {
+          return <EmbedContent key={i} url={url} />;
+        }
       }
 
       return (
@@ -314,6 +345,7 @@ export default async function ArticlePage({ params }) {
       );
     }
 
+    // 🧱 כותרות
     if (block.type === "heading") {
       const level = block.level || 2;
       const Tag = `h${Math.min(level, 3)}`;
@@ -327,6 +359,7 @@ export default async function ArticlePage({ params }) {
       );
     }
 
+    // 🧱 תמונה מובנית מ־Strapi
     if (block.type === "image") {
       const imageData =
         block.image?.data?.attributes || block.image?.attributes || block.image;
@@ -339,6 +372,7 @@ export default async function ArticlePage({ params }) {
 
     return null;
   };
+
 
   const paragraphs = Array.isArray(article.content)
     ? article.content
