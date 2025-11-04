@@ -123,7 +123,7 @@ export async function generateMetadata({ params }) {
 // ===================================================================
 //                       ArticlePage Component
 // ===================================================================
-export default async function ArticlePage({ params }) {
+export default async function ArticlePage({ params, setPageTitle, setPageBreadcrumbs }) {
   const res = await fetch(
     `${API_URL}/api/articles?filters[slug][$eq]=${params.slug}&populate=*`,
     { next: { revalidate: 0 } }
@@ -220,6 +220,10 @@ export default async function ArticlePage({ params }) {
     });
   }
   breadcrumbs.push({ label: article.title });
+    // ✅ עדכון הערכים בלייאאוט הראשי
+  if (setPageTitle) setPageTitle(article.title);
+  if (setPageBreadcrumbs) setPageBreadcrumbs(breadcrumbs);
+
 
   // ✅ רינדור פסקאות (כולל Honda + YouTube)
   const renderParagraph = (block, i) => {
@@ -387,7 +391,7 @@ export default async function ArticlePage({ params }) {
 
   return (
     <>
-      <PageContainer title={article.title} breadcrumbs={breadcrumbs}>
+      
         <div
           className="mx-auto max-w-[740px] space-y-2 text-right leading-relaxed text-base text-gray-800 px-2"
           style={{ fontFamily: article.font_family }}
@@ -431,7 +435,7 @@ export default async function ArticlePage({ params }) {
           <SimilarArticles currentSlug={article.slug} category={article.category} />
           <CommentsSection articleUrl={`${SITE_URL}${article.href}`} />
         </div>
-      </PageContainer>
+     
       <ScrollToTableButton />
       <ScrollToGalleryButton />
     </>

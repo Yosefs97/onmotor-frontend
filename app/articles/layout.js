@@ -1,22 +1,20 @@
-//app\articles\layout.js
 'use client';
+import { useState, useEffect } from "react";
 import PageContainer from "@/components/PageContainer";
-import { PageProvider, usePage } from "@/contexts/PageContext";
 
 export default function ArticlesLayout({ children }) {
-  return (
-    <PageProvider>
-      <PageContainerWrapper>{children}</PageContainerWrapper>
-    </PageProvider>
-  );
-}
-
-function PageContainerWrapper({ children }) {
-  const { title, breadcrumbs } = usePage();
+  const [pageTitle, setPageTitle] = useState("");
+  const [pageBreadcrumbs, setPageBreadcrumbs] = useState([]);
 
   return (
-    <PageContainer title={title} breadcrumbs={breadcrumbs}>
-      {children}
+    <PageContainer title={pageTitle} breadcrumbs={pageBreadcrumbs}>
+      {children &&
+        // כאן נעטוף את הילדים ונעביר להם setter functions
+        // כך שהעמוד הפנימי יכול לעדכן את הכותרת והפירורים
+        React.cloneElement(children, {
+          setPageTitle,
+          setPageBreadcrumbs,
+        })}
     </PageContainer>
   );
 }
