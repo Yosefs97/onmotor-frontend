@@ -232,7 +232,12 @@ export default async function ArticlePage({ params }) {
           <div
             key={i}
             className="article-text text-gray-800 text-[18px] leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: cleanText }}
+            dangerouslySetInnerHTML={{
+              __html: cleanText.replace(
+                /(https:\/\/hondanews\.eu[^\s"'<>]+)/gi,
+                (match) => wrapHondaProxy(match)
+              ),
+            }}
           />
         );
       }
@@ -240,13 +245,20 @@ export default async function ArticlePage({ params }) {
       const urlMatch = cleanText.match(/https?:\/\/[^\s]+/);
       if (urlMatch) {
         let url = urlMatch[0].trim();
-        if (url.includes("hondanews.eu")) url = resolveImageUrl(url);
+        if (url.includes("hondanews.eu")) url = wrapHondaProxy(url);
 
         if (
           /\.(jpg|jpeg|png|gif|webp)$/i.test(url) ||
           url.includes("hondanews.eu/image/")
         ) {
-          return <InlineImage key={i} src={resolveImageUrl(url)} alt="תמונה מתוך הכתבה" caption="" />;
+          return (
+            <InlineImage
+              key={i}
+              src={url}
+              alt="תמונה מתוך הכתבה"
+              caption=""
+            />
+          );
         }
 
         if (
@@ -259,7 +271,9 @@ export default async function ArticlePage({ params }) {
 
         return (
           <p key={i} className="article-text text-blue-600 underline">
-            <a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
+            <a href={url} target="_blank" rel="noopener noreferrer">
+              {url}
+            </a>
           </p>
         );
       }
@@ -268,7 +282,9 @@ export default async function ArticlePage({ params }) {
         <p
           key={i}
           className="article-text text-gray-800 text-[18px] leading-relaxed"
-          dangerouslySetInnerHTML={{ __html: cleanText.replace(/\n/g, "<br/>") }}
+          dangerouslySetInnerHTML={{
+            __html: cleanText.replace(/\n/g, "<br/>"),
+          }}
         />
       );
     }
@@ -280,13 +296,20 @@ export default async function ArticlePage({ params }) {
       const urlMatch = html.match(/https?:\/\/[^\s"']+/);
       if (urlMatch) {
         let url = urlMatch[0];
-        if (url.includes("hondanews.eu")) url = resolveImageUrl(url);
+        if (url.includes("hondanews.eu")) url = wrapHondaProxy(url);
 
         if (
           /\.(jpg|jpeg|png|gif|webp)$/i.test(url) ||
           url.includes("hondanews.eu/image/")
         ) {
-          return <InlineImage key={i} src={resolveImageUrl(url)} alt="תמונה" caption="" />;
+          return (
+            <InlineImage
+              key={i}
+              src={url}
+              alt="תמונה מתוך הכתבה"
+              caption=""
+            />
+          );
         }
 
         if (
@@ -302,7 +325,12 @@ export default async function ArticlePage({ params }) {
         <p
           key={i}
           className="article-text text-gray-800 text-[18px] leading-relaxed"
-          dangerouslySetInnerHTML={{ __html: html }}
+          dangerouslySetInnerHTML={{
+            __html: html.replace(
+              /(https:\/\/hondanews\.eu[^\s"'<>]+)/gi,
+              (match) => wrapHondaProxy(match)
+            ),
+          }}
         />
       );
     }
@@ -327,11 +355,14 @@ export default async function ArticlePage({ params }) {
       const alt = imageData.alternativeText || "תמונה מתוך הכתבה";
       const caption = imageData.caption || "";
       const src = resolveImageUrl(imageData.url);
-      return <InlineImage key={i} src={src} alt={alt} caption={caption} />;
+      return (
+        <InlineImage key={i} src={src} alt={alt} caption={caption} />
+      );
     }
 
     return null;
   };
+
 
   const paragraphs = Array.isArray(article.content)
     ? article.content
