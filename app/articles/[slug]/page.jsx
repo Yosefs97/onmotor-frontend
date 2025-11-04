@@ -1,5 +1,8 @@
 // ✅ app/articles/[slug]/page.jsx
+'use client';
 export const dynamic = 'force-dynamic';
+import { usePage } from "@/contexts/PageContext";
+import { useEffect } from "react";
 import ArticleHeader from "@/components/ArticleHeader";
 import SimpleKeyValueTable from "@/components/SimpleKeyValueTable";
 import Tags from "@/components/Tags";
@@ -218,6 +221,14 @@ export default async function ArticlePage({ params }) {
     });
   }
   breadcrumbs.push({ label: article.title });
+  // ✅ עדכון כותרת ופירורי לחם ל-PageContainer דרך context
+  const { setTitle, setBreadcrumbs } = usePage();
+
+  useEffect(() => {
+    setTitle(article.title);
+    setBreadcrumbs(breadcrumbs);
+  }, [article.title, breadcrumbs, setTitle, setBreadcrumbs]);
+
 
   // ✅ רינדור פסקאות (כולל Honda + YouTube)
   const renderParagraph = (block, i) => {
