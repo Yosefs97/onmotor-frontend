@@ -1,4 +1,4 @@
-// app/articles/[slug]/page.jsx
+// ✅ app/articles/[slug]/page.jsx
 export const dynamic = 'force-dynamic';
 
 import PageContainer from "@/components/PageContainer";
@@ -43,7 +43,6 @@ function renderMarks(text, node) {
 function toHtmlFromStrapiChildren(children) {
   if (!Array.isArray(children)) return '';
   return children.map((node) => {
-    // צומת קישור
     if (node?.type === 'link' || node?.url) {
       const href = normalizeHref(node.url || '#');
       const inner = node.children?.length
@@ -53,17 +52,8 @@ function toHtmlFromStrapiChildren(children) {
       const rel = isExternal(href) ? 'noopener noreferrer' : '';
       return `<a href="${href}" target="${target}" rel="${rel}" class="text-blue-600 underline hover:text-blue-800">${inner}</a>`;
     }
-
-    // טקסט רגיל
-    if (typeof node?.text === 'string') {
-      return renderMarks(node.text, node);
-    }
-
-    // אם יש ילדים נוספים
-    if (node?.children?.length) {
-      return toHtmlFromStrapiChildren(node.children);
-    }
-
+    if (typeof node?.text === 'string') return renderMarks(node.text, node);
+    if (node?.children?.length) return toHtmlFromStrapiChildren(node.children);
     return '';
   }).join('');
 }
@@ -97,9 +87,9 @@ export async function generateMetadata({ params }) {
       article.external_media_links.length > 1 &&
       article.external_media_links[1]?.startsWith("http")
     ) {
-      imageUrl = wrapHondaProxy(article.external_media_links[1].trim());
+      imageUrl = article.external_media_links[1].trim();
     } else if (article.image?.data?.attributes?.url) {
-      imageUrl = resolveImageUrl(article.image.data.attributes.url);
+      imageUrl = `${API_URL}${article.image.data.attributes.url}`;
     } else if (article.image?.url) {
       imageUrl = resolveImageUrl(article.image.url);
     }
@@ -115,14 +105,7 @@ export async function generateMetadata({ params }) {
         locale: "he_IL",
         url: `${SITE_URL}/articles/${params.slug}`,
         siteName: "OnMotor Media",
-        images: [
-          {
-            url: imageUrl,
-            width: 1200,
-            height: 630,
-            alt: title,
-          },
-        ],
+        images: [{ url: imageUrl, width: 1200, height: 630, alt: title }],
       },
       twitter: {
         card: "summary_large_image",
@@ -138,7 +121,7 @@ export async function generateMetadata({ params }) {
 }
 
 // ===================================================================
-//      הפונקציה הראשית של הדף
+//                       ArticlePage Component
 // ===================================================================
 export default async function ArticlePage({ params }) {
   const res = await fetch(
@@ -149,10 +132,8 @@ export default async function ArticlePage({ params }) {
   const json = await res.json();
   const rawArticle = json.data?.[0];
   if (!rawArticle) return notFound();
-
   const data = rawArticle;
 
-  // ✅ טיפול בגלריה
   const galleryItems = data.gallery?.data
     ? data.gallery.data.map((item) => item.attributes)
     : data.gallery || [];
@@ -170,7 +151,6 @@ export default async function ArticlePage({ params }) {
 
   const externalMediaUrl = data.externalMediaUrl || null;
 
-  // ✅ תמונה ראשית
   let mainImage = PLACEHOLDER_IMG;
   let mainImageAlt = "תמונה ראשית";
 
@@ -186,7 +166,7 @@ export default async function ArticlePage({ params }) {
     typeof data.external_media_links[1] === "string" &&
     data.external_media_links[1].startsWith("http")
   ) {
-    mainImage = wrapHondaProxy(data.external_media_links[1].trim());
+    mainImage = data.external_media_links[1].trim();
     mainImageAlt = "תמונה ראשית מהמדיה החיצונית";
   }
 
@@ -221,20 +201,17 @@ export default async function ArticlePage({ params }) {
     font_family: data.font_family || "Heebo, sans-serif",
   };
 
-  // ✅ פירורי לחם
   const breadcrumbs = [{ label: "דף הבית", href: "/" }];
-  if (article.category) {
+  if (article.category)
     breadcrumbs.push({
       label: labelMap[article.category] || article.category,
       href: `/${article.category}`,
     });
-  }
-  if (article.subcategory) {
+  if (article.subcategory)
     breadcrumbs.push({
       label: labelMap[article.subcategory] || article.subcategory,
       href: `/${article.category}/${article.subcategory}`,
     });
-  }
   if (article.values?.length > 0) {
     const valueKey = article.values[0];
     breadcrumbs.push({
@@ -244,8 +221,8 @@ export default async function ArticlePage({ params }) {
   }
   breadcrumbs.push({ label: article.title });
 
+  // ✅ רינדור פסקאות (כולל Honda + YouTube)
   const renderParagraph = (block, i) => {
-    // 🧱 טקסט רגיל
     if (typeof block === "string") {
       const cleanText = fixRelativeImages(block.trim());
       const hasHTMLTags = /<\/?[a-z][\s\S]*>/i.test(cleanText);
@@ -263,21 +240,15 @@ export default async function ArticlePage({ params }) {
       const urlMatch = cleanText.match(/https?:\/\/[^\s]+/);
       if (urlMatch) {
         let url = urlMatch[0].trim();
+        if (url.includes("hondanews.eu")) url = resolveImageUrl(url);
 
-        // ✅ עטיפה בפרוקסי להונדה אם צריך
-        if (url.includes("hondanews.eu")) {
-          url = wrapHondaProxy(url);
-        }
-
-        // ✅ תמונות (כולל הונדה בלי סיומת)
         if (
           /\.(jpg|jpeg|png|gif|webp)$/i.test(url) ||
           url.includes("hondanews.eu/image/")
         ) {
-          return <InlineImage key={i} src={url} alt="תמונה מתוך הכתבה" caption="" />;
+          return <InlineImage key={i} src={resolveImageUrl(url)} alt="תמונה מתוך הכתבה" caption="" />;
         }
 
-        // ✅ סרטונים ו־Embed
         if (
           /(youtube\.com|youtu\.be|facebook\.com|instagram\.com|tiktok\.com|x\.com|twitter\.com)/i.test(
             url
@@ -286,7 +257,6 @@ export default async function ArticlePage({ params }) {
           return <EmbedContent key={i} url={url} />;
         }
 
-        // ✅ קישורים רגילים
         return (
           <p key={i} className="article-text text-blue-600 underline">
             <a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
@@ -294,7 +264,6 @@ export default async function ArticlePage({ params }) {
         );
       }
 
-      // ✅ טקסט רגיל ללא URL
       return (
         <p
           key={i}
@@ -304,7 +273,6 @@ export default async function ArticlePage({ params }) {
       );
     }
 
-    // 🧱 בלוק מסוג פסקה (Rich Text)
     if (block.type === "paragraph" && block.children) {
       let html = toHtmlFromStrapiChildren(block.children);
       html = fixRelativeImages(html);
@@ -312,21 +280,15 @@ export default async function ArticlePage({ params }) {
       const urlMatch = html.match(/https?:\/\/[^\s"']+/);
       if (urlMatch) {
         let url = urlMatch[0];
+        if (url.includes("hondanews.eu")) url = resolveImageUrl(url);
 
-        // ✅ עטיפה בפרוקסי להונדה
-        if (url.includes("hondanews.eu")) {
-          url = wrapHondaProxy(url);
-        }
-
-        // ✅ תמונה (כולל הונדה)
         if (
           /\.(jpg|jpeg|png|gif|webp)$/i.test(url) ||
           url.includes("hondanews.eu/image/")
         ) {
-          return <InlineImage key={i} src={url} alt="תמונה" caption="" />;
+          return <InlineImage key={i} src={resolveImageUrl(url)} alt="תמונה" caption="" />;
         }
 
-        // ✅ Embed (יוטיוב, טיקטוק וכו’)
         if (
           /(youtube\.com|youtu\.be|facebook\.com|instagram\.com|tiktok\.com|x\.com|twitter\.com)/i.test(
             url
@@ -345,7 +307,6 @@ export default async function ArticlePage({ params }) {
       );
     }
 
-    // 🧱 כותרות
     if (block.type === "heading") {
       const level = block.level || 2;
       const Tag = `h${Math.min(level, 3)}`;
@@ -359,7 +320,6 @@ export default async function ArticlePage({ params }) {
       );
     }
 
-    // 🧱 תמונה מובנית מ־Strapi
     if (block.type === "image") {
       const imageData =
         block.image?.data?.attributes || block.image?.attributes || block.image;
@@ -372,7 +332,6 @@ export default async function ArticlePage({ params }) {
 
     return null;
   };
-
 
   const paragraphs = Array.isArray(article.content)
     ? article.content
