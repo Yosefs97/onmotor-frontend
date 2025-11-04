@@ -8,8 +8,6 @@ import Footer from "./Footer";
 import NewsTicker from "./NewsTicker";
 import MobileMenu from './MobileMenu';
 import MobileShopFilterBar from "./MobileShopFilterBar";
-import SidebarMiddleLayer from './SidebarMiddleLayer';
-import SidebarLeftLayer from './SidebarLeftLayer';
 
 export default function ClientLayout({ children }) {
   const pathname = usePathname();
@@ -65,16 +63,6 @@ export default function ClientLayout({ children }) {
         <main className="bg-gray-100 min-h-screen" dir="rtl">
           <div className="w-full">{children}</div>
         </main>
-        {/* סיידר אמצעי */}
-        <aside className="hidden lg:block w-1/4 border-l border-[#e60000]">
-          <SidebarMiddleLayer />
-        </aside>
-
-        {/* סיידר שמאלי */}
-        <aside className="hidden lg:block w-1/4 border-r border-[#e60000]">
-          <SidebarLeftLayer />
-        </aside>
-
       </div>
 
       <Footer />
