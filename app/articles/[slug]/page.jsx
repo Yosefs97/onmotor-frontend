@@ -249,7 +249,8 @@ export default async function ArticlePage({ params }) {
 
         if (
           /\.(jpg|jpeg|png|gif|webp)$/i.test(url) ||
-          url.includes("hondanews.eu/image/")
+          url.includes("hondanews.eu/image/") ||
+          url.includes("/api/proxy-honda?")
         ) {
           return (
             <InlineImage
@@ -300,7 +301,9 @@ export default async function ArticlePage({ params }) {
 
         if (
           /\.(jpg|jpeg|png|gif|webp)$/i.test(url) ||
-          url.includes("hondanews.eu/image/")
+          url.includes("hondanews.eu/image/") ||
+          url.includes("/api/proxy-honda?")
+
         ) {
           return (
             <InlineImage
