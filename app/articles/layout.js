@@ -1,18 +1,15 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import PageContainer from '@/components/PageContainer';
 
 export default function ArticlesLayout({ children }) {
   const [pageTitle, setPageTitle] = useState('');
-  const [pageBreadcrumbs, setPageBreadcrumbs] = useState([]);
+  const [breadcrumbs, setBreadcrumbs] = useState([]);
 
   return (
-    <PageContainer title={pageTitle} breadcrumbs={pageBreadcrumbs}>
+    <PageContainer title={pageTitle} breadcrumbs={breadcrumbs}>
       {React.Children.map(children, (child) =>
-        React.cloneElement(child, {
-          setPageTitle,
-          setPageBreadcrumbs,
-        })
+        React.cloneElement(child, { setPageTitle, setBreadcrumbs })
       )}
     </PageContainer>
   );
