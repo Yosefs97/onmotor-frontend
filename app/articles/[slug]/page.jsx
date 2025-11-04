@@ -246,6 +246,12 @@ export default async function ArticlePage({ params }) {
       if (urlMatch) {
         let url = urlMatch[0].trim();
         if (url.includes("hondanews.eu")) url = wrapHondaProxy(url);
+        // ✅ תמיכה בקישורי Kawasaki
+        else if (url.includes("content2.kawasaki.com")) {
+          // מנקה פרמטרים כמו ?w=400 מהכתובת
+          url = url.split("?")[0];
+        }
+
 
         if (
           /\.(jpg|jpeg|png|gif|webp)$/i.test(url) ||
@@ -298,11 +304,19 @@ export default async function ArticlePage({ params }) {
       if (urlMatch) {
         let url = urlMatch[0];
         if (url.includes("hondanews.eu")) url = wrapHondaProxy(url);
+        // ✅ תמיכה בקישורי Kawasaki
+        else if (url.includes("content2.kawasaki.com")) {
+          // מנקה פרמטרים כמו ?w=400 מהכתובת
+          url = url.split("?")[0];
+        }
+
 
         if (
           /\.(jpg|jpeg|png|gif|webp)$/i.test(url) ||
           url.includes("hondanews.eu/image/") ||
-          url.includes("/api/proxy-honda?")
+          url.includes("/api/proxy-honda?") ||
+          url.includes("content2.kawasaki.com/ContentStorage/")
+
 
         ) {
           return (
