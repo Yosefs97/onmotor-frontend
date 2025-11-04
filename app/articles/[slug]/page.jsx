@@ -263,9 +263,13 @@ export default async function ArticlePage({ params }) {
       const urlMatch = cleanText.match(/https?:\/\/[^\s]+/);
       if (urlMatch) {
         const url = wrapHondaProxy(urlMatch[0].trim());
-        if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
-          return <InlineImage key={i} src={url} alt="תמונה מתוך הכתבה" caption="" />;
+        if (
+          /\.(jpg|jpeg|png|gif|webp)$/i.test(url) ||
+          url.includes("hondanews.eu/image/")
+        ) {
+          return <InlineImage key={i} src={wrapHondaProxy(url)} alt="תמונה מתוך הכתבה" caption="" />;
         }
+
         if (/(youtube|facebook|instagram|tiktok|x\.com|twitter)/i.test(url)) {
           return <EmbedContent key={i} url={url} />;
         }
@@ -292,12 +296,13 @@ export default async function ArticlePage({ params }) {
       const urlMatch = html.match(/https?:\/\/[^\s"']+/);
       if (urlMatch) {
         const url = wrapHondaProxy(urlMatch[0]);
-        if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
-          return <InlineImage key={i} src={url} alt="תמונה" caption="" />;
+        if (
+          /\.(jpg|jpeg|png|gif|webp)$/i.test(url) ||
+          url.includes("hondanews.eu/image/")
+        ) {
+          return <InlineImage key={i} src={wrapHondaProxy(url)} alt="תמונה" caption="" />;
         }
-        if (/(youtube|facebook|instagram|tiktok|x\.com|twitter)/i.test(url)) {
-          return <EmbedContent key={i} url={url} />;
-        }
+
       }
 
       return (
