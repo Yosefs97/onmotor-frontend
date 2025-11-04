@@ -1,4 +1,5 @@
 // ✅ app/articles/[slug]/page.jsx
+'use client';
 export const dynamic = 'force-dynamic';
 
 import PageContainer from "@/components/PageContainer";
