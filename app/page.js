@@ -2,7 +2,7 @@
 export const dynamic = "force-dynamic";
 import React from 'react';
 import MainGridContentDesktop from '@/components/MainGridContentDesktop';
-
+import PageContainer from '@/components/PageContainer';
 
 /* -----------------------------------------------------------
    ⚙️ שלב 1: טעינת כתבות מ־Strapi (Server Component)
@@ -44,5 +44,12 @@ async function fetchArticles() {
 export default async function HomePage() {
   const articles = await fetchArticles();
 
-  return <MainGridContentDesktop articles={articles} />  
+  return (
+    <PageContainer
+      title="דף הבית" // ניתן לשנות לפי צורך
+      breadcrumbs={[]} // אין פירורי לחם בעמוד הבית
+    >
+      <MainGridContentDesktop articles={articles} />
+    </PageContainer>
+  );
 }
