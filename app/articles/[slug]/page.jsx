@@ -1,7 +1,7 @@
 // ✅ app/articles/[slug]/page.jsx
 
 export const dynamic = 'force-dynamic';
-import ArticlePageClientBridge from '@/components/ArticlePageClientBridge';
+import PageContainer from "@/components/PageContainer";
 import ArticleHeader from "@/components/ArticleHeader";
 import SimpleKeyValueTable from "@/components/SimpleKeyValueTable";
 import Tags from "@/components/Tags";
@@ -220,12 +220,7 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
     });
   }
   breadcrumbs.push({ label: article.title });
-  const clientBridge = (
-    <ArticlePageClientBridge
-      title={article.title}
-      breadcrumbs={breadcrumbs}
-    />
-  );
+  
 
 
   // ✅ רינדור פסקאות (כולל Honda + YouTube)
@@ -394,7 +389,7 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
 
   return (
     <>
-        {clientBridge}
+      <PageContainer title={article.title} breadcrumbs={breadcrumbs}>
         <div
           className="mx-auto max-w-[740px] space-y-2 text-right leading-relaxed text-base text-gray-800 px-2"
           style={{ fontFamily: article.font_family }}
@@ -438,7 +433,7 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
           <SimilarArticles currentSlug={article.slug} category={article.category} />
           <CommentsSection articleUrl={`${SITE_URL}${article.href}`} />
         </div>
-     
+      </PageContainer>
       <ScrollToTableButton />
       <ScrollToGalleryButton />
     </>
