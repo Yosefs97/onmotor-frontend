@@ -1,6 +1,7 @@
 'use client';
-import { useState, useEffect } from "react";
-import PageContainer from "@/components/PageContainer";
+import React, { useState, useEffect } from 'react';
+import PageContainer from '@/components/PageContainer';
+
 
 export default function ArticlesLayout({ children }) {
   const [pageTitle, setPageTitle] = useState("");
