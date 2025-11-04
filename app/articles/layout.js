@@ -2,20 +2,18 @@
 import React, { useState, useEffect } from 'react';
 import PageContainer from '@/components/PageContainer';
 
-
 export default function ArticlesLayout({ children }) {
-  const [pageTitle, setPageTitle] = useState("");
+  const [pageTitle, setPageTitle] = useState('');
   const [pageBreadcrumbs, setPageBreadcrumbs] = useState([]);
 
   return (
     <PageContainer title={pageTitle} breadcrumbs={pageBreadcrumbs}>
-      {children &&
-        // כאן נעטוף את הילדים ונעביר להם setter functions
-        // כך שהעמוד הפנימי יכול לעדכן את הכותרת והפירורים
-        React.cloneElement(children, {
+      {React.Children.map(children, (child) =>
+        React.cloneElement(child, {
           setPageTitle,
           setPageBreadcrumbs,
-        })}
+        })
+      )}
     </PageContainer>
   );
 }
