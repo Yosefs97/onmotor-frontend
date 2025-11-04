@@ -1,25 +1,20 @@
-//contexts/PageContext.jsx
 'use client';
-import { createContext, useContext, useState } from 'react';
+import React, { createContext, useState } from 'react';
 
-const PageContext = createContext({
-  title: '',
-  breadcrumbs: [],
-  setTitle: () => {},
-  setBreadcrumbs: () => {},
+export const PageContext = createContext({
+  pageTitle: '',
+  pageBreadcrumbs: [],
+  setPageTitle: () => {},
+  setPageBreadcrumbs: () => {},
 });
 
 export function PageProvider({ children }) {
-  const [title, setTitle] = useState('');
-  const [breadcrumbs, setBreadcrumbs] = useState([]);
+  const [pageTitle, setPageTitle] = useState('');
+  const [pageBreadcrumbs, setPageBreadcrumbs] = useState([]);
 
   return (
-    <PageContext.Provider value={{ title, breadcrumbs, setTitle, setBreadcrumbs }}>
+    <PageContext.Provider value={{ pageTitle, setPageTitle, pageBreadcrumbs, setPageBreadcrumbs }}>
       {children}
     </PageContext.Provider>
   );
-}
-
-export function usePage() {
-  return useContext(PageContext);
 }

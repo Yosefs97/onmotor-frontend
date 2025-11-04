@@ -1,8 +1,7 @@
 // ✅ app/articles/[slug]/page.jsx
-'use client';
-export const dynamic = 'force-dynamic';
 
-import PageContainer from "@/components/PageContainer";
+export const dynamic = 'force-dynamic';
+import ArticlePageClientBridge from '@/components/ArticlePageClientBridge';
 import ArticleHeader from "@/components/ArticleHeader";
 import SimpleKeyValueTable from "@/components/SimpleKeyValueTable";
 import Tags from "@/components/Tags";
@@ -221,9 +220,12 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
     });
   }
   breadcrumbs.push({ label: article.title });
-    // ✅ עדכון הערכים בלייאאוט הראשי
-  if (setPageTitle) setPageTitle(article.title);
-  if (setPageBreadcrumbs) setPageBreadcrumbs(breadcrumbs);
+  const clientBridge = (
+    <ArticlePageClientBridge
+      title={article.title}
+      breadcrumbs={breadcrumbs}
+    />
+  );
 
 
   // ✅ רינדור פסקאות (כולל Honda + YouTube)
@@ -392,7 +394,7 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
 
   return (
     <>
-      
+        {clientBridge}
         <div
           className="mx-auto max-w-[740px] space-y-2 text-right leading-relaxed text-base text-gray-800 px-2"
           style={{ fontFamily: article.font_family }}
