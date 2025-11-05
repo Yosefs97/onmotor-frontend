@@ -71,34 +71,39 @@ export default function ClientLayout({ children }) {
       {isShopPage && <MobileShopFilterBar />}
 
       {/* 🌍 תוכן ראשי עם סיידרים */}
-      <div className="w-screen sm:w-full overflow-x-hidden sm:overflow-visible bg-[#f9f9f9]" dir="rtl">
-        <main className="min-h-screen flex flex-col lg:flex-row text-right mb-0 px-0 sm:px-0 pt-[1px] pb-[2px]">
-          
-          {/* ✅ תוכן ראשי – Sticky */}
-          <div className="w-full lg:w-1/2 flex-shrink-0 px-0 py-0 lg:border-l border-[#e60000]">
-            <div className="sticky top-[70px]">
-              {children}
+      <div className="w-screen sm:w-full overflow-x-hidden sm:overflow-visible bg-[#f9f9f9]">
+        <div className="w-full flex flex-col lg:flex-row min-h-screen bg-gray-100">
+          <main
+            dir="rtl"
+            className="min-h-screen flex-1 mb-0 px-0 sm:px-0 pt-[1px] pb-[2px] text-right"
+          >
+            
+            {/* ✅ תוכן ראשי – Sticky */}
+            <div className="w-full lg:w-1/2 flex-shrink-0 px-0 py-0 lg:border-l border-[#e60000]">
+              <div className="sticky top-[70px]">
+                {children}
+              </div>
             </div>
-          </div>
 
-          {/* 🟦 סיידר אמצעי */}
-          <div
-            className={`w-full lg:w-1/4 flex-shrink-0 px-0 py-0 ${
-              !isMobile ? 'border-l border-[#e60000]' : ''
-            }`}
-          >
-            <SidebarMiddleLayer />
-          </div>
+            {/* 🟦 סיידר אמצעי */}
+            <div
+              className={`w-full lg:w-1/4 flex-shrink-0 px-0 py-0 ${
+                !isMobile ? 'border-l border-[#e60000]' : ''
+              }`}
+            >
+              <SidebarMiddleLayer />
+            </div>
 
-          {/* 🟩 סיידר שמאלי */}
-          <div
-            className={`w-full lg:w-1/4 flex-shrink-0 px-0 py-0 ${
-              !isMobile ? 'border-r border-[#e60000]' : ''
-            }`}
-          >
-            <SidebarLeftLayer />
-          </div>
-        </main>
+            {/* 🟩 סיידר שמאלי */}
+            <div
+              className={`w-full lg:w-1/4 flex-shrink-0 px-0 py-0 ${
+                !isMobile ? 'border-r border-[#e60000]' : ''
+              }`}
+            >
+              <SidebarLeftLayer />
+            </div>
+          </main>
+        </div>
       </div>
 
       {/* ⚫ פוטר */}
