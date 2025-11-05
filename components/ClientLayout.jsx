@@ -55,7 +55,7 @@ export default function ClientLayout({ children }) {
 
       {/* 🌍 פריסת שלושת העמודות */}
       <div className="w-full max-w-[1440px] mx-auto bg-gray-100" dir="rtl">
-        <main className="flex flex-col lg:flex-row min-h-screen mb-0 pt-[1px] pb-[2px] text-right">
+        <main className="flex flex-col lg:flex-row min-h-screen  text-right">
           {children}
           
 
