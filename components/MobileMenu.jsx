@@ -93,7 +93,7 @@ export default function MobileMenu() {
         <div
           {...handlers}
           ref={menuRef}
-          className="fixed top-0 left-0 right-0 h-screen w-[90vw] bg-black text-white flex flex-col z-[9999] text-right shadow-lg"
+          className="fixed top-0 left-0 right-0 h-screen w-[90vw] bg-black text-white flex flex-col z-[99999] text-right shadow-lg"
           style={{ touchAction: 'pan-y', overscrollBehavior: 'contain' }}
         >
           {/* 🔝 אזור עליון קבוע */}
