@@ -71,7 +71,7 @@ export default function ClientLayout({ children }) {
 
       {/* 🌍 פריסת שלושת הבלוקים לפי המבנה המקורי */}
       <div className="w-screen sm:w-full overflow-x-hidden sm:overflow-visible bg-[#f9f9f9]" dir="rtl">
-        <main className="min-h-screen flex flex-col lg:flex-row mb-0 px-0 sm:px-0 pt-[1px] pb-[2px] text-right bg-gray-100">
+        <main className="min-h-screen flex flex-col lg:flex-row-reverse mb-0 px-0 sm:px-0 pt-[1px] pb-[2px] text-right bg-gray-100">
           
           {/* ✅ תוכן ראשי – Sticky */}
           <div className="w-full lg:w-1/2 flex-shrink-0 px-0 py-0 lg:border-l border-[#e60000]">
@@ -99,6 +99,7 @@ export default function ClientLayout({ children }) {
           </div>
         </main>
       </div>
+
 
       {/* ⚫ פוטר */}
       <Footer />
