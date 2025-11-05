@@ -41,7 +41,7 @@ export default function ScrollToGalleryButton() {
   return (
     <button
       onClick={scrollToGallery}
-      className={`fixed bottom-36 right-1 z-[5000] bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 transition-all duration-500 ease-in-out
+      className={`fixed bottom-25 right-1 z-[5000] bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 transition-all duration-500 ease-in-out
       ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}
     >
       <FaImages className="text-lg" />
