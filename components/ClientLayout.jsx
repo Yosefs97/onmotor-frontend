@@ -3,7 +3,6 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import useIsMobile from "@/hooks/useIsMobile";
 import Header from "./Header";
 import Footer from "./Footer";
 import NewsTicker from "./NewsTicker";
@@ -11,32 +10,32 @@ import MobileMenu from "./MobileMenu";
 import MobileShopFilterBar from "./MobileShopFilterBar";
 import SidebarMiddleLayer from "./SidebarMiddleLayer";
 import SidebarLeftLayer from "./SidebarLeftLayer";
+import useIsMobile from "@/hooks/useIsMobile";
 
 /**
- * 🧱 ClientLayout – פריסה מדויקת 1/2 + 1/4 + 1/4 (RTL)
- * ------------------------------------------------------
- * ✅ Desktop: תוכן עיקרי (ימין) | סיידר אמצעי | סיידר שמאלי
- * ✅ Mobile: בלוקים אנכיים
+ * 🧱 ClientLayout – גרסה מאוזנת ומדויקת:
+ * -------------------------------------------------
+ * ✅ Desktop: תוכן ראשי 1/2, סיידר אמצעי 1/4, סיידר שמאלי 1/4
+ * ✅ Mobile: בלוקים אנכיים ללא רווחים צדדיים
  */
 
 export default function ClientLayout({ children }) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
 
-  // טעינת סקריפטים חיצוניים
   useEffect(() => {
     const scripts = [
       { id: "facebook-embed-script", src: "https://connect.facebook.net/he_IL/sdk.js#xfbml=1&version=v18.0" },
-      { id: "twitter-embed-script",  src: "https://platform.twitter.com/widgets.js" },
-      { id: "tiktok-embed-script",   src: "https://www.tiktok.com/embed.js" },
+      { id: "twitter-embed-script", src: "https://platform.twitter.com/widgets.js" },
+      { id: "tiktok-embed-script", src: "https://www.tiktok.com/embed.js" },
     ];
     scripts.forEach(({ id, src }) => {
       if (!document.getElementById(id)) {
-        const s = document.createElement("script");
-        s.id = id;
-        s.async = true;
-        s.src = src;
-        document.body.appendChild(s);
+        const script = document.createElement("script");
+        script.id = id;
+        script.async = true;
+        script.src = src;
+        document.body.appendChild(script);
       }
     });
   }, []);
@@ -54,32 +53,24 @@ export default function ClientLayout({ children }) {
       <NewsTicker />
       {isShopPage && <MobileShopFilterBar />}
 
-      {/* ⚙️ פריסת שלושת העמודות */}
-      <div className="w-screen sm:w-full overflow-x-hidden sm:overflow-visible bg-[#f9f9f9]" dir="rtl">
-        <main className="min-h-screen flex flex-col lg:flex-row text-right mb-0 px-0 sm:px-0 pt-[1px] pb-[2px] bg-gray-100">
+      {/* 🌍 פריסת שלושת העמודות */}
+      <div className="w-full max-w-[1440px] mx-auto bg-gray-100" dir="rtl">
+        <main className="flex flex-col lg:flex-row min-h-screen mb-0 pt-[1px] pb-[2px] text-right">
           
-          {/* 🟥 תוכן ראשי (ימין) */}
-          <div className="min-w-0 px-0 py-0 lg:flex-[0_0_50%] w-full lg:border-l border-[#e60000]">
+          {/* 🟥 תוכן ראשי – 1/2 */}
+          <div className="w-full lg:w-1/2 flex-shrink-0 px-0 sm:px-0 lg:border-l border-[#e60000]">
             <div className="sticky top-[70px]">
               {children}
             </div>
           </div>
 
-          {/* 🟦 סיידר אמצעי */}
-          <div
-            className={`min-w-0 px-0 py-0 lg:flex-[0_0_25%] w-full ${
-              !isMobile ? 'lg:border-l border-[#e60000]' : ''
-            }`}
-          >
+          {/* 🟦 סיידר אמצעי – 1/4 */}
+          <div className={`w-full lg:w-1/4 flex-shrink-0 px-0 sm:px-0 ${!isMobile ? 'border-l border-[#e60000]' : ''}`}>
             <SidebarMiddleLayer />
           </div>
 
-          {/* 🟩 סיידר שמאלי */}
-          <div
-            className={`min-w-0 px-0 py-0 lg:flex-[0_0_25%] w-full ${
-              !isMobile ? 'lg:border-r border-[#e60000]' : ''
-            }`}
-          >
+          {/* 🟩 סיידר שמאלי – 1/4 */}
+          <div className={`w-full lg:w-1/4 flex-shrink-0 px-0 sm:px-0 ${!isMobile ? 'border-r border-[#e60000]' : ''}`}>
             <SidebarLeftLayer />
           </div>
         </main>
