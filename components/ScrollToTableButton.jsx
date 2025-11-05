@@ -8,31 +8,31 @@ export default function ScrollToTableButton() {
 
   useEffect(() => {
     const handleScroll = () => {
-      const secondDesc = document.querySelector('.second-description');
-      if (!secondDesc) return;
+      const desc = document.querySelector('.second-description');
+      const table = document.querySelector('.article-table-section');
+      if (!desc || !table) return;
 
-      const rect = secondDesc.getBoundingClientRect();
-      const show = rect.top < window.innerHeight * 0.3;
-      setIsVisible(show);
+      const descRect = desc.getBoundingClientRect();
+      const tableRect = table.getBoundingClientRect();
+      const beforeTable = descRect.top < window.innerHeight * 0.3 && tableRect.top > window.innerHeight * 0.3;
+      setIsVisible(beforeTable);
     };
 
     window.addEventListener('scroll', handleScroll);
+    handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const scrollToTable = () => {
     const table = document.querySelector('.article-table-section');
-    if (table) {
-      table.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    if (table) table.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
-
-  if (!isVisible) return null;
 
   return (
     <button
       onClick={scrollToTable}
-      className="fixed bottom-20 right-1 z-[9999] bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full shadow-lg transition-all duration-300 flex items-center gap-2"
+      className={`fixed bottom-20 right-1 z-[5000] bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full shadow-lg transition-all duration-300 flex items-center gap-2
+      transition-opacity duration-500 ease-in-out ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
     >
       <FaTable className="text-lg" />
       <span className="text-sm font-semibold">למפרט</span>
