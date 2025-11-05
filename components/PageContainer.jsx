@@ -19,12 +19,7 @@ export default function PageContainer({ title, breadcrumbs = [], children }) {
       {/* תוכן מוצמד מתחת לכותרת */}
       <div className="sticky top-[70px] min-h-screen flex flex-col text-right px-3 sm:px-4">
         
-        {/* 🔴 ברדקרמבס (מתעדכנים לפי הנתיב, לא נטענים מחדש) */}
-        {breadcrumbs.length > 0 && (
-          <div className="mb-1">
-            <Breadcrumbs items={breadcrumbs} />
-          </div>
-        )}
+        
 
         {/* 🔶 כותרת ראשית */}
         {title && (
