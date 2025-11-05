@@ -17,7 +17,7 @@ export default function PageContainer({ title, breadcrumbs = [], children }) {
   return (
     <div className="w-full lg:w-1/2 flex-shrink-0 px-0 py-0 lg:border-l border-[#e60000] bg-[#f9f9f9]">
       {/* תוכן מוצמד מתחת לכותרת */}
-      <div className="sticky top-[70px] min-h-screen flex flex-col text-right px-3 sm:px-4">
+      <div className="sticky top-[70px] min-h-screen flex flex-col text-right px-1 sm:px-4">
         
         {/* 🔴 ברדקרמבס (מתעדכנים לפי הנתיב, לא נטענים מחדש) */}
         {breadcrumbs.length > 0 && (
