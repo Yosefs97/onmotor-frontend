@@ -56,13 +56,8 @@ export default function ClientLayout({ children }) {
       {/* 🌍 פריסת שלושת העמודות */}
       <div className="w-full max-w-[1440px] mx-auto bg-gray-100" dir="rtl">
         <main className="flex flex-col lg:flex-row min-h-screen mb-0 pt-[1px] pb-[2px] text-right">
+          {children}
           
-          {/* 🟥 תוכן ראשי – 1/2 */}
-          <div className="w-full lg:w-1/2 flex-shrink-0 px-0 sm:px-0 lg:border-l border-[#e60000]">
-            <div className="sticky top-[70px]">
-              {children}
-            </div>
-          </div>
 
           {/* 🟦 סיידר אמצעי – 1/4 */}
           <div className={`w-full lg:w-1/4 flex-shrink-0 px-0 sm:px-0 ${!isMobile ? 'border-l border-[#e60000]' : ''}`}>
