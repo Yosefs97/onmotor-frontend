@@ -12,12 +12,12 @@ import SidebarMiddleLayer from "./SidebarMiddleLayer";
 import SidebarLeftLayer from "./SidebarLeftLayer";
 
 /**
- * 🧱 ClientLayout – גרסה לאחר הסרת Breadcrumbs
+ * 🧱 ClientLayout – גרסה רספונסיבית מתוקנת
  * -------------------------------------------------
- * - שומר על Header, NewsTicker, Footer, ו־MobileMenu הקיימים.
- * - כולל רק את הסיידרים הקבועים.
- * - Breadcrumbs מטופלים מעתה ב־PageContainer.jsx בלבד.
- * - SidebarMiddleLayer ו־SidebarLeftLayer נטענים פעם אחת בלבד (Persist).
+ * ✅ שומר על Header, NewsTicker, Footer ו־MobileMenu הקיימים
+ * ✅ במובייל – הסיידרים מוסתרים, והתוכן תופס 100% רוחב
+ * ✅ ב־Desktop – נשמר יחס 1/2 (תוכן) + 1/4 (אמצעי) + 1/4 (שמאלי)
+ * ✅ ללא רווחים בצדדים או מתיחה מיותרת בגובה
  */
 
 export default function ClientLayout({ children }) {
@@ -67,19 +67,19 @@ export default function ClientLayout({ children }) {
       {/* כפתור סינון מוצרים במובייל (בחנות בלבד) */}
       {isShopPage && <MobileShopFilterBar />}
 
-      {/* 🌍 מבנה שלושת העמודות (שומר על יחסים 1/2 - 1/4 - 1/4) */}
+      {/* 🌍 פריסת שלושת העמודות */}
       <div className="w-full max-w-[1440px] mx-auto bg-gray-100" dir="rtl">
-        <main className="flex flex-col lg:flex-row min-h-screen">
+        <main className="flex flex-col lg:flex-row w-full min-h-fit lg:min-h-screen">
           {/* 🟥 תוכן משתנה (כתבות / קטגוריות) */}
-          {children}
+          <div className="w-full">{children}</div>
 
-          {/* 🟦 סיידר אמצעי – קבוע */}
-          <div className="w-full lg:w-1/4 flex-shrink-0 px-0 py-0 border-l border-[#e60000]">
+          {/* 🟦 סיידר אמצעי – מוצג רק בדסקטופ */}
+          <div className="hidden lg:block w-1/4 border-l border-[#e60000]">
             <SidebarMiddleLayer />
           </div>
 
-          {/* 🟩 סיידר שמאלי – קבוע */}
-          <div className="w-full lg:w-1/4 flex-shrink-0 px-0 py-0 border-r border-[#e60000]">
+          {/* 🟩 סיידר שמאלי – מוצג רק בדסקטופ */}
+          <div className="hidden lg:block w-1/4 border-r border-[#e60000]">
             <SidebarLeftLayer />
           </div>
         </main>
