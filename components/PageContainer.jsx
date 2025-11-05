@@ -34,7 +34,7 @@ export default function PageContainer({ title, breadcrumbs = [], children }) {
         )}
 
         {/* 🟢 תוכן דינמי (כתבות / קטגוריות / עמודים) */}
-        <div className="flex-1">{children}</div>
+        <div className="flex-1 w-full px-0 mx-0">{children}</div>
       </div>
     </div>
   );
