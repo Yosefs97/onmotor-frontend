@@ -8,6 +8,15 @@ import { getMainImage, resolveImageUrl } from '@/utils/resolveMainImage';
 const tabs = ['אחרונים', 'בדרכים', 'פופולרי'];
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 
+/* 🧠 Cache גלובלי ברמת המודול */
+let cache = {
+  latest: null,
+  onroad: null,
+  popular: null,
+  viral: null,
+  victims: null,
+};
+
 /* 👇 פונקציה שמוציאה שם אתר נקי מתוך כתובת */
 function extractDomainName(url) {
   try {
@@ -32,18 +41,16 @@ export default function TabLeftSidebar() {
   const sidebarRef = useRef(null);
 
   const [activeTab, setActiveTab] = useState('אחרונים');
-  const [latestArticles, setLatestArticles] = useState([]);
-  const [onRoadArticles, setOnRoadArticles] = useState([]);
-  const [popularContent, setPopularContent] = useState([]);
-  const [viralContent, setViralContent] = useState([]);
-  const [victims, setVictims] = useState([]);
+  const [latestArticles, setLatestArticles] = useState(cache.latest || []);
+  const [onRoadArticles, setOnRoadArticles] = useState(cache.onroad || []);
+  const [popularContent, setPopularContent] = useState(cache.popular || []);
+  const [viralContent, setViralContent] = useState(cache.viral || []);
+  const [victims, setVictims] = useState(cache.victims || []);
   const [isPaused, setIsPaused] = useState(false);
 
   /* ✅ normalizeItem – עכשיו עם getMainImage() */
   const normalizeItem = (obj, type = 'article') => {
     const a = obj.attributes || obj;
-
-    // קביעת מקור (YouTube, TikTok וכו’)
     let autoSource = '';
     if (a.url) {
       if (a.url.includes('youtube.com') || a.url.includes('youtu.be')) autoSource = 'YouTube';
@@ -53,7 +60,6 @@ export default function TabLeftSidebar() {
       else autoSource = extractDomainName(a.url);
     }
 
-    // ✅ שימוש בפונקציה המרכזית לבחירת תמונה
     const { mainImage } = getMainImage(a);
 
     return {
@@ -69,29 +75,34 @@ export default function TabLeftSidebar() {
     };
   };
 
-  /* ✅ שליפות מה־API */
+  /* ✅ שליפות מה־API עם cache */
   useEffect(() => {
-    const fetchLatest = async () => {
+    async function fetchLatest() {
+      if (cache.latest) return;
       try {
         const res = await fetch(`${API_URL}/api/articles?sort=date:desc&populate=*`);
         const data = (await res.json()).data || [];
-        setLatestArticles(data.map((a) => normalizeItem(a, 'latest-article')));
+        cache.latest = data.map((a) => normalizeItem(a, 'latest-article'));
+        setLatestArticles(cache.latest);
       } catch (err) {
         console.error('שגיאה בטעינת אחרונים:', err);
       }
-    };
+    }
 
-    const fetchOnRoad = async () => {
+    async function fetchOnRoad() {
+      if (cache.onroad) return;
       try {
         const res = await fetch(`${API_URL}/api/articles?filters[tags_txt][$contains]=iroads&sort=date:desc&populate=*`);
         const data = (await res.json()).data || [];
-        setOnRoadArticles(data.map((a) => normalizeItem(a, 'onroad-article')));
+        cache.onroad = data.map((a) => normalizeItem(a, 'onroad-article'));
+        setOnRoadArticles(cache.onroad);
       } catch (err) {
         console.error("שגיאה בטעינת 'בדרכים':", err);
       }
-    };
+    }
 
-    const fetchPopular = async () => {
+    async function fetchPopular() {
+      if (cache.popular) return;
       try {
         const res = await fetch(`${API_URL}/api/populars?sort=date:desc&populate=*`);
         const data = (await res.json()).data || [];
@@ -99,10 +110,7 @@ export default function TabLeftSidebar() {
         const withPreview = await Promise.all(
           data.map(async (item) => {
             const norm = normalizeItem(item, 'popular');
-
             if (norm.image && norm.image !== '/default-image.jpg') return norm;
-
-            // נסה להביא תצוגה מקדימה (metadata) אם אין תמונה
             if (norm.url) {
               try {
                 const previewRes = await fetch(`/api/preview?url=${encodeURIComponent(norm.url)}`);
@@ -112,37 +120,41 @@ export default function TabLeftSidebar() {
                 console.error('Preview fetch error:', err);
               }
             }
-
             if (!norm.image) norm.image = '/default-image.jpg';
             return norm;
           })
         );
 
+        cache.popular = withPreview;
         setPopularContent(withPreview);
       } catch (err) {
         console.error('שגיאה בטעינת פופולרי:', err);
       }
-    };
+    }
 
-    const fetchViral = async () => {
+    async function fetchViral() {
+      if (cache.viral) return;
       try {
         const res = await fetch(`${API_URL}/api/viral-contents?sort=views:desc&populate=*`);
         const data = (await res.json()).data || [];
-        setViralContent(data.map((v) => normalizeItem(v, 'viral')));
+        cache.viral = data.map((v) => normalizeItem(v, 'viral'));
+        setViralContent(cache.viral);
       } catch (err) {
         console.error('שגיאה בטעינת ויראלי:', err);
       }
-    };
+    }
 
-    const fetchVictims = async () => {
+    async function fetchVictims() {
+      if (cache.victims) return;
       try {
         const res = await fetch(`${API_URL}/api/victims?sort=date:desc&populate=*`);
         const data = (await res.json()).data || [];
-        setVictims(data.map((v) => normalizeItem(v, 'victim')));
+        cache.victims = data.map((v) => normalizeItem(v, 'victim'));
+        setVictims(cache.victims);
       } catch (err) {
         console.error('שגיאה בטעינת נפגעים:', err);
       }
-    };
+    }
 
     fetchLatest();
     fetchOnRoad();
@@ -181,8 +193,8 @@ export default function TabLeftSidebar() {
   }, [activeTab, isMobile, hasInteracted]);
 
   /* ✅ רינדור הפריטים לפי טאב */
-  const getStyledContent = (items) => {
-    return items.map((item, i) => {
+  const getStyledContent = (items) =>
+    items.map((item, i) => {
       const even = i % 2 === 0;
       const bg = even ? 'bg-red-50 text-black' : 'bg-neutral-900 text-white';
       return (
@@ -223,7 +235,6 @@ export default function TabLeftSidebar() {
         </a>
       );
     });
-  };
 
   let content = [];
   if (activeTab === 'אחרונים') content = getStyledContent(latestArticles);
@@ -236,10 +247,7 @@ export default function TabLeftSidebar() {
       ref={sidebarRef}
       className={`flex flex-col min-h-0 bg-white shadow-md w-full text-sm ${isMobile ? 'w-screen rounded-none' : ''}`}
     >
-      <div
-        className="flex border-b text-sm font-semibold bg-white sticky top-0 z-10 shadow-sm"
-        dir="rtl"
-      >
+      <div className="flex border-b text-sm font-semibold bg-white sticky top-0 z-10 shadow-sm" dir="rtl">
         {tabs.map((tab) => (
           <button
             key={tab}
