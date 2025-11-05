@@ -10,6 +10,8 @@ import MobileMenu from "./MobileMenu";
 import MobileShopFilterBar from "./MobileShopFilterBar";
 import SidebarMiddleLayer from "./SidebarMiddleLayer";
 import SidebarLeftLayer from "./SidebarLeftLayer";
+import useIsMobile from '@/hooks/useIsMobile';
+
 
 /**
  * 🧱 ClientLayout – גרסה לאחר הסרת Breadcrumbs
@@ -22,6 +24,8 @@ import SidebarLeftLayer from "./SidebarLeftLayer";
 
 export default function ClientLayout({ children }) {
   const pathname = usePathname();
+  const isMobile = useIsMobile();
+  
 
   // 🟢 טעינת סקריפטים חיצוניים (פייסבוק, טוויטר, טיקטוק)
   useEffect(() => {
