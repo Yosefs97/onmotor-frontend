@@ -13,19 +13,19 @@ import SidebarMiddleLayer from "./SidebarMiddleLayer";
 import SidebarLeftLayer from "./SidebarLeftLayer";
 
 /**
- * 🧱 ClientLayout – גרסה לפי המבנה המקורי של PageContainer
+ * 🧱 ClientLayout – לפי מבנה המקור (PageContainer)
  * -------------------------------------------------
- * ✅ הסיידרים מוצגים בדיוק כפי שהיו במקור.
- * ✅ בדסקטופ: תוכן (1/2) | אמצעי (1/4) | שמאלי (1/4)
- * ✅ במובייל: סדר אנכי – תוכן, ואז הסיידרים (ללא גבולות).
- * ✅ נטען פעם אחת בלבד, ללא רענון סיידרים.
+ * ✅ Desktop: תוכן ראשי (1/2), סיידר אמצעי (1/4), סיידר שמאלי (1/4)
+ * ✅ Mobile: שלושה בלוקים אנכיים אחד מתחת לשני (ללא גבולות)
+ * ✅ Sticky לתוכן נשמר
+ * ✅ סיידרים נטענים פעם אחת בלבד
  */
 
 export default function ClientLayout({ children }) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
 
-  // 🟢 טעינת סקריפטים חיצוניים (פייסבוק, טוויטר, טיקטוק)
+  // 🟢 טעינת סקריפטים חיצוניים
   useEffect(() => {
     const scripts = [
       {
@@ -69,12 +69,12 @@ export default function ClientLayout({ children }) {
       {/* כפתור סינון בחנות בלבד */}
       {isShopPage && <MobileShopFilterBar />}
 
-      {/* 🌍 פריסת שלושת הבלוקים לפי המבנה המקורי */}
+      {/* 🌍 שלושת הבלוקים (כמו ב־PageContainer המקורי) */}
       <div className="w-screen sm:w-full overflow-x-hidden sm:overflow-visible bg-[#f9f9f9]" dir="rtl">
-        <main className="min-h-screen flex flex-col lg:flex-row-reverse mb-0 px-0 sm:px-0 pt-[1px] pb-[2px] text-right bg-gray-100">
+        <main className="min-h-screen flex flex-col lg:flex-row mb-0 px-0 sm:px-0 pt-[1px] pb-[2px] text-right bg-gray-100">
           
           {/* ✅ תוכן ראשי – Sticky */}
-          <div className="basis-1/2 flex-shrink-0 px-0 py-0 lg:border-l border-[#e60000]">
+          <div className="w-full lg:w-1/2 flex-shrink-0 px-0 py-0 lg:border-l border-[#e60000]">
             <div className="sticky top-[70px]">
               {children}
             </div>
@@ -82,8 +82,8 @@ export default function ClientLayout({ children }) {
 
           {/* 🟦 סיידר אמצעי */}
           <div
-            className={`basis-1/4 flex-shrink-0 px-0 py-0 ${
-              !isMobile ? "border-l border-[#e60000]" : ""
+            className={`w-full lg:w-1/4 flex-shrink-0 px-0 py-0 ${
+              !isMobile ? 'border-l border-[#e60000]' : ''
             }`}
           >
             <SidebarMiddleLayer />
@@ -91,16 +91,14 @@ export default function ClientLayout({ children }) {
 
           {/* 🟩 סיידר שמאלי */}
           <div
-            className={`basis-1/4 flex-shrink-0 px-0 py-0 ${
-              !isMobile ? "border-r border-[#e60000]" : ""
+            className={`w-full lg:w-1/4 flex-shrink-0 px-0 py-0 ${
+              !isMobile ? 'border-r border-[#e60000]' : ''
             }`}
           >
             <SidebarLeftLayer />
           </div>
         </main>
       </div>
-
-
 
       {/* ⚫ פוטר */}
       <Footer />
