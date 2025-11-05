@@ -1,7 +1,7 @@
 // components/ClientLayout.jsx
 'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Header from "./Header";
 import Footer from "./Footer";
@@ -10,33 +10,18 @@ import MobileMenu from "./MobileMenu";
 import MobileShopFilterBar from "./MobileShopFilterBar";
 import SidebarMiddleLayer from "./SidebarMiddleLayer";
 import SidebarLeftLayer from "./SidebarLeftLayer";
-import Breadcrumbs from "./Breadcrumbs";
 
 /**
- * 🧱 ClientLayout – גרסה מעודכנת
+ * 🧱 ClientLayout – גרסה לאחר הסרת Breadcrumbs
  * -------------------------------------------------
  * - שומר על Header, NewsTicker, Footer, ו־MobileMenu הקיימים.
- * - מוסיף את שלושת הטורים (ימין 1/2, אמצע 1/4, שמאל 1/4).
- * - Breadcrumbs מוצג תמיד ומתעדכן לפי הנתיב.
+ * - כולל רק את הסיידרים הקבועים.
+ * - Breadcrumbs מטופלים מעתה ב־PageContainer.jsx בלבד.
  * - SidebarMiddleLayer ו־SidebarLeftLayer נטענים פעם אחת בלבד (Persist).
  */
 
 export default function ClientLayout({ children }) {
   const pathname = usePathname();
-  const [breadcrumbItems, setBreadcrumbItems] = useState([]);
-
-  // 📌 יצירת רשימת פירורים לפי הנתיב הנוכחי
-  useEffect(() => {
-    if (!pathname) return;
-    const parts = pathname.split("/").filter(Boolean);
-    const items = [{ label: "דף הבית", href: "/" }];
-    let currentPath = "";
-    parts.forEach((part) => {
-      currentPath += `/${part}`;
-      items.push({ label: decodeURIComponent(part), href: currentPath });
-    });
-    setBreadcrumbItems(items);
-  }, [pathname]);
 
   // 🟢 טעינת סקריפטים חיצוניים (פייסבוק, טוויטר, טיקטוק)
   useEffect(() => {
@@ -78,11 +63,6 @@ export default function ClientLayout({ children }) {
       {/* 🔺 הדר עליון */}
       <Header />
       <NewsTicker />
-
-      {/* 🧭 פירורי לחם (Breadcrumbs) – קבועים בזיכרון, מתעדכנים לפי הנתיב */}
-      <div className="w-full bg-gray-100 border-b border-[#e60000] py-1 px-3 sm:px-4 text-right">
-        <Breadcrumbs items={breadcrumbItems} />
-      </div>
 
       {/* כפתור סינון מוצרים במובייל (בחנות בלבד) */}
       {isShopPage && <MobileShopFilterBar />}
