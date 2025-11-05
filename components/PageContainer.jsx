@@ -2,20 +2,24 @@
 'use client';
 import React from 'react';
 import Breadcrumbs from './Breadcrumbs';
-import SidebarMiddleLayer from './SidebarMiddleLayer';
-import SidebarLeftLayer from './SidebarLeftLayer';
 import useIsMobile from '@/hooks/useIsMobile';
 
+/**
+ * 📦 PageContainer — גרסה מעודכנת
+ * ---------------------------------------
+ * - משמשת להצגת תוכן הדף בלבד (צד ימין).
+ * - הסיידרים (אמצעי + שמאלי) הועברו ל-ClientLayout.jsx כדי למנוע ריענון.
+ * - שומרת על יחס הגודל: 1/2 מסך בצד ימין עם גבול שמאלי.
+ */
 export default function PageContainer({ title, breadcrumbs = [], children }) {
   const isMobile = useIsMobile();
 
   return (
-    <div className="w-screen sm:w-full overflow-x-hidden sm:overflow-visible bg-[#f9f9f9]">
-      <main
-        dir="rtl"
-        className="min-h-screen flex-1 mb-0 px-0 sm:px-0 pt-[1px] pb-[2px] text-right"
-      >
-        {/* 🔴 ברדקרמבס */}
+    <div className="w-full lg:w-1/2 flex-shrink-0 px-0 py-0 lg:border-l border-[#e60000] bg-[#f9f9f9]">
+      {/* תוכן מוצמד מתחת לכותרת */}
+      <div className="sticky top-[70px] min-h-screen flex flex-col text-right px-3 sm:px-4">
+        
+        {/* 🔴 ברדקרמבס (מתעדכנים לפי הנתיב, לא נטענים מחדש) */}
         {breadcrumbs.length > 0 && (
           <div className="mb-1">
             <Breadcrumbs items={breadcrumbs} />
@@ -29,35 +33,9 @@ export default function PageContainer({ title, breadcrumbs = [], children }) {
           </h1>
         )}
 
-        {/* 🔵 שלושת הבלוקים */}
-        <div className="w-full flex flex-col lg:flex-row min-h-screen bg-gray-100">
-          
-          {/* ✅ תוכן ראשי – Sticky */}
-          <div className="w-full lg:w-1/2 flex-shrink-0 px-0 py-0 lg:border-l border-[#e60000]">
-            <div className="sticky top-[70px]"> 
-              {children}
-            </div>
-          </div>
-
-          {/* סיידר אמצעי */}
-          <div
-            className={`w-full lg:w-1/4 flex-shrink-0 px-0 py-0 ${
-              !isMobile ? 'border-l border-[#e60000]' : ''
-            }`}
-          >
-            <SidebarMiddleLayer />
-          </div>
-
-          {/* סיידר שמאלי */}
-          <div
-            className={`w-full lg:w-1/4 flex-shrink-0 px-0 py-0 ${
-              !isMobile ? 'border-r border-[#e60000]' : ''
-            }`}
-          >
-            <SidebarLeftLayer />
-          </div>
-        </div>
-      </main>
+        {/* 🟢 תוכן דינמי (כתבות / קטגוריות / עמודים) */}
+        <div className="flex-1">{children}</div>
+      </div>
     </div>
   );
 }
