@@ -13,34 +13,28 @@ import SidebarMiddleLayer from "./SidebarMiddleLayer";
 import SidebarLeftLayer from "./SidebarLeftLayer";
 
 /**
- * 🧱 ClientLayout – משולב עם הפריסה המלאה של PageContainer
+ * 🧱 ClientLayout – פריסת 1/2 + 1/4 + 1/4 מדויקת (כמו PageContainer)
  * ---------------------------------------------------------
- * - כולל Header, NewsTicker, Footer, MobileMenu.
- * - מבנה שלושת העמודות שומר על עיצוב PageContainer:
- *   1/2 תוכן עיקרי + 1/4 סיידר אמצעי + 1/4 סיידר שמאלי.
- * - Sticky לתוכן הראשי.
- * - רספונסיבי: במובייל שלושת הבלוקים נפרדים אנכית וללא גבולות.
+ * ✅ Desktop:
+ *   תוכן עיקרי (ימין, 1/2)
+ *   סיידר אמצעי (מרכז, 1/4)
+ *   סיידר שמאלי (שמאל, 1/4)
+ * ✅ Mobile:
+ *   בלוקים אנכיים (אחד מתחת לשני)
  */
 
 export default function ClientLayout({ children }) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
 
-  // טעינת סקריפטים חיצוניים (פייסבוק, טוויטר, טיקטוק)
   useEffect(() => {
     const scripts = [
       {
         id: "facebook-embed-script",
         src: "https://connect.facebook.net/he_IL/sdk.js#xfbml=1&version=v18.0",
       },
-      {
-        id: "twitter-embed-script",
-        src: "https://platform.twitter.com/widgets.js",
-      },
-      {
-        id: "tiktok-embed-script",
-        src: "https://www.tiktok.com/embed.js",
-      },
+      { id: "twitter-embed-script", src: "https://platform.twitter.com/widgets.js" },
+      { id: "tiktok-embed-script", src: "https://www.tiktok.com/embed.js" },
     ];
 
     scripts.forEach(({ id, src }) => {
@@ -58,52 +52,46 @@ export default function ClientLayout({ children }) {
 
   return (
     <>
-      {/* 🍔 תפריט מובייל קבוע */}
+      {/* 🍔 תפריט מובייל */}
       <div className="fixed top-4 right-0 z-[9999] lg:hidden">
         <MobileMenu />
       </div>
 
-      {/* 🔺 הדר עליון */}
+      {/* הדר וחדשות */}
       <Header />
       <NewsTicker />
 
-      {/* כפתור סינון מוצרים במובייל */}
       {isShopPage && <MobileShopFilterBar />}
 
-      {/* 🌍 תוכן ראשי עם סיידרים */}
-      <div className="w-screen sm:w-full overflow-x-hidden sm:overflow-visible bg-[#f9f9f9]">
-        <div className="w-full flex flex-col lg:flex-row min-h-screen bg-gray-100">
-          <main
-            dir="rtl"
-            className="min-h-screen flex-1 mb-0 px-0 sm:px-0 pt-[1px] pb-[2px] text-right"
+      {/* ⚙️ פריסת שלושת העמודות */}
+      <div className="w-screen sm:w-full overflow-x-hidden sm:overflow-visible bg-[#f9f9f9]" dir="rtl">
+        <main className="min-h-screen flex flex-col lg:flex-row-reverse text-right mb-0 px-0 sm:px-0 pt-[1px] pb-[2px] bg-gray-100">
+          
+          {/* 🟥 תוכן ראשי (ימין) */}
+          <div className="w-full lg:w-1/2 flex-shrink-0 px-0 py-0 lg:border-l border-[#e60000]">
+            <div className="sticky top-[70px]">
+              {children}
+            </div>
+          </div>
+
+          {/* 🟦 סיידר אמצעי */}
+          <div
+            className={`w-full lg:w-1/4 flex-shrink-0 px-0 py-0 ${
+              !isMobile ? 'border-l border-[#e60000]' : ''
+            }`}
           >
-            
-            {/* ✅ תוכן ראשי – Sticky */}
-            <div className="w-full lg:w-1/2 flex-shrink-0 px-0 py-0 lg:border-l border-[#e60000]">
-              <div className="sticky top-[70px]">
-                {children}
-              </div>
-            </div>
+            <SidebarMiddleLayer />
+          </div>
 
-            {/* 🟦 סיידר אמצעי */}
-            <div
-              className={`w-full lg:w-1/4 flex-shrink-0 px-0 py-0 ${
-                !isMobile ? 'border-l border-[#e60000]' : ''
-              }`}
-            >
-              <SidebarMiddleLayer />
-            </div>
-
-            {/* 🟩 סיידר שמאלי */}
-            <div
-              className={`w-full lg:w-1/4 flex-shrink-0 px-0 py-0 ${
-                !isMobile ? 'border-r border-[#e60000]' : ''
-              }`}
-            >
-              <SidebarLeftLayer />
-            </div>
-          </main>
-        </div>
+          {/* 🟩 סיידר שמאלי */}
+          <div
+            className={`w-full lg:w-1/4 flex-shrink-0 px-0 py-0 ${
+              !isMobile ? 'border-r border-[#e60000]' : ''
+            }`}
+          >
+            <SidebarLeftLayer />
+          </div>
+        </main>
       </div>
 
       {/* ⚫ פוטר */}
