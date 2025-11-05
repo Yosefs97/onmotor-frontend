@@ -412,9 +412,9 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
           {article.subdescription && (
             <p className="second-description text-gray-700 text-[18px]">{article.subdescription}</p>
           )}
-
-          {paragraphs.map(renderParagraph)}
-
+          <div className="article-content">
+            {paragraphs.map(renderParagraph)}
+          </div>
           {article.tableData && (
             <div className="article-table-section">
               <SimpleKeyValueTable data={article.tableData} />
