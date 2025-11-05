@@ -74,7 +74,7 @@ export default function ClientLayout({ children }) {
         <main className="min-h-screen flex flex-col lg:flex-row-reverse mb-0 px-0 sm:px-0 pt-[1px] pb-[2px] text-right bg-gray-100">
           
           {/* ✅ תוכן ראשי – Sticky */}
-          <div className="w-full lg:w-1/2 flex-shrink-0 px-0 py-0 lg:border-l border-[#e60000]">
+          <div className="basis-1/2 flex-shrink-0 px-0 py-0 lg:border-l border-[#e60000]">
             <div className="sticky top-[70px]">
               {children}
             </div>
@@ -82,7 +82,7 @@ export default function ClientLayout({ children }) {
 
           {/* 🟦 סיידר אמצעי */}
           <div
-            className={`w-full lg:w-1/4 flex-shrink-0 px-0 py-0 ${
+            className={`basis-1/4 flex-shrink-0 px-0 py-0 ${
               !isMobile ? "border-l border-[#e60000]" : ""
             }`}
           >
@@ -91,7 +91,7 @@ export default function ClientLayout({ children }) {
 
           {/* 🟩 סיידר שמאלי */}
           <div
-            className={`w-full lg:w-1/4 flex-shrink-0 px-0 py-0 ${
+            className={`basis-1/4 flex-shrink-0 px-0 py-0 ${
               !isMobile ? "border-r border-[#e60000]" : ""
             }`}
           >
@@ -99,6 +99,7 @@ export default function ClientLayout({ children }) {
           </div>
         </main>
       </div>
+
 
 
       {/* ⚫ פוטר */}
