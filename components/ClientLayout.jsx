@@ -69,18 +69,17 @@ export default function ClientLayout({ children }) {
       {/* כפתור סינון בחנות בלבד */}
       {isShopPage && <MobileShopFilterBar />}
 
-      {/* 🌍 שלושת הבלוקים (כמו ב־PageContainer המקורי) */}
-      <div className="w-screen sm:w-full overflow-x-hidden sm:overflow-visible bg-[#f9f9f9]" dir="rtl">
-        <main className="min-h-screen flex flex-col lg:flex-row mb-0 px-0 sm:px-0 pt-[1px] pb-[2px] text-right bg-gray-100">
+      {/* 🔵 שלושת הבלוקים */}
+        <div className="w-full flex flex-col lg:flex-row min-h-screen bg-gray-100">
           
           {/* ✅ תוכן ראשי – Sticky */}
           <div className="w-full lg:w-1/2 flex-shrink-0 px-0 py-0 lg:border-l border-[#e60000]">
-            <div className="sticky top-[70px]">
+            <div className="sticky top-[70px]"> 
               {children}
             </div>
           </div>
 
-          {/* 🟦 סיידר אמצעי */}
+          {/* סיידר אמצעי */}
           <div
             className={`w-full lg:w-1/4 flex-shrink-0 px-0 py-0 ${
               !isMobile ? 'border-l border-[#e60000]' : ''
@@ -89,7 +88,7 @@ export default function ClientLayout({ children }) {
             <SidebarMiddleLayer />
           </div>
 
-          {/* 🟩 סיידר שמאלי */}
+          {/* סיידר שמאלי */}
           <div
             className={`w-full lg:w-1/4 flex-shrink-0 px-0 py-0 ${
               !isMobile ? 'border-r border-[#e60000]' : ''
@@ -97,8 +96,7 @@ export default function ClientLayout({ children }) {
           >
             <SidebarLeftLayer />
           </div>
-        </main>
-      </div>
+        </div>
 
       {/* ⚫ פוטר */}
       <Footer />
