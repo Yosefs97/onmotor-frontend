@@ -432,7 +432,9 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
 
           <Tags tags={article.tags} />
           <SimilarArticles currentSlug={article.slug} category={article.category} />
-          <CommentsSection articleUrl={`${SITE_URL}${article.href}`} />
+          <div className="comments-section">
+            <CommentsSection articleUrl={`${SITE_URL}${article.href}`} />
+          </div>
         </div>
       </PageContainer>
       <ScrollToTableButton />

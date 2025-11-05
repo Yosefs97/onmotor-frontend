@@ -11,29 +11,38 @@ export default function ScrollToTableButton() {
       const content = document.querySelector('.article-content');
       const table = document.querySelector('.article-table-section');
       const gallery = document.querySelector('.article-gallery-section');
+      const comments = document.querySelector('.comments-section');
       if (!content) return;
 
       const contentRect = content.getBoundingClientRect();
       const tableRect = table?.getBoundingClientRect();
       const galleryRect = gallery?.getBoundingClientRect();
+      const commentsRect = comments?.getBoundingClientRect();
 
-      const startVisible = contentRect.top < window.innerHeight * 0.6; // אחרי כ-5 שורות
+      const startVisible = contentRect.top < window.innerHeight * 0.6;
       const inTable =
         tableRect &&
         tableRect.top < window.innerHeight * 0.8 &&
         tableRect.bottom > window.innerHeight * 0.2;
       const afterGallery =
         galleryRect && galleryRect.bottom < window.innerHeight * 0.8;
+      const inComments =
+        commentsRect &&
+        commentsRect.top < window.innerHeight &&
+        commentsRect.bottom > 0;
 
-      // ✅ מופיע רק כשעברנו תחילת הכתבה,
-      // נעלם אם אנחנו בטבלה,
-      // מופיע שוב אחרי הגלריה (בסוף הדף)
+      const isMobile = window.innerWidth <= 1024;
+
+      // ✅ מופיע אחרי תחילת הכתבה, נעלם בטבלה,
+      // מופיע שוב אחרי הגלריה, נעלם בסוף (תגובות)
       const show = (startVisible && !inTable) || afterGallery;
-      setIsVisible(show);
+      const hideAtComments = isMobile && inComments;
+
+      setIsVisible(show && !hideAtComments);
     };
 
     window.addEventListener('scroll', handleScroll);
-    handleScroll(); // הפעלה מידית
+    handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 

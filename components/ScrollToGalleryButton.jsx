@@ -10,26 +10,36 @@ export default function ScrollToGalleryButton() {
     const handleScroll = () => {
       const content = document.querySelector('.article-content');
       const gallery = document.querySelector('.article-gallery-section');
+      const comments = document.querySelector('.comments-section');
       if (!content) return;
 
       const contentRect = content.getBoundingClientRect();
       const galleryRect = gallery?.getBoundingClientRect();
+      const commentsRect = comments?.getBoundingClientRect();
 
-      const startVisible = contentRect.top < window.innerHeight * 0.6; // אחרי כ-5 שורות
+      const startVisible = contentRect.top < window.innerHeight * 0.6;
       const inGallery =
         galleryRect &&
         galleryRect.top < window.innerHeight * 0.8 &&
         galleryRect.bottom > window.innerHeight * 0.2;
       const afterEnd =
         galleryRect && galleryRect.bottom < window.innerHeight * 0.8;
+      const inComments =
+        commentsRect &&
+        commentsRect.top < window.innerHeight &&
+        commentsRect.bottom > 0;
+
+      const isMobile = window.innerWidth <= 1024;
 
       // ✅ מופיע אחרי ההתחלה, נעלם בגלריה, מופיע שוב אחרי הסוף
       const show = (startVisible && !inGallery) || afterEnd;
-      setIsVisible(show);
+      const hideAtComments = isMobile && inComments;
+
+      setIsVisible(show && !hideAtComments);
     };
 
     window.addEventListener('scroll', handleScroll);
-    handleScroll(); // הפעלה מידית
+    handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
