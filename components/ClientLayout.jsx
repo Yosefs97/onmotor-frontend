@@ -3,6 +3,7 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
+import useIsMobile from "@/hooks/useIsMobile";
 import Header from "./Header";
 import Footer from "./Footer";
 import NewsTicker from "./NewsTicker";
@@ -12,18 +13,20 @@ import SidebarMiddleLayer from "./SidebarMiddleLayer";
 import SidebarLeftLayer from "./SidebarLeftLayer";
 
 /**
- * 🧱 ClientLayout – גרסה לאחר הסרת Breadcrumbs
- * -------------------------------------------------
- * - שומר על Header, NewsTicker, Footer, ו־MobileMenu הקיימים.
- * - כולל רק את הסיידרים הקבועים.
- * - Breadcrumbs מטופלים מעתה ב־PageContainer.jsx בלבד.
- * - SidebarMiddleLayer ו־SidebarLeftLayer נטענים פעם אחת בלבד (Persist).
+ * 🧱 ClientLayout – משולב עם הפריסה המלאה של PageContainer
+ * ---------------------------------------------------------
+ * - כולל Header, NewsTicker, Footer, MobileMenu.
+ * - מבנה שלושת העמודות שומר על עיצוב PageContainer:
+ *   1/2 תוכן עיקרי + 1/4 סיידר אמצעי + 1/4 סיידר שמאלי.
+ * - Sticky לתוכן הראשי.
+ * - רספונסיבי: במובייל שלושת הבלוקים נפרדים אנכית וללא גבולות.
  */
 
 export default function ClientLayout({ children }) {
   const pathname = usePathname();
+  const isMobile = useIsMobile();
 
-  // 🟢 טעינת סקריפטים חיצוניים (פייסבוק, טוויטר, טיקטוק)
+  // טעינת סקריפטים חיצוניים (פייסבוק, טוויטר, טיקטוק)
   useEffect(() => {
     const scripts = [
       {
@@ -55,7 +58,7 @@ export default function ClientLayout({ children }) {
 
   return (
     <>
-      {/* 🍔 כפתור ההמבורגר במובייל */}
+      {/* 🍔 תפריט מובייל קבוע */}
       <div className="fixed top-4 right-0 z-[9999] lg:hidden">
         <MobileMenu />
       </div>
@@ -64,22 +67,35 @@ export default function ClientLayout({ children }) {
       <Header />
       <NewsTicker />
 
-      {/* כפתור סינון מוצרים במובייל (בחנות בלבד) */}
+      {/* כפתור סינון מוצרים במובייל */}
       {isShopPage && <MobileShopFilterBar />}
 
-      {/* 🌍 מבנה שלושת העמודות (שומר על יחסים 1/2 - 1/4 - 1/4) */}
-      <div className="w-full max-w-[1440px] mx-auto bg-gray-100" dir="rtl">
-        <main className="flex flex-col lg:flex-row min-h-screen">
-          {/* 🟥 תוכן משתנה (כתבות / קטגוריות) */}
-          {children}
+      {/* 🌍 תוכן ראשי עם סיידרים */}
+      <div className="w-screen sm:w-full overflow-x-hidden sm:overflow-visible bg-[#f9f9f9]" dir="rtl">
+        <main className="min-h-screen flex flex-col lg:flex-row text-right mb-0 px-0 sm:px-0 pt-[1px] pb-[2px]">
+          
+          {/* ✅ תוכן ראשי – Sticky */}
+          <div className="w-full lg:w-1/2 flex-shrink-0 px-0 py-0 lg:border-l border-[#e60000]">
+            <div className="sticky top-[70px]">
+              {children}
+            </div>
+          </div>
 
-          {/* 🟦 סיידר אמצעי – קבוע */}
-          <div className="w-full lg:w-1/4 flex-shrink-0 px-0 py-0 border-l border-[#e60000]">
+          {/* 🟦 סיידר אמצעי */}
+          <div
+            className={`w-full lg:w-1/4 flex-shrink-0 px-0 py-0 ${
+              !isMobile ? 'border-l border-[#e60000]' : ''
+            }`}
+          >
             <SidebarMiddleLayer />
           </div>
 
-          {/* 🟩 סיידר שמאלי – קבוע */}
-          <div className="w-full lg:w-1/4 flex-shrink-0 px-0 py-0 border-r border-[#e60000]">
+          {/* 🟩 סיידר שמאלי */}
+          <div
+            className={`w-full lg:w-1/4 flex-shrink-0 px-0 py-0 ${
+              !isMobile ? 'border-r border-[#e60000]' : ''
+            }`}
+          >
             <SidebarLeftLayer />
           </div>
         </main>
