@@ -13,33 +13,27 @@ import SidebarMiddleLayer from "./SidebarMiddleLayer";
 import SidebarLeftLayer from "./SidebarLeftLayer";
 
 /**
- * 🧱 ClientLayout – לפי מבנה המקור (PageContainer)
+ * 🧱 ClientLayout – מבנה אתר OnMotor Media
  * -------------------------------------------------
- * ✅ Desktop: תוכן ראשי (1/2), סיידר אמצעי (1/4), סיידר שמאלי (1/4)
- * ✅ Mobile: שלושה בלוקים אנכיים אחד מתחת לשני (ללא גבולות)
- * ✅ Sticky לתוכן נשמר
- * ✅ סיידרים נטענים פעם אחת בלבד
+ * ✅ Desktop: 1/4 (ימין - SidebarLeftLayer)
+ *             1/4 (אמצע - SidebarMiddleLayer)
+ *             1/2 (שמאל - תוכן ראשי)
+ * ✅ Mobile: אנכי (שלוש שכבות אחת מתחת לשנייה)
  */
 
 export default function ClientLayout({ children }) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
 
-  // 🟢 טעינת סקריפטים חיצוניים
+  // 🟢 טעינת סקריפטים חיצוניים (Facebook / Twitter / TikTok)
   useEffect(() => {
     const scripts = [
       {
         id: "facebook-embed-script",
         src: "https://connect.facebook.net/he_IL/sdk.js#xfbml=1&version=v18.0",
       },
-      {
-        id: "twitter-embed-script",
-        src: "https://platform.twitter.com/widgets.js",
-      },
-      {
-        id: "tiktok-embed-script",
-        src: "https://www.tiktok.com/embed.js",
-      },
+      { id: "twitter-embed-script", src: "https://platform.twitter.com/widgets.js" },
+      { id: "tiktok-embed-script", src: "https://www.tiktok.com/embed.js" },
     ];
 
     scripts.forEach(({ id, src }) => {
@@ -69,34 +63,30 @@ export default function ClientLayout({ children }) {
       {/* כפתור סינון בחנות בלבד */}
       {isShopPage && <MobileShopFilterBar />}
 
-      {/* 🔵 שלושת הבלוקים */}
-        <div className="w-full flex flex-col lg:flex-row min-h-screen bg-gray-100">
-          
-          {/* ✅ תוכן ראשי – Sticky */}
-          <div className="w-full lg:w-1/2 flex-shrink-0 px-0 py-0 lg:border-l border-[#e60000]">
-            <div className="sticky top-[70px]"> 
-              {children}
-            </div>
-          </div>
+      {/* 🔵 שלושת הבלוקים - פריסת דסקטופ ומובייל */}
+      <div className="w-full flex flex-col lg:flex-row-reverse min-h-screen bg-gray-100">
 
-          {/* סיידר אמצעי */}
-          <div
-            className={`w-full lg:w-1/4 flex-shrink-0 px-0 py-0 ${
-              !isMobile ? 'border-l border-[#e60000]' : ''
-            }`}
-          >
-            <SidebarMiddleLayer />
-          </div>
+        {/* 🟥 סיידר ימין (קבוע) */}
+        <div
+          className={`w-full lg:w-1/4 flex-shrink-0 px-0 py-0 border-l border-[#e60000]`}
+        >
+          <SidebarLeftLayer />
+        </div>
 
-          {/* סיידר שמאלי */}
-          <div
-            className={`w-full lg:w-1/4 flex-shrink-0 px-0 py-0 ${
-              !isMobile ? 'border-r border-[#e60000]' : ''
-            }`}
-          >
-            <SidebarLeftLayer />
+        {/* 🟧 סיידר אמצעי */}
+        <div
+          className={`w-full lg:w-1/4 flex-shrink-0 px-0 py-0 border-l border-[#e60000]`}
+        >
+          <SidebarMiddleLayer />
+        </div>
+
+        {/* 🟩 תוכן ראשי (1/2 מהמסך) */}
+        <div className="w-full lg:w-1/2 flex-shrink-0 px-0 py-0">
+          <div className="sticky top-[70px]">
+            {children}
           </div>
         </div>
+      </div>
 
       {/* ⚫ פוטר */}
       <Footer />
