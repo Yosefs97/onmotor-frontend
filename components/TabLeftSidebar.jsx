@@ -35,8 +35,6 @@ export default function TabLeftSidebar() {
   const [latestArticles, setLatestArticles] = useState([]);
   const [onRoadArticles, setOnRoadArticles] = useState([]);
   const [popularContent, setPopularContent] = useState([]);
-  const [viralContent, setViralContent] = useState([]);
-  const [victims, setVictims] = useState([]);
   const [isPaused, setIsPaused] = useState(false);
 
   /* ✅ normalizeItem – עכשיו עם getMainImage() */
@@ -124,31 +122,13 @@ export default function TabLeftSidebar() {
       }
     };
 
-    const fetchViral = async () => {
-      try {
-        const res = await fetch(`${API_URL}/api/viral-contents?sort=views:desc&populate=*`);
-        const data = (await res.json()).data || [];
-        setViralContent(data.map((v) => normalizeItem(v, 'viral')));
-      } catch (err) {
-        console.error('שגיאה בטעינת ויראלי:', err);
-      }
-    };
+  
 
-    const fetchVictims = async () => {
-      try {
-        const res = await fetch(`${API_URL}/api/victims?sort=date:desc&populate=*`);
-        const data = (await res.json()).data || [];
-        setVictims(data.map((v) => normalizeItem(v, 'victim')));
-      } catch (err) {
-        console.error('שגיאה בטעינת נפגעים:', err);
-      }
-    };
+    
 
     fetchLatest();
     fetchOnRoad();
     fetchPopular();
-    fetchViral();
-    fetchVictims();
   }, []);
 
   /* ✅ גלילה אנכית מתמשכת */
