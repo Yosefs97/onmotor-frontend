@@ -3,7 +3,6 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import useIsMobile from "@/hooks/useIsMobile";
 import Header from "./Header";
 import Footer from "./Footer";
 import NewsTicker from "./NewsTicker";
@@ -13,27 +12,32 @@ import SidebarMiddleLayer from "./SidebarMiddleLayer";
 import SidebarLeftLayer from "./SidebarLeftLayer";
 
 /**
- * 🧱 ClientLayout – מבנה אתר OnMotor Media
+ * 🧱 ClientLayout – גרסה לאחר הסרת Breadcrumbs
  * -------------------------------------------------
- * ✅ Desktop: 1/4 (ימין - SidebarLeftLayer)
- *             1/4 (אמצע - SidebarMiddleLayer)
- *             1/2 (שמאל - תוכן ראשי)
- * ✅ Mobile: אנכי (שלוש שכבות אחת מתחת לשנייה)
+ * - שומר על Header, NewsTicker, Footer, ו־MobileMenu הקיימים.
+ * - כולל רק את הסיידרים הקבועים.
+ * - Breadcrumbs מטופלים מעתה ב־PageContainer.jsx בלבד.
+ * - SidebarMiddleLayer ו־SidebarLeftLayer נטענים פעם אחת בלבד (Persist).
  */
 
 export default function ClientLayout({ children }) {
   const pathname = usePathname();
-  const isMobile = useIsMobile();
 
-  // 🟢 טעינת סקריפטים חיצוניים (Facebook / Twitter / TikTok)
+  // 🟢 טעינת סקריפטים חיצוניים (פייסבוק, טוויטר, טיקטוק)
   useEffect(() => {
     const scripts = [
       {
         id: "facebook-embed-script",
         src: "https://connect.facebook.net/he_IL/sdk.js#xfbml=1&version=v18.0",
       },
-      { id: "twitter-embed-script", src: "https://platform.twitter.com/widgets.js" },
-      { id: "tiktok-embed-script", src: "https://www.tiktok.com/embed.js" },
+      {
+        id: "twitter-embed-script",
+        src: "https://platform.twitter.com/widgets.js",
+      },
+      {
+        id: "tiktok-embed-script",
+        src: "https://www.tiktok.com/embed.js",
+      },
     ];
 
     scripts.forEach(({ id, src }) => {
@@ -51,41 +55,34 @@ export default function ClientLayout({ children }) {
 
   return (
     <>
-      {/* 🍔 תפריט מובייל */}
+      {/* 🍔 כפתור ההמבורגר במובייל */}
       <div className="fixed top-4 right-0 z-[9999] lg:hidden">
         <MobileMenu />
       </div>
 
-      {/* 🔺 הדר וניוז טיקר */}
+      {/* 🔺 הדר עליון */}
       <Header />
       <NewsTicker />
 
-      {/* כפתור סינון בחנות בלבד */}
+      {/* כפתור סינון מוצרים במובייל (בחנות בלבד) */}
       {isShopPage && <MobileShopFilterBar />}
 
-      {/* 🔵 שלושת הבלוקים - פריסת דסקטופ ומובייל */}
-      <div className="w-full flex flex-col lg:flex-row-reverse min-h-screen bg-gray-100">
+      {/* 🌍 מבנה שלושת העמודות (שומר על יחסים 1/2 - 1/4 - 1/4) */}
+      <div className="w-full max-w-[1440px] mx-auto bg-gray-100" dir="rtl">
+        <main className="flex flex-col lg:flex-row min-h-screen">
+          {/* 🟥 תוכן משתנה (כתבות / קטגוריות) */}
+          {children}
 
-        {/* 🟥 סיידר ימין (קבוע) */}
-        <div
-          className={`w-full lg:w-1/4 flex-shrink-0 px-0 py-0 border-l border-[#e60000]`}
-        >
-          <SidebarLeftLayer />
-        </div>
-
-        {/* 🟧 סיידר אמצעי */}
-        <div
-          className={`w-full lg:w-1/4 flex-shrink-0 px-0 py-0 border-l border-[#e60000]`}
-        >
-          <SidebarMiddleLayer />
-        </div>
-
-        {/* 🟩 תוכן ראשי (1/2 מהמסך) */}
-        <div className="w-full lg:w-1/2 flex-shrink-0 px-0 py-0">
-          <div className="sticky top-[70px]">
-            {children}
+          {/* 🟦 סיידר אמצעי – קבוע */}
+          <div className="w-full lg:w-1/4 flex-shrink-0 px-0 py-0 border-l border-[#e60000]">
+            <SidebarMiddleLayer />
           </div>
-        </div>
+
+          {/* 🟩 סיידר שמאלי – קבוע */}
+          <div className="w-full lg:w-1/4 flex-shrink-0 px-0 py-0 border-r border-[#e60000]">
+            <SidebarLeftLayer />
+          </div>
+        </main>
       </div>
 
       {/* ⚫ פוטר */}
