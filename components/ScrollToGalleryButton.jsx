@@ -8,29 +8,28 @@ export default function ScrollToGalleryButton() {
 
   useEffect(() => {
     const handleScroll = () => {
-      const articleContent = document.querySelector('.article-content');
-      const table = document.querySelector('.article-table-section');
+      const content = document.querySelector('.article-content');
       const gallery = document.querySelector('.article-gallery-section');
-      if (!articleContent) return;
+      if (!content) return;
 
-      const rect = articleContent.getBoundingClientRect();
-      const tableRect = table?.getBoundingClientRect();
+      const contentRect = content.getBoundingClientRect();
       const galleryRect = gallery?.getBoundingClientRect();
 
-      const startOffset = window.innerHeight * 0.25;
-      const endOffset = window.innerHeight * 0.15;
+      const startVisible = contentRect.top < window.innerHeight * 0.6; // אחרי כ-5 שורות
+      const inGallery =
+        galleryRect &&
+        galleryRect.top < window.innerHeight * 0.8 &&
+        galleryRect.bottom > window.innerHeight * 0.2;
+      const afterEnd =
+        galleryRect && galleryRect.bottom < window.innerHeight * 0.8;
 
-      const afterStart = rect.top < -startOffset;
-      const beforeGallery = galleryRect ? galleryRect.top > endOffset : true;
-      const afterEnd = galleryRect ? galleryRect.bottom < window.innerHeight : false;
-
-      // ✅ מוצג אם עברו את ההתחלה ועדיין לא בגלריה
-      // או אם עברו את סוף הכתבה
-      setIsVisible((afterStart && beforeGallery) || afterEnd);
+      // ✅ מופיע אחרי ההתחלה, נעלם בגלריה, מופיע שוב אחרי הסוף
+      const show = (startVisible && !inGallery) || afterEnd;
+      setIsVisible(show);
     };
 
     window.addEventListener('scroll', handleScroll);
-    handleScroll();
+    handleScroll(); // הפעלה מידית
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 

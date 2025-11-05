@@ -8,29 +8,32 @@ export default function ScrollToTableButton() {
 
   useEffect(() => {
     const handleScroll = () => {
-      const articleContent = document.querySelector('.article-content'); // גוף הכתבה
+      const content = document.querySelector('.article-content');
       const table = document.querySelector('.article-table-section');
       const gallery = document.querySelector('.article-gallery-section');
-      if (!articleContent) return;
+      if (!content) return;
 
-      const rect = articleContent.getBoundingClientRect();
+      const contentRect = content.getBoundingClientRect();
       const tableRect = table?.getBoundingClientRect();
       const galleryRect = gallery?.getBoundingClientRect();
 
-      const startOffset = window.innerHeight * 0.25; // בערך אחרי כמה שורות
-      const endOffset = window.innerHeight * 0.15;
+      const startVisible = contentRect.top < window.innerHeight * 0.6; // אחרי כ-5 שורות
+      const inTable =
+        tableRect &&
+        tableRect.top < window.innerHeight * 0.8 &&
+        tableRect.bottom > window.innerHeight * 0.2;
+      const afterGallery =
+        galleryRect && galleryRect.bottom < window.innerHeight * 0.8;
 
-      const afterStart = rect.top < -startOffset; // עברו את תחילת הכתבה
-      const beforeTable = tableRect ? tableRect.top > endOffset : true;
-      const afterGallery = galleryRect ? galleryRect.bottom < window.innerHeight : false;
-
-      // ✅ מוצג אם עברו את ההתחלה ועדיין לא בטבלה
-      // או אם נמצאים אחרי הגלריה (כלומר בסוף הכתבה)
-      setIsVisible((afterStart && beforeTable) || afterGallery);
+      // ✅ מופיע רק כשעברנו תחילת הכתבה,
+      // נעלם אם אנחנו בטבלה,
+      // מופיע שוב אחרי הגלריה (בסוף הדף)
+      const show = (startVisible && !inTable) || afterGallery;
+      setIsVisible(show);
     };
 
     window.addEventListener('scroll', handleScroll);
-    handleScroll();
+    handleScroll(); // הפעלה מידית
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
