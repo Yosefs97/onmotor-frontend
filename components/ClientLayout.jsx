@@ -54,8 +54,8 @@ export default function ClientLayout({ children }) {
       {isShopPage && <MobileShopFilterBar />}
 
       {/* 🌍 פריסת שלושת העמודות */}
-      <div className="w-full lg:max-w-[1440px] lg:mx-auto bg-gray-100" dir="rtl">
-        <main className="flex flex-col lg:flex-row min-h-screen  text-right">
+      <div className="w-screen sm:w-full overflow-x-hidden sm:overflow-visible bg-[#f9f9f9]" dir="rtl">
+        <main className="min-h-screen flex flex-col lg:flex-row mb-0 px-0 sm:px-0 pt-[1px] pb-[2px] text-right bg-gray-100">
           {children}
           
 
