@@ -5,7 +5,7 @@ import ContactForAdBox from './ContactForAdBox';
 
 export default function SidebarMiddleLayer() {
   return (
-    <div className="sticky top-7 flex flex-col gap-0">
+    <div className="sticky top-7 flex flex-col gap-0 w-full flex-1">
       {/* תוכן הסיידר שמתעדכן */}
       <div className="flex-1">
         <SidebarFixed />
