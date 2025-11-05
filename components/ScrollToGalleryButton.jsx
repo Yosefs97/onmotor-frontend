@@ -15,7 +15,7 @@ export default function ScrollToGalleryButton() {
       const tableRect = table.getBoundingClientRect();
       const galleryRect = gallery.getBoundingClientRect();
 
-      const show = tableRect.bottom < window.innerHeight * 0.1 && galleryRect.top > window.innerHeight * 0.3;
+      const show = tableRect.bottom < window.innerHeight * 0.3 && galleryRect.top > window.innerHeight * 0.3;
       setIsVisible(show);
     };
 
