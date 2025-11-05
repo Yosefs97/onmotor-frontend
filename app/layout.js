@@ -68,7 +68,7 @@ export default function RootLayout({ children }) {
         />
       </head>
 
-      <body className="pt-[0px] flex flex-col min-h-screen">
+      <body className="flex flex-col min-h-screen">
         <AuthModalProvider>
           <ScrollToTopButton />
           <ClientLayout>{children}</ClientLayout>
