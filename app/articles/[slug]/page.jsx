@@ -14,6 +14,7 @@ import InlineImage from "@/components/InlineImage";
 import EmbedContent from "@/components/EmbedContent";
 import ScrollToTableButton from "@/components/ScrollToTableButton";
 import ScrollToGalleryButton from "@/components/ScrollToGalleryButton";
+import ScrollToCommentsButton from "@/components/ScrollToCommentsButton";
 import { fixRelativeImages, resolveImageUrl, wrapHondaProxy } from "@/lib/fixArticleImages";
 
 const API_URL = process.env.STRAPI_API_URL;
