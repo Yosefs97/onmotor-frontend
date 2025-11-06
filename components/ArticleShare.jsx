@@ -91,7 +91,7 @@ export default function ArticleShare() {
           onPointerLeave={() => setInteracting(false)}
           onTouchStart={() => setInteracting(true)}
           onTouchEnd={() => setInteracting(false)}
-          className={`${positionClass} w-60 bg-white text-black rounded shadow-lg z-50`}
+          className={`${positionClass} w-40 bg-white text-black rounded shadow-lg z-50`}
         >
           <div className="flex justify-end p-2">
             <button onClick={() => setOpen(false)} className="focus:outline-none">
