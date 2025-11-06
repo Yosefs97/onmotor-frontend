@@ -12,12 +12,14 @@ export default function ScrollToTableButton() {
       const table = document.querySelector('.article-table-section');
       const gallery = document.querySelector('.article-gallery-section');
       const comments = document.querySelector('.comments-section');
+      const sidebarMiddle = document.querySelector('.sidebar-middle-layer');
       if (!content) return;
 
       const contentRect = content.getBoundingClientRect();
       const tableRect = table?.getBoundingClientRect();
       const galleryRect = gallery?.getBoundingClientRect();
       const commentsRect = comments?.getBoundingClientRect();
+      const sidebarRect = sidebarMiddle?.getBoundingClientRect();
 
       const startVisible = contentRect.top < window.innerHeight * 0.6;
       const inTable =
@@ -30,15 +32,18 @@ export default function ScrollToTableButton() {
         commentsRect &&
         commentsRect.top < window.innerHeight &&
         commentsRect.bottom > 0;
+      const afterComments =
+        commentsRect && commentsRect.bottom < window.innerHeight * 0.8;
+      const inSidebar =
+        sidebarRect && sidebarRect.top < window.innerHeight * 0.8;
 
       const isMobile = window.innerWidth <= 1024;
 
-      // ✅ מופיע אחרי תחילת הכתבה, נעלם בטבלה,
-      // מופיע שוב אחרי הגלריה, נעלם בסוף (תגובות)
+      // ✅ מופיע אחרי תחילת הכתבה, נעלם בטבלה/תגובות/סיידר
       const show = (startVisible && !inTable) || afterGallery;
       const hideAtComments = isMobile && inComments;
-      const afterComments = commentsRect && commentsRect.bottom < window.innerHeight * 0.8;
-      setIsVisible((show && !hideAtComments) || afterComments);
+
+      setIsVisible(((show && !hideAtComments) || afterComments) && !inSidebar);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -55,7 +60,11 @@ export default function ScrollToTableButton() {
     <button
       onClick={scrollToTable}
       className={`fixed bottom-35 right-1 z-[5000] bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 transition-all duration-500 ease-in-out
-      ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}
+      ${
+        isVisible
+          ? 'opacity-100 translate-y-0'
+          : 'opacity-0 translate-y-4 pointer-events-none'
+      }`}
     >
       <FaTable className="text-lg" />
       <span className="text-sm font-semibold">למפרט</span>
