@@ -127,37 +127,31 @@ export default function SidebarFixed() {
     }
 
     return (
-      <div className="border-[3px] border-[#e60000] rounded-xl overflow-hidden shadow-lg bg-black">
-        <div className="w-full aspect-video">{content}</div>
-
-        {/* כותרת */}
-        {attrs.title && (
-          <p className="mt-2 text-center font-bold text-[#e60000] px-2 py-2">
-            {attrs.title}
-          </p>
-        )}
+      <div className="border-[3px] border-[#e60000] rounded-xl overflow-hidden shadow-xl bg-black transition-all hover:shadow-[#e60000]/50">
+        <div className="w-full aspect-[16/8]">{content}</div>
 
         {/* כפתורים */}
-        <div className="flex justify-around gap-2 p-2">
-          {attrs.slug && (
-            <a
-              href={`/articles/${attrs.slug}`}
-              className="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 text-sm"
-            >
-              לכתבה
-            </a>
-          )}
+        <div className="flex justify-center gap-2 p-3">
           {attrs.link && (
             <a
               href={attrs.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-gray-700 text-white px-3 py-1 rounded-md hover:bg-gray-800 text-sm"
+              className="relative bg-gradient-to-r from-[#1f1f1f] to-[#3a3a3a] text-white font-bold px-4 py-2 rounded-lg text-center text-sm transition-all duration-300 hover:scale-105 hover:from-[#e60000] hover:to-[#b50000]"
             >
-             לאתר המפרסם
+              {attrs.title ? attrs.title : 'לאתר המפרסם'}
+            </a>
+          )}
+          {attrs.slug && (
+            <a
+              href={`/articles/${attrs.slug}`}
+              className="bg-[#e60000] text-white px-3 py-2 rounded-md hover:bg-[#b50000] text-sm transition-all duration-300"
+            >
+              לכתבה
             </a>
           )}
         </div>
+
       </div>
     );
   };
