@@ -34,8 +34,8 @@ export default function ScrollToGalleryButton() {
       // ✅ מופיע אחרי ההתחלה, נעלם בגלריה, מופיע שוב אחרי הסוף
       const show = (startVisible && !inGallery) || afterEnd;
       const hideAtComments = isMobile && inComments;
-
-      setIsVisible(show && !hideAtComments);
+      const afterComments = commentsRect && commentsRect.bottom < window.innerHeight * 0.8;
+      setIsVisible((show && !hideAtComments) || afterComments);
     };
 
     window.addEventListener('scroll', handleScroll);

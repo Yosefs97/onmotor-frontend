@@ -439,6 +439,7 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
       </PageContainer>
       <ScrollToTableButton />
       <ScrollToGalleryButton />
+      <ScrollToCommentsButton />
     </>
   );
 }
