@@ -356,6 +356,36 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
       );
     }
 
+        // ✅ טיפול ברשימות (ממוספרות או נקודתיות)
+    if (block.type === "list") {
+      const isOrdered = block.format === "ordered";
+      const Tag = isOrdered ? "ol" : "ul";
+      return (
+        <Tag
+          key={i}
+          dir="rtl"
+          className={`my-3 pr-6 space-y-1 text-[18px] text-gray-800 leading-relaxed ${
+            isOrdered ? "list-decimal" : "list-disc"
+          }`}
+        >
+          {block.children?.map((item, idx) => {
+            const html = toHtmlFromStrapiChildren(item.children || []);
+            return (
+              <li
+                key={idx}
+                dangerouslySetInnerHTML={{
+                  __html: fixRelativeImages(html),
+                }}
+              />
+            );
+          })}
+        </Tag>
+      );
+    }
+
+
+
+
     if (block.type === "heading") {
       const level = block.level || 2;
       const Tag = `h${Math.min(level, 3)}`;
