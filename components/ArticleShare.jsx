@@ -21,8 +21,8 @@ export default function ArticleShare() {
       const rect = buttonRef.current.getBoundingClientRect();
       const screenWidth = window.innerWidth;
 
-      if (rect.left < screenWidth / 3) setPosition('right'); // קרוב לצד שמאל
-      else if (rect.right > (screenWidth / 3) * 2) setPosition('left'); // קרוב לצד ימין
+      if (rect.left < screenWidth / 3) setPosition('left'); // קרוב לצד שמאל
+      else if (rect.right > (screenWidth / 3) * 2) setPosition('right'); // קרוב לצד ימין
       else setPosition('bottom'); // באמצע
     }
   }, [open]);
