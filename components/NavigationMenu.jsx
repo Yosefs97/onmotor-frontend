@@ -58,7 +58,6 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
           title: 'מדריכים', path: '/blog/guides', links: [
             { title: 'מדריך טכני ותחזוקה', path: '/blog/guides/guide-tech' },
             { title: 'מדריך לרוכב המתחיל', path: '/blog/guides/guide-beginner' },
-            { title: 'מדריך קניית אופנוע יד 2', path: '/blog/guides/guide-buy' },
             { title: 'מדריך לרוכב המתקדם', path: '/blog/guides/guide-advanced' },
 
           ]

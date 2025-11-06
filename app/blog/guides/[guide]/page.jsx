@@ -7,7 +7,6 @@ import CategoryPage from '@/components/CategoryPage';
 const guideLabelMap = {
   'guide-tech': 'מדריך טכני ותחזוקה',
   'guide-beginner': 'מדריך לרוכב המתחיל',
-  'guide-buy': 'מדריך קניית אופנוע יד 2',
   'guide-advanced': 'מדריך לרוכב המתקדם',
 };
 
