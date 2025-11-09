@@ -71,7 +71,7 @@ export default function ArticleCard({ article, size = 'small' }) {
               ? 'bg-[#e60000]/70'
               : isTouched
                 ? 'bg-[#e60000]/150'
-                : 'bg-gradient-to-t from-black/110 via-black/90 to-transparent  group-hover:bg-[#e60000]/80'
+                : 'bg-gradient-to-t from-black/110 via-black/90 to-black/40  group-hover:bg-[#e60000]/80'
             }`}
         >
           <h3 className={`${titleSize} transition-all duration-300 ${isMobile ? 'font-normal' : 'font-bold'}`}>
