@@ -88,8 +88,8 @@ export default function ForumThreadPage() {
       ) : (
         <>
           <div className="border p-6 rounded-xl bg-white shadow mb-8">
-            <h2 className="text-2xl font-semibold mb-2 text-right">{thread.title}</h2>
-            <p className="text-sm text-gray-500 mb-4 text-right">נכתב על ידי {thread.author}</p>
+            <h2 className="text-2xl font-semibold text-gray-800 mb-2 text-right">{thread.title}</h2>
+            <p className="text-sm text-gray-800 mb-4 text-right">נכתב על ידי {thread.author}</p>
             <p className="whitespace-pre-line text-gray-800 leading-relaxed text-right">
               {thread.content}
             </p>
