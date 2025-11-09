@@ -440,9 +440,7 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
           {article.description && (
             <p className="font-bold text-2xl text-gray-600">{article.description}</p>
           )}
-          {article.subdescription && (
-            <p className="second-description text-gray-700 text-[18px]">{article.subdescription}</p>
-          )}
+          
           <div className="article-content">
             {paragraphs.map(renderParagraph)}
           </div>
