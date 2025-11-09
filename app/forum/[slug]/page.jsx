@@ -57,7 +57,7 @@ export default function ForumCategoryPage() {
     }
   };
 
-  const categoryLabel = labelMap[slug] || slug;
+  const categoryLabel = labelMap?.[slug] || decodeURIComponent(slug) || 'פורום';
 
   return (
     <PageContainer
