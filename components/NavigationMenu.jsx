@@ -28,10 +28,20 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
       try {
         const res = await fetch(`${API_URL}/api/forum-categories?populate=*`, { cache: "no-store" });
         const json = await res.json();
-        const formatted = json.data?.map((cat) => ({
-          title: cat.attributes?.name || "ללא שם",
-          path: `/forum/${cat.attributes?.slug}`,
-        })) || [];
+        const formatted = json.data?.map((cat) => {
+          const name =
+            cat?.attributes?.name?.trim() ||
+            cat?.name?.trim() ||
+            "ללא שם";
+          const slug =
+            cat?.attributes?.slug?.trim() ||
+            cat?.slug?.trim() ||
+            "";
+          return {
+            title: name,
+            path: slug ? `/forum/${slug}` : "/forum",
+          };
+        }) || [];
         setForumLinks(formatted);
       } catch (err) {
         console.error("⚠️ שגיאה בטעינת קטגוריות פורום:", err);
