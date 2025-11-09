@@ -63,7 +63,7 @@ export default function ForumCategoryPage() {
 
   return (
     <PageContainer
-      title={`פורום ${categoryLabel}`}
+      title={`${categoryLabel}`}
       breadcrumbs={[
         { label: 'דף הבית', href: '/' },
         { label: 'פורום', href: '/forum' },
