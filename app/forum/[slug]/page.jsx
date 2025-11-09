@@ -76,7 +76,7 @@ export default function ForumCategoryPage() {
             {threads.map((t) => (
               <li
                 key={t.id}
-                className="border p-5 rounded-xl bg-white shadow-sm hover:shadow-md transition"
+                className="border text-gray-900 p-5 rounded-xl bg-white shadow-sm hover:shadow-md transition"
               >
                 <Link href={`/forum/${slug}/${t.slug}`}>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2 hover:text-red-600">
