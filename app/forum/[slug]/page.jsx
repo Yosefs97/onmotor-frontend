@@ -78,7 +78,7 @@ export default function ForumCategoryPage() {
             {threads.map((t) => (
               <li
                 key={t.id}
-                className="hover:bg-[#161616] transition cursor-pointer"
+                className="hover:bg-[#8c1616] transition cursor-pointer"
               >
                 <Link href={`/forum/${slug}/${t.slug}`} className="block p-5">
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
@@ -103,7 +103,7 @@ export default function ForumCategoryPage() {
         {/* 🔻 טופס פתיחת דיון חדש */}
         <form
           onSubmit={handleSubmit}
-          className="mt-8 border border-gray-700 rounded-lg bg-[#1a1a1a] shadow-md p-6 text-gray-200"
+          className="mt-8 border border-gray-700 rounded-lg bg-[#8c1616] shadow-md p-6 text-gray-200"
         >
           <h3 className="text-xl font-semibold text-white mb-4 text-right border-b border-gray-700 pb-2">
             פתח דיון חדש
