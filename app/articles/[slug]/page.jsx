@@ -16,6 +16,7 @@ import ScrollToTableButton from "@/components/ScrollToTableButton";
 import ScrollToGalleryButton from "@/components/ScrollToGalleryButton";
 import ScrollToCommentsButton from "@/components/ScrollToCommentsButton";
 import { fixRelativeImages, resolveImageUrl, wrapHondaProxy } from "@/lib/fixArticleImages";
+import { getArticleImage } from "@/lib/getArticleImage";
 
 const API_URL = process.env.STRAPI_API_URL;
 const PUBLIC_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || API_URL;
@@ -81,19 +82,8 @@ export async function generateMetadata({ params }) {
       article.subdescription ||
       "כתבה מתוך מגזין OnMotor Media";
 
-    let imageUrl = "https://www.onmotormedia.com/full_Logo.jpg";
-
-    if (
-      Array.isArray(article.external_media_links) &&
-      article.external_media_links.length > 1 &&
-      article.external_media_links[1]?.startsWith("http")
-    ) {
-      imageUrl = article.external_media_links[1].trim();
-    } else if (article.image?.data?.attributes?.url) {
-      imageUrl = `${API_URL}${article.image.data.attributes.url}`;
-    } else if (article.image?.url) {
-      imageUrl = resolveImageUrl(article.image.url);
-    }
+    // 🧠 קריאה לפונקציה הנפרדת
+    const imageUrl = getArticleImage(article);
 
     return {
       title: `${title} | OnMotor Media`,
