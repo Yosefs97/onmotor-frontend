@@ -102,7 +102,7 @@ export default function ForumCategoryPage() {
         onSubmit={handleSubmit}
         className="border p-6 rounded-xl bg-gray-50 shadow-inner"
       >
-        <h3 className="text-xl font-semibold mb-4 text-right">
+        <h3 className="text-xl font-semibold mb-4 text-gray-900 text-right">
           פתח דיון חדש
         </h3>
 
@@ -128,7 +128,7 @@ export default function ForumCategoryPage() {
           onChange={(e) =>
             setNewThread({ ...newThread, title: e.target.value })
           }
-          className="w-full border rounded px-3 py-2 mb-4"
+          className="w-full border text-gray-900 rounded px-3 py-2 mb-4"
           placeholder="לדוגמה: בעיה במערכת בלימה של GSX..."
         />
 
