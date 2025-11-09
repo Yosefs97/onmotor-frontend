@@ -2,9 +2,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import PageContainer from '@/components/PageContainer';
-import ForumCategoryList from '@/components/ForumCategoryList';
 import { fetchForumCategories } from '@/lib/forumApi';
+import { FaMotorcycle } from 'react-icons/fa';
 
 export default function ForumPage() {
   const [categories, setCategories] = useState([]);
@@ -32,14 +33,21 @@ export default function ForumPage() {
         { label: 'פורום', href: '/forum' },
       ]}
     >
-      <div className="bg-[#111111] text-gray-200 min-h-screen py-8 px-2 sm:px-4">
-        <div className="max-w-5xl mx-auto">
-          <h1 className="text-3xl font-semibold text-white mb-8 text-center border-b border-gray-700 pb-3">
-            פורום הרוכבים של OnMotor
-          </h1>
+      <div className="bg-[#111111] text-gray-200 min-h-screen py-10 px-4">
+        <div className="max-w-6xl mx-auto">
+          {/* 🏍️ כותרת עליונה */}
+          <div className="flex items-center justify-center mb-10">
+            <FaMotorcycle className="text-[#e60000] text-3xl mr-2" />
+            <h1 className="text-3xl font-bold text-white border-b-2 border-[#e60000] pb-2">
+              פורום הרוכבים של OnMotor
+            </h1>
+          </div>
 
+          {/* 🌀 טעינה / תוכן */}
           {loading ? (
-            <p className="text-center text-gray-400">טוען קטגוריות...</p>
+            <p className="text-center text-gray-400 animate-pulse">
+              טוען קטגוריות...
+            </p>
           ) : categories.length === 0 ? (
             <p className="text-center text-gray-500">לא נמצאו קטגוריות פורום.</p>
           ) : (
@@ -47,16 +55,22 @@ export default function ForumPage() {
               {categories.map((cat) => (
                 <li
                   key={cat.id}
-                  className="bg-[#1a1a1a] border border-gray-700 rounded-lg shadow-md hover:shadow-lg hover:border-[#e60000] transition cursor-pointer"
+                  className="group bg-[#1a1a1a] border border-gray-700 rounded-lg shadow-md hover:shadow-xl hover:border-[#e60000] hover:-translate-y-1 transition-all duration-300 cursor-pointer"
                 >
-                  <a href={`/forum/${cat.slug}`} className="block p-6 h-full">
-                    <h2 className="text-xl font-semibold text-white mb-2 hover:text-[#e60000] transition">
-                      {cat.name}
-                    </h2>
-                    <p className="text-gray-400 text-sm leading-relaxed">
-                      {cat.description || 'דיונים וידע בתחום זה'}
+                  <Link href={`/forum/${cat.slug}`} className="block p-6 h-full">
+                    <div className="flex items-center justify-between mb-3">
+                      <h2 className="text-xl font-semibold text-white group-hover:text-[#e60000] transition-colors">
+                        {cat.name}
+                      </h2>
+                      <span className="text-[#e60000] opacity-0 group-hover:opacity-100 transition">
+                        ➜
+                      </span>
+                    </div>
+
+                    <p className="text-gray-400 text-sm leading-relaxed min-h-[48px]">
+                      {cat.description || 'דיונים, ידע וטיפים מהשטח'}
                     </p>
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>

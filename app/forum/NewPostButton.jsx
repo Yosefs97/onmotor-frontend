@@ -1,9 +1,11 @@
 // app/forum/NewPostButton.jsx
 'use client';
+
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuthModal } from '@/contexts/AuthModalProvider';
 import { getCurrentUser } from '@/utils/auth';
+import { FaPlus } from 'react-icons/fa';
 
 export default function NewPostButton() {
   const router = useRouter();
@@ -20,18 +22,23 @@ export default function NewPostButton() {
 
     const user = getCurrentUser();
     if (user) {
-      router.push(`/forum/${params.category}/new`);
+      // ✅ משתמש מחובר – מעבר לעמוד פתיחת דיון חדש
+      router.push(`/forum/${params.slug}/new`);
     } else {
-      openModal('inline', 'הירשם/התחבר לצורך פתיחת דיון חדש');
+      // ❌ משתמש לא מחובר – פתיחת מודאל התחברות
+      openModal('inline', 'עליך להתחבר כדי לפתוח דיון חדש');
     }
   };
 
   return (
-    <button
-      onClick={handleClick}
-      className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
-    >
-      פתח דיון חדש - (לצורך כך הירשם/התחבר בחלון שנפתח)
-    </button>
+    <div className="flex justify-end mt-4 mb-6">
+      <button
+        onClick={handleClick}
+        className="flex items-center gap-2 bg-[#e60000] hover:bg-[#ff3333] text-white px-5 py-2.5 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
+      >
+        <FaPlus className="text-sm" />
+        <span>פתח דיון חדש</span>
+      </button>
+    </div>
   );
 }

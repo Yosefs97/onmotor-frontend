@@ -78,17 +78,41 @@ export default function ForumCategoryPage() {
             {threads.map((t) => (
               <li
                 key={t.id}
-                className="hover:bg-[#8c1616] transition cursor-pointer"
+                className="hover:bg-[#2a0a0a] transition cursor-pointer group"
               >
                 <Link href={`/forum/${slug}/${t.slug}`} className="block p-5">
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
-                    <h3 className="text-lg font-semibold text-white mb-2 sm:mb-0 hover:text-[#e60000] transition">
-                      {t.title}
-                    </h3>
-                    <p className="text-sm text-gray-400 text-left sm:text-right">
-                      נכתב על ידי <span className="text-gray-300">{t.author}</span>
-                    </p>
+                    <div className="flex items-center gap-2 mb-2 sm:mb-0">
+                      {t.pinned && (
+                        <span className="text-[#e60000] font-bold text-xs bg-[#300] px-2 py-1 rounded">
+                          📌 נעוץ
+                        </span>
+                      )}
+                      {t.locked && (
+                        <span className="text-[#ff3333] font-bold text-xs bg-[#400] px-2 py-1 rounded">
+                          🔒 נעול
+                        </span>
+                      )}
+                      <h3 className="text-lg font-semibold text-white group-hover:text-[#e60000] transition">
+                        {t.title}
+                      </h3>
+                    </div>
+                    <div className="text-sm text-gray-400 text-left sm:text-right">
+                      <p>
+                        נכתב על ידי{' '}
+                        <span className="text-gray-300">{t.author}</span>
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        צפיות: {t.views || 0} •{' '}
+                        {t.lastActivity
+                          ? `עדכון אחרון: ${new Date(
+                              t.lastActivity
+                            ).toLocaleDateString('he-IL')}`
+                          : '—'}
+                      </p>
+                    </div>
                   </div>
+
                   <p className="text-gray-400 text-sm mt-2 line-clamp-2 whitespace-pre-line">
                     {t.content.length > 300
                       ? t.content.slice(0, 300) + '...'
@@ -103,7 +127,7 @@ export default function ForumCategoryPage() {
         {/* 🔻 טופס פתיחת דיון חדש */}
         <form
           onSubmit={handleSubmit}
-          className="mt-8 border border-gray-700 rounded-lg bg-[#8c1616] shadow-md p-6 text-gray-200"
+          className="mt-8 border border-gray-700 rounded-lg bg-[#1a1a1a] shadow-md p-6 text-gray-200"
         >
           <h3 className="text-xl font-semibold text-white mb-4 text-right border-b border-gray-700 pb-2">
             פתח דיון חדש
@@ -115,9 +139,11 @@ export default function ForumCategoryPage() {
           <input
             type="text"
             value={newThread.author}
-            onChange={(e) => setNewThread({ ...newThread, author: e.target.value })}
+            onChange={(e) =>
+              setNewThread({ ...newThread, author: e.target.value })
+            }
             className="w-full bg-[#2a2a2a] border border-gray-600 rounded px-3 py-2 mb-4 text-gray-100 focus:outline-none focus:border-[#e60000]"
-            placeholder="לדוגמה: יוסי מ-CRF..."
+            placeholder="לדוגמה: רוכב מ-TMAX..."
           />
 
           <label className="block mb-2 text-sm font-medium text-gray-400 text-right">
@@ -126,7 +152,9 @@ export default function ForumCategoryPage() {
           <input
             type="text"
             value={newThread.title}
-            onChange={(e) => setNewThread({ ...newThread, title: e.target.value })}
+            onChange={(e) =>
+              setNewThread({ ...newThread, title: e.target.value })
+            }
             className="w-full bg-[#2a2a2a] border border-gray-600 rounded px-3 py-2 mb-4 text-gray-100 focus:outline-none focus:border-[#e60000]"
             placeholder="לדוגמה: בעיה במערכת בלימה של GSX..."
           />
@@ -136,7 +164,9 @@ export default function ForumCategoryPage() {
           </label>
           <textarea
             value={newThread.content}
-            onChange={(e) => setNewThread({ ...newThread, content: e.target.value })}
+            onChange={(e) =>
+              setNewThread({ ...newThread, content: e.target.value })
+            }
             className="w-full bg-[#2a2a2a] border border-gray-600 rounded px-3 py-2 h-32 mb-4 text-gray-100 resize-none focus:outline-none focus:border-[#e60000]"
             placeholder="כתוב כאן את תוכן הדיון..."
           />
