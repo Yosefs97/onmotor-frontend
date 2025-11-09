@@ -95,8 +95,8 @@ export default function ForumThreadPage() {
             </p>
           </div>
 
-          <div className="border p-6 rounded-xl bg-gray-50 shadow-inner mb-8">
-            <h3 className="text-lg font-semibold mb-4 text-right">תגובות</h3>
+          <div className="border p-6 rounded-xl bg-gray-50 text-gray-800 shadow-inner mb-8">
+            <h3 className="text-lg text-gray-800 font-semibold mb-4 text-right">תגובות</h3>
             {comments.length === 0 ? (
               <p>אין תגובות עדיין.</p>
             ) : (
