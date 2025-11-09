@@ -3,6 +3,7 @@
 import './globals.css';
 import { AuthModalProvider } from '@/contexts/AuthModalProvider';
 import ClientLayout from '@/components/ClientLayout';
+import FacebookSDKLoader from '@/components/FacebookSDKLoader';
 import ScrollToTopButton from '@/components/ScrollToTopButton';
 import Script from 'next/script';
 import { Heebo } from 'next/font/google';
@@ -69,6 +70,7 @@ export default function RootLayout({ children }) {
       </head>
 
       <body className="flex flex-col min-h-screen">
+        <FacebookSDKLoader />   {/* טוען את Facebook SDK גלובלי */}
         <AuthModalProvider>
           <ScrollToTopButton />
           <ClientLayout>{children}</ClientLayout>
