@@ -115,7 +115,7 @@ export default function ForumCategoryPage() {
           onChange={(e) =>
             setNewThread({ ...newThread, author: e.target.value })
           }
-          className="w-full border rounded px-3 py-2 mb-4"
+          className="w-full text-gray-900 border rounded px-3 py-2 mb-4"
           placeholder="לדוגמה: יוסי מ-CRF..."
         />
 
