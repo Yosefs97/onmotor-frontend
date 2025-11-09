@@ -6,7 +6,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import PageContainer from '@/components/PageContainer';
 import { fetchThreadsByCategorySlug, addThread } from '@/lib/forumApi';
-import { labelMap } from '@/utils/labelMap';
+import { getForumLabel } from '@/utils/labelMap';
 
 export default function ForumCategoryPage() {
   const params = useParams();
@@ -17,8 +17,8 @@ export default function ForumCategoryPage() {
   const [submitting, setSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState(null);
 
-  const categoryLabel = labelMap?.[slug] || decodeURIComponent(slug) || 'פורום';
-
+  // ✅ שם הקטגוריה בעברית לפי הסלאג
+  const categoryLabel = getForumLabel(slug);
 
   const loadThreads = async () => {
     try {
@@ -48,7 +48,7 @@ export default function ForumCategoryPage() {
         title: newThread.title,
         content: newThread.content,
         author: newThread.author || 'אנונימי',
-        categorySlug: decodeURIComponent(slug),
+        categorySlug: slug,
       });
       setNewThread({ title: '', content: '', author: '' });
       await loadThreads();
@@ -60,8 +60,6 @@ export default function ForumCategoryPage() {
       setSubmitting(false);
     }
   };
-
-  
 
   return (
     <PageContainer

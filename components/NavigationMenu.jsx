@@ -5,17 +5,40 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { scrollToBottomOfElement } from "./utils/scrollUtils";
 
+const API_URL =
+  process.env.NEXT_PUBLIC_STRAPI_API_URL ||
+  "https://onmotor-strapi.onrender.com";
+
 export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
   const [openIndex, setOpenIndex] = useState(null);
   const [subOpenIndex, setSubOpenIndex] = useState(null);
+  const [forumLinks, setForumLinks] = useState([]); // ✅ קטגוריות פורום דינמיות
   const menuRefs = useRef([]);
   const router = useRouter();
 
   const toggleMenu = (index) => {
     const newIndex = openIndex === index ? null : index;
     setOpenIndex(newIndex);
-    setSubOpenIndex(null); // סגירת תתי־תפריטים כשעוברים בין תפריטים
+    setSubOpenIndex(null);
   };
+
+  // 🟩 שלב 1 — טעינת קטגוריות פורום מ־Strapi
+  useEffect(() => {
+    async function loadForumCategories() {
+      try {
+        const res = await fetch(`${API_URL}/api/forum-categories?populate=*`, { cache: "no-store" });
+        const json = await res.json();
+        const formatted = json.data?.map((cat) => ({
+          title: cat.attributes?.name || "ללא שם",
+          path: `/forum/${cat.attributes?.slug}`,
+        })) || [];
+        setForumLinks(formatted);
+      } catch (err) {
+        console.error("⚠️ שגיאה בטעינת קטגוריות פורום:", err);
+      }
+    }
+    loadForumCategories();
+  }, []);
 
   useEffect(() => {
     if (openIndex !== null && menuRefs.current[openIndex]) {
@@ -23,6 +46,7 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
     }
   }, [openIndex]);
 
+  // 🟨 שלב 2 — מבנה תפריט
   const menus = [
     { title: 'OnMotor Parts', path: '/shop', links: [] },
     {
@@ -42,11 +66,7 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
     },
     { title: 'רלב"ד', path: '/law-book', links: [{ title: 'שאל את הרלב"ד', path: '/law-book/ask-question' }] },
     {
-      title: 'פורום', path: '/forum', links: [
-        { title: 'פורום טכני', path: '/forum/tech' },
-        { title: 'טיולים', path: '/forum/rides' },
-        { title: 'קנייה/מכירה', path: '/forum/sale' },
-      ]
+      title: 'פורום', path: '/forum', links: forumLinks // ✅ דינמי מ־Strapi
     },
     {
       title: 'בלוג', path: '/blog', links: [
@@ -59,7 +79,6 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
             { title: 'מדריך טכני ותחזוקה', path: '/blog/guides/guide-tech' },
             { title: 'מדריך לרוכב המתחיל', path: '/blog/guides/guide-beginner' },
             { title: 'מדריך לרוכב המתקדם', path: '/blog/guides/guide-advanced' },
-
           ]
         }
       ]
@@ -79,6 +98,7 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
     }
   ];
 
+  // 🟥 שלב 3 — רינדור תפריט
   return (
     <div className={mobile ? "max-h-[100vh] overflow-y-0 pr-8" : ""}>
       <nav className={mobile ? "flex flex-col gap-2 text-2xl text-right" : "flex gap-2 text-lm font-semibold"}>
@@ -168,15 +188,14 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
                       return (
                         <div key={idx} className="relative group/sub">
                           <Link
-  href={link.path}
-  className="block px-4 py-2 text-sm text-white hover:text-[#e60000] whitespace-nowrap text-right relative"
->
-  <span>{link.title}</span>
-  {link.title === "מדריכים" && (
-    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs">▼</span>
-  )}
-</Link>
-
+                            href={link.path}
+                            className="block px-4 py-2 text-sm text-white hover:text-[#e60000] whitespace-nowrap text-right relative"
+                          >
+                            <span>{link.title}</span>
+                            {link.title === "מדריכים" && (
+                              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs">▼</span>
+                            )}
+                          </Link>
 
                           {hasSubLinks && (
                             <div className="absolute top-full right-0 w-54 bg-black shadow-lg rounded p-2 z-50 text-right hidden group-hover/sub:flex flex-col">
@@ -194,7 +213,6 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
                         </div>
                       );
                     })}
-
                   </div>
                 )
               )}

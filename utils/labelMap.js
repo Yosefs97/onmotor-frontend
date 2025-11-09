@@ -1,4 +1,6 @@
+// utils/labelMap.js
 
+// 🟥 תרגום קטגוריות כלליות
 const labelMap = {
   news: 'חדשות',
   reviews: 'סקירות',
@@ -29,6 +31,21 @@ const labelMap = {
   'guide-advanced': 'מדריך לרוכב המתקדם',
 };
 
+// 🟨 תרגום דינמי לסלאגים של קטגוריות פורום
+export function getForumLabel(slug = '') {
+  if (slug.startsWith('forum-category-')) {
+    const suffix = slug.replace('forum-category-', '');
+    const translations = {
+      rider: 'פורום לרוכבים',
+      tech: 'פורום טכני',
+      gear: 'פורום קנייה ומכירה',
+    };
+    return translations[suffix] || `פורום ${suffix}`;
+  }
+  return labelMap[slug] || slug;
+}
+
+// 🟦 לינקים (לא חובה לשנות כרגע)
 const linkLabelMap = {
   news: 'לכל החדשות',
   reviews: 'לכל הסקירות',
@@ -40,14 +57,13 @@ const linkLabelMap = {
   global: 'לחדשות מהעולם',
   machine: 'למכונות חדשות',
   podcast: 'לפודקאסט אחד על אחד',
-  'in-helmet': 'לבלוג בקסדה', 
+  'in-helmet': 'לבלוג בקסדה',
   video: 'לסקירות וידאו',
   motorcycles: 'לסקירות אופנועים',
   tech: 'לפורום טכני',
   rides: 'לפורום טיולים',
   sale: 'לפורום מכירה',
 
-  // 🔽 חדשים - מדריכים
   guides: 'לכל המדריכים',
   'guide-tech': 'למדריך הטכני',
   'guide-beginner': 'למדריך לרוכב המתחיל',
