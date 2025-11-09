@@ -67,7 +67,7 @@ export default function ArticleShareBottom() {
   if (!visible || hidden) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 text-right">
+    <div className="fixed bottom-6 left-2 z-50 text-right">
       {/* כפתור ראשי */}
       <button
         ref={buttonRef}
