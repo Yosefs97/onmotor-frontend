@@ -9,7 +9,7 @@ export default function ForumCategoryList({ categories }) {
         <li key={cat.id} className="border p-4 rounded shadow">
           {/* ✅ החלפנו את id ל-slug */}
           <Link href={`/forum/${cat.slug}`}>
-            <span className="text-lg font-semibold hover:underline">
+            <span className="text-lg text-gray-600 font-semibold hover:underline">
               {cat.name}
             </span>
           </Link>
