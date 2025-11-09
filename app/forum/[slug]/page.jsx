@@ -9,12 +9,16 @@ import { fetchThreadsByCategorySlug, addThread } from '@/lib/forumApi';
 import { labelMap } from '@/utils/labelMap';
 
 export default function ForumCategoryPage() {
-  const { slug } = useParams();
+  const params = useParams();
+  const slug = params?.slug ? decodeURIComponent(params.slug) : '';
   const [threads, setThreads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newThread, setNewThread] = useState({ title: '', content: '', author: '' });
   const [submitting, setSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState(null);
+
+  const categoryLabel = labelMap?.[slug] || decodeURIComponent(slug) || 'פורום';
+
 
   const loadThreads = async () => {
     try {
@@ -57,7 +61,7 @@ export default function ForumCategoryPage() {
     }
   };
 
-  const categoryLabel = labelMap?.[slug] || decodeURIComponent(slug) || 'פורום';
+  
 
   return (
     <PageContainer
