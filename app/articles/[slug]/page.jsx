@@ -17,6 +17,8 @@ import ScrollToGalleryButton from "@/components/ScrollToGalleryButton";
 import ScrollToCommentsButton from "@/components/ScrollToCommentsButton";
 import { fixRelativeImages, resolveImageUrl, wrapHondaProxy } from "@/lib/fixArticleImages";
 import { getArticleImage } from "@/lib/getArticleImage";
+import ArticleShareBottom from "@/components/ArticleShareBottom";
+
 
 const API_URL = process.env.STRAPI_API_URL;
 const PUBLIC_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || API_URL;
@@ -454,6 +456,7 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
           <div className="comments-section">
             <CommentsSection articleUrl={`${SITE_URL}${article.href}`} />
           </div>
+          <ArticleShareBottom />
         </div>
       </PageContainer>
       <ScrollToTableButton />
