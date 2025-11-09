@@ -114,9 +114,9 @@ export default function ForumThreadPage() {
           {/* 🟢 טופס השארת תגובה */}
           <form
             onSubmit={handleSubmit}
-            className="border p-6 rounded-xl bg-gray-50 shadow-inner"
+            className="border p-6 rounded-xl text-gray-800 bg-gray-50 shadow-inner"
           >
-            <h3 className="text-xl font-semibold mb-4 text-right">השאר תגובה</h3>
+            <h3 className="text-xl text-gray-800 font-semibold mb-4 text-right">השאר תגובה</h3>
 
             <label className="block mb-2 text-sm font-medium text-gray-700 text-right">
               שם
@@ -127,7 +127,7 @@ export default function ForumThreadPage() {
               onChange={(e) =>
                 setNewComment({ ...newComment, author: e.target.value })
               }
-              className="w-full border rounded px-3 py-2 mb-4"
+              className="w-full border text-gray-800 rounded px-3 py-2 mb-4"
               placeholder="לדוגמה: רוכב מ-TMAX..."
             />
 
@@ -139,7 +139,7 @@ export default function ForumThreadPage() {
               onChange={(e) =>
                 setNewComment({ ...newComment, text: e.target.value })
               }
-              className="w-full border rounded px-3 py-2 h-32 mb-4 resize-none"
+              className="w-full border text-gray-800 rounded px-3 py-2 h-32 mb-4 resize-none"
               placeholder="כתוב כאן את תגובתך..."
             />
 
