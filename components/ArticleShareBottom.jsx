@@ -8,18 +8,15 @@ import { gsap } from 'gsap';
 
 export default function ArticleShareBottom() {
   const [open, setOpen] = useState(false);
-  const [visible, setVisible] = useState(false); // מתי להציג את הכפתור
-  const [hidden, setHidden] = useState(false); // האם המשתמש לחץ על X
-  const [position, setPosition] = useState('bottom');
+  const [visible, setVisible] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const buttonRef = useRef(null);
   const dropRef = useRef(null);
   const url = typeof window !== 'undefined' ? window.location.href : '';
-  const scrollTimeout = useRef(null);
 
-  // ✅ שליטה מתי הכפתור מופיע (רק באזור שבין הגלריה לתגובות)
+  // ✅ הכפתור יוצג רק בין הגלריה לתגובות
   useEffect(() => {
     const handleScroll = () => {
-      if (hidden) return; // אם המשתמש סגר – לא להציג שוב
       const gallery = document.querySelector('.article-gallery-section');
       const comments = document.querySelector('.comments-section');
       if (!gallery || !comments) return;
@@ -27,7 +24,6 @@ export default function ArticleShareBottom() {
       const galleryRect = gallery.getBoundingClientRect();
       const commentsRect = comments.getBoundingClientRect();
 
-      // הכפתור מוצג כשהגולש עבר את סוף הגלריה ועד לתגובות
       const shouldShow =
         galleryRect.bottom < window.innerHeight * 0.8 &&
         commentsRect.top > window.innerHeight * 0.2;
@@ -36,17 +32,17 @@ export default function ArticleShareBottom() {
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll(); // קריאה ראשונית
+    handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [hidden]);
+  }, []);
 
-  // ✅ אנימציית פתיחה וסגירה
+  // ✅ אנימציה לפתיחה
   useEffect(() => {
     if (open && dropRef.current) {
       gsap.fromTo(
         dropRef.current,
-        { scale: 0.9, opacity: 0 },
-        { scale: 1, opacity: 1, duration: 0.25, ease: 'power1.out' }
+        { y: 10, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.25, ease: 'power1.out' }
       );
     } else if (!open && dropRef.current) {
       gsap.to(dropRef.current, { opacity: 0, duration: 0.15 });
@@ -64,30 +60,38 @@ export default function ArticleShareBottom() {
     } else handleCopy();
   };
 
-  if (!visible || hidden) return null;
+  if (!visible) return null;
 
   return (
-    <div className="fixed bottom-6 left-2 z-50 text-right">
-      {/* כפתור ראשי */}
+    <div className="fixed bottom-20 left-2 z-50 text-right"> 
+      {/* 🟥 הזזה לשמאל ולגובה מתאים (bottom-20 במקום bottom-6, left במקום right) */}
+
       <button
         ref={buttonRef}
-        onClick={() => setOpen(o => !o)}
-        className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg"
+        onClick={() => {
+          if (collapsed) setCollapsed(false);
+          else setOpen(o => !o);
+        }}
+        className={`flex items-center gap-2 px-4 py-2 rounded-full shadow-lg transition-all duration-300 ${
+          collapsed
+            ? 'bg-red-600 hover:bg-red-700 text-white p-3 w-12 h-12 justify-center'
+            : 'bg-red-600 hover:bg-red-700 text-white'
+        }`}
       >
         <FiShare2 className="w-5 h-5 text-white" />
-        <span>שתף כתבה</span>
+        {!collapsed && <span>שתף כתבה</span>}
       </button>
 
-      {/* תפריט שיתוף */}
-      {open && (
+      {/* תפריט השיתוף */}
+      {open && !collapsed && (
         <div
           ref={dropRef}
-          className="absolute right-0 mt-2 w-48 bg-white text-black rounded-lg shadow-xl border border-gray-200"
+          className="absolute bottom-14 left-0 w-52 bg-white text-black rounded-lg shadow-xl border border-gray-200"
         >
           <div className="flex justify-between items-center p-2 border-b border-gray-100">
             <span className="text-sm font-medium">שתף באמצעות</span>
             <button
-              onClick={() => setHidden(true)} // סגירה לצמיתות
+              onClick={() => setCollapsed(true)}
               className="text-gray-500 hover:text-red-500"
             >
               <FiX className="w-4 h-4" />
