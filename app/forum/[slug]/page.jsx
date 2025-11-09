@@ -44,7 +44,7 @@ export default function ForumCategoryPage() {
         title: newThread.title,
         content: newThread.content,
         author: newThread.author || 'אנונימי',
-        categorySlug: slug,
+        categorySlug: decodeURIComponent(slug),
       });
       setNewThread({ title: '', content: '', author: '' });
       await loadThreads();
