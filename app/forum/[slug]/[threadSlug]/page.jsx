@@ -19,7 +19,25 @@ export default function ForumThreadPage() {
       try {
         const t = await fetchThreadBySlug(decodedThreadSlug);
         setThread(t);
-        if (t?.id) await incrementThreadViews(t.id, t.views);
+
+        if (t?.id) {
+          // ✅ בדיקה אם המשתמש כבר צפה בדיון הזה
+          const viewedKey = `viewed-thread-${t.id}`;
+          const hasViewed = localStorage.getItem(viewedKey);
+
+          if (!hasViewed) {
+            localStorage.setItem(viewedKey, 'true');
+
+            // ✅ עדכון ספירת צפיות ב־Strapi
+            fetch(`${process.env.NEXT_PUBLIC_STRAPI_API_URL}/api/forum-threads/${t.id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                data: { views: (t.views || 0) + 1 },
+              }),
+            }).catch((err) => console.error('⚠️ שגיאה בעדכון צפיות:', err));
+          }
+        }
       } catch (err) {
         console.error('❌ שגיאה בטעינת דיון:', err);
       } finally {
@@ -28,6 +46,7 @@ export default function ForumThreadPage() {
     }
     load();
   }, [decodedThreadSlug]);
+
 
   const categoryLabel = labelMap[slug] || slug;
 
