@@ -7,7 +7,7 @@ import Link from 'next/link';
 import PageContainer from '@/components/PageContainer';
 import { fetchThreadsByCategorySlug } from '@/lib/forumApi';
 import { getForumLabel } from '@/utils/labelMap';
-import NewPostButton from '../NewPostButton';
+import NewPostForm from '../NewPostForm';
 
 export default function ForumCategoryPage() {
   const params = useParams();
@@ -45,7 +45,7 @@ export default function ForumCategoryPage() {
       <div className="bg-[#faafaf] text-black min-h-screen py-8 px-2 sm:px-4 transition-colors duration-500">
         {/* 🔴 קופסת פתיחת דיון חדש */}
         <div className="border-2 border-[#e60000] rounded-xl bg-white shadow-md mb-8 p-4">
-          <NewPostButton categorySlug={slug} onCreated={() => setRefresh(!refresh)} />
+          <NewPostForm categorySlug={slug} onCreated={() => setRefresh(!refresh)} />
         </div>
 
         {loading ? (
