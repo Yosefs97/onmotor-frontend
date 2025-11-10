@@ -53,13 +53,17 @@ export default function CommentsSection({ threadSlug, threadLocked }) {
         תגובות ({comments.length})
       </h3>
 
-      {/* רשימת תגובות */}
       <div className="space-y-4">
         {comments.length === 0 ? (
           <p className="text-center text-gray-700">אין תגובות עדיין.</p>
         ) : (
           comments.map((c) => (
-            <CommentItem key={c.id} comment={c} setReplyTo={setReplyTo} />
+            <CommentItem
+              key={c.id}
+              comment={c}
+              comments={comments}
+              setReplyTo={setReplyTo}
+            />
           ))
         )}
       </div>
