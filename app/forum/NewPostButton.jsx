@@ -1,44 +1,123 @@
 // app/forum/NewPostButton.jsx
 'use client';
 
-import { useRouter, useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { useAuthModal } from '@/contexts/AuthModalProvider';
-import { getCurrentUser } from '@/utils/auth';
-import { FaPlus } from 'react-icons/fa';
+import { useState } from 'react';
+import { addThread } from '@/lib/forumApi';
 
-export default function NewPostButton() {
-  const router = useRouter();
-  const params = useParams();
-  const [isClient, setIsClient] = useState(false);
-  const { openModal } = useAuthModal();
+export default function NewPostButton({ categorySlug, onCreated }) {
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ title: '', content: '', author: '' });
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState(null);
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.title.trim() || !form.content.trim()) {
+      alert('נא למלא כותרת ותוכן');
+      return;
+    }
 
-  const handleClick = () => {
-    if (!isClient) return;
-
-    const user = getCurrentUser();
-    if (user) {
-      // ✅ משתמש מחובר – מעבר לעמוד פתיחת דיון חדש
-      router.push(`/forum/${params.slug}/new`);
-    } else {
-      // ❌ משתמש לא מחובר – פתיחת מודאל התחברות
-      openModal('inline', 'עליך להתחבר כדי לפתוח דיון חדש');
+    setLoading(true);
+    try {
+      await addThread({
+        title: form.title,
+        content: form.content,
+        author: form.author || 'אנונימי',
+        categorySlug,
+        lastActivity: new Date().toISOString(),
+      });
+      setForm({ title: '', content: '', author: '' });
+      setOpen(false);
+      if (onCreated) onCreated();
+      setStatus({ type: 'success', text: '✅ הדיון נוסף בהצלחה!' });
+    } catch (err) {
+      console.error(err);
+      setStatus({ type: 'error', text: '❌ שגיאה ביצירת דיון' });
+    } finally {
+      setLoading(false);
+      setTimeout(() => setStatus(null), 2500);
     }
   };
 
   return (
-    <div className="flex justify-end mt-4 mb-6">
+    <div className="relative">
+      {/* כפתור פתיחה */}
       <button
-        onClick={handleClick}
-        className="flex items-center gap-2 bg-[#e60000] hover:bg-[#ff3333] text-white px-5 py-2.5 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
+        onClick={() => setOpen(true)}
+        className="px-5 py-2 bg-[#faafaf] text-[#1c1c1c] font-semibold rounded-md hover:bg-[#ffbaba] transition shadow-md"
       >
-        <FaPlus className="text-sm" />
-        <span>פתח דיון חדש</span>
+        פתח דיון חדש
       </button>
+
+      {/* חלון מודאל */}
+      {open && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-[#222] text-[#ada6a6] rounded-xl shadow-xl w-[90%] max-w-lg p-6 relative">
+            <button
+              onClick={() => setOpen(false)}
+              className="absolute top-3 left-3 text-[#faafaf] hover:text-white text-xl"
+            >
+              ✕
+            </button>
+
+            <h3 className="text-2xl font-bold text-[#faafaf] mb-4 text-right border-b border-[#faafaf]/40 pb-2">
+              פתח דיון חדש
+            </h3>
+
+            <form onSubmit={handleSubmit}>
+              <label className="block mb-2 text-sm text-right">שם</label>
+              <input
+                type="text"
+                value={form.author}
+                onChange={(e) => setForm({ ...form, author: e.target.value })}
+                className="w-full bg-[#2a2a2a] border border-[#444] rounded px-3 py-2 mb-4 text-[#ada6a6] focus:outline-none focus:border-[#faafaf]"
+                placeholder="לדוגמה: רוכב מהצפון..."
+              />
+
+              <label className="block mb-2 text-sm text-right">כותרת</label>
+              <input
+                type="text"
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                className="w-full bg-[#2a2a2a] border border-[#444] rounded px-3 py-2 mb-4 text-[#ada6a6] focus:outline-none focus:border-[#faafaf]"
+                placeholder="כותרת הדיון..."
+              />
+
+              <label className="block mb-2 text-sm text-right">תוכן</label>
+              <textarea
+                value={form.content}
+                onChange={(e) => setForm({ ...form, content: e.target.value })}
+                className="w-full bg-[#2a2a2a] border border-[#444] rounded px-3 py-2 h-32 mb-4 text-[#ada6a6] resize-none focus:outline-none focus:border-[#faafaf]"
+                placeholder="כתוב כאן את תוכן הדיון..."
+              />
+
+              <button
+                type="submit"
+                disabled={loading}
+                className={`w-full py-2 rounded font-semibold text-white transition ${
+                  loading
+                    ? 'bg-gray-600 cursor-not-allowed'
+                    : 'bg-[#faafaf] text-[#1c1c1c] hover:bg-[#ffbaba]'
+                }`}
+              >
+                {loading ? 'שולח...' : 'פרסם דיון'}
+              </button>
+            </form>
+
+            {status && (
+              <p
+                className={`mt-4 text-center font-medium ${
+                  status.type === 'success'
+                    ? 'text-green-400'
+                    : 'text-red-400'
+                }`}
+              >
+                {status.text}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

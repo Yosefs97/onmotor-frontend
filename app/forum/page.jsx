@@ -37,7 +37,7 @@ export default function ForumPage() {
         <div className="max-w-6xl mx-auto">
           {/* 🏍️ כותרת עליונה */}
           <div className="flex items-center justify-center mb-10">
-            <FaMotorcycle className="text-[#faafaf] text-4xl ml-2 drop-shadow-[0_0_8px_#faafaf]" />
+            <FaMotorcycle className="text-[#faafaf] text-4xl mr-2 drop-shadow-[0_0_8px_#faafaf]" />
             <h1 className="text-3xl font-bold text-[#faafaf] border-b border-[#faafaf] pb-2 drop-shadow-[0_0_6px_#faafaf]/50">
               פורום OnMotor
             </h1>
