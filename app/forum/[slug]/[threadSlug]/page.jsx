@@ -14,6 +14,8 @@ import { labelMap } from '@/utils/labelMap';
 
 export default function ForumThreadPage() {
   const { slug, threadSlug } = useParams();
+  const decodedThreadSlug = decodeURIComponent(threadSlug || ""); // ✅ פענוח מלא של הסלאג
+
   const [thread, setThread] = useState(null);
   const [comments, setComments] = useState([]);
   const [replyTo, setReplyTo] = useState(null);
@@ -25,10 +27,11 @@ export default function ForumThreadPage() {
   useEffect(() => {
     async function load() {
       try {
-        const t = await fetchThreadBySlug(threadSlug);
+        console.log("📥 טוען דיון לפי slug:", decodedThreadSlug);
+        const t = await fetchThreadBySlug(decodedThreadSlug); // ✅ שימוש בערך המפוענח
         setThread(t);
         if (t?.id) await incrementThreadViews(t.id, t.views);
-        const c = await fetchCommentsByThreadSlug(threadSlug);
+        const c = await fetchCommentsByThreadSlug(decodedThreadSlug);
         setComments(c);
       } catch (err) {
         console.error('❌ שגיאה בטעינת דיון:', err);
@@ -38,8 +41,9 @@ export default function ForumThreadPage() {
       }
     }
     load();
-  }, [threadSlug]);
+  }, [decodedThreadSlug]); // ✅ מאזין לגרסה המפוענחת
 
+  // 🟢 טופס תגובה
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!newComment.text.trim()) {
@@ -50,7 +54,7 @@ export default function ForumThreadPage() {
     setSubmitting(true);
     try {
       await addCommentByThreadSlug({
-        threadSlug,
+        threadSlug: decodedThreadSlug, // ✅ שימוש באותו ערך
         text: newComment.text,
         author: newComment.author || 'אנונימי',
         reply_to: replyTo,
@@ -58,7 +62,7 @@ export default function ForumThreadPage() {
 
       setNewComment({ author: '', text: '' });
       setReplyTo(null);
-      const updatedComments = await fetchCommentsByThreadSlug(threadSlug);
+      const updatedComments = await fetchCommentsByThreadSlug(decodedThreadSlug);
       setComments(updatedComments);
 
       setStatusMessage({ text: 'התגובה פורסמה בהצלחה 🎉', type: 'success' });
@@ -72,6 +76,7 @@ export default function ForumThreadPage() {
   };
 
   const categoryLabel = labelMap[slug] || slug;
+
 
   return (
     <PageContainer
