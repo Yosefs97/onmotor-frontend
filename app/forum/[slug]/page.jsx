@@ -96,7 +96,7 @@ export default function ForumCategoryPage() {
                         </span>
                       </p>
                       <p className="text-sm text-gray-700 mt-1">
-                        צפיות: {t.views || 0}
+                        צפיות: {t.views || 0}• תגובות: {t.commentsCount || 0}
                       </p>
                     </div>
                   </div>
