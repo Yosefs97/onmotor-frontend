@@ -40,54 +40,54 @@ export default function NewPostButton({ categorySlug, onCreated }) {
   };
 
   return (
-    <div className="relative">
-      {/* כפתור פתיחה */}
+    <>
+      {/* כפתור קבוע בצד ימין למעלה */}
       <button
         onClick={() => setOpen(true)}
-        className="px-5 py-2 bg-[#faafaf] text-[#1c1c1c] font-semibold rounded-md hover:bg-[#ffbaba] transition shadow-md"
+        className="fixed top-24 right-8 z-40 px-6 py-2 bg-[#e60000] text-white font-semibold rounded-lg shadow-lg hover:bg-[#ff3333] transition"
       >
         פתח דיון חדש
       </button>
 
       {/* חלון מודאל */}
       {open && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-          <div className="bg-[#222] text-[#ada6a6] rounded-xl shadow-xl w-[90%] max-w-lg p-6 relative">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-white text-black rounded-xl shadow-2xl w-[90%] max-w-lg p-6 relative border-2 border-[#e60000]">
             <button
               onClick={() => setOpen(false)}
-              className="absolute top-3 left-3 text-[#faafaf] hover:text-white text-xl"
+              className="absolute top-3 left-3 text-[#e60000] hover:text-black text-xl"
             >
               ✕
             </button>
 
-            <h3 className="text-2xl font-bold text-[#faafaf] mb-4 text-right border-b border-[#faafaf]/40 pb-2">
+            <h3 className="text-2xl font-bold text-[#e60000] mb-4 text-right border-b-2 border-[#e60000] pb-2">
               פתח דיון חדש
             </h3>
 
             <form onSubmit={handleSubmit}>
-              <label className="block mb-2 text-sm text-right">שם</label>
+              <label className="block mb-2 text-sm text-right font-medium">שם</label>
               <input
                 type="text"
                 value={form.author}
                 onChange={(e) => setForm({ ...form, author: e.target.value })}
-                className="w-full bg-[#2a2a2a] border border-[#444] rounded px-3 py-2 mb-4 text-[#ada6a6] focus:outline-none focus:border-[#faafaf]"
+                className="w-full bg-[#fad2d2] border-2 border-[#e60000] rounded px-3 py-2 mb-4 text-black focus:outline-none focus:border-[#ff3333]"
                 placeholder="לדוגמה: רוכב מהצפון..."
               />
 
-              <label className="block mb-2 text-sm text-right">כותרת</label>
+              <label className="block mb-2 text-sm text-right font-medium">כותרת</label>
               <input
                 type="text"
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
-                className="w-full bg-[#2a2a2a] border border-[#444] rounded px-3 py-2 mb-4 text-[#ada6a6] focus:outline-none focus:border-[#faafaf]"
+                className="w-full bg-[#fad2d2] border-2 border-[#e60000] rounded px-3 py-2 mb-4 text-black focus:outline-none focus:border-[#ff3333]"
                 placeholder="כותרת הדיון..."
               />
 
-              <label className="block mb-2 text-sm text-right">תוכן</label>
+              <label className="block mb-2 text-sm text-right font-medium">תוכן</label>
               <textarea
                 value={form.content}
                 onChange={(e) => setForm({ ...form, content: e.target.value })}
-                className="w-full bg-[#2a2a2a] border border-[#444] rounded px-3 py-2 h-32 mb-4 text-[#ada6a6] resize-none focus:outline-none focus:border-[#faafaf]"
+                className="w-full bg-[#fad2d2] border-2 border-[#e60000] rounded px-3 py-2 h-32 mb-4 text-black resize-none focus:outline-none focus:border-[#ff3333]"
                 placeholder="כתוב כאן את תוכן הדיון..."
               />
 
@@ -97,7 +97,7 @@ export default function NewPostButton({ categorySlug, onCreated }) {
                 className={`w-full py-2 rounded font-semibold text-white transition ${
                   loading
                     ? 'bg-gray-600 cursor-not-allowed'
-                    : 'bg-[#faafaf] text-[#1c1c1c] hover:bg-[#ffbaba]'
+                    : 'bg-[#e60000] hover:bg-[#ff3333]'
                 }`}
               >
                 {loading ? 'שולח...' : 'פרסם דיון'}
@@ -107,9 +107,7 @@ export default function NewPostButton({ categorySlug, onCreated }) {
             {status && (
               <p
                 className={`mt-4 text-center font-medium ${
-                  status.type === 'success'
-                    ? 'text-green-400'
-                    : 'text-red-400'
+                  status.type === 'success' ? 'text-green-600' : 'text-red-600'
                 }`}
               >
                 {status.text}
@@ -118,6 +116,6 @@ export default function NewPostButton({ categorySlug, onCreated }) {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

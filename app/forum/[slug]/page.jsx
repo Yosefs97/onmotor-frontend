@@ -41,57 +41,54 @@ export default function ForumCategoryPage() {
         { label: categoryLabel, href: `/forum/${slug}` },
       ]}
     >
-      <div className="bg-[#1c1c1c] text-[#ada6a6] min-h-screen py-8 px-2 sm:px-4 transition-colors duration-500">
+      <div className="bg-[#fad2d2] text-black min-h-screen py-8 px-2 sm:px-4 relative transition-colors duration-500">
         {/* כפתור פתיחת דיון חדש */}
-        <div className="flex justify-end mb-6">
-          <NewPostButton categorySlug={slug} onCreated={loadThreads} />
-        </div>
+        <NewPostButton categorySlug={slug} onCreated={loadThreads} />
 
         {loading ? (
-          <p className="text-center text-[#ada6a6]/80">טוען דיונים...</p>
+          <p className="text-center text-gray-700">טוען דיונים...</p>
         ) : threads.length === 0 ? (
-          <p className="text-center text-[#ada6a6]/70">אין דיונים בקטגוריה זו.</p>
+          <p className="text-center text-gray-700">אין דיונים בקטגוריה זו.</p>
         ) : (
-          <ul className="divide-y divide-[#2a2a2a] border border-[#333] rounded-xl overflow-hidden bg-[#222] shadow-md">
+          <ul className="divide-y divide-[#e60000]/50 border-2 border-[#e60000] rounded-xl overflow-hidden bg-white shadow-md">
             {threads.map((t) => (
               <li
                 key={t.id}
-                className="hover:bg-[#2c1919] transition cursor-pointer group"
+                className="hover:bg-[#ffeaea] transition cursor-pointer group"
               >
                 <Link href={`/forum/${slug}/${t.slug}`} className="block p-5">
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
                     <div className="flex items-center gap-2 mb-2 sm:mb-0">
                       {t.pinned && (
-                        <span className="text-[#faafaf] font-bold text-xs bg-[#3a1a1a] px-2 py-1 rounded">
+                        <span className="text-[#e60000] font-bold text-xs bg-[#ffdede] px-2 py-1 rounded">
                           📌 נעוץ
                         </span>
                       )}
                       {t.locked && (
-                        <span className="text-[#faafaf] font-bold text-xs bg-[#4a1a1a] px-2 py-1 rounded">
+                        <span className="text-[#e60000] font-bold text-xs bg-[#ffdede] px-2 py-1 rounded">
                           🔒 נעול
                         </span>
                       )}
-                      <h3 className="text-lg font-semibold text-[#ada6a6] group-hover:text-[#faafaf] transition">
+                      <h3 className="text-lg font-semibold group-hover:text-[#e60000] transition">
                         {t.title}
                       </h3>
                     </div>
-                    <div className="text-sm text-[#ada6a6]/80 text-left sm:text-right">
+
+                    <div className="text-sm text-right">
                       <p>
                         נכתב על ידי{' '}
-                        <span className="text-[#faafaf]">{t.author}</span>
+                        <span className="text-[#e60000]">{t.author}</span>
                       </p>
-                      <p className="text-xs text-[#ada6a6]/60 mt-1">
+                      <p className="text-xs mt-1">
                         צפיות: {t.views || 0} •{' '}
                         {t.lastActivity
-                          ? `עדכון אחרון: ${new Date(
-                              t.lastActivity
-                            ).toLocaleDateString('he-IL')}`
+                          ? new Date(t.lastActivity).toLocaleDateString('he-IL')
                           : '—'}
                       </p>
                     </div>
                   </div>
 
-                  <p className="text-[#ada6a6]/70 text-sm mt-2 line-clamp-2 whitespace-pre-line">
+                  <p className="text-sm mt-2 line-clamp-2 whitespace-pre-line">
                     {t.content.length > 300
                       ? t.content.slice(0, 300) + '...'
                       : t.content}
