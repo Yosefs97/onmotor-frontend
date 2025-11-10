@@ -46,7 +46,7 @@ export default function ForumCategoryPage() {
         {/* 🟥 קופסה כוללת */}
         <div className="border-2 border-[#e60000] rounded-xl bg-white shadow-md mb-8">
           {/* 🔴 כפתור פתיחה */}
-          <div className="flex justify-end items-center p-4 border-b-2 border-[#e60000] bg-[#fff5f5]">
+          <div className="flex justify-end items-center p-4 bg-[#fff5f5] rounded-t-xl">
             <button
               onClick={() => setShowForm(!showForm)}
               className="px-5 py-2 bg-[#e60000] text-white rounded-lg hover:bg-[#ff3333] transition font-semibold"
@@ -57,7 +57,7 @@ export default function ForumCategoryPage() {
 
           {/* 🧾 טופס פתיחת דיון */}
           {showForm && (
-            <div className="p-6 border-b-2 border-[#e60000] bg-[#ffeaea]">
+            <div className="p-6 border-t-2 border-[#e60000] bg-[#ffeaea] rounded-b-xl">
               <NewPostForm
                 categorySlug={slug}
                 onCreated={loadThreads}
