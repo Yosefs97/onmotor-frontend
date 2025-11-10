@@ -1,3 +1,4 @@
+//app\forum\[slug]\[threadSlug]\CommentsSection.jsx
 'use client';
 
 import { useEffect, useState } from 'react';

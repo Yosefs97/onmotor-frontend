@@ -1,3 +1,4 @@
+//app\forum\[slug]\[threadSlug]\CommentItem.jsx
 'use client';
 import { useEffect, useRef } from 'react';
 
