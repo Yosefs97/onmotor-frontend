@@ -1,4 +1,4 @@
-//app\forum\[slug]\[threadSlug]\CommentsSection.jsx
+// app/forum/[slug]/[threadSlug]/CommentsSection.jsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -19,19 +19,23 @@ export default function CommentsSection({ threadSlug, threadLocked }) {
   }, [threadSlug]);
 
   async function loadComments() {
-  try {
-    const data = await fetchCommentsByThreadSlug(threadSlug);
-    console.log("🧩 תגובות נטענו:", data);
-    setComments(data.map(c => ({
-      ...c,
-      author: c.author?.trim() || "אנונימי",
-      text: c.text?.trim() || "— אין תוכן —"
-    })));
-  } catch (err) {
-    console.error('❌ שגיאה בטעינת תגובות:', err);
-  }
-}
+    try {
+      const data = await fetchCommentsByThreadSlug(threadSlug);
+      console.log('🧩 תגובות נטענו (מקור):', data);
 
+      // 🧠 ננקה ונחזיר ערכים בטוחים
+      const sanitized = data.map((c) => ({
+        ...c,
+        author: c.author?.trim() || 'אנונימי',
+        text: c.text?.trim() || '— אין תוכן —',
+      }));
+
+      console.log('✅ תגובות לאחר ניקוי:', sanitized);
+      setComments(sanitized);
+    } catch (err) {
+      console.error('❌ שגיאה בטעינת תגובות:', err);
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,7 +45,7 @@ export default function CommentsSection({ threadSlug, threadLocked }) {
       await addCommentByThreadSlug({
         threadSlug,
         text: newComment.text,
-        author: newComment.author || 'אנונימי',
+        author: newComment.author?.trim() || 'אנונימי',
         reply_to: replyTo,
       });
       setNewComment({ author: '', text: '' });
@@ -75,7 +79,6 @@ export default function CommentsSection({ threadSlug, threadLocked }) {
         )}
       </div>
 
-      {/* טופס תגובה */}
       {!threadLocked ? (
         <form
           onSubmit={handleSubmit}
@@ -94,7 +97,9 @@ export default function CommentsSection({ threadSlug, threadLocked }) {
             </div>
           )}
 
-          <label className="block mb-2 text-sm text-right font-semibold">שם</label>
+          <label className="block mb-2 text-sm text-right font-semibold">
+            שם
+          </label>
           <input
             type="text"
             value={newComment.author}
@@ -102,10 +107,12 @@ export default function CommentsSection({ threadSlug, threadLocked }) {
               setNewComment({ ...newComment, author: e.target.value })
             }
             className="w-full bg-[#fad2d2] border-2 border-[#e60000] rounded px-3 py-2 mb-4 text-black focus:outline-none focus:border-[#ff3333]"
-            placeholder="לדוגמה:יאיר ADV1290"
+            placeholder="לדוגמה: יאיר ADV1290"
           />
 
-          <label className="block mb-2 text-sm text-right font-semibold">תגובה</label>
+          <label className="block mb-2 text-sm text-right font-semibold">
+            תגובה
+          </label>
           <textarea
             value={newComment.text}
             onChange={(e) =>
