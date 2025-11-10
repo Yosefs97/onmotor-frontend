@@ -1,4 +1,3 @@
-// app/forum/[slug]/page.jsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -7,13 +6,14 @@ import Link from 'next/link';
 import PageContainer from '@/components/PageContainer';
 import { fetchThreadsByCategorySlug } from '@/lib/forumApi';
 import { getForumLabel } from '@/utils/labelMap';
-import NewPostButton from '../NewPostButton';
+import NewPostForm from '../NewPostForm';
 
 export default function ForumCategoryPage() {
   const params = useParams();
   const slug = params?.slug ? decodeURIComponent(params.slug) : '';
   const [threads, setThreads] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
 
   const categoryLabel = getForumLabel(slug);
 
@@ -41,63 +41,87 @@ export default function ForumCategoryPage() {
         { label: categoryLabel, href: `/forum/${slug}` },
       ]}
     >
-      <div className="bg-[#fad2d2] text-black min-h-screen py-8 px-2 sm:px-4 relative transition-colors duration-500">
-        {/* כפתור פתיחת דיון חדש */}
-        <NewPostButton categorySlug={slug} onCreated={loadThreads} />
+      <div className="bg-[#fad2d2] text-black min-h-screen py-8 px-2 sm:px-4 transition-colors duration-500">
+        <div className="max-w-5xl mx-auto border-2 border-[#e60000] rounded-xl bg-white shadow-md overflow-hidden">
+          {/* 🔴 כפתור פתיחה */}
+          <div className="flex justify-end items-center p-4 border-b-2 border-[#e60000] bg-[#fff5f5]">
+            <button
+              onClick={() => setShowForm(!showForm)}
+              className="px-5 py-2 bg-[#e60000] text-white rounded-lg hover:bg-[#ff3333] transition font-semibold"
+            >
+              {showForm ? 'סגור טופס' : 'פתח דיון חדש'}
+            </button>
+          </div>
 
-        {loading ? (
-          <p className="text-center text-gray-700">טוען דיונים...</p>
-        ) : threads.length === 0 ? (
-          <p className="text-center text-gray-700">אין דיונים בקטגוריה זו.</p>
-        ) : (
-          <ul className="divide-y divide-[#e60000]/50 border-2 border-[#e60000] rounded-xl overflow-hidden bg-white shadow-md">
-            {threads.map((t) => (
-              <li
-                key={t.id}
-                className="hover:bg-[#ffeaea] transition cursor-pointer group"
-              >
-                <Link href={`/forum/${slug}/${t.slug}`} className="block p-5">
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
-                    <div className="flex items-center gap-2 mb-2 sm:mb-0">
-                      {t.pinned && (
-                        <span className="text-[#e60000] font-bold text-xs bg-[#ffdede] px-2 py-1 rounded">
-                          📌 נעוץ
-                        </span>
-                      )}
-                      {t.locked && (
-                        <span className="text-[#e60000] font-bold text-xs bg-[#ffdede] px-2 py-1 rounded">
-                          🔒 נעול
-                        </span>
-                      )}
-                      <h3 className="text-lg font-semibold group-hover:text-[#e60000] transition">
-                        {t.title}
-                      </h3>
-                    </div>
+          {/* 🧾 טופס פתיחת דיון */}
+          {showForm && (
+            <div className="p-6 border-b-2 border-[#e60000] bg-[#ffeaea]">
+              <NewPostForm categorySlug={slug} onCreated={loadThreads} onClose={() => setShowForm(false)} />
+            </div>
+          )}
 
-                    <div className="text-sm text-right">
-                      <p>
-                        נכתב על ידי{' '}
-                        <span className="text-[#e60000]">{t.author}</span>
+          {/* 📋 רשימת דיונים */}
+          <div className="p-4">
+            {loading ? (
+              <p className="text-center text-gray-700">טוען דיונים...</p>
+            ) : threads.length === 0 ? (
+              <p className="text-center text-gray-700">אין דיונים בקטגוריה זו.</p>
+            ) : (
+              <ul className="divide-y divide-[#e60000]/50">
+                {threads.map((t) => (
+                  <li key={t.id} className="hover:bg-[#fff5f5] transition cursor-pointer group p-4">
+                    <Link href={`/forum/${slug}/${t.slug}`}>
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                        <div className="flex items-center gap-2 mb-2 sm:mb-0">
+                          {t.pinned && (
+                            <span className="text-[#e60000] font-bold text-xs bg-[#ffdede] px-2 py-1 rounded">
+                              📌 נעוץ
+                            </span>
+                          )}
+                          {t.locked && (
+                            <span className="text-[#e60000] font-bold text-xs bg-[#ffdede] px-2 py-1 rounded">
+                              🔒 נעול
+                            </span>
+                          )}
+                          <h3 className="text-lg font-semibold group-hover:text-[#e60000] transition">
+                            {t.title}
+                          </h3>
+                        </div>
+
+                        <div className="text-sm text-right">
+                          <p>
+                            נכתב על ידי{' '}
+                            <span className="text-[#e60000] font-semibold">{t.author}</span>
+                          </p>
+                          <p className="text-xs mt-1">
+                            צפיות: {t.views || 0} •{' '}
+                            {t.lastActivity
+                              ? new Date(t.lastActivity).toLocaleString('he-IL')
+                              : '—'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <p className="text-sm mt-2 line-clamp-2 whitespace-pre-line text-gray-700">
+                        {t.content.length > 300
+                          ? t.content.slice(0, 300) + '...'
+                          : t.content}
                       </p>
-                      <p className="text-xs mt-1">
-                        צפיות: {t.views || 0} •{' '}
+
+                      {/* 🕒 תאריך עדכון אחרון */}
+                      <div className="text-xs text-gray-600 border-t border-[#e60000] mt-3 pt-1">
+                        עודכן לאחרונה:{' '}
                         {t.lastActivity
-                          ? new Date(t.lastActivity).toLocaleDateString('he-IL')
+                          ? new Date(t.lastActivity).toLocaleString('he-IL')
                           : '—'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <p className="text-sm mt-2 line-clamp-2 whitespace-pre-line">
-                    {t.content.length > 300
-                      ? t.content.slice(0, 300) + '...'
-                      : t.content}
-                  </p>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
+                      </div>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
       </div>
     </PageContainer>
   );
