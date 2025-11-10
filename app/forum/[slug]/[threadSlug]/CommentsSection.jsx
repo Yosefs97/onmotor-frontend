@@ -19,13 +19,19 @@ export default function CommentsSection({ threadSlug, threadLocked }) {
   }, [threadSlug]);
 
   async function loadComments() {
-    try {
-      const data = await fetchCommentsByThreadSlug(threadSlug);
-      setComments(data);
-    } catch (err) {
-      console.error('❌ שגיאה בטעינת תגובות:', err);
-    }
+  try {
+    const data = await fetchCommentsByThreadSlug(threadSlug);
+    console.log("🧩 תגובות נטענו:", data);
+    setComments(data.map(c => ({
+      ...c,
+      author: c.author?.trim() || "אנונימי",
+      text: c.text?.trim() || "— אין תוכן —"
+    })));
+  } catch (err) {
+    console.error('❌ שגיאה בטעינת תגובות:', err);
   }
+}
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
