@@ -1,12 +1,10 @@
+// app/forum/[slug]/[threadSlug]/page.jsx
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import PageContainer from '@/components/PageContainer';
-import {
-  fetchThreadBySlug,
-  incrementThreadViews,
-} from '@/lib/forumApi';
+import { fetchThreadBySlug, incrementThreadViews } from '@/lib/forumApi';
 import { labelMap } from '@/utils/labelMap';
 import CommentsSection from './CommentsSection';
 
@@ -43,7 +41,7 @@ export default function ForumThreadPage() {
         { label: thread?.title || 'דיון', href: `/forum/${slug}/${threadSlug}` },
       ]}
     >
-      <div className="bg-[#fad2d2] text-black min-h-screen py-8 px-2 sm:px-4">
+      <div className="bg-[#faafaf] text-black min-h-screen py-8 px-2 sm:px-4">
         {loading ? (
           <p className="text-center text-gray-700">טוען דיון...</p>
         ) : !thread ? (
@@ -54,33 +52,46 @@ export default function ForumThreadPage() {
           <>
             {/* 🟥 פוסט פתיחה */}
             <div className="border-2 border-[#e60000] rounded-xl bg-white shadow-md mb-8">
-              <div className="p-4 border-b-2 border-[#e60000] flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  {thread.pinned && (
-                    <span className="text-[#e60000] font-bold text-sm">📌 נעוץ</span>
-                  )}
-                  {thread.locked && (
-                    <span className="text-[#e60000] font-bold text-sm">🔒 נעול</span>
-                  )}
-                  <h2 className="text-xl sm:text-2xl font-semibold text-[#e60000]">
-                    {thread.title}
-                  </h2>
+              {/* כותרת ופרטי יוצר — היפוך צדדים */}
+              <div className="p-4 border-b-2 border-[#e60000] flex justify-between items-start">
+                {/* כותרת מימין */}
+                <h2 className="text-xl sm:text-2xl font-bold text-[#e60000] text-right">
+                  {thread.title}
+                </h2>
+
+                {/* פרטי יוצר משמאל */}
+                <div className="text-left">
+                  <p className="text-sm">
+                    נכתב על ידי{' '}
+                    <span className="font-semibold text-[#e60000]">
+                      {thread.author}
+                    </span>
+                  </p>
+                  <p className="text-sm text-gray-700 mt-1">
+                    צפיות: {thread.views || 0}
+                  </p>
                 </div>
-                <p className="text-sm text-right">
-                  נכתב על ידי{' '}
-                  <span className="font-semibold">{thread.author}</span>
-                  <br />
-                  צפיות: {thread.views || 0}
-                </p>
               </div>
-              <div className="p-6 whitespace-pre-line leading-relaxed text-black">
+
+              {/* תוכן הדיון */}
+              <div className="p-6 whitespace-pre-line leading-relaxed text-black bg-[#fffafa]">
                 {thread.content}
               </div>
-              <div className="px-6 pb-4 text-xs border-t-2 border-[#e60000]">
-                עודכן לאחרונה:{' '}
-                {thread.lastActivity
-                  ? new Date(thread.lastActivity).toLocaleString('he-IL')
-                  : '—'}
+
+              {/* תאריכים */}
+              <div className="px-6 pb-4 text-xs border-t-2 border-[#e60000] flex justify-between">
+                <span>
+                  נוצר בתאריך:{' '}
+                  {thread.date
+                    ? new Date(thread.date).toLocaleString('he-IL')
+                    : '—'}
+                </span>
+                <span>
+                  עודכן לאחרונה:{' '}
+                  {thread.lastActivity
+                    ? new Date(thread.lastActivity).toLocaleString('he-IL')
+                    : '—'}
+                </span>
               </div>
             </div>
 
