@@ -29,6 +29,8 @@ export default function ForumThreadPage() {
       try {
         console.log("📥 טוען דיון לפי slug:", decodedThreadSlug);
         const t = await fetchThreadBySlug(decodedThreadSlug); // ✅ שימוש בערך המפוענח
+        console.log("🧩 תוצאה מ־fetchThreadBySlug:", t);
+
         setThread(t);
         if (t?.id) await incrementThreadViews(t.id, t.views);
         const c = await fetchCommentsByThreadSlug(decodedThreadSlug);
