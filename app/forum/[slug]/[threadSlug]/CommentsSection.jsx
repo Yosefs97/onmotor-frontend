@@ -67,7 +67,7 @@ export default function CommentsSection({ threadSlug, threadLocked }) {
   return (
     <div>
       {/* 🔺 כותרת */}
-      <div className="flex justify-between items-center mb-4 border-b-2 border-[#e60000] pb-2">
+      <div className="flex justify-between items-center mb-2 border-b-2 border-[#e60000] pb-2">
         <h3 className="text-2xl font-bold text-[#e60000] text-right">
           תגובות ({comments.length})
         </h3>
