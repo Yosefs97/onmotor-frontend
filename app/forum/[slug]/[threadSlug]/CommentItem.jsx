@@ -1,6 +1,8 @@
 // app/forum/[slug]/[threadSlug]/CommentItem.jsx
 'use client';
 import { useEffect, useRef, useState } from 'react';
+import { linkifyText } from '@/utils/linkifyText';
+
 
 export default function CommentItem({
   comment,
@@ -77,9 +79,20 @@ export default function CommentItem({
       )}
 
       {/* תוכן התגובה */}
-      <p className="whitespace-pre-line leading-relaxed text-black mb-3 break-words break-all overflow-hidden">
-        {comment.text?.trim() || '— אין תוכן —'}
-      </p>
+      <p
+        className="
+          whitespace-pre-line 
+          leading-relaxed 
+          text-black 
+          mb-3 
+          break-words 
+          break-all 
+          overflow-hidden
+        "
+        dangerouslySetInnerHTML={{
+          __html: linkifyText(comment.text?.trim() || '— אין תוכן —'),
+        }}
+      />
 
       {/* פעולות */}
       <div className="flex gap-4 items-center mb-2">
