@@ -7,6 +7,7 @@ import PageContainer from '@/components/PageContainer';
 import { fetchThreadBySlug } from '@/lib/forumApi';
 import { labelMap } from '@/utils/labelMap';
 import CommentsSection from './CommentsSection';
+import { linkifyText } from '@/utils/linkifyText';
 
 export default function ForumThreadPage() {
   const { slug, threadSlug } = useParams();
@@ -63,9 +64,19 @@ export default function ForumThreadPage() {
                 : '—'}
             </p>
 
-            <div className="whitespace-pre-line leading-relaxed text-black text-lg mb-6 break-words break-all overflow-hidden">
-              {thread.content}
-            </div>
+            <div
+              className="
+                whitespace-pre-line 
+                leading-relaxed 
+                text-black 
+                text-lg 
+                mb-6 
+                break-words 
+                break-all 
+                overflow-hidden
+              "
+              dangerouslySetInnerHTML={{ __html: linkifyText(thread.content) }}
+            />
 
             <div className="text-xs text-gray-700 flex justify-between">
               <span>
