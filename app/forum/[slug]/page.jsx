@@ -30,12 +30,34 @@ export default function ForumCategoryPage() {
         threadsData.map(async (t) => {
           try {
             const comments = await fetchCommentsByThreadSlug(t.slug);
-            return { ...t, commentsCount: comments.length };
+
+            // חישוב מספר תגובות ותאריך אחרון
+            const lastCommentDate = comments.length
+              ? new Date(
+                  Math.max(...comments.map((c) => new Date(c.createdAt || c.date)))
+                )
+              : null;
+
+            // אם יש תגובות, תאריך עדכון הוא תאריך התגובה האחרונה; אחרת – תאריך הדיון
+            const lastActivity = lastCommentDate
+              ? lastCommentDate
+              : new Date(t.updatedAt || t.date || t.createdAt);
+
+            return {
+              ...t,
+              commentsCount: comments.length,
+              lastActivity,
+            };
           } catch {
-            return { ...t, commentsCount: 0 };
+            return {
+              ...t,
+              commentsCount: 0,
+              lastActivity: new Date(t.updatedAt || t.date || t.createdAt),
+            };
           }
         })
       );
+
 
       // 📅 מיון לפי תאריך יצירה (חדש לישן)
       const sorted = withCounts.sort((a, b) => {
