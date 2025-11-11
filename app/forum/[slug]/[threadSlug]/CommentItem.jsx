@@ -77,7 +77,7 @@ export default function CommentItem({
       )}
 
       {/* תוכן התגובה */}
-      <p className="whitespace-pre-line leading-relaxed text-black mb-3 break-words">
+      <p className="whitespace-pre-line leading-relaxed text-black mb-3 break-words break-all overflow-hidden">
         {comment.text?.trim() || '— אין תוכן —'}
       </p>
 

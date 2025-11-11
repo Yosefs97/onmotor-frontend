@@ -63,7 +63,7 @@ export default function ForumThreadPage() {
                 : '—'}
             </p>
 
-            <div className="whitespace-pre-line leading-relaxed text-black text-lg mb-6">
+            <div className="whitespace-pre-line leading-relaxed text-black text-lg mb-6 break-words break-all overflow-hidden">
               {thread.content}
             </div>
 
