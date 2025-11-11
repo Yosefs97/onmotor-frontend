@@ -1,4 +1,3 @@
-// app/forum/[slug]/[threadSlug]/CommentItem.jsx
 'use client';
 import { useEffect, useRef, useState } from 'react';
 
@@ -9,7 +8,7 @@ export default function CommentItem({
   replyTo,
   onSubmit,
   depth = 0,
-  index = 0, // נשתמש בו לקביעת צבע רקע מתחלף
+  index = 0,
 }) {
   const ref = useRef(null);
   const [replyText, setReplyText] = useState('');
@@ -24,8 +23,12 @@ export default function CommentItem({
   const repliedTo = comment.reply_to ? comments.find((c) => c.id === comment.reply_to) : null;
   const dateString = new Date(comment.date || comment.createdAt || Date.now()).toLocaleString('he-IL');
 
-  // 💗 צבע רקע לפי זוגיות התגובה (לא לפי עומק)
+  // 💗 גוון ורוד מתחלף
   const bgColor = index % 2 === 0 ? 'bg-[#ffeaea]' : 'bg-[#fff5f5]';
+
+  // 🧭 הזחה מימין בלבד — מתחילה מנקודת חצי כפתור השב
+  const baseIndent = 60; // בערך חצי רוחב כפתור "השב"
+  const indentRight = depth > 0 ? baseIndent * depth : 0;
 
   const handleLocalSubmit = async (e) => {
     e.preventDefault();
@@ -42,15 +45,20 @@ export default function CommentItem({
   return (
     <div
       ref={ref}
-      className={`${bgColor} border-b border-[#e60000]/25 w-full py-4 px-6 text-right transition-all duration-200`}
-      style={{ paddingRight: `${depth * 30 + 16}px` }} // ⬅️ הזחה רק מימין
+      className={`${bgColor} border-b border-[#e60000]/20 w-full py-4 text-right overflow-hidden`}
+      style={{
+        paddingInlineStart: `${indentRight}px`, // הזחה רק מהימין (ל־RTL)
+        paddingInlineEnd: '20px',
+        width: '100%',
+      }}
     >
-      {/* כותרת */}
+      {/* שם ותאריך */}
       <div className="flex justify-between items-center mb-1">
         <p className="font-semibold text-[#e60000]">{comment.author || 'אנונימי'}</p>
         <p className="text-xs text-gray-700">{dateString}</p>
       </div>
 
+      {/* אם זו תגובה למישהו */}
       {repliedTo && (
         <p className="text-xs text-gray-600 mb-2">
           בתגובה ל־{' '}
@@ -59,7 +67,7 @@ export default function CommentItem({
       )}
 
       {/* תוכן התגובה */}
-      <p className="whitespace-pre-line leading-relaxed text-black mb-3">
+      <p className="whitespace-pre-line leading-relaxed text-black mb-3 break-words">
         {comment.text?.trim() || '— אין תוכן —'}
       </p>
 
@@ -121,7 +129,7 @@ export default function CommentItem({
               replyTo={replyTo}
               onSubmit={onSubmit}
               depth={depth + 1}
-              index={i} // ⬅️ כדי לשמור רצף צבעים
+              index={i}
             />
           ))}
         </div>
