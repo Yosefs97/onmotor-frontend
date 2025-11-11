@@ -118,7 +118,7 @@ export default function ForumCategoryPage() {
         ) : threads.length === 0 ? (
           <p className="text-center text-gray-700">אין דיונים בקטגוריה זו.</p>
         ) : (
-          <ul className="divide-y divide-[#e60000]/40 border-t border-b border-[#e60000]/40">
+          <ul className="divide-y divide-[#e60000]/40 border-t-3 border-b-3 border-[#e60000]/40">
             {threads.map((t, i) => {
               const bgColor = i % 2 === 0 ? 'bg-[#ffffff]' : 'bg-[#fff0f0]';
               return (
@@ -153,7 +153,7 @@ export default function ForumCategoryPage() {
                     </p>
 
                     {/* תאריכים */}
-                    <div className="text-xs text-gray-700 border-t border-[#e60000]/30 mt-2 pt-1 flex justify-between">
+                    <div className="text-xs text-gray-700 border-t-2 border-[#e60000]/30 mt-2 pt-1 flex justify-between">
                       <span>
                         נוצר:{' '}
                         {t.date
