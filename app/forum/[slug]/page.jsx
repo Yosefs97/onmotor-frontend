@@ -4,7 +4,10 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import PageContainer from '@/components/PageContainer';
-import { fetchThreadsByCategorySlug, fetchCommentsByThreadSlug } from '@/lib/forumApi';
+import {
+  fetchThreadsByCategorySlug,
+  fetchCommentsByThreadSlug,
+} from '@/lib/forumApi';
 import { getForumLabel } from '@/utils/labelMap';
 import NewPostForm from '../NewPostForm';
 
@@ -17,32 +20,40 @@ export default function ForumCategoryPage() {
 
   const categoryLabel = getForumLabel(slug);
 
-  useEffect(() => {
-    async function loadThreads() {
-      try {
-        const threadsData = await fetchThreadsByCategorySlug(slug);
+  // ✅ נזיז את הפונקציה החוצה כדי שתהיה זמינה גם מחוץ ל-useEffect
+  const loadThreads = async () => {
+    try {
+      const threadsData = await fetchThreadsByCategorySlug(slug);
 
-        // חישוב מספר תגובות
-        const withCounts = await Promise.all(
-          threadsData.map(async (t) => {
-            try {
-              const comments = await fetchCommentsByThreadSlug(t.slug);
-              return { ...t, commentsCount: comments.length };
-            } catch {
-              return { ...t, commentsCount: 0 };
-            }
-          })
-        );
+      // 🧮 חישוב מספר תגובות לכל דיון
+      const withCounts = await Promise.all(
+        threadsData.map(async (t) => {
+          try {
+            const comments = await fetchCommentsByThreadSlug(t.slug);
+            return { ...t, commentsCount: comments.length };
+          } catch {
+            return { ...t, commentsCount: 0 };
+          }
+        })
+      );
 
-        // דיונים חדשים בראש
-        setThreads(withCounts.reverse());
-      } catch (err) {
-        console.error('שגיאה בטעינת דיונים:', err);
-      } finally {
-        setLoading(false);
-      }
+      // 📅 מיון לפי תאריך יצירה (חדש לישן)
+      const sorted = withCounts.sort((a, b) => {
+        const dateA = new Date(a.date || a.createdAt || 0);
+        const dateB = new Date(b.date || b.createdAt || 0);
+        return dateB - dateA;
+      });
+
+      setThreads(sorted);
+    } catch (err) {
+      console.error('❌ שגיאה בטעינת דיונים:', err);
+    } finally {
+      setLoading(false);
     }
+  };
 
+  // 🧩 טוען את הדיונים ברגע שהקטגוריה משתנה
+  useEffect(() => {
     loadThreads();
   }, [slug]);
 
@@ -73,7 +84,7 @@ export default function ForumCategoryPage() {
               categorySlug={slug}
               onCreated={() => {
                 setShowForm(false);
-                loadThreads();
+                loadThreads(); // ✅ מעדכן את הרשימה בלי רענון
               }}
             />
           </div>
