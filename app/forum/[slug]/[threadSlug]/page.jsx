@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import PageContainer from '@/components/PageContainer';
 import { fetchThreadBySlug, fetchCommentsByThreadSlug } from '@/lib/forumApi';
-import { getForumLabel } from '@/utils/labelMap'; // ✅ שים לב לשינוי כאן
+import { labelMap } from '@/utils/labelMap';
 import CommentsSection from './CommentsSection';
 import { linkifyText } from '@/utils/linkifyText';
 
@@ -18,15 +18,22 @@ export default function ForumThreadPage() {
   useEffect(() => {
     async function load() {
       try {
+        // 📥 מביא את נתוני הדיון
         const t = await fetchThreadBySlug(decodedThreadSlug);
+
+        // 📥 מביא גם את כל התגובות לדיון
         const comments = await fetchCommentsByThreadSlug(decodedThreadSlug);
 
+        // 🧮 מחשב את תאריך התגובה האחרונה
         const lastCommentDate = comments.length
           ? new Date(
-              Math.max(...comments.map((c) => new Date(c.createdAt || c.date)))
+              Math.max(
+                ...comments.map((c) => new Date(c.createdAt || c.date))
+              )
             )
           : null;
 
+        // 🕒 אם יש תגובות, נעדכן לפי התגובה האחרונה; אחרת לפי תאריך הדיון
         const lastActivity = lastCommentDate
           ? lastCommentDate
           : new Date(t.updatedAt || t.date || t.createdAt);
@@ -41,8 +48,7 @@ export default function ForumThreadPage() {
     load();
   }, [decodedThreadSlug]);
 
-  // ✅ משתמש בפונקציה שמחזירה תווית קריאה בעברית
-  const categoryLabel = getForumLabel(slug);
+  const categoryLabel = labelMap[slug] || slug;
 
   return (
     <PageContainer
@@ -62,6 +68,7 @@ export default function ForumThreadPage() {
         </div>
       ) : (
         <>
+          {/* 💬 תוכן הדיון */}
           <section className="w-full bg-[#ffeaea] text-black py-2 px-6 sm:px-10">
             <h2 className="text-3xl font-bold text-[#e60000] mb-3">
               {thread.title}
@@ -83,6 +90,7 @@ export default function ForumThreadPage() {
               dangerouslySetInnerHTML={{ __html: linkifyText(thread.content) }}
             />
 
+            {/* 🕒 תאריכים */}
             <div className="text-xs text-gray-700 flex justify-between border-t-2 border-[#e60000]/30 pt-1">
               <span>
                 נוצר:{' '}
@@ -99,8 +107,10 @@ export default function ForumThreadPage() {
             </div>
           </section>
 
+          {/* 🔴 קו מפריד עבה */}
           <div className="border-t-4 border-[#e60000] my-0 w-full"></div>
 
+          {/* 💭 תגובות */}
           <section className="w-full bg-[#fff] py-8 sm:px-10">
             <CommentsSection
               threadSlug={decodedThreadSlug}
