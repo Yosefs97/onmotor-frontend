@@ -20,17 +20,17 @@ export default function ForumThreadPage() {
       try {
         const t = await fetchThreadBySlug(decodedThreadSlug);
 
-        // ✅ נביא את כל התגובות כדי לחשב תאריך אחרון אמיתי
+        // ✅ נביא את התגובה האחרונה ישירות מ־Strapi כדי לחשב עדכון אמיתי
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_STRAPI_API_URL}/api/forum-comments?filters[thread][slug][$eq]=${decodedThreadSlug}&sort[0]=createdAt:desc&pagination[limit]=1`
         );
         const json = await res.json();
         const lastComment = json?.data?.[0];
 
-        // אם יש תגובה חדשה – תשתמש בתאריך שלה
+        // 🕒 אם יש תגובה חדשה – השתמש בתאריך שלה, אחרת בתאריך עדכון או יצירה של הדיון
         const lastActivity = lastComment
           ? lastComment.attributes?.createdAt
-          : t.lastActivity || t.updatedAt;
+          : t.lastActivity || t.updatedAt || t.date || t.createdAt;
 
         setThread({ ...t, lastActivity });
       } catch (err) {
@@ -41,7 +41,6 @@ export default function ForumThreadPage() {
     }
     load();
   }, [decodedThreadSlug]);
-
 
   const categoryLabel = labelMap[slug] || slug;
 
@@ -92,7 +91,8 @@ export default function ForumThreadPage() {
               dangerouslySetInnerHTML={{ __html: linkifyText(thread.content) }}
             />
 
-            <div className="text-xs text-gray-700 flex justify-between">
+            {/* 🕒 תאריכים */}
+            <div className="text-xs text-gray-700 flex justify-between border-t-2 border-[#e60000]/30 pt-1">
               <span>
                 נוצר בתאריך:{' '}
                 {thread.date
@@ -101,13 +101,9 @@ export default function ForumThreadPage() {
               </span>
               <span>
                 עודכן לאחרונה:{' '}
-                {thread.comments?.length
-                  ? new Date(
-                      [...thread.comments]
-                        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0]
-                        .createdAt
-                    ).toLocaleString('he-IL')
-                  : new Date(thread.date || thread.createdAt).toLocaleString('he-IL')}
+                {thread.lastActivity
+                  ? new Date(thread.lastActivity).toLocaleString('he-IL')
+                  : '—'}
               </span>
             </div>
           </section>
@@ -115,7 +111,7 @@ export default function ForumThreadPage() {
           {/* 🔴 קו מפריד עבה */}
           <div className="border-t-4 border-[#e60000] my-0 w-full"></div>
 
-          {/* 💬 תגובות ברצועת צבע מקצה לקצה */}
+          {/* 💬 תגובות */}
           <section className="w-full bg-[#fff] py-8 sm:px-10">
             <CommentsSection
               threadSlug={decodedThreadSlug}
