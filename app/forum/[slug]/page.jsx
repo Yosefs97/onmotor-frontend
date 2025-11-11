@@ -146,7 +146,7 @@ export default function ForumCategoryPage() {
                     </div>
 
                     {/* תוכן מקוצר */}
-                    <p className="text-sm text-black leading-tight whitespace-pre-line">
+                    <p className="text-sm text-black leading-tight whitespace-pre-line break-words break-all overflow-hidden">
                       {t.content?.length > 180
                         ? t.content.slice(0, 180) + '...'
                         : t.content}
