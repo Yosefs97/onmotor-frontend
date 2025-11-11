@@ -142,10 +142,10 @@ export default function CommentForm({ articleId }) {
             <div key={c.id} className="border rounded bg-white p-4">
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-red-600 text-white flex justify-center items-center font-bold">
+                  <div className="w-8 h-8 rounded-full bg-red-600 text-white flex justify-center items-center font-bold ">
                     {generateAvatar(authorName)}
                   </div>
-                  <div className="text-sm font-semibold text-gray-800">
+                  <div className="text-sm font-semibold text-gray-800 ">
                     {authorName}
                   </div>
                 </div>

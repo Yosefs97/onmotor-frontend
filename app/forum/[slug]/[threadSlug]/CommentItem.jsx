@@ -59,7 +59,7 @@ export default function CommentItem({
     >
       {/* כותרת */}
       <div className="flex justify-between items-center mb-1">
-        <p className="font-semibold text-[#e60000]">{comment.author || 'אנונימי'}</p>
+        <p className="font-semibold text-[#e60000] break-words break-all overflow-hidden">{comment.author || 'אנונימי'}</p>
         <p className="text-xs text-gray-700">{dateString}</p>
       </div>
 
