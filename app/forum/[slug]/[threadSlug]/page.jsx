@@ -101,9 +101,13 @@ export default function ForumThreadPage() {
               </span>
               <span>
                 עודכן לאחרונה:{' '}
-                {thread.lastActivity
-                  ? new Date(thread.lastActivity).toLocaleString('he-IL')
-                  : '—'}
+                {thread.comments?.length
+                  ? new Date(
+                      [...thread.comments]
+                        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0]
+                        .createdAt
+                    ).toLocaleString('he-IL')
+                  : new Date(thread.date || thread.createdAt).toLocaleString('he-IL')}
               </span>
             </div>
           </section>
