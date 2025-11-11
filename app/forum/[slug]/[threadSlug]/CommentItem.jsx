@@ -9,6 +9,7 @@ export default function CommentItem({
   replyTo,
   onSubmit,
   depth = 0,
+  index = 0, // נשתמש בו לקביעת צבע רקע מתחלף
 }) {
   const ref = useRef(null);
   const [replyText, setReplyText] = useState('');
@@ -23,8 +24,8 @@ export default function CommentItem({
   const repliedTo = comment.reply_to ? comments.find((c) => c.id === comment.reply_to) : null;
   const dateString = new Date(comment.date || comment.createdAt || Date.now()).toLocaleString('he-IL');
 
-  // 💗 גוון מתחלף (לבן / ורוד בהיר)
-  const bgColor = depth % 2 === 0 ? 'bg-[#ffffff]' : 'bg-[#fff3f3]';
+  // 💗 צבע רקע לפי זוגיות התגובה (לא לפי עומק)
+  const bgColor = index % 2 === 0 ? 'bg-[#ffeaea]' : 'bg-[#fff5f5]';
 
   const handleLocalSubmit = async (e) => {
     e.preventDefault();
@@ -41,15 +42,15 @@ export default function CommentItem({
   return (
     <div
       ref={ref}
-      className={`${bgColor} border-b border-[#e60000]/25 w-full py-4 px-6 text-right`}
+      className={`${bgColor} border-b border-[#e60000]/25 w-full py-4 px-6 text-right transition-all duration-200`}
+      style={{ paddingRight: `${depth * 30 + 16}px` }} // ⬅️ הזחה רק מימין
     >
       {/* כותרת */}
       <div className="flex justify-between items-center mb-1">
         <p className="font-semibold text-[#e60000]">{comment.author || 'אנונימי'}</p>
-        <p className="text-xs text-gray-600">{dateString}</p>
+        <p className="text-xs text-gray-700">{dateString}</p>
       </div>
 
-      {/* אם זו תגובה למישהו */}
       {repliedTo && (
         <p className="text-xs text-gray-600 mb-2">
           בתגובה ל־{' '}
@@ -73,7 +74,7 @@ export default function CommentItem({
         {childComments.length > 0 && (
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="text-sm text-gray-600 hover:text-[#e60000]"
+            className="text-sm text-gray-700 hover:text-[#e60000]"
           >
             {collapsed ? `הצג ${childComments.length} תגובות` : 'הסתר תגובות'}
           </button>
@@ -84,7 +85,7 @@ export default function CommentItem({
       {replyTo === comment.id && (
         <form
           onSubmit={handleLocalSubmit}
-          className="mt-3 bg-[#fff0f0] border border-[#e60000]/20 rounded-lg p-3 space-y-2"
+          className="mt-3 bg-[#fffafa] border border-[#e60000]/20 rounded-lg p-3 space-y-2"
         >
           <input
             type="text"
@@ -111,7 +112,7 @@ export default function CommentItem({
       {/* תגובות משנה */}
       {!collapsed && childComments.length > 0 && (
         <div className="mt-0">
-          {childComments.map((child) => (
+          {childComments.map((child, i) => (
             <CommentItem
               key={child.id}
               comment={child}
@@ -120,6 +121,7 @@ export default function CommentItem({
               replyTo={replyTo}
               onSubmit={onSubmit}
               depth={depth + 1}
+              index={i} // ⬅️ כדי לשמור רצף צבעים
             />
           ))}
         </div>
