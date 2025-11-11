@@ -102,13 +102,13 @@ export default function CommentItem({
             placeholder="שם"
             value={replyAuthor}
             onChange={(e) => setReplyAuthor(e.target.value)}
-            className="w-full border border-[#e60000]/20 rounded px-2 py-1 text-sm"
+            className="w-full border border-[#e60000]/20 text-[#e60000] rounded px-2 py-1 text-sm"
           />
           <textarea
             placeholder="תגובה..."
             value={replyText}
             onChange={(e) => setReplyText(e.target.value)}
-            className="w-full border border-[#e60000]/20 rounded px-2 py-1 text-sm h-20 resize-none"
+            className="w-full border border-[#e60000]/20 rounded px-2 py-1 text-[#e60000] text-sm h-20 resize-none"
           />
           <button
             type="submit"

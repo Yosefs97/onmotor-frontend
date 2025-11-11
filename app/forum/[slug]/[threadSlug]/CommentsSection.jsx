@@ -103,7 +103,7 @@ export default function CommentsSection({ threadSlug, threadLocked }) {
               onChange={(e) =>
                 setNewComment({ ...newComment, author: e.target.value })
               }
-              className="w-full bg-[#fad2d2] border-2 border-[#e60000] rounded px-3 py-2 mb-4 text-black focus:outline-none focus:border-[#ff3333]"
+              className="w-full bg-[#fad2d2] border-2 border-[#e60000] rounded px-3 py-2 mb-2 text-black focus:outline-none focus:border-[#ff3333]"
               placeholder="לדוגמה: יאיר ADV1290"
             />
 
@@ -115,7 +115,7 @@ export default function CommentsSection({ threadSlug, threadLocked }) {
               onChange={(e) =>
                 setNewComment({ ...newComment, text: e.target.value })
               }
-              className="w-full bg-[#fad2d2] border-2 border-[#e60000] rounded px-3 py-2 h-32 mb-4 text-black resize-none focus:outline-none focus:border-[#ff3333]"
+              className="w-full bg-[#fad2d2] border-2 border-[#e60000] rounded px-3 py-2 h-32 mb-2 text-black resize-none focus:outline-none focus:border-[#ff3333]"
               placeholder="כתוב כאן את תגובתך..."
             />
 
