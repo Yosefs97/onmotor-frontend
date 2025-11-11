@@ -73,7 +73,7 @@ export default function ForumCategoryPage() {
               categorySlug={slug}
               onCreated={() => {
                 setShowForm(false);
-                location.reload();
+                loadThreads();
               }}
             />
           </div>
