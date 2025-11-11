@@ -45,10 +45,9 @@ export default function CommentItem({
   const handleLocalSubmit = async (e) => {
     e.preventDefault();
     if (!replyText.trim()) return;
-    await onSubmit({
+    await onSubmit(e, comment.id, {
       text: replyText,
       author: replyAuthor || 'אנונימי',
-      reply_to: comment.id,
     });
     setReplyText('');
     setReplyAuthor('');
