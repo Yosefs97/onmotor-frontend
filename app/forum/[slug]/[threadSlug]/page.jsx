@@ -49,7 +49,7 @@ export default function ForumThreadPage() {
       ) : (
         <>
           {/* 🩷 אזור הדיון הראשי */}
-          <section className="w-full bg-[#ffeaea] text-black py-10 px-6 sm:px-10">
+          <section className="w-full bg-[#ffeaea] text-black py-2 px-6 sm:px-10">
             <h2 className="text-3xl font-bold text-[#e60000] mb-3">{thread.title}</h2>
 
             <p className="text-sm mb-4">
