@@ -40,61 +40,61 @@ export default function ForumThreadPage() {
         { label: thread?.title || 'דיון', href: `/forum/${slug}/${threadSlug}` },
       ]}
     >
-      <div className="bg-[#fff] text-black min-h-screen py-8 px-2 sm:px-4">
-        {loading ? (
-          <p className="text-center text-gray-700">טוען דיון...</p>
-        ) : !thread ? (
-          <p className="text-center text-[#e60000] font-semibold">
-            ❌ דיון לא נמצא
-          </p>
-        ) : (
-          <>
-            {/* 🟩 דיון ראשי ללא קופסה */}
-            <div className="pb-8">
-              <h2 className="text-3xl font-bold text-[#e60000] mb-2">{thread.title}</h2>
+      {loading ? (
+        <div className="text-center py-10 text-gray-700">טוען דיון...</div>
+      ) : !thread ? (
+        <div className="text-center py-10 text-[#e60000] font-semibold">
+          ❌ דיון לא נמצא
+        </div>
+      ) : (
+        <>
+          {/* 🩷 אזור הדיון הראשי */}
+          <section className="w-full bg-[#ffeaea] text-black py-10 px-6 sm:px-10">
+            <h2 className="text-3xl font-bold text-[#e60000] mb-3">{thread.title}</h2>
 
-              <div className="text-sm mb-4">
-                נכתב על ידי{' '}
-                <span className="font-semibold text-[#e60000]">
-                  {thread.author}
-                </span>
-                <span className="mx-2 text-gray-500">•</span>
+            <p className="text-sm mb-4">
+              נכתב על ידי{' '}
+              <span className="font-semibold text-[#e60000]">
+                {thread.author}
+              </span>{' '}
+              •{' '}
+              {thread.date
+                ? new Date(thread.date).toLocaleString('he-IL')
+                : '—'}
+            </p>
+
+            <div className="whitespace-pre-line leading-relaxed text-black text-lg mb-6">
+              {thread.content}
+            </div>
+
+            <div className="text-xs text-gray-700 flex justify-between">
+              <span>
+                נוצר בתאריך:{' '}
                 {thread.date
                   ? new Date(thread.date).toLocaleString('he-IL')
                   : '—'}
-              </div>
-
-              <div className="whitespace-pre-line leading-relaxed text-black text-lg mb-6">
-                {thread.content}
-              </div>
-
-              <div className="text-xs text-gray-600 flex justify-between">
-                <span>
-                  נוצר בתאריך:{' '}
-                  {thread.date
-                    ? new Date(thread.date).toLocaleString('he-IL')
-                    : '—'}
-                </span>
-                <span>
-                  עודכן לאחרונה:{' '}
-                  {thread.lastActivity
-                    ? new Date(thread.lastActivity).toLocaleString('he-IL')
-                    : '—'}
-                </span>
-              </div>
+              </span>
+              <span>
+                עודכן לאחרונה:{' '}
+                {thread.lastActivity
+                  ? new Date(thread.lastActivity).toLocaleString('he-IL')
+                  : '—'}
+              </span>
             </div>
+          </section>
 
-            {/* 🔴 קו מפריד עבה */}
-            <div className="border-t-4 border-[#e60000] my-6"></div>
+          {/* 🔴 קו מפריד עבה */}
+          <div className="border-t-4 border-[#e60000] my-0 w-full"></div>
 
-            {/* 💬 תגובות */}
+          {/* 💬 תגובות ברצועת צבע מקצה לקצה */}
+          <section className="w-full bg-[#fff] py-8 sm:px-10">
             <CommentsSection
               threadSlug={decodedThreadSlug}
               threadLocked={thread.locked}
             />
-          </>
-        )}
-      </div>
+          </section>
+        </>
+      )}
     </PageContainer>
   );
 }
