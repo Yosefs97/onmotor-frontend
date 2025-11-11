@@ -19,20 +19,7 @@ export default function ForumThreadPage() {
     async function load() {
       try {
         const t = await fetchThreadBySlug(decodedThreadSlug);
-
-        // ✅ נביא את כל התגובות כדי לחשב תאריך אחרון אמיתי
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_STRAPI_API_URL}/api/forum-comments?filters[thread][slug][$eq]=${decodedThreadSlug}&sort[0]=createdAt:desc&pagination[limit]=1`
-        );
-        const json = await res.json();
-        const lastComment = json?.data?.[0];
-
-        // אם יש תגובה חדשה – תשתמש בתאריך שלה
-        const lastActivity = lastComment
-          ? lastComment.attributes?.createdAt
-          : t.lastActivity || t.updatedAt;
-
-        setThread({ ...t, lastActivity });
+        setThread(t);
       } catch (err) {
         console.error('❌ שגיאה בטעינת דיון:', err);
       } finally {
@@ -41,7 +28,6 @@ export default function ForumThreadPage() {
     }
     load();
   }, [decodedThreadSlug]);
-
 
   const categoryLabel = labelMap[slug] || slug;
 
