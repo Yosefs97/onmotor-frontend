@@ -1,11 +1,10 @@
-// app/forum/[slug]/page.jsx
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import PageContainer from '@/components/PageContainer';
-import { fetchThreadsByCategorySlug } from '@/lib/forumApi';
+import { fetchThreadsByCategorySlug, fetchCommentsByThreadSlug } from '@/lib/forumApi';
 import { getForumLabel } from '@/utils/labelMap';
 import NewPostForm from '../NewPostForm';
 
@@ -18,38 +17,25 @@ export default function ForumCategoryPage() {
 
   const categoryLabel = getForumLabel(slug);
 
-  const loadThreads = async () => {
-    try {
-      const data = await fetchThreadsByCategorySlug(slug);
-      setThreads(data);
-    } catch (err) {
-      console.error('שגיאה בטעינת דיונים:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-    // 🧩 טעינת דיונים כולל ספירת תגובות אמיתית לפי fetchCommentsByThreadSlug
   useEffect(() => {
-    async function load() {
+    async function loadThreads() {
       try {
         const threadsData = await fetchThreadsByCategorySlug(slug);
 
-        // 🧮 נחשב לכל דיון את מספר התגובות דרך אותו API שבו משתמש עמוד הדיון עצמו
+        // חישוב מספר תגובות
         const withCounts = await Promise.all(
           threadsData.map(async (t) => {
             try {
-              // נשתמש בדיוק באותה פונקציה שמשמשת את CommentsSection
               const comments = await fetchCommentsByThreadSlug(t.slug);
               return { ...t, commentsCount: comments.length };
-            } catch (err) {
-              console.error(`❌ שגיאה בטעינת תגובות לדיון ${t.slug}:`, err);
+            } catch {
               return { ...t, commentsCount: 0 };
             }
           })
         );
 
-        setThreads(withCounts);
+        // דיונים חדשים בראש
+        setThreads(withCounts.reverse());
       } catch (err) {
         console.error('שגיאה בטעינת דיונים:', err);
       } finally {
@@ -57,9 +43,8 @@ export default function ForumCategoryPage() {
       }
     }
 
-    load();
+    loadThreads();
   }, [slug]);
-
 
   return (
     <PageContainer
@@ -70,30 +55,29 @@ export default function ForumCategoryPage() {
         { label: categoryLabel, href: `/forum/${slug}` },
       ]}
     >
-      <div className="bg-[#faafaf] text-black min-h-screen py-8 px-2 sm:px-4 transition-colors duration-500">
-        {/* 🟥 קופסה כוללת */}
-        <div className="border-2 border-[#e60000] rounded-xl bg-white shadow-md mb-8">
-          {/* 🔴 כפתור פתיחה */}
-          <div className="flex justify-end items-center p-4 bg-[#fff5f5] rounded-t-xl">
-            <button
-              onClick={() => setShowForm(!showForm)}
-              className="px-5 py-2 bg-[#e60000] text-white rounded-lg hover:bg-[#ff3333] transition font-semibold"
-            >
-              {showForm ? 'סגור טופס' : 'פתח דיון חדש'}
-            </button>
-          </div>
-
-          {/* 🧾 טופס פתיחת דיון */}
-          {showForm && (
-            <div className="p-6 border-t-2 border-[#e60000] bg-[#ffeaea] rounded-b-xl">
-              <NewPostForm
-                categorySlug={slug}
-                onCreated={loadThreads}
-                onClose={() => setShowForm(false)}
-              />
-            </div>
-          )}
+      <div className="bg-[#fffafa] text-black min-h-screen py-8 sm:px-6">
+        {/* 🔺 כפתור פתיחת דיון חדש */}
+        <div className="flex justify-end items-center mb-4 border-b-2 border-[#e60000] pb-3">
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="px-5 py-2 bg-[#e60000] text-white rounded-md hover:bg-[#ff3333] transition font-semibold"
+          >
+            {showForm ? 'סגור טופס' : 'פתח דיון חדש'}
+          </button>
         </div>
+
+        {/* 🧾 טופס פתיחת דיון חדש */}
+        {showForm && (
+          <div className="mb-6 border-2 border-[#e60000] bg-[#ffeaea] rounded-lg p-6">
+            <NewPostForm
+              categorySlug={slug}
+              onCreated={() => {
+                setShowForm(false);
+                location.reload();
+              }}
+            />
+          </div>
+        )}
 
         {/* 🗂️ רשימת דיונים */}
         {loading ? (
@@ -101,59 +85,59 @@ export default function ForumCategoryPage() {
         ) : threads.length === 0 ? (
           <p className="text-center text-gray-700">אין דיונים בקטגוריה זו.</p>
         ) : (
-          <ul className="space-y-6">
-            {threads.map((t) => (
-              <li
-                key={t.id}
-                className="border-2 border-[#e60000] rounded-xl bg-white shadow-md transition hover:shadow-lg hover:-translate-y-1 duration-200"
-              >
-                <Link href={`/forum/${slug}/${t.slug}`} className="block p-5">
-                  {/* 🧭 כותרת ופרטי יוצר — היפוך צדדים */}
-                  <div className="flex justify-between items-start border-b-2 border-[#e60000] pb-3 mb-3">
-                    {/* כותרת מימין */}
-                    <h3 className="text-xl font-bold text-[#e60000] text-right">
-                      {t.title}
-                    </h3>
-
-                    {/* פרטי יוצר משמאל */}
-                    <div className="text-left">
-                      <p className="text-sm">
-                        נכתב על ידי{' '}
-                        <span className="font-semibold text-[#e60000]">
-                          {t.author || 'אנונימי'}
-                        </span>
-                      </p>
-                      <p className="text-sm text-gray-700 mt-1">
-                        צפיות: {t.views || 0}• תגובות: {t.commentsCount || 0}
-                      </p>
+          <ul className="divide-y divide-[#e60000]/20 border-t border-b border-[#e60000]/20">
+            {threads.map((t, i) => {
+              const bgColor = i % 2 === 0 ? 'bg-[#ffffff]' : 'bg-[#fff0f0]';
+              return (
+                <li
+                  key={t.id}
+                  className={`${bgColor} w-full transition hover:bg-[#ffeaea]/70 duration-200`}
+                >
+                  <Link href={`/forum/${slug}/${t.slug}`} className="block px-6 py-3">
+                    {/* כותרת ופרטים */}
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="text-lg font-bold text-[#e60000] truncate text-right">
+                        {t.title}
+                      </h3>
+                      <div className="text-sm text-gray-700 text-left">
+                        <p>
+                          נכתב על ידי{' '}
+                          <span className="text-[#e60000] font-semibold">
+                            {t.author || 'אנונימי'}
+                          </span>
+                        </p>
+                        <p>
+                          צפיות: {t.views || 0} • תגובות: {t.commentsCount || 0}
+                        </p>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* 💬 תוכן הדיון */}
-                  <p className="text-sm leading-relaxed whitespace-pre-line mb-4 text-[#181818]">
-                    {t.content?.length > 250
-                      ? t.content.slice(0, 250) + '...'
-                      : t.content}
-                  </p>
+                    {/* תוכן מקוצר */}
+                    <p className="text-sm text-black leading-tight whitespace-pre-line">
+                      {t.content?.length > 180
+                        ? t.content.slice(0, 180) + '...'
+                        : t.content}
+                    </p>
 
-                  {/* 🕓 תאריכים */}
-                  <div className="text-xs text-gray-700 border-t-2 border-[#e60000] pt-2 flex justify-between">
-                    <span>
-                      נוצר בתאריך:{' '}
-                      {t.date
-                        ? new Date(t.date).toLocaleString('he-IL')
-                        : '—'}
-                    </span>
-                    <span>
-                      עודכן לאחרונה:{' '}
-                      {t.lastActivity
-                        ? new Date(t.lastActivity).toLocaleString('he-IL')
-                        : '—'}
-                    </span>
-                  </div>
-                </Link>
-              </li>
-            ))}
+                    {/* תאריכים */}
+                    <div className="text-xs text-gray-700 border-t border-[#e60000]/30 mt-2 pt-1 flex justify-between">
+                      <span>
+                        נוצר:{' '}
+                        {t.date
+                          ? new Date(t.date).toLocaleString('he-IL')
+                          : '—'}
+                      </span>
+                      <span>
+                        עודכן:{' '}
+                        {t.lastActivity
+                          ? new Date(t.lastActivity).toLocaleString('he-IL')
+                          : '—'}
+                      </span>
+                    </div>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
