@@ -36,7 +36,8 @@ export default function CommentsSection({ threadSlug, threadLocked }) {
         return sorted;
       };
 
-      setComments(sortHierarchical(data));
+      const sorted = sortHierarchical(data).reverse();
+      setComments(sorted);
     } catch (err) {
       console.error('❌ שגיאה בטעינת תגובות:', err);
     }

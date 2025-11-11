@@ -55,7 +55,7 @@ export default function CommentItem({
   return (
     <div
       ref={ref}
-      className={`${bgColor} border-b border-[#e60000]/20 w-full py-2 px- text-right transition-colors duration-200`}
+      className={`${bgColor} border-b border-[#e60000]/40 w-full py-1 px-3 text-right transition-colors duration-200`}
     >
       {/* כותרת */}
       <div className="flex justify-between items-center mb-1">
@@ -95,14 +95,14 @@ export default function CommentItem({
       {replyTo === comment.id && (
         <form
           onSubmit={handleLocalSubmit}
-          className="mt-3 bg-[#fffafa] border border-[#e60000]/20 rounded-lg p-3 space-y-2"
+          className="mt-3 bg-[#fffafa] border border-[#e60000]/40 rounded-lg p-3 space-y-2"
         >
           <input
             type="text"
             placeholder="שם"
             value={replyAuthor}
             onChange={(e) => setReplyAuthor(e.target.value)}
-            className="w-full border border-[#e60000]/20 text-[#e60000] rounded px-2 py-1 text-sm"
+            className="w-full border border-[#e60000]/10 text-[#e60000] rounded px-2 py-1 text-sm"
           />
           <textarea
             placeholder="תגובה..."
