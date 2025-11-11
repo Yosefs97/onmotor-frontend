@@ -55,7 +55,7 @@ export default function CommentItem({
   return (
     <div
       ref={ref}
-      className={`${bgColor} border-b border-[#e60000]/20 w-full py-4 px-6 text-right transition-colors duration-200`}
+      className={`${bgColor} border-b border-[#e60000]/20 w-full py-2 px- text-right transition-colors duration-200`}
     >
       {/* כותרת */}
       <div className="flex justify-between items-center mb-1">
