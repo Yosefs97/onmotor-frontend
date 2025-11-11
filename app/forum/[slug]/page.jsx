@@ -55,7 +55,7 @@ export default function ForumCategoryPage() {
         { label: categoryLabel, href: `/forum/${slug}` },
       ]}
     >
-      <div className="bg-[#fffafa] text-black min-h-screen py-2 sm:px-6">
+      <div className="bg-[#fffafa] text-black min-h-screen py-1 sm:px-6">
         {/* 🔺 כפתור פתיחת דיון חדש */}
         <div className="flex justify-end items-center mb-4 border-b-2 border-[#e60000] pb-3">
           <button
@@ -85,7 +85,7 @@ export default function ForumCategoryPage() {
         ) : threads.length === 0 ? (
           <p className="text-center text-gray-700">אין דיונים בקטגוריה זו.</p>
         ) : (
-          <ul className="divide-y divide-[#e60000]/20 border-t border-b border-[#e60000]/40">
+          <ul className="divide-y divide-[#e60000]/40 border-t border-b border-[#e60000]/40">
             {threads.map((t, i) => {
               const bgColor = i % 2 === 0 ? 'bg-[#ffffff]' : 'bg-[#fff0f0]';
               return (
@@ -93,7 +93,7 @@ export default function ForumCategoryPage() {
                   key={t.id}
                   className={`${bgColor} w-full transition hover:bg-[#ffeaea]/70 duration-200`}
                 >
-                  <Link href={`/forum/${slug}/${t.slug}`} className="block px-6 py-3">
+                  <Link href={`/forum/${slug}/${t.slug}`} className="block px-6 py-1">
                     {/* כותרת ופרטים */}
                     <div className="flex justify-between items-center mb-2">
                       <h3 className="text-lg font-bold text-[#e60000] truncate text-right">
