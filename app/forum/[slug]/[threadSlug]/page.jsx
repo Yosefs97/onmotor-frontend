@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import PageContainer from '@/components/PageContainer';
-import { fetchThreadBySlug, incrementThreadViews } from '@/lib/forumApi';
+import { fetchThreadBySlug } from '@/lib/forumApi';
 import { labelMap } from '@/utils/labelMap';
 import CommentsSection from './CommentsSection';
 
@@ -19,25 +19,6 @@ export default function ForumThreadPage() {
       try {
         const t = await fetchThreadBySlug(decodedThreadSlug);
         setThread(t);
-
-        if (t?.id) {
-          // ✅ בדיקה אם המשתמש כבר צפה בדיון הזה
-          const viewedKey = `viewed-thread-${t.id}`;
-          const hasViewed = localStorage.getItem(viewedKey);
-
-          if (!hasViewed) {
-            localStorage.setItem(viewedKey, 'true');
-
-            // ✅ עדכון ספירת צפיות ב־Strapi
-            fetch(`${process.env.NEXT_PUBLIC_STRAPI_API_URL}/api/forum-threads/${t.id}`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                data: { views: (t.views || 0) + 1 },
-              }),
-            }).catch((err) => console.error('⚠️ שגיאה בעדכון צפיות:', err));
-          }
-        }
       } catch (err) {
         console.error('❌ שגיאה בטעינת דיון:', err);
       } finally {
@@ -46,7 +27,6 @@ export default function ForumThreadPage() {
     }
     load();
   }, [decodedThreadSlug]);
-
 
   const categoryLabel = labelMap[slug] || slug;
 
@@ -60,7 +40,7 @@ export default function ForumThreadPage() {
         { label: thread?.title || 'דיון', href: `/forum/${slug}/${threadSlug}` },
       ]}
     >
-      <div className="bg-[#faafaf] text-black min-h-screen py-8 px-2 sm:px-4">
+      <div className="bg-[#fff] text-black min-h-screen py-8 px-2 sm:px-4">
         {loading ? (
           <p className="text-center text-gray-700">טוען דיון...</p>
         ) : !thread ? (
@@ -69,36 +49,26 @@ export default function ForumThreadPage() {
           </p>
         ) : (
           <>
-            {/* 🟥 פוסט פתיחה */}
-            <div className="border-2 border-[#e60000] rounded-xl bg-white shadow-md mb-8">
-              {/* כותרת ופרטי יוצר — היפוך צדדים */}
-              <div className="p-4 border-b-2 border-[#e60000] flex justify-between items-start">
-                {/* כותרת מימין */}
-                <h2 className="text-xl sm:text-2xl font-bold text-[#e60000] text-right">
-                  {thread.title}
-                </h2>
+            {/* 🟩 דיון ראשי ללא קופסה */}
+            <div className="pb-8">
+              <h2 className="text-3xl font-bold text-[#e60000] mb-2">{thread.title}</h2>
 
-                {/* פרטי יוצר משמאל */}
-                <div className="text-left">
-                  <p className="text-sm">
-                    נכתב על ידי{' '}
-                    <span className="font-semibold text-[#e60000]">
-                      {thread.author}
-                    </span>
-                  </p>
-                  <p className="text-sm text-gray-700 mt-1">
-                    צפיות: {thread.views || 0}
-                  </p>
-                </div>
+              <div className="text-sm mb-4">
+                נכתב על ידי{' '}
+                <span className="font-semibold text-[#e60000]">
+                  {thread.author}
+                </span>
+                <span className="mx-2 text-gray-500">•</span>
+                {thread.date
+                  ? new Date(thread.date).toLocaleString('he-IL')
+                  : '—'}
               </div>
 
-              {/* תוכן הדיון */}
-              <div className="p-6 whitespace-pre-line leading-relaxed text-black bg-[#fffafa]">
+              <div className="whitespace-pre-line leading-relaxed text-black text-lg mb-6">
                 {thread.content}
               </div>
 
-              {/* תאריכים */}
-              <div className="px-6 pb-4 text-xs border-t-2 border-[#e60000] flex justify-between">
+              <div className="text-xs text-gray-600 flex justify-between">
                 <span>
                   נוצר בתאריך:{' '}
                   {thread.date
@@ -113,6 +83,9 @@ export default function ForumThreadPage() {
                 </span>
               </div>
             </div>
+
+            {/* 🔴 קו מפריד עבה */}
+            <div className="border-t-4 border-[#e60000] my-6"></div>
 
             {/* 💬 תגובות */}
             <CommentsSection

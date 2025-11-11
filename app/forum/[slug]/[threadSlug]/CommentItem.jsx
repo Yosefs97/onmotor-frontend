@@ -8,7 +8,7 @@ export default function CommentItem({
   setReplyTo,
   replyTo,
   onSubmit,
-  depth = 0, // עומק ההיררכיה
+  depth = 0,
 }) {
   const ref = useRef(null);
   const [replyText, setReplyText] = useState('');
@@ -19,13 +19,12 @@ export default function CommentItem({
     if (ref.current) ref.current.id = `comment-${comment.id}`;
   }, [comment.id]);
 
-  // כל התגובות שהן תגובות לתגובה הנוכחית
   const childComments = comments.filter((c) => c.reply_to === comment.id);
   const repliedTo = comment.reply_to ? comments.find((c) => c.id === comment.reply_to) : null;
   const dateString = new Date(comment.date || comment.createdAt || Date.now()).toLocaleString('he-IL');
 
-  // צבע רקע מתחלף כמו טבלה
-  const bgColor = depth % 2 === 0 ? 'bg-[#fff]' : 'bg-[#f7f7f7]';
+  // 💗 רקע מתחלף בין לבן לורוד עדין
+  const bgColor = depth % 2 === 0 ? 'bg-[#fff]' : 'bg-[#ffeaea]';
 
   const handleLocalSubmit = async (e) => {
     e.preventDefault();
@@ -42,64 +41,61 @@ export default function CommentItem({
   return (
     <div
       ref={ref}
-      className={`${bgColor} border-b border-[#e60000]/30 text-left py-3 px-4 rounded-md`}
-      style={{ marginLeft: depth * 20 }} // הזחה לפי עומק
+      className={`${bgColor} border-b border-[#e60000]/30 text-left py-4 px-4`}
+      style={{ marginLeft: depth * 20 }}
     >
-      {/* 🔹 שורה עליונה: שם ותאריך */}
+      {/* 🔹 שורה עליונה */}
       <div className="flex justify-between items-center mb-1">
         <p className="font-semibold text-[#e60000]">{comment.author || 'אנונימי'}</p>
         <p className="text-xs text-gray-600">{dateString}</p>
       </div>
 
-      {/* אם זו תגובה למישהו */}
       {repliedTo && (
         <p className="text-xs text-gray-600 mb-2">
           בתגובה ל־ <span className="text-[#e60000] font-semibold">{repliedTo.author}</span>
         </p>
       )}
 
-      {/* תוכן התגובה */}
-      <p className="whitespace-pre-line leading-relaxed text-black mb-2">
+      <p className="whitespace-pre-line leading-relaxed text-black mb-3">
         {comment.text?.trim() || '— אין תוכן —'}
       </p>
 
-      {/* כפתורי השב / קיפול */}
-      <div className="flex gap-4 items-center mb-1">
+      {/* 🧭 פעולות */}
+      <div className="flex gap-4 items-center">
         <button
           onClick={() => setReplyTo(replyTo === comment.id ? null : comment.id)}
           className="text-sm text-[#e60000] hover:underline"
         >
           השב
         </button>
-
         {childComments.length > 0 && (
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="text-sm text-gray-600 hover:text-[#e60000] transition"
+            className="text-sm text-gray-600 hover:text-[#e60000]"
           >
-            {collapsed ? `הצג ${childComments.length} תגובות` : `הסתר תגובות`}
+            {collapsed ? `הצג ${childComments.length} תגובות` : 'הסתר תגובות'}
           </button>
         )}
       </div>
 
-      {/* טופס תגובה פנימי */}
+      {/* ✏️ טופס תגובה פנימי */}
       {replyTo === comment.id && (
         <form
           onSubmit={handleLocalSubmit}
-          className="mt-3 bg-[#fff5f5] border border-[#e60000]/30 rounded-lg p-3 space-y-2"
+          className="mt-3 bg-[#fff5f5] border border-[#e60000]/20 rounded-lg p-3 space-y-2"
         >
           <input
             type="text"
             placeholder="שם"
             value={replyAuthor}
             onChange={(e) => setReplyAuthor(e.target.value)}
-            className="w-full border border-[#e60000]/30 rounded px-2 py-1 text-sm"
+            className="w-full border border-[#e60000]/20 rounded px-2 py-1 text-sm"
           />
           <textarea
             placeholder="תגובה..."
             value={replyText}
             onChange={(e) => setReplyText(e.target.value)}
-            className="w-full border border-[#e60000]/30 rounded px-2 py-1 text-sm h-20 resize-none"
+            className="w-full border border-[#e60000]/20 rounded px-2 py-1 text-sm h-20 resize-none"
           />
           <button
             type="submit"
@@ -110,7 +106,7 @@ export default function CommentItem({
         </form>
       )}
 
-      {/* תגובות משנה (עם אפשרות קיפול) */}
+      {/* תגובות משנה */}
       {!collapsed && childComments.length > 0 && (
         <div className="mt-3 space-y-3">
           {childComments.map((child) => (
