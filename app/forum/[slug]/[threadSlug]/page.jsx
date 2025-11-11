@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import PageContainer from '@/components/PageContainer';
 import { fetchThreadBySlug, fetchCommentsByThreadSlug } from '@/lib/forumApi';
-import { labelMap } from '@/utils/labelMap';
+import { getForumLabel  } from '@/utils/labelMap';
 import CommentsSection from './CommentsSection';
 import { linkifyText } from '@/utils/linkifyText';
 
@@ -48,7 +48,7 @@ export default function ForumThreadPage() {
     load();
   }, [decodedThreadSlug]);
 
-  const categoryLabel = labelMap[slug] || slug;
+  const categoryLabel = getForumLabel(slug);
 
   return (
     <PageContainer
