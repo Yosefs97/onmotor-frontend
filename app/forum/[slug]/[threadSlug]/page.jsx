@@ -1,127 +1,83 @@
-// app/forum/[slug]/[threadSlug]/page.jsx
+// app/forum/[slug]/[threadSlug]/CommentItem.jsx
 'use client';
+import { useEffect, useRef } from 'react';
 
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import PageContainer from '@/components/PageContainer';
-import { fetchThreadBySlug, incrementThreadViews } from '@/lib/forumApi';
-import { labelMap } from '@/utils/labelMap';
-import CommentsSection from './CommentsSection';
-
-export default function ForumThreadPage() {
-  const { slug, threadSlug } = useParams();
-  const decodedThreadSlug = decodeURIComponent(threadSlug || '');
-  const [thread, setThread] = useState(null);
-  const [loading, setLoading] = useState(true);
+export default function CommentItem({ comment, comments, setReplyTo }) {
+  const ref = useRef(null);
 
   useEffect(() => {
-    async function load() {
-      try {
-        const t = await fetchThreadBySlug(decodedThreadSlug);
-        setThread(t);
-
-        if (t?.id) {
-          // ✅ בדיקה אם המשתמש כבר צפה בדיון הזה
-          const viewedKey = `viewed-thread-${t.id}`;
-          const hasViewed = localStorage.getItem(viewedKey);
-
-          if (!hasViewed) {
-            localStorage.setItem(viewedKey, 'true');
-
-            // ✅ עדכון ספירת צפיות ב־Strapi
-            fetch(`${process.env.NEXT_PUBLIC_STRAPI_API_URL}/api/forum-threads/${t.id}`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                data: { views: (t.views || 0) + 1 },
-              }),
-            }).catch((err) => console.error('⚠️ שגיאה בעדכון צפיות:', err));
-          }
-        }
-      } catch (err) {
-        console.error('❌ שגיאה בטעינת דיון:', err);
-      } finally {
-        setLoading(false);
-      }
+    if (ref.current) {
+      ref.current.id = `comment-${comment.id}`;
     }
-    load();
-  }, [decodedThreadSlug]);
+  }, [comment.id]);
 
+  // תגובות-משנה (תגובות לתגובה זו)
+  const childComments = comments.filter((c) => c.reply_to === comment.id);
 
-  const categoryLabel = labelMap[slug] || slug;
+  const repliedTo = comment.reply_to
+    ? comments.find((c) => c.id === comment.reply_to)
+    : null;
+
+  const handleScrollToReplied = () => {
+    if (!repliedTo) return;
+    const el = document.getElementById(`comment-${repliedTo.id}`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const dateString = comment.date
+    ? new Date(comment.date).toLocaleString('he-IL')
+    : comment.createdAt
+    ? new Date(comment.createdAt).toLocaleString('he-IL')
+    : '—';
+
+  const commentText = comment.text || comment.content || '';
 
   return (
-    <PageContainer
-      title={thread ? thread.title : 'טוען...'}
-      breadcrumbs={[
-        { label: 'דף הבית', href: '/' },
-        { label: 'פורום', href: '/forum' },
-        { label: categoryLabel, href: `/forum/${slug}` },
-        { label: thread?.title || 'דיון', href: `/forum/${slug}/${threadSlug}` },
-      ]}
+    <div
+      ref={ref}
+      className="border-2 border-[#e60000] bg-white rounded-xl shadow-md p-4 scroll-mt-24 text-right"
     >
-      <div className="bg-[#faafaf] text-black min-h-screen py-8 px-2 sm:px-4">
-        {loading ? (
-          <p className="text-center text-gray-700">טוען דיון...</p>
-        ) : !thread ? (
-          <p className="text-center text-[#e60000] font-semibold">
-            ❌ דיון לא נמצא
-          </p>
-        ) : (
-          <>
-            {/* 🟥 פוסט פתיחה */}
-            <div className="border-2 border-[#e60000] rounded-xl bg-white shadow-md mb-8">
-              {/* כותרת ופרטי יוצר — היפוך צדדים */}
-              <div className="p-4 border-b-2 border-[#e60000] flex justify-between items-start">
-                {/* כותרת מימין */}
-                <h2 className="text-xl sm:text-2xl font-bold text-[#e60000] text-right">
-                  {thread.title}
-                </h2>
-
-                {/* פרטי יוצר משמאל */}
-                <div className="text-left">
-                  <p className="text-sm">
-                    נכתב על ידי{' '}
-                    <span className="font-semibold text-[#e60000]">
-                      {thread.author}
-                    </span>
-                  </p>
-                  <p className="text-sm text-gray-700 mt-1">
-                    צפיות: {thread.views || 0}
-                  </p>
-                </div>
-              </div>
-
-              {/* תוכן הדיון */}
-              <div className="p-6 whitespace-pre-line leading-relaxed text-black bg-[#fffafa]">
-                {thread.content}
-              </div>
-
-              {/* תאריכים */}
-              <div className="px-6 pb-4 text-xs border-t-2 border-[#e60000] flex justify-between">
-                <span>
-                  נוצר בתאריך:{' '}
-                  {thread.date
-                    ? new Date(thread.date).toLocaleString('he-IL')
-                    : '—'}
-                </span>
-                <span>
-                  עודכן לאחרונה:{' '}
-                  {thread.lastActivity
-                    ? new Date(thread.lastActivity).toLocaleString('he-IL')
-                    : '—'}
-                </span>
-              </div>
-            </div>
-
-            {/* 💬 תגובות */}
-            <CommentsSection
-              threadSlug={decodedThreadSlug}
-              threadLocked={thread.locked}
-            />
-          </>
-        )}
+      <div className="flex justify-between items-center mb-2">
+        <p className="font-semibold text-[#e60000]">{comment.author || 'אנונימי'}</p>
+        <p className="text-xs text-gray-600">{dateString}</p>
       </div>
-    </PageContainer>
+
+      {repliedTo && (
+        <p className="text-xs text-gray-600 mb-2">
+          בתגובה ל־{' '}
+          <button
+            onClick={handleScrollToReplied}
+            className="text-[#e60000] font-semibold hover:underline"
+          >
+            {repliedTo.author || 'אנונימי'}
+          </button>
+        </p>
+      )}
+
+      <p className="whitespace-pre-line leading-relaxed text-black mb-3">
+        {commentText.trim() ? commentText : '— אין תוכן —'}
+      </p>
+
+      <button
+        onClick={() => setReplyTo(comment.id)}
+        className="text-sm text-[#e60000] hover:underline"
+      >
+        השב
+      </button>
+
+      {/* 🟢 תגובות משנה (מופיעות בפנים) */}
+      {childComments.length > 0 && (
+        <div className="mt-4 pl-4 border-r-2 border-[#e60000]/40 space-y-3">
+          {childComments.map((child) => (
+            <CommentItem
+              key={child.id}
+              comment={child}
+              comments={comments}
+              setReplyTo={setReplyTo}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
