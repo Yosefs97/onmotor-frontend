@@ -55,7 +55,7 @@ export default function ForumCategoryPage() {
         { label: categoryLabel, href: `/forum/${slug}` },
       ]}
     >
-      <div className="bg-[#fffafa] text-black min-h-screen py-8 sm:px-6">
+      <div className="bg-[#fffafa] text-black min-h-screen py-2 sm:px-6">
         {/* 🔺 כפתור פתיחת דיון חדש */}
         <div className="flex justify-end items-center mb-4 border-b-2 border-[#e60000] pb-3">
           <button
