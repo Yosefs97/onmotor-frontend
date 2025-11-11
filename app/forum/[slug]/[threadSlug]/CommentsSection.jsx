@@ -148,11 +148,11 @@ export default function CommentsSection({ threadSlug, threadLocked }) {
               comments={comments}
               setReplyTo={setReplyTo}
               replyTo={replyTo}
-              onSubmit={(payload) =>
-                handleSubmit({ preventDefault: () => {} }, c.id, payload)
-              }
+              // 🩶 נתקן את הקריאה כך שתהיה תואמת למה ש־CommentItem שולח
+              onSubmit={handleSubmit}
               index={i}
             />
+
           ))
         )}
       </div>
