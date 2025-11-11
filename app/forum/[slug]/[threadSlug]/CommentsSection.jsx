@@ -44,16 +44,17 @@ export default function CommentsSection({ threadSlug, threadLocked }) {
     }
   }
 
-  const handleSubmit = async (e, replyId = null) => {
+  const handleSubmit = async (e, replyId = null, payload = null) => {
     e.preventDefault();
-    if (!newComment.text.trim()) return;
+    const data = payload || newComment;
+    if (!data.text.trim()) return;
     setSubmitting(true);
     try {
       await addCommentByThreadSlug({
         threadSlug,
-        text: newComment.text,
-        author: newComment.author?.trim() || 'אנונימי',
-        reply_to: replyId,
+        text: data.text,
+        author: data.author?.trim() || 'אנונימי',
+        reply_to: replyId, // ✅ תומך גם בתגובה לתגובה
       });
       setNewComment({ author: '', text: '' });
       setReplyTo(null);
@@ -62,9 +63,9 @@ export default function CommentsSection({ threadSlug, threadLocked }) {
       console.error('❌ שגיאה בשליחת תגובה:', err);
     } finally {
       setSubmitting(false);
-      setShowForm(false);
     }
   };
+
 
   return (
     <div>
@@ -148,8 +149,9 @@ export default function CommentsSection({ threadSlug, threadLocked }) {
               comments={comments}
               setReplyTo={setReplyTo}
               replyTo={replyTo}
-              // 🩶 נתקן את הקריאה כך שתהיה תואמת למה ש־CommentItem שולח
-              onSubmit={handleSubmit}
+              onSubmit={(e, replyId, payload) =>
+                handleSubmit(e, replyId, payload) // ← תואם לחתימה
+              }
               index={i}
             />
 
