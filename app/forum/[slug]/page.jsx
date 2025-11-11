@@ -29,9 +29,37 @@ export default function ForumCategoryPage() {
     }
   };
 
+    // 🧩 טעינת דיונים כולל ספירת תגובות אמיתית לפי fetchCommentsByThreadSlug
   useEffect(() => {
-    loadThreads();
+    async function load() {
+      try {
+        const threadsData = await fetchThreadsByCategorySlug(slug);
+
+        // 🧮 נחשב לכל דיון את מספר התגובות דרך אותו API שבו משתמש עמוד הדיון עצמו
+        const withCounts = await Promise.all(
+          threadsData.map(async (t) => {
+            try {
+              // נשתמש בדיוק באותה פונקציה שמשמשת את CommentsSection
+              const comments = await fetchCommentsByThreadSlug(t.slug);
+              return { ...t, commentsCount: comments.length };
+            } catch (err) {
+              console.error(`❌ שגיאה בטעינת תגובות לדיון ${t.slug}:`, err);
+              return { ...t, commentsCount: 0 };
+            }
+          })
+        );
+
+        setThreads(withCounts);
+      } catch (err) {
+        console.error('שגיאה בטעינת דיונים:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    load();
   }, [slug]);
+
 
   return (
     <PageContainer
