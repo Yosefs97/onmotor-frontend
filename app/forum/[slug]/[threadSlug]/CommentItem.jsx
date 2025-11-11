@@ -1,3 +1,4 @@
+// app/forum/[slug]/[threadSlug]/CommentItem.jsx
 'use client';
 import { useEffect, useRef, useState } from 'react';
 
@@ -7,28 +8,37 @@ export default function CommentItem({
   setReplyTo,
   replyTo,
   onSubmit,
-  depth = 0,
   index = 0,
 }) {
   const ref = useRef(null);
   const [replyText, setReplyText] = useState('');
   const [replyAuthor, setReplyAuthor] = useState('');
-  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     if (ref.current) ref.current.id = `comment-${comment.id}`;
   }, [comment.id]);
 
-  const childComments = comments.filter((c) => c.reply_to === comment.id);
-  const repliedTo = comment.reply_to ? comments.find((c) => c.id === comment.reply_to) : null;
-  const dateString = new Date(comment.date || comment.createdAt || Date.now()).toLocaleString('he-IL');
+  const repliedTo = comment.reply_to
+    ? comments.find((c) => c.id === comment.reply_to)
+    : null;
 
-  // 💗 גוון ורוד מתחלף
-  const bgColor = index % 2 === 0 ? 'bg-[#ffeaea]' : 'bg-[#fff5f5]';
+  const dateString = new Date(
+    comment.date || comment.createdAt || Date.now()
+  ).toLocaleString('he-IL');
 
-  // 🧭 הזחה מימין בלבד — מתחילה מנקודת חצי כפתור השב
-  const baseIndent = 60; // בערך חצי רוחב כפתור "השב"
-  const indentRight = depth > 0 ? baseIndent * depth : 0;
+  // 💗 צבע רקע מתחלף לפי אינדקס
+  const bgColor = index % 2 === 0 ? 'bg-[#fff5f5]' : 'bg-[#ffffff]';
+
+  // ✴️ גלילה אל המגיב
+  const handleScrollToReplied = () => {
+    if (!repliedTo) return;
+    const el = document.getElementById(`comment-${repliedTo.id}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('ring-2', 'ring-[#e60000]');
+      setTimeout(() => el.classList.remove('ring-2', 'ring-[#e60000]'), 1200);
+    }
+  };
 
   const handleLocalSubmit = async (e) => {
     e.preventDefault();
@@ -45,14 +55,9 @@ export default function CommentItem({
   return (
     <div
       ref={ref}
-      className={`${bgColor} border-b border-[#e60000]/20 w-full py-4 text-right overflow-hidden`}
-      style={{
-        paddingInlineStart: `${indentRight}px`, // הזחה רק מהימין (ל־RTL)
-        paddingInlineEnd: '20px',
-        width: '100%',
-      }}
+      className={`${bgColor} border-b border-[#e60000]/20 w-full py-4 px-6 text-right transition-colors duration-200`}
     >
-      {/* שם ותאריך */}
+      {/* כותרת */}
       <div className="flex justify-between items-center mb-1">
         <p className="font-semibold text-[#e60000]">{comment.author || 'אנונימי'}</p>
         <p className="text-xs text-gray-700">{dateString}</p>
@@ -60,10 +65,15 @@ export default function CommentItem({
 
       {/* אם זו תגובה למישהו */}
       {repliedTo && (
-        <p className="text-xs text-gray-600 mb-2">
+        <button
+          onClick={handleScrollToReplied}
+          className="text-xs text-gray-700 mb-2 hover:text-[#e60000] transition"
+        >
           בתגובה ל־{' '}
-          <span className="text-[#e60000] font-semibold">{repliedTo.author}</span>
-        </p>
+          <span className="text-[#e60000] font-semibold hover:underline">
+            {repliedTo.author}
+          </span>
+        </button>
       )}
 
       {/* תוכן התגובה */}
@@ -79,14 +89,6 @@ export default function CommentItem({
         >
           השב
         </button>
-        {childComments.length > 0 && (
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className="text-sm text-gray-700 hover:text-[#e60000]"
-          >
-            {collapsed ? `הצג ${childComments.length} תגובות` : 'הסתר תגובות'}
-          </button>
-        )}
       </div>
 
       {/* טופס תגובה פנימי */}
@@ -115,24 +117,6 @@ export default function CommentItem({
             פרסם
           </button>
         </form>
-      )}
-
-      {/* תגובות משנה */}
-      {!collapsed && childComments.length > 0 && (
-        <div className="mt-0">
-          {childComments.map((child, i) => (
-            <CommentItem
-              key={child.id}
-              comment={child}
-              comments={comments}
-              setReplyTo={setReplyTo}
-              replyTo={replyTo}
-              onSubmit={onSubmit}
-              depth={depth + 1}
-              index={i}
-            />
-          ))}
-        </div>
       )}
     </div>
   );
