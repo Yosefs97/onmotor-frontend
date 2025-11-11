@@ -151,7 +151,7 @@ export default function CommentForm({ articleId }) {
                 </div>
                 <div className="text-xs text-gray-500">{timeAgo(c.attributes?.createdAt)}</div>
               </div>
-              <p className="mt-2 text-gray-700 text-sm whitespace-pre-line">
+              <p className="mt-2 text-gray-700 text-sm whitespace-pre-line break-words break-all overflow-hidden">
                 {c.attributes?.content}
               </p>
               <div className="mt-2 flex gap-4 text-sm text-gray-600">
