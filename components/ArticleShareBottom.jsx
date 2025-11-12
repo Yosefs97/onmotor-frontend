@@ -76,7 +76,7 @@ export default function ArticleShareBottom() {
     <div
       className={`fixed z-50 text-right transition-all duration-300 ${
         isDesktop
-          ? 'bottom-24 left-1/4 -translate-x-[360px]' // מתאים למרכז תוכן 720px
+          ? 'bottom-24 right-1/2 -translate-x-[360px]' // מתאים למרכז תוכן 720px
           : 'bottom-20 left-2'
       }`}
     >
