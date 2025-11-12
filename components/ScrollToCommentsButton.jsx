@@ -5,6 +5,14 @@ import { FaCommentDots } from 'react-icons/fa';
 
 export default function ScrollToCommentsButton() {
   const [isVisible, setIsVisible] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+   useEffect(() => {
+    const checkDevice = () => setIsDesktop(window.innerWidth > 1024);
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    return () => window.removeEventListener('resize', checkDevice);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -52,7 +60,9 @@ export default function ScrollToCommentsButton() {
         isVisible
           ? 'opacity-100 translate-y-0'
           : 'opacity-0 translate-y-4 pointer-events-none'
-      }`}
+      }
+      ${isDesktop ? 'right-6 bottom-44' : 'right-1 bottom-15'}
+      `}
     >
       <FaCommentDots className="text-lg" />
       <span className="text-sm font-semibold">לתגובות</span>
