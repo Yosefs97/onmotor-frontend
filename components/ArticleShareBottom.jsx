@@ -2,20 +2,19 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { FiShare2, FiCopy, FiX } from 'react-icons/fi';
-import { FaWhatsapp, FaTwitter, FaFacebook, FaInstagram, FaTiktok } from 'react-icons/fa';
+import { FaWhatsapp, FaTwitter, FaFacebook, FaTiktok } from 'react-icons/fa';
 import { MdMoreHoriz } from 'react-icons/md';
 import { gsap } from 'gsap';
 
 export default function ArticleShareBottom() {
   const [open, setOpen] = useState(false);
-  const [visible, setVisible] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
   const buttonRef = useRef(null);
   const dropRef = useRef(null);
   const url = typeof window !== 'undefined' ? window.location.href : '';
 
-  const [isDesktop, setIsDesktop] = useState(false);
-
+  // 🔹 זיהוי דסקטופ/מובייל
   useEffect(() => {
     const checkDevice = () => setIsDesktop(window.innerWidth > 1024);
     checkDevice();
@@ -23,30 +22,7 @@ export default function ArticleShareBottom() {
     return () => window.removeEventListener('resize', checkDevice);
   }, []);
 
-
-  // ✅ הכפתור יוצג רק בין הגלריה לתגובות
-  useEffect(() => {
-    const handleScroll = () => {
-      const gallery = document.querySelector('.article-gallery-section');
-      const comments = document.querySelector('.comments-section');
-      if (!gallery || !comments) return;
-
-      const galleryRect = gallery.getBoundingClientRect();
-      const commentsRect = comments.getBoundingClientRect();
-
-      const shouldShow =
-        galleryRect.bottom < window.innerHeight * 0.8 &&
-        commentsRect.top > window.innerHeight * 0.2;
-
-      setVisible(shouldShow);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // ✅ אנימציה לפתיחה
+  // 🔹 אנימציית פתיחה
   useEffect(() => {
     if (open && dropRef.current) {
       gsap.fromTo(
@@ -70,25 +46,21 @@ export default function ArticleShareBottom() {
     } else handleCopy();
   };
 
-  if (!visible) return null;
-
   return (
     <div
-      className={`fixed z-50 text-right transition-all duration-300 ${
+      className={`${
         isDesktop
-          ? 'bottom-24 right-1/2 -translate-x-[360px]' // מתאים למרכז תוכן 720px
-          : 'bottom-20 left-2'
+          ? 'w-full flex justify-center my-10 relative' // בתוך גוף הכתבה
+          : 'fixed bottom-20 left-2 z-50 text-right' // במובייל נשאר צף
       }`}
     >
-
-
       <button
         ref={buttonRef}
         onClick={() => {
           if (collapsed) setCollapsed(false);
           else setOpen(o => !o);
         }}
-        className={`flex items-center gap-2 px-4 py-2 rounded-full shadow-lg transition-all duration-300 ${
+        className={`flex items-center gap-2 px-5 py-3 rounded-full shadow-lg transition-all duration-300 ${
           collapsed
             ? 'bg-red-600 hover:bg-red-700 text-white p-3 w-12 h-12 justify-center'
             : 'bg-red-600 hover:bg-red-700 text-white'
@@ -98,11 +70,15 @@ export default function ArticleShareBottom() {
         {!collapsed && <span>שתף כתבה</span>}
       </button>
 
-      {/* תפריט השיתוף */}
+      {/* 🔹 תפריט השיתוף */}
       {open && !collapsed && (
         <div
           ref={dropRef}
-          className="absolute bottom-14 left-0 w-52 bg-white text-black rounded-lg shadow-xl border border-gray-200"
+          className={`${
+            isDesktop
+              ? 'absolute mt-16 bg-white text-black rounded-lg shadow-xl border border-gray-200 w-56'
+              : 'absolute bottom-14 left-0 w-52 bg-white text-black rounded-lg shadow-xl border border-gray-200'
+          }`}
         >
           <div className="flex justify-between items-center p-2 border-b border-gray-100">
             <span className="text-sm font-medium">שתף באמצעות</span>
@@ -133,7 +109,9 @@ export default function ArticleShareBottom() {
           </a>
 
           <a
-            href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(document.title)}`}
+            href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(
+              url
+            )}&text=${encodeURIComponent(document.title)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center w-full px-4 py-2 hover:bg-gray-100"
@@ -143,7 +121,9 @@ export default function ArticleShareBottom() {
           </a>
 
           <a
-            href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`}
+            href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+              url
+            )}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center w-full px-4 py-2 hover:bg-gray-100"

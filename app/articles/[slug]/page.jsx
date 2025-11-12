@@ -450,13 +450,15 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
               external_media_links={article.external_media_links}
             />
           </div>
-
-          <Tags tags={article.tags} />
-          <SimilarArticles currentSlug={article.slug} category={article.category} />
+          <ArticleShareBottom />
           <div className="comments-section">
             <CommentsSection articleUrl={`${SITE_URL}${article.href}`} />
           </div>
-          <ArticleShareBottom />
+
+          <Tags tags={article.tags} />
+          <SimilarArticles currentSlug={article.slug} category={article.category} />
+          
+          
         </div>
       </PageContainer>
       <ScrollToTableButton />
