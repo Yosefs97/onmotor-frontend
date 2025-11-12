@@ -14,6 +14,16 @@ export default function ArticleShareBottom() {
   const dropRef = useRef(null);
   const url = typeof window !== 'undefined' ? window.location.href : '';
 
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const checkDevice = () => setIsDesktop(window.innerWidth > 1024);
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    return () => window.removeEventListener('resize', checkDevice);
+  }, []);
+
+
   // ✅ הכפתור יוצג רק בין הגלריה לתגובות
   useEffect(() => {
     const handleScroll = () => {
@@ -63,8 +73,14 @@ export default function ArticleShareBottom() {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-20 left-2 z-50 text-right"> 
-      {/* 🟥 הזזה לשמאל ולגובה מתאים (bottom-20 במקום bottom-6, left במקום right) */}
+    <div
+      className={`fixed z-50 text-right transition-all duration-300 ${
+        isDesktop
+          ? 'bottom-24 left-1/2 -translate-x-[360px]' // מתאים למרכז תוכן 720px
+          : 'bottom-20 left-2'
+      }`}
+    >
+
 
       <button
         ref={buttonRef}
