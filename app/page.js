@@ -49,6 +49,10 @@ export default async function HomePage() {
       title="דף הבית"
       breadcrumbs={[]}
     >
+      
+
+      <MainGridContentDesktop articles={articles} />
+
       <h1 className="text-2xl font-bold text-[#e60000] px-4 mt-4">
         OnMotor Media – מגזין אופנועים ישראלי
       </h1>
@@ -57,7 +61,6 @@ export default async function HomePage() {
          מגזין אופנועים בישראל – חדשות, סקירות, מבחני דרכים, ציוד, טיפים לקהילת הרוכבים התוססת. בישראל
       </p>
 
-      <MainGridContentDesktop articles={articles} />
     </PageContainer>
   );
 }
