@@ -6,9 +6,9 @@ import { FaImages } from 'react-icons/fa';
 export default function ScrollToGalleryButton() {
   const [isVisible, setIsVisible] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
-  const [desktopRight, setDesktopRight] = useState(null); // רק לדסקטופ
+  const [desktopRight, setDesktopRight] = useState(20);
 
-  /* ✔ זיהוי מובייל/מחשב */
+  // ✔ זיהוי מובייל/מחשב
   useEffect(() => {
     const checkDevice = () => setIsDesktop(window.innerWidth > 1024);
     checkDevice();
@@ -16,11 +16,11 @@ export default function ScrollToGalleryButton() {
     return () => window.removeEventListener('resize', checkDevice);
   }, []);
 
-  /* ✔ מחשבים – לחשב מיקום עמוד כתבה */
+  // ✔ חישוב מיקום יחסית לכתבה — כמו בכפתור התגובות
   useEffect(() => {
     if (!isDesktop) return;
 
-    const calcRight = () => {
+    const calcPosition = () => {
       const article = document.querySelector('.article-content-wrapper');
       if (!article) return;
 
@@ -30,52 +30,29 @@ export default function ScrollToGalleryButton() {
       setDesktopRight(fromRight + 20);
     };
 
-    calcRight();
-    window.addEventListener('resize', calcRight);
-    return () => window.removeEventListener('resize', calcRight);
+    calcPosition();
+    window.addEventListener('resize', calcPosition);
+    return () => window.removeEventListener('resize', calcPosition);
   }, [isDesktop]);
 
-  /* ✔ לוגיקה של הופעה/היעלמות */
+  // ✔ לוגיקת הופעה/היעלמות — זהה לכפתור התגובות
   useEffect(() => {
     const handleScroll = () => {
       const content = document.querySelector('.article-content');
       const gallery = document.querySelector('.article-gallery-section');
-      const comments = document.querySelector('.comments-section');
-      const sidebarMiddle = document.querySelector('.sidebar-middle-layer');
-      if (!content) return;
+      if (!content || !gallery) return;
 
       const contentRect = content.getBoundingClientRect();
-      const galleryRect = gallery?.getBoundingClientRect();
-      const commentsRect = comments?.getBoundingClientRect();
-      const sidebarRect = sidebarMiddle?.getBoundingClientRect();
+      const galleryRect = gallery.getBoundingClientRect();
 
       const startVisible = contentRect.top < window.innerHeight * 0.6;
 
+      // בגלריה עצמה — הכפתור לא צריך להופיע
       const inGallery =
-        galleryRect &&
         galleryRect.top < window.innerHeight * 0.8 &&
         galleryRect.bottom > window.innerHeight * 0.2;
 
-      const afterGallery =
-        galleryRect && galleryRect.bottom < window.innerHeight * 0.8;
-
-      const inComments =
-        commentsRect &&
-        commentsRect.top < window.innerHeight &&
-        commentsRect.bottom > 0;
-
-      const afterComments =
-        commentsRect && commentsRect.bottom < window.innerHeight * 0.8;
-
-      const inSidebar =
-        sidebarRect && sidebarRect.top < window.innerHeight * 0.8;
-
-      const isMobile = window.innerWidth <= 1024;
-
-      const show = (startVisible && !inGallery) || afterGallery;
-      const hideAtComments = isMobile && inComments;
-
-      setIsVisible(((show && !hideAtComments) || afterComments) && !inSidebar);
+      setIsVisible(startVisible && !inGallery);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -85,25 +62,20 @@ export default function ScrollToGalleryButton() {
 
   const scrollToGallery = () => {
     const gallery = document.querySelector('.article-gallery-section');
-    if (gallery) gallery.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (gallery)
+      gallery.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
-
-  /* 🎯 מובייל = ללא style  
-     🎯 מחשב = הוספת style */
-  const desktopStyle = isDesktop
-    ? {
-        right: desktopRight ? `${desktopRight}px` : '20px',
-        bottom: '200px',
-      }
-    : {};
 
   return (
     <button
       onClick={scrollToGallery}
-      className={`fixed bottom-25 right-1 z-[5000] bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 transition-all duration-500 ease-in-out
+      className={`fixed z-[5000] bg-green-600 right-1 hover:bg-green-700 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 transition-all duration-500 ease-in-out
         ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}
       `}
-      style={desktopStyle}
+      style={{
+        bottom: isDesktop ? '200px' : '80px',
+        right: isDesktop ? `${desktopRight}px` : '8px',
+      }}
     >
       <FaImages className="text-lg" />
       <span className="text-sm font-semibold">לגלריה</span>
