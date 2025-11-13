@@ -35,31 +35,24 @@ export default function ScrollToTableButton() {
     return () => window.removeEventListener('resize', calcPosition);
   }, [isDesktop]);
 
-  // ✔ הופעה/היעלמות – כולל בדיקה שהכתבה עדיין נראית על המסך
+  // ✔ הופעה/היעלמות – שיטה כמו כפתור התגובות
   useEffect(() => {
     const handleScroll = () => {
       const content = document.querySelector('.article-content');
       const table = document.querySelector('.article-table-section');
-      const wrapper = document.querySelector('.article-content-wrapper');
-
-      if (!content || !table || !wrapper) return;
+      if (!content || !table) return;
 
       const contentRect = content.getBoundingClientRect();
       const tableRect = table.getBoundingClientRect();
-      const wrapperRect = wrapper.getBoundingClientRect();
 
       const startVisible = contentRect.top < window.innerHeight * 0.6;
 
+      // בזמן שאתה בתוך אזור הטבלה – הכפתור צריך להיעלם
       const inTable =
         tableRect.top < window.innerHeight * 0.8 &&
         tableRect.bottom > window.innerHeight * 0.2;
 
-      // ❗ חדש — כדי למנוע הופעה באזור הסיידרים במובייל
-      const articleStillVisible =
-        wrapperRect.bottom > window.innerHeight * 0.2 &&
-        wrapperRect.top < window.innerHeight * 0.8;
-
-      setIsVisible(startVisible && !inTable && articleStillVisible);
+      setIsVisible(startVisible && !inTable);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -80,7 +73,7 @@ export default function ScrollToTableButton() {
         ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}
       `}
       style={{
-        bottom: isDesktop ? '210px' : '130px',
+        bottom: isDesktop ? '210px' : '130px', // נכוון אחר כך לפי הסדר שלך
         right: isDesktop ? `${desktopRight}px` : '8px',
       }}
     >
