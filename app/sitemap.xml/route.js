@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const SITE_URL = "https://onmotormedia.com";
+  const SITE_URL = "https://www.onmotormedia.com";
   const API_URL = process.env.STRAPI_URL;
 
   let articles = [];
