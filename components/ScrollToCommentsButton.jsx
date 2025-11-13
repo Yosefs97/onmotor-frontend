@@ -70,7 +70,7 @@ export default function ScrollToCommentsButton() {
   return (
     <button
       onClick={scrollToComments}
-      className={`fixed z-[5000] bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 transition-all duration-500 ease-in-out
+      className={`fixed z-[5000] bg-orange-600 right-1 hover:bg-orange-700 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 transition-all duration-500 ease-in-out
         ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}
       `}
       style={{
