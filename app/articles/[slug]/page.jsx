@@ -1,6 +1,7 @@
 // ✅ app/articles/[slug]/page.jsx
 
 export const dynamic = 'force-dynamic';
+import Script from "next/script";
 import PageContainer from "@/components/PageContainer";
 import ArticleHeader from "@/components/ArticleHeader";
 import SimpleKeyValueTable from "@/components/SimpleKeyValueTable";
@@ -193,6 +194,42 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
     external_media_links: data.external_media_links || [],
     font_family: data.font_family || "Heebo, sans-serif",
   };
+
+    // ===============================
+  // 📌 Structured Data (JSON-LD)
+  // ===============================
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "NewsArticle",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `https://www.onmotormedia.com/articles/${article.slug}`
+    },
+    "headline": article.title,
+    "description": article.description || article.subdescription || "",
+    "image": [article.image],
+    "author": {
+      "@type": "Person",
+      "name": article.author || "צוות OnMotor"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "OnMotor Media",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://www.onmotormedia.com/OnMotorLogonoback.png"
+      }
+    },
+    "datePublished": article.date,
+    "dateModified": article.date,
+    "inLanguage": "he-IL",
+    "articleSection": article.category,
+    "keywords": (article.tags || []).join(", "),
+    "articleBody": typeof article.content === "string"
+      ? article.content.substring(0, 500)
+      : ""
+  };
+
 
   const breadcrumbs = [{ label: "דף הבית", href: "/" }];
   if (article.category)
@@ -413,6 +450,13 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
 
   return (
     <>
+      <Script
+            id="structured-data"
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
+
       <PageContainer title={article.title} breadcrumbs={breadcrumbs}>
         <div
           className="mx-auto max-w-[740px] space-y-2 text-right leading-relaxed text-base text-gray-800 px-2"
