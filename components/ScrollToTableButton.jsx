@@ -5,45 +5,54 @@ import { FaTable } from 'react-icons/fa';
 
 export default function ScrollToTableButton() {
   const [isVisible, setIsVisible] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+  const [desktopRight, setDesktopRight] = useState(20);
 
+  // ✔ זיהוי מובייל/מחשב
+  useEffect(() => {
+    const checkDevice = () => setIsDesktop(window.innerWidth > 1024);
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    return () => window.removeEventListener('resize', checkDevice);
+  }, []);
+
+  // ✔ חישוב מיקום יחסית לעמוד הכתבה (כמו תגים/גלריה)
+  useEffect(() => {
+    if (!isDesktop) return;
+
+    const calcPosition = () => {
+      const article = document.querySelector('.article-content-wrapper');
+      if (!article) return;
+
+      const rect = article.getBoundingClientRect();
+      const fromRight = window.innerWidth - rect.right;
+
+      setDesktopRight(fromRight + 20);
+    };
+
+    calcPosition();
+    window.addEventListener('resize', calcPosition);
+    return () => window.removeEventListener('resize', calcPosition);
+  }, [isDesktop]);
+
+  // ✔ הופעה/היעלמות – שיטה כמו כפתור התגובות
   useEffect(() => {
     const handleScroll = () => {
       const content = document.querySelector('.article-content');
       const table = document.querySelector('.article-table-section');
-      const gallery = document.querySelector('.article-gallery-section');
-      const comments = document.querySelector('.comments-section');
-      const sidebarMiddle = document.querySelector('.sidebar-middle-layer');
-      if (!content) return;
+      if (!content || !table) return;
 
       const contentRect = content.getBoundingClientRect();
-      const tableRect = table?.getBoundingClientRect();
-      const galleryRect = gallery?.getBoundingClientRect();
-      const commentsRect = comments?.getBoundingClientRect();
-      const sidebarRect = sidebarMiddle?.getBoundingClientRect();
+      const tableRect = table.getBoundingClientRect();
 
       const startVisible = contentRect.top < window.innerHeight * 0.6;
+
+      // בזמן שאתה בתוך אזור הטבלה – הכפתור צריך להיעלם
       const inTable =
-        tableRect &&
         tableRect.top < window.innerHeight * 0.8 &&
         tableRect.bottom > window.innerHeight * 0.2;
-      const afterGallery =
-        galleryRect && galleryRect.bottom < window.innerHeight * 0.8;
-      const inComments =
-        commentsRect &&
-        commentsRect.top < window.innerHeight &&
-        commentsRect.bottom > 0;
-      const afterComments =
-        commentsRect && commentsRect.bottom < window.innerHeight * 0.8;
-      const inSidebar =
-        sidebarRect && sidebarRect.top < window.innerHeight * 0.8;
 
-      const isMobile = window.innerWidth <= 1024;
-
-      // ✅ מופיע אחרי תחילת הכתבה, נעלם בטבלה/תגובות/סיידר
-      const show = (startVisible && !inTable) || afterGallery;
-      const hideAtComments = isMobile && inComments;
-
-      setIsVisible(((show && !hideAtComments) || afterComments) && !inSidebar);
+      setIsVisible(startVisible && !inTable);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -53,18 +62,20 @@ export default function ScrollToTableButton() {
 
   const scrollToTable = () => {
     const table = document.querySelector('.article-table-section');
-    if (table) table.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (table)
+      table.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   return (
     <button
       onClick={scrollToTable}
-      className={`fixed bottom-35 right-1 z-[5000] bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 transition-all duration-500 ease-in-out
-      ${
-        isVisible
-          ? 'opacity-100 translate-y-0'
-          : 'opacity-0 translate-y-4 pointer-events-none'
-      }`}
+      className={`fixed z-[5000] bg-blue-600 right-1 hover:bg-blue-700 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 transition-all duration-500 ease-in-out
+        ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}
+      `}
+      style={{
+        bottom: isDesktop ? '250px' : '140px', // נכוון אחר כך לפי הסדר שלך
+        right: isDesktop ? `${desktopRight}px` : '8px',
+      }}
     >
       <FaTable className="text-lg" />
       <span className="text-sm font-semibold">למפרט</span>
