@@ -98,7 +98,7 @@ export default function ArticleShareBottom() {
     <div
       className="fixed z-[5000] transition-all duration-300"
       style={{
-        bottom: isDesktop ? '300px' : '20px',
+        bottom: isDesktop ? '150px' : '40px',
         left: isDesktop ? `${desktopLeft}px` : '10px',
       }}
     >
