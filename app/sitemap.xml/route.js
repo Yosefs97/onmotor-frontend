@@ -15,8 +15,8 @@ export async function GET() {
     const json = await res.json();
 
     articles = json.data?.map(item => ({
-      url: `${SITE_URL}/articles/${item.attributes.slug}`,
-      lastmod: item.attributes.updatedAt,
+      url: `${SITE_URL}/articles/${item.slug}`,     // ⬅️ תיקון: גישה ישירה
+      lastmod: item.updatedAt,                   // ⬅️ תיקון: גישה ישירה
     })) || [];
 
   } catch (err) {
