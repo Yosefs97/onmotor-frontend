@@ -8,7 +8,7 @@ export default function ScrollToTableButton() {
   const [isDesktop, setIsDesktop] = useState(false);
   const [desktopRight, setDesktopRight] = useState(20);
 
-  /* ✔ זיהוי דסקטופ */
+  // ✔ זיהוי מובייל/מחשב
   useEffect(() => {
     const checkDevice = () => setIsDesktop(window.innerWidth > 1024);
     checkDevice();
@@ -16,7 +16,7 @@ export default function ScrollToTableButton() {
     return () => window.removeEventListener('resize', checkDevice);
   }, []);
 
-  /* ✔ חישוב מיקום יחסי לעמוד הכתבה */
+  // ✔ חישוב מיקום יחסית לעמוד הכתבה (כמו תגים/גלריה)
   useEffect(() => {
     if (!isDesktop) return;
 
@@ -35,39 +35,31 @@ export default function ScrollToTableButton() {
     return () => window.removeEventListener('resize', calcPosition);
   }, [isDesktop]);
 
-  /* ✔ הופעה/היעלמות — כולל בדיקה של SIDEBARS כמו במקור */
+  // ✔ הופעה/היעלמות – כולל בדיקה שהכתבה עדיין נראית על המסך
   useEffect(() => {
     const handleScroll = () => {
       const content = document.querySelector('.article-content');
       const table = document.querySelector('.article-table-section');
+      const wrapper = document.querySelector('.article-content-wrapper');
 
-      const sidebarMiddle = document.querySelector('.sidebar-middle-layer');
-      const sidebarLeft = document.querySelector('.sidebar-left-layer');
-
-      if (!content || !table) return;
+      if (!content || !table || !wrapper) return;
 
       const contentRect = content.getBoundingClientRect();
       const tableRect = table.getBoundingClientRect();
-      const sidebarMiddleRect = sidebarMiddle?.getBoundingClientRect();
-      const sidebarLeftRect = sidebarLeft?.getBoundingClientRect();
+      const wrapperRect = wrapper.getBoundingClientRect();
 
-      /* ✔ האם התחלנו לקרוא את הכתבה */
       const startVisible = contentRect.top < window.innerHeight * 0.6;
 
-      /* ✔ האם אנחנו בתוך אזור הטבלה? */
       const inTable =
         tableRect.top < window.innerHeight * 0.8 &&
         tableRect.bottom > window.innerHeight * 0.2;
 
-      /* ✔ האם נכנסנו לאזור הסיידרים? (כמו בקבצים המקוריים שלך) */
-      const inSidebar =
-        (sidebarMiddleRect &&
-          sidebarMiddleRect.top < window.innerHeight * 0.9) ||
-        (sidebarLeftRect &&
-          sidebarLeftRect.top < window.innerHeight * 0.9);
+      // ❗ חדש — כדי למנוע הופעה באזור הסיידרים במובייל
+      const articleStillVisible =
+        wrapperRect.bottom > window.innerHeight * 0.2 &&
+        wrapperRect.top < window.innerHeight * 0.8;
 
-      /* ✔ תוצאה סופית */
-      setIsVisible(startVisible && !inTable && !inSidebar);
+      setIsVisible(startVisible && !inTable && articleStillVisible);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -75,14 +67,12 @@ export default function ScrollToTableButton() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  /* ✔ גלילה לטבלה */
   const scrollToTable = () => {
     const table = document.querySelector('.article-table-section');
     if (table)
       table.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  /* ✔ כפתור */
   return (
     <button
       onClick={scrollToTable}
