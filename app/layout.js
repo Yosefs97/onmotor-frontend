@@ -18,35 +18,43 @@ const heebo = Heebo({
 // החזרנו את אובייקט המטא-דאטה הראשי.
 // זה ישמש כברירת מחדל, והכתבות ידרסו אותו נקודתית.
 export const metadata = {
-  metadataBase: new URL("https://www.onmotormedia.com"),
-  title: {
-    default: "OnMotor Media - מגזין הרוכבים של ישראל",
-    template: "%s | OnMotor Media",
-  },
-  description: "מגזין הרוכבים של ישראל – חדשות, סקירות, מדריכים וקהילה",
-  openGraph: {
-    title: "OnMotor Media",
-    description: "מגזין הרוכבים של ישראל – חדשות, סקירות, מדריכים וקהילה",
-    url: "https://www.onmotormedia.com",
-    siteName: "OnMotor Media",
-    images: [
-      {
-        url: "https://www.onmotormedia.com/full_Logo.jpg", // שימוש בלוגו הגדול
-        width: 1200,
-        height: 630,
-        alt: "OnMotor Media Logo"
-      },
-    ],
-    locale: "he_IL",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "OnMotor Media",
-    description: "מגזין הרוכבים של ישראל – חדשות, סקירות, מדריכים וקהילה",
-    images: ["https://www.onmotormedia.com/full_Logo.jpg"],
-  },
+  metadataBase: new URL("https://www.onmotormedia.com"),
+
+  title: {
+    default: "OnMotor Media – מגזין אופנועים ישראלי | חדשות, סקירות וקהילה",
+    template: "%s | OnMotor Media",
+  },
+
+  description:
+    "מגזין אופנועים ישראלי מוביל – חדשות אופנועים, סקירות דגמים, סקירת ציוד ומבחני דרך. כל מה שרוכב בישראל צריך לדעת.",
+
+  openGraph: {
+    title: "OnMotor Media – מגזין אופנועים ישראלי",
+    description:
+      "חדשות אופנועים, סקירות, ציוד וניסיון מהשטח – מגזין האופנועים לרוכב בישראל.",
+    url: "https://www.onmotormedia.com",
+    siteName: "OnMotor Media",
+    images: [
+      {
+        url: "https://www.onmotormedia.com/full_Logo.jpg",
+        width: 1200,
+        height: 630,
+        alt: "OnMotor Media Logo",
+      },
+    ],
+    locale: "he_IL",
+    type: "website",
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "OnMotor Media – מגזין אופנועים ישראלי",
+    description:
+      "חדשות אופנועים, סקירות דגמים לקהילת הרוכבים של ישראל.",
+    images: ["https://www.onmotormedia.com/full_Logo.jpg"],
+  },
 };
+
 //  ========= ⬆️ התיקון כאן ⬆️ =========
 
 
