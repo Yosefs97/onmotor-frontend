@@ -6,9 +6,9 @@ import { FaImages } from 'react-icons/fa';
 export default function ScrollToGalleryButton() {
   const [isVisible, setIsVisible] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
-  const [desktopRight, setDesktopRight] = useState(20);
+  const [desktopRight, setDesktopRight] = useState(null); // רק לדסקטופ
 
-  /* ✔ זיהוי מובייל / מחשב */
+  /* ✔ זיהוי מובייל/מחשב */
   useEffect(() => {
     const checkDevice = () => setIsDesktop(window.innerWidth > 1024);
     checkDevice();
@@ -16,11 +16,11 @@ export default function ScrollToGalleryButton() {
     return () => window.removeEventListener('resize', checkDevice);
   }, []);
 
-  /* ✔ חישוב מיקום כפתור לפי העמודה של הכתבה */
+  /* ✔ מחשבים – לחשב מיקום עמוד כתבה */
   useEffect(() => {
     if (!isDesktop) return;
 
-    const calcPosition = () => {
+    const calcRight = () => {
       const article = document.querySelector('.article-content-wrapper');
       if (!article) return;
 
@@ -30,9 +30,9 @@ export default function ScrollToGalleryButton() {
       setDesktopRight(fromRight + 20);
     };
 
-    calcPosition();
-    window.addEventListener('resize', calcPosition);
-    return () => window.removeEventListener('resize', calcPosition);
+    calcRight();
+    window.addEventListener('resize', calcRight);
+    return () => window.removeEventListener('resize', calcRight);
   }, [isDesktop]);
 
   /* ✔ לוגיקה של הופעה/היעלמות */
@@ -88,16 +88,22 @@ export default function ScrollToGalleryButton() {
     if (gallery) gallery.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  /* 🎯 מובייל = ללא style  
+     🎯 מחשב = הוספת style */
+  const desktopStyle = isDesktop
+    ? {
+        right: desktopRight ? `${desktopRight}px` : '20px',
+        bottom: '200px',
+      }
+    : {};
+
   return (
     <button
       onClick={scrollToGallery}
-      className={`fixed z-[5000] bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 transition-all duration-500 ease-in-out
+      className={`fixed bottom-25 right-1 z-[5000] bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 transition-all duration-500 ease-in-out
         ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}
       `}
-      style={{
-        bottom: isDesktop ? '200px' : '80px',
-        right: isDesktop ? `${desktopRight}px` : '12px',
-      }}
+      style={desktopStyle}
     >
       <FaImages className="text-lg" />
       <span className="text-sm font-semibold">לגלריה</span>
