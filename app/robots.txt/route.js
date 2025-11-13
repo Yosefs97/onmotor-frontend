@@ -3,7 +3,7 @@ export function GET() {
 User-agent: *
 Disallow:
 
-Sitemap: https://onmotormedia.com/sitemap.xml
+Sitemap: https://www.onmotormedia.com/sitemap.xml
   `.trim();
 
   return new Response(content, {
