@@ -73,7 +73,7 @@ export default function ScrollToTableButton() {
         ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}
       `}
       style={{
-        bottom: isDesktop ? '210px' : '140px', // נכוון אחר כך לפי הסדר שלך
+        bottom: isDesktop ? '210px' : '130px', // נכוון אחר כך לפי הסדר שלך
         right: isDesktop ? `${desktopRight}px` : '8px',
       }}
     >
