@@ -16,7 +16,7 @@ export default function FacebookSDKLoader() {
         window.FB.init({
           appId: '1702134291174147',
           xfbml: true,
-          version: 'v18.0',  // ← גרסה יציבה (פתרון ידוע לבעיה)
+          version: 'v23.0',  // ← גרסה יציבה (פתרון ידוע לבעיה)
         });
       } catch (err) {
         console.error("❌ FB.init failed:", err);
