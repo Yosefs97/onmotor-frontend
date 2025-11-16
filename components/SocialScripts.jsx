@@ -10,7 +10,7 @@ export default function SocialScripts() {
       s.async = true;
       s.defer = true;
       s.crossOrigin = "anonymous";
-      s.src = "https://connect.facebook.net/he_IL/sdk.js#xfbml=1&version=v19.0";
+      s.src = "https://connect.facebook.net/he_IL/sdk.js#xfbml=1&version=v23.0";
       document.body.appendChild(s);
     }
 
