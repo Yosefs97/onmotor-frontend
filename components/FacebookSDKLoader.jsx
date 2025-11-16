@@ -4,18 +4,26 @@ import { useEffect } from 'react';
 
 export default function FacebookSDKLoader() {
   useEffect(() => {
-    // אם כבר נטען, אין צורך שוב
-    if (window.FB) return;
 
+    // ⚠️ לא בודקים window.FB — רק אם הסקריפט קיים
+    if (document.getElementById('facebook-jssdk')) return;
+
+    // תמיד מגדירים fbAsyncInit לפני טעינה
     window.fbAsyncInit = function () {
-      window.FB.init({
-        appId: '1702134291174147', // 🔴 כאן תכניס את ה־App ID שלך מ-Facebook Developers
-        xfbml: true,
-        version: 'v21.0',
-      });
+      if (!window.FB) return;
+
+      try {
+        window.FB.init({
+          appId: '1702134291174147',
+          xfbml: true,
+          version: 'v20.0',   // ← גרסה יציבה (פתרון ידוע לבעיה)
+        });
+      } catch (err) {
+        console.error("❌ FB.init failed:", err);
+      }
     };
 
-    // טוען את ה־SDK
+    // טעינת SDK רק פעם אחת
     (function (d, s, id) {
       let js, fjs = d.getElementsByTagName(s)[0];
       if (d.getElementById(id)) return;
@@ -24,6 +32,7 @@ export default function FacebookSDKLoader() {
       js.src = 'https://connect.facebook.net/he_IL/sdk.js';
       fjs.parentNode.insertBefore(js, fjs);
     })(document, 'script', 'facebook-jssdk');
+
   }, []);
 
   return null;
