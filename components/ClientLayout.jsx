@@ -25,10 +25,14 @@ export default function ClientLayout({ children }) {
 
   useEffect(() => {
     const scripts = [
-      { id: "facebook-embed-script", src: "https://connect.facebook.net/he_IL/sdk.js#xfbml=1&version=v18.0" },
+      // ❌ הוסר: טעינת Facebook SDK (גרמה להתנגשויות עם FacebookSDKLoader)
+      // { id: "facebook-embed-script", src: "https://connect.facebook.net/he_IL/sdk.js#xfbml=1&version=v18.0" },
+
+      // ✔ נשאר כרגיל:
       { id: "twitter-embed-script", src: "https://platform.twitter.com/widgets.js" },
       { id: "tiktok-embed-script", src: "https://www.tiktok.com/embed.js" },
     ];
+
     scripts.forEach(({ id, src }) => {
       if (!document.getElementById(id)) {
         const script = document.createElement("script");
@@ -57,7 +61,6 @@ export default function ClientLayout({ children }) {
       <div className="w-screen sm:w-full overflow-x-hidden sm:overflow-visible bg-[#f9f9f9]" dir="rtl">
         <main className="min-h-screen flex flex-col max-w-[1440px] mx-auto lg:flex-row mb-0 px-0 sm:px-0 pt-[1px] pb-[2px] text-right bg-gray-100">
           {children}
-          
 
           {/* 🟦 סיידר אמצעי – 1/4 */}
           <div className={`w-full lg:w-1/4 flex-shrink-0 px-0 sm:px-0 ${!isMobile ? 'border-l border-[#e60000]' : ''}`}>
