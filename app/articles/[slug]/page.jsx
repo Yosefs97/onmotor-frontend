@@ -19,6 +19,8 @@ import ScrollToCommentsButton from "@/components/ScrollToCommentsButton";
 import { fixRelativeImages, resolveImageUrl, wrapHondaProxy } from "@/lib/fixArticleImages";
 import { getArticleImage } from "@/lib/getArticleImage";
 import ArticleShareBottom from "@/components/ArticleShareBottom";
+import Head from "next/head";
+
 
 
 const API_URL = process.env.STRAPI_API_URL;
@@ -455,7 +457,17 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      <Head>
+        {/* ---- תמונות לשיתוף ---- */}
+        <meta property="og:image" content={article.image} />
+        <meta property="og:image:secure_url" content={article.image} />
+        <meta property="og:image:type" content="image/jpeg" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
 
+        <meta name="twitter:image" content={article.image} />
+        <meta itemProp="image" content={article.image} />
+      </Head>
 
       <PageContainer title={article.title} breadcrumbs={breadcrumbs}>
         <div
