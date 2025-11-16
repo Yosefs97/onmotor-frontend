@@ -6,29 +6,20 @@ export default function FacebookComments({ url }) {
   const [pageUrl, setPageUrl] = useState('');
 
   useEffect(() => {
-    // נוודא שתמיד משתמשים ב־URL מדויק של הדפדפן (כולל פרמטרים)
     if (typeof window !== 'undefined') {
-      const currentUrl = window.location.origin + window.location.pathname;
-      setPageUrl(currentUrl);
+      setPageUrl(window.location.origin + window.location.pathname);
     }
   }, []);
 
   useEffect(() => {
     if (!pageUrl) return;
 
-    // אם ה־SDK קיים – מבצע parse
-    if (window.FB && window.FB.XFBML) {
-      window.FB.XFBML.parse();
-    } else {
-      // מאזין לטעינת ה־SDK
-      const checkFB = setInterval(() => {
-        if (window.FB && window.FB.XFBML) {
-          window.FB.XFBML.parse();
-          clearInterval(checkFB);
-        }
-      }, 500);
-      return () => clearInterval(checkFB);
-    }
+    // SDK עדיין לא נטען? אל תעשה כלום!
+    if (!window.FB || !window.FB.XFBML) return;
+
+    // SDK נטען בצורה מלאה → עכשיו מותר parse
+    window.FB.XFBML.parse();
+
   }, [pageUrl]);
 
   return (
