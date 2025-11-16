@@ -25,7 +25,7 @@ export default function MobileShopFilterBar({ onFilterChange = () => {}, product
     <>
       <button
         onClick={() => setOpen(!open)}
-        className={`fixed top-42 z-50 px-4 py-1 rounded-md shadow-lg md:hidden transition-all duration-300 
+        className={`fixed top-52 z-50 px-4 py-1 rounded-md shadow-lg md:hidden transition-all duration-300 
           ${open ? "left-10 bg-gray-800" : "left-0 bg-red-600"} text-white animate-parts-bounce`}
       >
         {open ? "✕" : "סינון"}
