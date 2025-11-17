@@ -11,7 +11,7 @@ export default function CommentsSection({ articleUrl }) {
       </h3>
 
       {/* ✅ מציג רק תגובות מפייסבוק */}
-      <FacebookComments url={articleUrl} />
+     {/* <FacebookComments url={articleUrl} />*/}
     </div>
   );
 }
