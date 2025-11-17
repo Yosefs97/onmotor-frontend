@@ -74,7 +74,7 @@ export default function ArticleCard({ article, size = 'small' }) {
           <h3
             className={`${titleSize} transition-all duration-300 ${
               isMobile
-                ? 'font-normal bg-black/60 inline-block px-1 py-0.5 rounded-sm'
+                ? 'font-normal bg-black/30 box-decoration-clone px-1 rounded-sm'
                 : 'font-bold'
             }`}
           >
