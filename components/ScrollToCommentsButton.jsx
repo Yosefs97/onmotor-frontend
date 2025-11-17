@@ -41,6 +41,8 @@ export default function ScrollToCommentsButton() {
     const handleScroll = () => {
       const content = document.querySelector('.article-content');
       const comments = document.querySelector('.comments-section');
+      const similar = document.querySelector('.similar-articles-section');
+
       if (!content || !comments) return;
 
       const contentRect = content.getBoundingClientRect();
@@ -52,8 +54,11 @@ export default function ScrollToCommentsButton() {
         commentsRect.bottom > window.innerHeight * 0.2;
 
       const isMobile = window.innerWidth <= 1024;
+      const inSimilar =
+        similarRect &&
+        similarRect.top < window.innerHeight * 0.9;
 
-      setIsVisible(startVisible && !inComments);
+      setIsVisible(startVisible && !inComments  && !inSimilar);
     };
 
     window.addEventListener('scroll', handleScroll);
