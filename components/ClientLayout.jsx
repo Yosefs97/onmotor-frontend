@@ -1,7 +1,7 @@
 // components/ClientLayout.jsx
 'use client';
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Header from "./Header";
 import Footer from "./Footer";
@@ -16,6 +16,10 @@ export default function ClientLayout({ children }) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
 
+  const [isAtTop, setIsAtTop] = useState(true);
+  const [headerHeight, setHeaderHeight] = useState(60);
+
+  /* 📌 טעינת סקריפטים (טוויטר/טיקטוק) */
   useEffect(() => {
     const scripts = [
       { id: "twitter-embed-script", src: "https://platform.twitter.com/widgets.js" },
@@ -33,6 +37,33 @@ export default function ClientLayout({ children }) {
     });
   }, []);
 
+  /* 📌 זיהוי גלילה במובייל */
+  useEffect(() => {
+    if (!isMobile) return;
+
+    const onScroll = () => {
+      setIsAtTop(window.scrollY < 10);
+    };
+
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [isMobile]);
+
+  /* 📌 חישוב גובה Header באופן דינמי */
+  useEffect(() => {
+    const header = document.querySelector("header");
+    if (!header) return;
+
+    const updateHeight = () => {
+      setHeaderHeight(header.getBoundingClientRect().height);
+    };
+
+    updateHeight();
+    window.addEventListener("resize", updateHeight);
+
+    return () => window.removeEventListener("resize", updateHeight);
+  }, []);
+
   const isShopPage = pathname.startsWith("/shop");
 
   return (
@@ -43,7 +74,24 @@ export default function ClientLayout({ children }) {
       </div>
 
       <Header />
-      <NewsTicker />
+
+      {/* 📰 NewsTicker – במובייל יזוז במורד הדף, בדסקטופ נשאר מקובע */}
+      <div
+        className={`
+          ${isMobile
+            ? (isAtTop
+                ? `sticky z-[9998]`
+                : "relative")
+            : `sticky z-[9998]`
+          }
+        `}
+        style={{
+          top: isMobile ? (isAtTop ? headerHeight : 0) : headerHeight,
+        }}
+      >
+        <NewsTicker />
+      </div>
+
       {isShopPage && <MobileShopFilterBar />}
 
       {/* 🌍 פריסת העמוד */}
@@ -53,7 +101,6 @@ export default function ClientLayout({ children }) {
             ${isShopPage ? '' : 'lg:flex-row'}
           `}
         >
-
           {/* תוכן מרכזי */}
           {children}
 
