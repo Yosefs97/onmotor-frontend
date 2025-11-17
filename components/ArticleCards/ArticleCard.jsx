@@ -20,8 +20,7 @@ export default function ArticleCard({ article, size = 'small' }) {
   const handleTouchStart = () => setIsTouched(true);
 
   // --- ⭐️ לוגיקה חדשה ופשוטה ⭐️ ---
-  // אנחנו סומכים על רכיב האב (CategoryPage) שכבר הכין לנו URL תקין
-  const imageUrl = article.image || '/default-image.jpg'; // פולבאק סופי למקרה ש-article.image ריק
+  const imageUrl = article.image || '/default-image.jpg';
   // --- ⭐️ סוף לוגיקה חדשה ⭐️ ---
 
   const imageAltText = article.imageAlt || article.title || 'Article image';
@@ -52,7 +51,7 @@ export default function ArticleCard({ article, size = 'small' }) {
         {imageUrl ? (
           <div className="relative w-full h-full">
             <Image
-              src={imageUrl} // ⭐️ שימוש ישיר ב-URL הנקי
+              src={imageUrl}
               alt={imageAltText}
               fill
               sizes="(max-width: 768px) 100vw, 50vw"
@@ -74,21 +73,32 @@ export default function ArticleCard({ article, size = 'small' }) {
                 : 'bg-gradient-to-t from-black/110 via-black/90 to-black/40  group-hover:bg-[#e60000]/80'
             }`}
         >
-          <h3 className={`${titleSize} transition-all duration-300 ${isMobile ? 'font-normal' : 'font-bold'}`}>
+          {/* ⭐️ כאן השינוי — רקע שחור שקוף לכותרת במובייל */}
+          <h3
+            className={`${titleSize} transition-all duration-300 ${
+              isMobile
+                ? 'font-normal bg-black/60 inline-block px-1 py-0.5 rounded-sm'
+                : 'font-bold'
+            }`}
+          >
             {article.title || article.headline}
           </h3>
 
           {!isMobile && (
-            <p className={`${descSize} overflow-hidden transition-all duration-300
-              ${isTouched
-                ? 'max-h-20 opacity-100'
-                : 'max-h-0 opacity-0 group-hover:max-h-20 group-hover:opacity-100'}`}>
+            <p
+              className={`${descSize} overflow-hidden transition-all duration-300
+                ${isTouched
+                  ? 'max-h-20 opacity-100'
+                  : 'max-h-0 opacity-0 group-hover:max-h-20 group-hover:opacity-100'}`}
+            >
               {article.description}
             </p>
           )}
 
-          <p className={`text-s mt-1 text-white/80 
-            ${(isMobile && isTouched) || (!isMobile) ? 'block' : 'hidden group-hover:block'}`}>
+          <p
+            className={`text-s mt-1 text-white/80 
+            ${(isMobile && isTouched) || (!isMobile) ? 'block' : 'hidden group-hover:block'}`}
+          >
             {formatDate(article.date)}
           </p>
         </div>
