@@ -7,7 +7,7 @@ import ArticleCard from '@/components/ArticleCards/ArticleCard';
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || process.env.STRAPI_API_URL;
 const PLACEHOLDER_IMG = '/default-image.jpg';
 
-// ✅ פונקציה לתיקון כתובת תמונה
+// פונקציה לתיקון כתובת תמונה
 function resolveImageUrl(rawUrl) {
   if (!rawUrl) return PLACEHOLDER_IMG;
   if (rawUrl.startsWith('http')) return rawUrl;
@@ -19,7 +19,22 @@ export default function SimilarArticles({ currentSlug, category }) {
   const [currentGroup, setCurrentGroup] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
-  // ✅ זיהוי מובייל
+  // 👉 Swipe states
+  const [touchStartX, setTouchStartX] = useState(null);
+  const [touchEndX, setTouchEndX] = useState(null);
+
+  const handleSwipe = () => {
+    if (!isMobile) return;
+
+    if (touchStartX - touchEndX > 50) {
+      nextGroup();
+    }
+    if (touchEndX - touchStartX > 50) {
+      prevGroup();
+    }
+  };
+
+  // זיהוי מובייל
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     handleResize();
@@ -27,7 +42,7 @@ export default function SimilarArticles({ currentSlug, category }) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // ✅ שליפת כתבות דומות
+  // שליפת כתבות דומות
   useEffect(() => {
     async function fetchSimilarArticles() {
       try {
@@ -42,30 +57,27 @@ export default function SimilarArticles({ currentSlug, category }) {
           let mainImage = PLACEHOLDER_IMG;
           let mainImageAlt = a.title || 'תמונה ראשית';
 
-          // 1️⃣ גלריה
           const galleryItem = a.gallery?.[0];
           if (galleryItem?.url) {
             mainImage = resolveImageUrl(galleryItem.url);
             mainImageAlt = galleryItem.alternativeText || mainImageAlt;
-          }
-          // 2️⃣ תמונה ראשית
-          else if (a.image?.url) {
+          } else if (a.image?.url) {
             mainImage = resolveImageUrl(a.image.url);
             mainImageAlt = a.image.alternativeText || mainImageAlt;
-          }
-          // 3️⃣ external_media_links
-          else if (
+          } else if (
             Array.isArray(a.external_media_links) &&
             a.external_media_links.length > 0
           ) {
             const validLinks = a.external_media_links.filter(
               (l) => typeof l === 'string' && l.startsWith('http')
             );
+
             if (validLinks.length > 1) {
-              mainImage = validLinks[1].trim(); // השני
+              mainImage = validLinks[1].trim();
             } else if (validLinks.length > 0) {
-              mainImage = validLinks[0].trim(); // הראשון
+              mainImage = validLinks[0].trim();
             }
+
             mainImageAlt = 'תמונה ראשית מהמדיה החיצונית';
           }
 
@@ -91,26 +103,32 @@ export default function SimilarArticles({ currentSlug, category }) {
     fetchSimilarArticles();
   }, [currentSlug, category]);
 
-  // ✅ חישוב קבוצות (3 לדסקטופ, 2 למובייל)
+  // חלוקה לקבוצות (3 לדסקטופ, 2 למובייל)
   const groupSize = isMobile ? 2 : 3;
   const groups = [];
   for (let i = 0; i < similar.length; i += groupSize) {
     groups.push(similar.slice(i, i + groupSize));
   }
 
-  // ✅ מעבר אוטומטי כל 6 שניות
+  // מעבר אוטומטי — רק במחשב
   useEffect(() => {
+    if (isMobile) return;
     if (groups.length <= 1) return;
+
     const interval = setInterval(() => {
       setCurrentGroup((prev) => (prev + 1) % groups.length);
     }, 6000);
+
     return () => clearInterval(interval);
-  }, [groups.length]);
+  }, [groups.length, isMobile]);
 
   if (!similar.length) return null;
 
-  const nextGroup = () => setCurrentGroup((prev) => (prev + 1) % groups.length);
-  const prevGroup = () => setCurrentGroup((prev) => (prev - 1 + groups.length) % groups.length);
+  const nextGroup = () =>
+    setCurrentGroup((prev) => (prev + 1) % groups.length);
+
+  const prevGroup = () =>
+    setCurrentGroup((prev) => (prev - 1 + groups.length) % groups.length);
 
   return (
     <div className="mt-10 relative bg-white p-4 rounded-md shadow-md">
@@ -126,27 +144,38 @@ export default function SimilarArticles({ currentSlug, category }) {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -200, opacity: 0 }}
             transition={{ duration: 0.6 }}
-            className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-3'} gap-4`}
+            className={`grid ${
+              isMobile ? 'grid-cols-2' : 'grid-cols-3'
+            } gap-4`}
+            
+            // 👉 תמיכה בהחלקה במובייל
+            onTouchStart={(e) => setTouchStartX(e.touches[0].clientX)}
+            onTouchMove={(e) => setTouchEndX(e.touches[0].clientX)}
+            onTouchEnd={handleSwipe}
           >
             {groups[currentGroup].map((article) => (
-              <ArticleCard key={article.slug || article.id} article={article} />
+              <ArticleCard
+                key={article.slug || article.id}
+                article={article}
+              />
             ))}
           </motion.div>
         </AnimatePresence>
 
-        {/* ✅ חיצים */}
         {groups.length > 1 && (
           <>
             <button
               onClick={prevGroup}
-              className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-red-600/90 hover:bg-red-600/60 text-white p-3 rounded-full text-2xl transition"
+              className="absolute left-2 top-1/2 transform -translate-y-1/2
+              bg-red-600/90 hover:bg-red-600/60 text-white p-3 rounded-full text-2xl transition"
               aria-label="הקודם"
             >
               ›
             </button>
             <button
               onClick={nextGroup}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-red-600/90 hover:bg-red-600/60 text-white p-3 rounded-full text-2xl transition"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2
+              bg-red-600/90 hover:bg-red-600/60 text-white p-3 rounded-full text-2xl transition"
               aria-label="הבא"
             >
               ‹
@@ -155,7 +184,6 @@ export default function SimilarArticles({ currentSlug, category }) {
         )}
       </div>
 
-      {/* ✅ נקודות אינדיקציה */}
       {groups.length > 1 && (
         <div className="flex justify-center space-x-2 mt-3">
           {groups.map((_, idx) => (
