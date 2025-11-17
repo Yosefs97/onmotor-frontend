@@ -3,7 +3,6 @@
 import './globals.css';
 import { AuthModalProvider } from '@/contexts/AuthModalProvider';
 import ClientLayout from '@/components/ClientLayout';
-import FacebookSDKLoader from '@/components/FacebookSDKLoader';
 import ScrollToTopButton from '@/components/ScrollToTopButton';
 import Script from 'next/script';
 import { Heebo } from 'next/font/google';
@@ -86,6 +85,11 @@ export default function RootLayout({ children }) {
 
         {/* תוסף הנגישות */}
         <Script src="https://cdn.enable.co.il/licenses/enable-L491236ornf8p4x2-1025-75004/init.js" />
+        {/* Facebook SDK – נטען רק אחרי Hydration */}
+        <Script
+          src="https://connect.facebook.net/he_IL/sdk.js#xfbml=1&version=v23.0"
+          strategy="lazyOnload"
+        />
       </body>
     </html>
   );
