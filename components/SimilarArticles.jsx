@@ -22,14 +22,15 @@ export default function SimilarArticles({ currentSlug, category }) {
   // 👉 Swipe states
   const [touchStartX, setTouchStartX] = useState(null);
   const [touchEndX, setTouchEndX] = useState(null);
-
   const handleSwipe = () => {
     if (!isMobile) return;
-
-    if (touchStartX - touchEndX > 50) {
-      nextGroup();
+    const dx = touchEndX - touchStartX;
+    // ב־RTL: החלקה שמאלה → prev
+    if (dx < -50) {
+      prevGroup(); 
     }
-    if (touchEndX - touchStartX > 50) {
+    // ב־RTL: החלקה ימינה → next
+    if (dx > 50) {
       prevGroup();
     }
   };
