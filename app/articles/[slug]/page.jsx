@@ -502,9 +502,8 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
 
           <Tags tags={article.tags} />
 
-          <div className="similar-articles-section">
-            <SimilarArticles currentSlug={article.slug} category={article.category} />
-          </div>
+          <SimilarArticles currentSlug={article.slug} category={article.category} />
+          
           
           
         </div>
