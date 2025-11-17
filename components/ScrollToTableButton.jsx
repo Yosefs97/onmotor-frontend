@@ -77,7 +77,7 @@ export default function ScrollToTableButton() {
         ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}
       `}
       style={{
-        bottom: isDesktop ? '210px' : '130px',
+        bottom: isDesktop ? '228px' : '130px',
         right: isDesktop ? `${desktopRight}px` : '8px',
       }}
     >

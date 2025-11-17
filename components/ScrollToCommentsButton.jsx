@@ -79,7 +79,7 @@ export default function ScrollToCommentsButton() {
         ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}
       `}
       style={{
-        bottom: isDesktop ? '140px' : '60px',
+        bottom: isDesktop ? '150px' : '60px',
         right: isDesktop ? `${desktopRight}px` : '8px',
       }}
     >
