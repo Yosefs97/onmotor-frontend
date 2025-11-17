@@ -3,9 +3,6 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
-// 🛑 הערה: המשתנה הזה כבר לא נחוץ בקובץ זה, כי ה-URL המלא מגיע מהאב
-// const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
-
 export default function ArticleCard({ article, size = 'small' }) {
   const [isTouched, setIsTouched] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -19,9 +16,7 @@ export default function ArticleCard({ article, size = 'small' }) {
 
   const handleTouchStart = () => setIsTouched(true);
 
-  // --- ⭐️ לוגיקה חדשה ופשוטה ⭐️ ---
   const imageUrl = article.image || '/default-image.jpg';
-  // --- ⭐️ סוף לוגיקה חדשה ⭐️ ---
 
   const imageAltText = article.imageAlt || article.title || 'Article image';
 
@@ -66,14 +61,16 @@ export default function ArticleCard({ article, size = 'small' }) {
 
         <div
           className={`absolute bottom-0 w-full text-white ${paddingSize} transition-all duration-300
-            ${isMobile
-              ? 'bg-[#e60000]/70'
-              : isTouched
+            ${
+              isMobile
+                ? 'bg-transparent'
+                : isTouched
                 ? 'bg-[#e60000]/150'
-                : 'bg-gradient-to-t from-black/110 via-black/90 to-black/40  group-hover:bg-[#e60000]/80'
-            }`}
+                : 'bg-gradient-to-t from-black/110 via-black/90 to-black/40 group-hover:bg-[#e60000]/80'
+            }
+          `}
         >
-          {/* ⭐️ כאן השינוי — רקע שחור שקוף לכותרת במובייל */}
+          {/* ⭐ במובייל הכותרת עצמה עם רקע שחור שקוף */}
           <h3
             className={`${titleSize} transition-all duration-300 ${
               isMobile
@@ -87,9 +84,11 @@ export default function ArticleCard({ article, size = 'small' }) {
           {!isMobile && (
             <p
               className={`${descSize} overflow-hidden transition-all duration-300
-                ${isTouched
-                  ? 'max-h-20 opacity-100'
-                  : 'max-h-0 opacity-0 group-hover:max-h-20 group-hover:opacity-100'}`}
+                ${
+                  isTouched
+                    ? 'max-h-20 opacity-100'
+                    : 'max-h-0 opacity-0 group-hover:max-h-20 group-hover:opacity-100'
+                }`}
             >
               {article.description}
             </p>
@@ -97,7 +96,8 @@ export default function ArticleCard({ article, size = 'small' }) {
 
           <p
             className={`text-s mt-1 text-white/80 
-            ${(isMobile && isTouched) || (!isMobile) ? 'block' : 'hidden group-hover:block'}`}
+              ${(isMobile && isTouched) || !isMobile ? 'block' : 'hidden group-hover:block'}
+            `}
           >
             {formatDate(article.date)}
           </p>
