@@ -1,4 +1,4 @@
-// components/NewsTicker.jsx
+//components\NewsTicker.jsx
 'use client';
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
@@ -16,10 +16,6 @@ export default function NewsTicker() {
   const containerRef = useRef(null);
   const textRef = useRef(null);
   const animRef = useRef(null);
-
-  // ✔️ זיהוי מובייל
-  const isMobileDevice =
-    typeof window !== 'undefined' && window.innerWidth < 768;
 
   // --- טעינת כותרות ---
   useEffect(() => {
@@ -59,30 +55,20 @@ export default function NewsTicker() {
         setCharIndex((prev) => prev + 1);
       }, 60);
       return () => clearTimeout(timeout);
-
     } else {
-      // ✔️ אחרי הקלדה – במובייל אין תנועה בכלל
+      // הקלדה הסתיימה → מפעילים את תנועת הגלישה
       setIsTyping(false);
-
       const timeout = setTimeout(() => {
         setCharIndex(0);
         setDisplayedText('');
         setCurrentHeadline((prev) => (prev + 1) % headlines.length);
-      }, isMobileDevice ? 2500 : 3000);
-
+      }, 3000);
       return () => clearTimeout(timeout);
     }
-  }, [charIndex, currentHeadline, headlines, isMobileDevice]);
+  }, [charIndex, currentHeadline, headlines]);
 
-  // --- תנועה (רק בדסקטופ) ---
+  // --- תנועה רק אחרי סיום הקלדה ---
   useEffect(() => {
-    if (isMobileDevice) {
-      // ❗ במובייל – אין תנועה
-      cancelAnimationFrame(animRef.current);
-      setShiftX(0);
-      return;
-    }
-
     if (isTyping || !containerRef.current || !textRef.current) {
       cancelAnimationFrame(animRef.current);
       setShiftX(0);
@@ -99,23 +85,22 @@ export default function NewsTicker() {
 
     const move = () => {
       pos += direction * speed;
-      if (pos < -(textWidth - containerWidth + 2)) direction = 1;
-      if (pos > 0) direction = -1;
+      if (pos < -(textWidth - containerWidth +2)) direction = 2;
+      if (pos > 0) direction = 2;
       setShiftX(pos);
       animRef.current = requestAnimationFrame(move);
     };
-
     animRef.current = requestAnimationFrame(move);
-    return () => cancelAnimationFrame(animRef.current);
 
-  }, [isTyping, displayedText, isMobileDevice]);
+    return () => cancelAnimationFrame(animRef.current);
+  }, [isTyping, displayedText]);
 
   if (!headlines.length) return null;
 
   return (
     <div
       dir="rtl"
-      className="bg-[#e60000] w-full overflow-hidden"
+      className="sticky top-0 z-50 bg-[#e60000] w-full fixed top-[80px] z-[40] overflow-hidden"
       style={{ height: "40px" }}
     >
       <div className="relative flex items-center h-full px-2 text-white font-bold text-base md:text-lg whitespace-nowrap overflow-hidden">
@@ -134,7 +119,7 @@ export default function NewsTicker() {
           <Link
             ref={textRef}
             href={headlines[currentHeadline].link}
-            className="absolute right-0 top-0"
+            className="absolute right-0 top-0 transition-transform duration-75 ease-linear"
             style={{
               transform: `translateX(${shiftX}px)`,
               whiteSpace: "nowrap",
