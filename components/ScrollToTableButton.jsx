@@ -7,7 +7,6 @@ export default function ScrollToTableButton() {
   const [isVisible, setIsVisible] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const [desktopRight, setDesktopRight] = useState(20);
-  const [compact, setCompact] = useState(false); // ✔ מצב קומפקטי (רק אייקון)
 
   // ✔ זיהוי מובייל/מחשב
   useEffect(() => {
@@ -36,7 +35,7 @@ export default function ScrollToTableButton() {
     return () => window.removeEventListener('resize', calcPosition);
   }, [isDesktop]);
 
-  // ✔ הופעה/היעלמות – כולל SimilarArticles + מצב קומפקטי
+  // ✔ הופעה/היעלמות – כולל SimilarArticles
   useEffect(() => {
     const handleScroll = () => {
       const content = document.querySelector('.article-content');
@@ -55,15 +54,9 @@ export default function ScrollToTableButton() {
         tableRect.top < window.innerHeight * 0.8 &&
         tableRect.bottom > window.innerHeight * 0.2;
 
-      // ✔ נעלם רק אחרי שעוברים את כל הבלוק
       const passedSimilar =
-        similarRect && similarRect.bottom < 0;
-
-      // ✔ הפעלה/כיבוי
+        similarRect && similarRect.bottom < 0.8;
       setIsVisible(startVisible && !inTable && !passedSimilar);
-
-      // ✔ מצב קומפקטי (רק אייקון)
-      setCompact(window.scrollY > 400);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -80,13 +73,8 @@ export default function ScrollToTableButton() {
   return (
     <button
       onClick={scrollToTable}
-      className={`fixed z-[5000] bg-blue-600 hover:bg-blue-700 text-white shadow-lg flex items-center transition-all duration-500 ease-in-out
+      className={`fixed z-[5000] bg-blue-600 right-1 hover:bg-blue-700 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 transition-all duration-500 ease-in-out
         ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}
-
-        ${compact
-          ? 'px-3 py-3 rounded-full'
-          : 'px-4 py-2 rounded-full gap-2'
-        }
       `}
       style={{
         bottom: isDesktop ? '210px' : '130px',
@@ -94,13 +82,7 @@ export default function ScrollToTableButton() {
       }}
     >
       <FaTable className="text-lg" />
-
-      {/* ✔ טקסט מוצג רק כשלא קומפקטי */}
-      {!compact && (
-        <span className="text-sm font-semibold">
-          למפרט
-        </span>
-      )}
+      <span className="text-sm font-semibold">למפרט</span>
     </button>
   );
 }
