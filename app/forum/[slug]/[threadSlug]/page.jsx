@@ -6,7 +6,6 @@ import { useParams } from 'next/navigation';
 import PageContainer from '@/components/PageContainer';
 import { fetchThreadBySlug, fetchCommentsByThreadSlug } from '@/lib/forumApi';
 import { getForumLabel } from '@/utils/labelMap';
-import CommentsSection from './CommentsSection';
 import { linkifyText } from '@/utils/linkifyText';
 
 export default function ForumThreadPage() {
@@ -108,12 +107,7 @@ export default function ForumThreadPage() {
 
           <div className="border-t-4 border-[#e60000] my-0 w-full"></div>
 
-          <section className="w-full bg-[#fff] py-8 sm:px-10">
-            <CommentsSection
-              threadSlug={decodedThreadSlug}
-              threadLocked={thread.locked}
-            />
-          </section>
+          
         </>
       )}
     </PageContainer>
