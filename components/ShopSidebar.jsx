@@ -1,14 +1,14 @@
 // /components/ShopSidebar.jsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import DropdownSimple from './DropdownSimple';
 import { buildUrlFromFilters } from '@/utils/buildUrlFromFilters';
 import { motion } from 'framer-motion';
 import { MessageCircle } from 'lucide-react';
 
-export default function ShopSidebar({ onFilterChange = () => {}, product = null }) {
+export default function ShopSidebar({ onFilterChange = () => {}, product = null, scrollRef }) {
   const [facets, setFacets] = useState({
     vendors: [],
     models: {},
@@ -26,11 +26,27 @@ export default function ShopSidebar({ onFilterChange = () => {}, product = null 
     category: '',
   });
 
-  const [yearRange, setYearRange] = useState([0, 0]); // min,max years for selected model
-  const [cursor, setCursor] = useState([0, 0]);       // slider current values
+  const [yearRange, setYearRange] = useState([0, 0]);
+  const [cursor, setCursor] = useState([0, 0]);
 
   const router = useRouter();
   const pathname = usePathname();
+
+  // 🔥 פונקציית גלילה חכמה במובייל
+  const scrollToElement = (id) => {
+    if (typeof window === "undefined") return;
+    if (!scrollRef?.current) return;
+
+    if (window.innerWidth < 1024) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({
+          behavior: "smooth",
+          block: "center"
+        });
+      }
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -40,7 +56,7 @@ export default function ShopSidebar({ onFilterChange = () => {}, product = null 
     })();
   }, []);
 
-  // when model changes → update available year range
+  // update years when model changes
   useEffect(() => {
     const list = facets.yearsByModel[filters.model?.toLowerCase?.() || ''] || [];
     if (list.length) {
@@ -74,6 +90,7 @@ export default function ShopSidebar({ onFilterChange = () => {}, product = null 
     return () => document.removeEventListener('keydown', handleEnter);
   }, [filters, cursor]);
 
+  // 🔥 שינוי יצרן + גלילה לשדה דגם
   const handleVendorChange = (val) => {
     setFilters((f) => ({
       ...f,
@@ -85,6 +102,8 @@ export default function ShopSidebar({ onFilterChange = () => {}, product = null 
       sku: '',
       q: '',
     }));
+
+    setTimeout(() => scrollToElement("filter-model"), 150);
   };
 
   return (
@@ -95,8 +114,8 @@ export default function ShopSidebar({ onFilterChange = () => {}, product = null 
       <h3 className="font-extrabold text-2xl border-b border-red-600 pb-2">
         סינון מוצרים
       </h3>
-      
-      {/* ✅ כפתור יצירת קשר בוואטסאפ */}
+
+      {/* וואטסאפ */}
       <motion.a
         href="https://wa.me/972522304604"
         target="_blank"
@@ -131,34 +150,40 @@ export default function ShopSidebar({ onFilterChange = () => {}, product = null 
         />
       </div>
 
+      {/* יצרן */}
       <DropdownSimple
+        id="filter-vendor"
         label="יצרן"
         value={filters.vendor}
         options={facets.vendors || []}
         onChange={handleVendorChange}
       />
 
+      {/* דגם */}
       {filters.vendor && (
         <DropdownSimple
+          id="filter-model"
           label="דגם"
           value={filters.model}
           options={facets.models[filters.vendor] || []}
-          onChange={(val) =>
+          onChange={(val) => {
             setFilters((f) => ({
               ...f,
               model: val,
               yearFrom: '',
               yearTo: '',
               category: '',
-            }))
-          }
+            }));
+            setTimeout(() => scrollToElement("filter-year"), 150);
+          }}
         />
       )}
 
-      {/* ✅ טווח שנים כסליידר */}
+      {/* טווח שנים */}
       {filters.model && yearRange[0] > 0 && (
-        <div className="space-y-2">
+        <div id="filter-year" className="space-y-2">
           <label className="text-lg font-bold text-red-600">טווח שנים</label>
+
           <div className="flex items-center gap-2">
             <input
               type="range"
@@ -173,6 +198,7 @@ export default function ShopSidebar({ onFilterChange = () => {}, product = null 
             />
             <span className="text-sm">{cursor[0]}</span>
           </div>
+
           <div className="flex items-center gap-2">
             <input
               type="range"
@@ -187,22 +213,30 @@ export default function ShopSidebar({ onFilterChange = () => {}, product = null 
             />
             <span className="text-sm">{cursor[1]}</span>
           </div>
+
           <div className="text-xs text-gray-600">
             נבחר: {cursor[0]} - {cursor[1]}
           </div>
         </div>
       )}
 
+      {/* קטגוריה */}
       {filters.model && (
         <DropdownSimple
+          id="filter-category"
           label="קטגוריה"
           value={filters.category}
           options={facets.categoriesByModel[filters.model] || []}
-          onChange={(val) => setFilters((f) => ({ ...f, category: val }))}
+          onChange={(val) => {
+            setFilters((f) => ({ ...f, category: val }));
+            setTimeout(() => scrollToElement("filter-submit-btn"), 150);
+          }}
         />
       )}
 
+      {/* כפתור חיפוש */}
       <button
+        id="filter-submit-btn"
         onClick={applyFilters}
         className="w-full mt-4 bg-red-600 text-white font-bold py-2 px-4 rounded-md hover:bg-red-700 transition"
       >
