@@ -78,7 +78,7 @@ export default function ScrollToGalleryButton() {
         ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}
       `}
       style={{
-        bottom: isDesktop ? '188px' : '95px',
+        bottom: isDesktop ? '188px' : '110px',
         right: isDesktop ? `${desktopRight}px` : '8px',
       }}
     >
