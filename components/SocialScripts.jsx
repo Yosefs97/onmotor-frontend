@@ -3,16 +3,16 @@ import { useEffect } from "react";
 
 export default function SocialScripts() {
   useEffect(() => {
-    // Facebook
-    if (!document.getElementById("facebook-embed-script")) {
-      const s = document.createElement("script");
-      s.id = "facebook-embed-script";
-      s.async = true;
-      s.defer = true;
-      s.crossOrigin = "anonymous";
-      s.src = "https://connect.facebook.net/he_IL/sdk.js#xfbml=1&version=v18.0";
-      document.body.appendChild(s);
-    }
+    // {// Facebook
+    //if (!document.getElementById("facebook-embed-script")) {
+    //  const s = document.createElement("script");
+     // s.id = "facebook-embed-script";
+    //  s.async = true;
+    //  s.defer = true;
+    //  s.crossOrigin = "anonymous";
+    //  s.src = "https://connect.facebook.net/he_IL/sdk.js#xfbml=1&version=v18.0";
+    //  document.body.appendChild(s);
+    //}
 
     // Twitter/X
     if (!document.getElementById("twitter-embed-script")) {
