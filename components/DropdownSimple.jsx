@@ -4,8 +4,10 @@ import { useState, useRef, useEffect } from "react";
 
 export default function DropdownSimple({ label, value, onChange, options = [], disabled = false }) {
   const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState(""); // טקסט שמוקלד
+  const [search, setSearch] = useState("");
   const dropdownRef = useRef(null);
+
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -17,24 +19,32 @@ export default function DropdownSimple({ label, value, onChange, options = [], d
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // 🔥 כאשר הדropdown נפתח — גלול אותו למרכז המסך (מעל המקלדת)
+  useEffect(() => {
+    if (open) {
+      setTimeout(() => {
+        dropdownRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center"
+        });
+      }, 50);
+    }
+  }, [open]);
+
   const getLabel = (opt) => (typeof opt === "string" ? opt : opt.label);
   const getValue = (opt) => (typeof opt === "string" ? opt : opt.value);
 
-  // סינון אופציות לפי מה שהמשתמש הקליד
   const filteredOptions = options.filter((opt) =>
     getLabel(opt).toLowerCase().includes(search.toLowerCase())
   );
 
-  // בחירה + הפעלת applyFilters דרך CustomEvent
   const handleSelect = (val) => {
     onChange(val);
     setSearch("");
     setOpen(false);
-    // שליחת אירוע גלובלי להפעלת applyFilters
     document.dispatchEvent(new Event("dropdownFilterApplied"));
   };
 
-  // לחיצה על Enter בתוך ה־input
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -55,7 +65,6 @@ export default function DropdownSimple({ label, value, onChange, options = [], d
     <div className="w-full relative mb-3" ref={dropdownRef}>
       <label className="block text-sm mb-1">{label}</label>
 
-      {/* כפתור לפתיחה */}
       <button
         type="button"
         onClick={() => !disabled && setOpen(!open)}
@@ -72,11 +81,14 @@ export default function DropdownSimple({ label, value, onChange, options = [], d
         <span className="text-xs">{open ? "▲" : "▼"}</span>
       </button>
 
-      {/* הרשימה עם שדה חיפוש */}
       {open && !disabled && (
-        <div className="absolute z-20 mt-1 w-full bg-white border rounded shadow 
-                        max-h-40 overflow-y-auto overscroll-contain left-0 right-0 p-2 space-y-1">
-          {/* שדה הקלדה */}
+        <div
+          className={`${
+            isMobile
+              ? "fixed left-1/2 -translate-x-1/2 top-28 w-[90vw] max-h-[50vh]"
+              : "absolute left-0 right-0 mt-1 w-full max-h-40"
+          } z-20 bg-white border rounded shadow overflow-y-auto overscroll-contain p-2 space-y-1`}
+        >
           <input
             type="text"
             value={search}
@@ -87,7 +99,6 @@ export default function DropdownSimple({ label, value, onChange, options = [], d
             autoFocus
           />
 
-          {/* תוצאות */}
           {filteredOptions.length === 0 && (
             <div className="px-3 py-2 text-sm text-gray-500">אין אפשרויות</div>
           )}
