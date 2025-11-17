@@ -78,7 +78,7 @@ export default function RootLayout({ children }) {
       </head>
 
       <body className="flex flex-col min-h-screen">
-        <FacebookSDKLoader />   {/* טוען את Facebook SDK גלובלי */}
+           {/* טוען את Facebook SDK גלובלי */}
         <AuthModalProvider>
           <ScrollToTopButton />
           <ClientLayout>{children}</ClientLayout>
