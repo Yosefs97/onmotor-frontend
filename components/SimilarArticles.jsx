@@ -165,7 +165,7 @@ export default function SimilarArticles({ currentSlug, category }) {
         {groups.length > 1 && (
           <>
             <button
-              onClick={prevGroup}
+              onClick={nextGroup}
               className="absolute left-2 top-1/2 transform -translate-y-1/2
               bg-red-600/90 hover:bg-red-600/60 text-white p-3 rounded-full text-2xl transition"
               aria-label="הקודם"
@@ -173,7 +173,7 @@ export default function SimilarArticles({ currentSlug, category }) {
               ›
             </button>
             <button
-              onClick={nextGroup}
+              onClick={prevGroup}
               className="absolute right-2 top-1/2 transform -translate-y-1/2
               bg-red-600/90 hover:bg-red-600/60 text-white p-3 rounded-full text-2xl transition"
               aria-label="הבא"
