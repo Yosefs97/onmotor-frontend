@@ -6,8 +6,9 @@ import { FaCommentDots } from 'react-icons/fa';
 export default function ScrollToCommentsButton() {
   const [isVisible, setIsVisible] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
-  const [desktopRight, setDesktopRight] = useState(20); // המיקום היחסי לכתבה
+  const [desktopRight, setDesktopRight] = useState(20);
 
+  /* 📌 זיהוי מחשב */
   useEffect(() => {
     const checkDevice = () => setIsDesktop(window.innerWidth > 1024);
     checkDevice();
@@ -15,7 +16,7 @@ export default function ScrollToCommentsButton() {
     return () => window.removeEventListener('resize', checkDevice);
   }, []);
 
-  /* 🎯 חישוב מיקום כפתור ביחס לעמוד כתבה */
+  /* 📌 חישוב מיקום הכפתור ביחס לכתבה */
   useEffect(() => {
     if (!isDesktop) return;
 
@@ -24,11 +25,8 @@ export default function ScrollToCommentsButton() {
       if (!article) return;
 
       const rect = article.getBoundingClientRect();
-
-      // מרחק מימין של עמוד כתבה בתוך המסך
       const fromRight = window.innerWidth - rect.right;
 
-      // נוסיף ריווח קטן
       setDesktopRight(fromRight + 20);
     };
 
@@ -37,30 +35,34 @@ export default function ScrollToCommentsButton() {
     return () => window.removeEventListener('resize', calcPosition);
   }, [isDesktop]);
 
+  /* 📌 לוגיקת הצגה/הסתרה */
   useEffect(() => {
     const handleScroll = () => {
       const content = document.querySelector('.article-content');
       const comments = document.querySelector('.comments-section');
-      
+      const similar = document.querySelector('.similar-articles-section');
 
       if (!content || !comments) return;
 
       const contentRect = content.getBoundingClientRect();
       const commentsRect = comments.getBoundingClientRect();
+      const similarRect = similar ? similar.getBoundingClientRect() : null;
 
       const startVisible = contentRect.top < window.innerHeight * 0.6;
+
       const inComments =
         commentsRect.top < window.innerHeight * 0.8 &&
         commentsRect.bottom > window.innerHeight * 0.2;
 
-      const isMobile = window.innerWidth <= 1024;
-      
+      const inSimilar =
+        similarRect && similarRect.top < window.innerHeight * 0.9;
 
-      setIsVisible(startVisible && !inComments);
+      setIsVisible(startVisible && !inComments && !inSimilar);
     };
 
     window.addEventListener('scroll', handleScroll);
     handleScroll();
+
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
