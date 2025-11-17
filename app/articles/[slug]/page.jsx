@@ -496,7 +496,9 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
             />
           </div>
           <ArticleShareBottom />
-          
+          <div className="comments-section">
+            <CommentsSection articleUrl={`${SITE_URL}${article.href}`} />
+          </div>
 
           <Tags tags={article.tags} />
           <SimilarArticles currentSlug={article.slug} category={article.category} />
