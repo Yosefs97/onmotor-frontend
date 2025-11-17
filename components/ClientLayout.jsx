@@ -12,12 +12,23 @@ import SidebarMiddleLayer from "./SidebarMiddleLayer";
 import SidebarLeftLayer from "./SidebarLeftLayer";
 import useIsMobile from "@/hooks/useIsMobile";
 
+/**
+ * 🧱 ClientLayout – גרסה מאוזנת ומדויקת:
+ * -------------------------------------------------
+ * ✅ Desktop: תוכן ראשי 1/2, סיידר אמצעי 1/4, סיידר שמאלי 1/4
+ * ✅ Mobile: בלוקים אנכיים ללא רווחים צדדיים
+ */
+
 export default function ClientLayout({ children }) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
 
   useEffect(() => {
     const scripts = [
+      // ❌ הוסר: טעינת Facebook SDK (גרמה להתנגשויות עם FacebookSDKLoader)
+      // { id: "facebook-embed-script", src: "https://connect.facebook.net/he_IL/sdk.js#xfbml=1&version=v18.0" },
+
+      // ✔ נשאר כרגיל:
       { id: "twitter-embed-script", src: "https://platform.twitter.com/widgets.js" },
       { id: "tiktok-embed-script", src: "https://www.tiktok.com/embed.js" },
     ];
@@ -46,29 +57,20 @@ export default function ClientLayout({ children }) {
       <NewsTicker />
       {isShopPage && <MobileShopFilterBar />}
 
-      {/* 🌍 פריסת העמוד */}
+      {/* 🌍 פריסת שלושת העמודות */}
       <div className="w-screen sm:w-full overflow-x-hidden sm:overflow-visible bg-[#f9f9f9]" dir="rtl">
-        <main
-          className={`min-h-screen flex flex-col max-w-[1440px] mx-auto mb-0 px-0 sm:px-0 pt-[1px] pb-[2px] text-right bg-gray-100
-            ${isShopPage ? '' : 'lg:flex-row'}
-          `}
-        >
-
-          {/* תוכן מרכזי */}
+        <main className="min-h-screen flex flex-col max-w-[1440px] mx-auto lg:flex-row mb-0 px-0 sm:px-0 pt-[1px] pb-[2px] text-right bg-gray-100">
           {children}
 
-          {/* סיידרים – מוצגים רק אם זה לא shop */}
-          {!isShopPage && (
-            <>
-              <div className={`w-full lg:w-1/4 flex-shrink-0 px-0 sm:px-0 ${!isMobile ? 'border-l border-[#e60000]' : ''}`}>
-                <SidebarMiddleLayer />
-              </div>
+          {/* 🟦 סיידר אמצעי – 1/4 */}
+          <div className={`w-full lg:w-1/4 flex-shrink-0 px-0 sm:px-0 ${!isMobile ? 'border-l border-[#e60000]' : ''}`}>
+            <SidebarMiddleLayer />
+          </div>
 
-              <div className={`w-full lg:w-1/4 flex-shrink-0 px-0 sm:px-0 ${!isMobile ? 'border-r border-[#e60000]' : ''}`}>
-                <SidebarLeftLayer />
-              </div>
-            </>
-          )}
+          {/* 🟩 סיידר שמאלי – 1/4 */}
+          <div className={`w-full lg:w-1/4 flex-shrink-0 px-0 sm:px-0 ${!isMobile ? 'border-r border-[#e60000]' : ''}`}>
+            <SidebarLeftLayer />
+          </div>
         </main>
       </div>
 
