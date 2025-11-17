@@ -14,14 +14,14 @@ export async function GET() {
 
     // ✅ Facebook Page
     const fbRes = await fetch(
-      `https://graph.facebook.com/v17.0/${process.env.FB_PAGE_ID}?fields=followers_count&access_token=${process.env.META_ACCESS_TOKEN}`
+      `https://graph.facebook.com/v18.0/${process.env.FB_PAGE_ID}?fields=followers_count&access_token=${process.env.META_ACCESS_TOKEN}`
     );
     const fbJson = await fbRes.json();
     results.facebook = fbJson.followers_count || "—";
 
     // ✅ Instagram Business
     const igRes = await fetch(
-      `https://graph.facebook.com/v17.0/${process.env.IG_BUSINESS_ID}?fields=followers_count&access_token=${process.env.META_ACCESS_TOKEN}`
+      `https://graph.facebook.com/v18.0/${process.env.IG_BUSINESS_ID}?fields=followers_count&access_token=${process.env.META_ACCESS_TOKEN}`
     );
     const igJson = await igRes.json();
     results.instagram = igJson.followers_count || "—";
