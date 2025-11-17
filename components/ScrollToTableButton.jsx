@@ -55,7 +55,7 @@ export default function ScrollToTableButton() {
         tableRect.bottom > window.innerHeight * 0.2;
 
       const passedSimilar =
-        similarRect && similarRect.bottom < 0;
+        similarRect && similarRect.bottom < 0.8;
       setIsVisible(startVisible && !inTable && !passedSimilar);
     };
 
