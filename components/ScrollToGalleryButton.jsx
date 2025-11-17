@@ -35,24 +35,29 @@ export default function ScrollToGalleryButton() {
     return () => window.removeEventListener('resize', calcPosition);
   }, [isDesktop]);
 
-  // ✔ לוגיקת הופעה/היעלמות — זהה לכפתור התגובות
+  // ✔ לוגיקת הופעה/היעלמות — כולל SimilarArticles
   useEffect(() => {
     const handleScroll = () => {
       const content = document.querySelector('.article-content');
       const gallery = document.querySelector('.article-gallery-section');
+      const similar = document.querySelector('.similar-articles-section');
+
       if (!content || !gallery) return;
 
       const contentRect = content.getBoundingClientRect();
       const galleryRect = gallery.getBoundingClientRect();
+      const similarRect = similar ? similar.getBoundingClientRect() : null;
 
       const startVisible = contentRect.top < window.innerHeight * 0.6;
 
-      // בגלריה עצמה — הכפתור לא צריך להופיע
       const inGallery =
         galleryRect.top < window.innerHeight * 0.8 &&
         galleryRect.bottom > window.innerHeight * 0.2;
 
-      setIsVisible(startVisible && !inGallery);
+      const inSimilar =
+        similarRect && similarRect.top < window.innerHeight * 0.9;
+
+      setIsVisible(startVisible && !inGallery && !inSimilar);
     };
 
     window.addEventListener('scroll', handleScroll);
