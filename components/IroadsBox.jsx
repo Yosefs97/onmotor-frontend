@@ -137,13 +137,13 @@ export default function IroadsBox() {
         }
         className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-red-600 text-white p-2 rounded-full"
       >
-        ‹
+        ›
       </button>
       <button
         onClick={() => setCurrentIndex((prev) => (prev + 1) % slides.length)}
         className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-red-600 text-white p-2 rounded-full"
       >
-        ›
+        ‹
       </button>
 
       {/* ✅ נקודות אינדיקציה */}
