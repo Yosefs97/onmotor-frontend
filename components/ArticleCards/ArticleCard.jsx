@@ -83,12 +83,13 @@ export default function ArticleCard({ article, size = 'small' }) {
 
           {!isMobile && (
             <p
-              className={`text-sm text-white font-medium mt-1 
-                ${(isMobile && isTouched) || !isMobile ? 'inline-block' : 'hidden group-hover:inline-block'}
-                ${isMobile ? 'bg-black/40 px-1 rounded-sm' : 'text-white/20'}
-              `}
+              className={`${descSize} overflow-hidden transition-all duration-300
+                ${
+                  isTouched
+                    ? 'max-h-20 opacity-100'
+                    : 'max-h-0 opacity-0 group-hover:max-h-20 group-hover:opacity-100'
+                }`}
             >
-
               {article.description}
             </p>
           )}
