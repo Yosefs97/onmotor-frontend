@@ -34,7 +34,7 @@ export default function LimitedArticles({ articles, rowsToShow = 2 }) {
     <div className="flex flex-col">
       <div
         ref={gridRef}
-        className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-2"
+        className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-0"
       >
         {visibleArticles.map((article) => (
           <ArticleCard key={article.id} article={article} />
