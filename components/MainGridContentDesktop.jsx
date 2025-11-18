@@ -136,18 +136,18 @@ export default function MainGridContentDesktop() {
             </div>
 
             {/* 🟢 מובייל — פריסה חדשה */}
-            <div className="md:hidden w-full space-y-2">
+            <div className="md:hidden w-full space-y-0">
               {/* שורה 1 */}
               <ArticleCard article={first} size="large" />
 
               {/* שורה 2 */}
-              <div className="grid grid-cols-2 gap-1">
+              <div className="grid grid-cols-2 gap-0">
                 <ArticleCard article={second} size="small" />
                 <ArticleCard article={third} size="small" />
               </div>
 
               {/* שורה 3 */}
-              <div className="grid grid-cols-2 gap-1">
+              <div className="grid grid-cols-2 gap-0">
                 <ArticleCard article={fourth} size="small" />
                 <ArticleCard article={fifth} size="small" />
               </div>
