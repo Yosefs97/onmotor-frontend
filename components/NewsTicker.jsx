@@ -60,16 +60,15 @@ export default function NewsTicker() {
       const timeout = setTimeout(() => {
         setCharIndex(0);
         setDisplayedText('');
-        setShiftX(0);
         setCurrentHeadline((prev) => (prev + 1) % headlines.length);
       }, 3000);
       return () => clearTimeout(timeout);
     }
   }, [charIndex, currentHeadline, headlines]);
 
-  // --- הזזה בזמן ההקלדה (typewriter auto-scroll) ---
+  // --- הזזה בזמן ההקלדה כדי להציג תמיד את סוף המשפט ---
   useEffect(() => {
-    if (!isTyping) return;
+    if (!isTyping) return; // רק בזמן הקלדה
     if (!textRef.current || !containerRef.current) return;
 
     const textWidth = textRef.current.scrollWidth;
@@ -81,32 +80,28 @@ export default function NewsTicker() {
     } else {
       setShiftX(0);
     }
-  }, [displayedText, isTyping]);
+  }, [displayedText]);
 
-  // --- אנימציה לאחר סיום הקלדה ---
+  // --- תנועה רק אחרי סיום הקלדה ---
   useEffect(() => {
-    if (isTyping) {
+    if (isTyping || !containerRef.current || !textRef.current) {
       cancelAnimationFrame(animRef.current);
       return;
     }
 
-    if (!textRef.current || !containerRef.current) return;
-
-    const textWidth = textRef.current.scrollWidth;
     const containerWidth = containerRef.current.clientWidth;
-
+    const textWidth = textRef.current.scrollWidth;
     if (textWidth <= containerWidth) return;
 
-    // כיוון חכם — מתחיל בצד שאליו כבר זזנו בסיום ההקלדה
     let pos = shiftX;
-    let direction = shiftX < 0 ? 1 : -1;
+    let direction = -1;
     const speed = 0.7;
 
     const move = () => {
       pos += direction * speed;
 
       if (pos < -(textWidth - containerWidth + 2)) direction = 1;
-      if (pos > 0) direction = -1;
+      if (pos > 0) direction = 1;
 
       setShiftX(pos);
       animRef.current = requestAnimationFrame(move);
@@ -115,7 +110,7 @@ export default function NewsTicker() {
     animRef.current = requestAnimationFrame(move);
 
     return () => cancelAnimationFrame(animRef.current);
-  }, [isTyping]);
+  }, [isTyping, displayedText]);
 
   if (!headlines.length) return null;
 
@@ -126,7 +121,6 @@ export default function NewsTicker() {
       style={{ height: "20px" }}
     >
       <div className="relative flex items-center h-full px-2 text-white font-bold text-base md:text-lg whitespace-nowrap overflow-hidden">
-
         <span
           className="ml-2 text-sm shrink-0"
           style={{ height: "40px", lineHeight: "40px" }}
@@ -137,7 +131,7 @@ export default function NewsTicker() {
         <div
           ref={containerRef}
           className="relative flex-1 text-sm overflow-hidden"
-          style={{ height: "40px", lineHeight: "40px", direction: "rtl" }}
+          style={{ height: "40px", lineHeight: "40px", direction: "ltr" }}
         >
           <Link
             ref={textRef}
@@ -152,7 +146,6 @@ export default function NewsTicker() {
             <span className="animate-pulse">|</span>
           </Link>
         </div>
-
       </div>
     </div>
   );
