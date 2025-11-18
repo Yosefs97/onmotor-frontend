@@ -1,4 +1,5 @@
-//app\page.js
+// app/page.js
+export const revalidate = 60; // ISR: רענון כל 60 שניות
 
 import React from 'react';
 import MainGridContentDesktop from '@/components/MainGridContentDesktop';
@@ -6,7 +7,7 @@ import PageContainer from '@/components/PageContainer';
 
 /* -----------------------------------------------------------
    ⚙️ שלב 1: טעינת כתבות מ־Strapi (Server Component)
-   - הקריאה נעשית בצד השרת כדי לשפר ביצועים (SSR)
+   - הקריאה נעשית בצד השרת כדי לשפר ביצועים (SSR+ISR)
    - התוצאה נשמרת בקאש ל־60 שניות (revalidate)
 ----------------------------------------------------------- */
 async function fetchArticles() {
@@ -19,7 +20,7 @@ async function fetchArticles() {
   const url = `${base}/api/articles?populate=*`;
 
   try {
-    const res = await fetch(url, { next: { revalidate: 60 } }); // ✅ קאש 60 שניות
+    const res = await fetch(url, { next: { revalidate } }); // ✅ קאש 60 שניות
     if (!res.ok) {
       throw new Error(`שגיאה בטעינה מה־API (${res.status})`);
     }
@@ -37,9 +38,6 @@ async function fetchArticles() {
 
 /* -----------------------------------------------------------
    🏠 שלב 2: עמוד הבית
-   - עטוף בתוך PageContainer כדי לשמור על מבנה אחיד
-   - מבטיח שהסיידרים יגללו באופן יחסי (sticky תקין)
-   - שומר על רקע אחיד, RTL מלא ו־SEO תקין
 ----------------------------------------------------------- */
 export default async function HomePage() {
   const articles = await fetchArticles();
@@ -49,8 +47,6 @@ export default async function HomePage() {
       title="דף הבית"
       breadcrumbs={[]}
     >
-      
-
       <MainGridContentDesktop articles={articles} />
 
       <h1 className="text-2xl font-bold text-[#e60000] px-4 mt-4">
@@ -58,9 +54,8 @@ export default async function HomePage() {
       </h1>
 
       <p className="px-4 mt-2 mb-4 text-gray-700">
-         .מגזין אופנועים בישראל - חדשות, סקירות, מבחני דרכים, ציוד, טיפים לקהילת הרוכבים התוססת בישראל
+        .מגזין אופנועים בישראל - חדשות, סקירות, מבחני דרכים, ציוד, טיפים לקהילת הרוכבים התוססת בישראל
       </p>
-
     </PageContainer>
   );
 }
