@@ -1,6 +1,6 @@
 // ✅ app/articles/[slug]/page.jsx
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 180; // ⬅️ השינוי היחיד שבוצע
 import Script from "next/script";
 import PageContainer from "@/components/PageContainer";
 import ArticleHeader from "@/components/ArticleHeader";
