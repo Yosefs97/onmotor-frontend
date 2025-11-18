@@ -1,56 +1,62 @@
-//app\page.js
-export const dynamic = "force-dynamic";
-import React from 'react';
-import MainGridContentDesktop from '@/components/MainGridContentDesktop';
-import PageContainer from '@/components/PageContainer';
+//app/page.js
+export const dynamic = "force-dynamic"; // ❗ חייב להישאר
+
+import React from "react";
+import MainGridContentDesktop from "@/components/MainGridContentDesktop";
+import PageContainer from "@/components/PageContainer";
 
 /* -----------------------------------------------------------
-   ⚙️ שלב 1: טעינת כתבות מ־Strapi (Server Component)
-   - הקריאה נעשית בצד השרת כדי לשפר ביצועים (SSR)
-   - התוצאה נשמרת בקאש ל־60 שניות (revalidate)
+   ⚙️ טעינת כתבות מ־Strapi (Server Component)
+   - דינאמי כדי למנוע נפילת build
+   - עם revalidate כדי לחסוך Edge Requests
 ----------------------------------------------------------- */
 async function fetchArticles() {
   const base = process.env.STRAPI_API_URL;
 
   if (!base) {
-    throw new Error('❌ STRAPI_API_URL לא הוגדר בקובץ הסביבה');
+    console.error("❌ STRAPI_API_URL לא הוגדר");
+    return [];
   }
 
   const url = `${base}/api/articles?populate=*`;
 
   try {
-    const res = await fetch(url, { next: { revalidate: 60 } }); // ✅ קאש 60 שניות
+    // ⏳ הגבלת זמן כדי לא להתקע אם Strapi לא מגיב
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 7000); // 7 שניות
+
+    const res = await fetch(url, {
+      next: { revalidate: 60 }, // Cache ל־60 שניות
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeout);
+
     if (!res.ok) {
-      throw new Error(`שגיאה בטעינה מה־API (${res.status})`);
+      console.error("❌ שגיאת API:", res.status);
+      return [];
     }
 
     const json = await res.json();
-    return json.data.map(item => ({
+
+    return json.data.map((item) => ({
       id: item.id,
       ...item.attributes,
     }));
   } catch (err) {
-    console.error('❌ שגיאה בטעינת כתבות מהשרת:', err);
-    return [];
+    console.error("❌ שגיאה בטעינת כתבות:", err.message);
+    return []; // fallback בטוח כדי לא להפיל את האתר
   }
 }
 
 /* -----------------------------------------------------------
-   🏠 שלב 2: עמוד הבית
-   - עטוף בתוך PageContainer כדי לשמור על מבנה אחיד
-   - מבטיח שהסיידרים יגללו באופן יחסי (sticky תקין)
-   - שומר על רקע אחיד, RTL מלא ו־SEO תקין
+   🏠 עמוד הבית
 ----------------------------------------------------------- */
 export default async function HomePage() {
   const articles = await fetchArticles();
 
   return (
-    <PageContainer
-      title="דף הבית"
-      breadcrumbs={[]}
-    >
-      
-
+    <PageContainer title="דף הבית" breadcrumbs={[]}>
       <MainGridContentDesktop articles={articles} />
 
       <h1 className="text-2xl font-bold text-[#e60000] px-4 mt-4">
@@ -58,9 +64,9 @@ export default async function HomePage() {
       </h1>
 
       <p className="px-4 mt-2 mb-4 text-gray-700">
-         .מגזין אופנועים בישראל - חדשות, סקירות, מבחני דרכים, ציוד, טיפים לקהילת הרוכבים התוססת בישראל
+        מגזין אופנועים בישראל - חדשות, סקירות, מבחני דרכים, ציוד, טיפים
+        לקהילת הרוכבים התוססת בישראל.
       </p>
-
     </PageContainer>
   );
 }
