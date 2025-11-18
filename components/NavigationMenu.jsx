@@ -192,7 +192,7 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
                     </div>
                   )
                 ) : (
-                  <div className="absolute right-0 w-56 bg-black shadow-lg rounded p-2 z-50 text-right hidden group-hover:flex flex-col">
+                  <div className="absolute right-0 w-56 bg-black shadow-lg rounded p-2 z-[9999] text-right hidden group-hover:flex flex-col">
                     {menu.links.map((link, idx) => {
                       const hasSubLinks = link.links && link.links.length > 0;
                       return (
@@ -208,7 +208,7 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
                           </Link>
 
                           {hasSubLinks && (
-                            <div className="absolute top-full right-0 w-54 bg-black shadow-lg rounded p-2 z-50 text-right hidden group-hover/sub:flex flex-col">
+                            <div className="absolute top-full right-0 w-54 bg-black shadow-lg rounded p-2 z-[9999] text-right hidden group-hover/sub:flex flex-col">
                               {link.links.map((sublink, sIdx) => (
                                 <Link
                                   key={sIdx}
