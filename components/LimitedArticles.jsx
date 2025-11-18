@@ -1,4 +1,3 @@
-//components/LimitedArticles.jsx
 'use client';
 import React, { useState, useRef } from 'react';
 import ArticleCard from './ArticleCards/ArticleCard';
@@ -13,17 +12,44 @@ export default function LimitedArticles({ articles, rowsToShow = 2 }) {
   const isExpanded = visibleCount >= totalArticles;
 
   const handleToggle = () => {
+    const previousCount = visibleCount; // ⭐ כמה היו לפני פתיחה/סגירה
+
     if (isExpanded) {
+      // ⭐ מצב סגירה — חזרה לראש הרשימה
       setVisibleCount(rowsToShow * itemsPerRow);
 
       setTimeout(() => {
-        gridRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        gridRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
       }, 100);
+
     } else {
-      setVisibleCount(Math.min(visibleCount + rowsToShow * itemsPerRow, totalArticles));
+      // ⭐ מצב פתיחה — חשיפת שורות נוספות
+      const newCount = Math.min(
+        visibleCount + rowsToShow * itemsPerRow,
+        totalArticles
+      );
+
+      setVisibleCount(newCount);
 
       setTimeout(() => {
-        buttonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // ⭐ המתנה שה־DOM יסיים לבנות את הכרטיסים החדשים
+        const firstNew = document.querySelector(
+          `[data-article-index="${previousCount}"]`
+        );
+
+        if (firstNew) {
+          const rect = firstNew.getBoundingClientRect();
+          const scrollY = window.scrollY + rect.top - 80; 
+          // ⭐ מרווח 80px מלמעלה — ניתן לשנות לטעמו שלך
+
+          window.scrollTo({
+            top: scrollY,
+            behavior: 'smooth'
+          });
+        }
       }, 100);
     }
   };
@@ -36,8 +62,10 @@ export default function LimitedArticles({ articles, rowsToShow = 2 }) {
         ref={gridRef}
         className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-0"
       >
-        {visibleArticles.map((article) => (
-          <ArticleCard key={article.id} article={article} />
+        {visibleArticles.map((article, index) => (
+          <div key={article.id} data-article-index={index}>
+            <ArticleCard article={article} />
+          </div>
         ))}
       </div>
 
