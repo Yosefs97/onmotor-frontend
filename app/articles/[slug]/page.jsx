@@ -1,7 +1,6 @@
-// app/articles/[slug]/page.jsx
+// ✅ app/articles/[slug]/page.jsx
 
-export const revalidate = 300; // ISR לכתבות: רענון כל 5 דקות
-
+export const dynamic = 'force-dynamic';
 import Script from "next/script";
 import PageContainer from "@/components/PageContainer";
 import ArticleHeader from "@/components/ArticleHeader";
@@ -20,6 +19,8 @@ import ScrollToCommentsButton from "@/components/ScrollToCommentsButton";
 import { fixRelativeImages, resolveImageUrl, wrapHondaProxy } from "@/lib/fixArticleImages";
 import { getArticleImage } from "@/lib/getArticleImage";
 import ArticleShareBottom from "@/components/ArticleShareBottom";
+
+
 
 const API_URL = process.env.STRAPI_API_URL;
 const PUBLIC_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || API_URL;
@@ -70,7 +71,7 @@ export async function generateMetadata({ params }) {
   try {
     const res = await fetch(
       `${API_URL}/api/articles?filters[slug][$eq]=${params.slug}&populate=*`,
-      { next: { revalidate } } // ✅ ISR גם למטאדטה
+      { cache: "no-store" }
     );
 
     if (!res.ok) throw new Error(`API fetch failed with status ${res.status}`);
@@ -85,6 +86,7 @@ export async function generateMetadata({ params }) {
       article.subdescription ||
       "כתבה מתוך מגזין OnMotor Media";
 
+    // 🧠 קריאה לפונקציה הנפרדת
     const imageUrl = getArticleImage(article);
 
     return {
@@ -119,7 +121,7 @@ export async function generateMetadata({ params }) {
 export default async function ArticlePage({ params, setPageTitle, setPageBreadcrumbs }) {
   const res = await fetch(
     `${API_URL}/api/articles?filters[slug][$eq]=${params.slug}&populate=*`,
-    { next: { revalidate } } // ✅ ISR במקום revalidate: 0
+    { next: { revalidate: 0 } }
   );
 
   const json = await res.json();
@@ -194,7 +196,7 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
     font_family: data.font_family || "Heebo, sans-serif",
   };
 
-  // ===============================
+    // ===============================
   // 📌 Structured Data (JSON-LD)
   // ===============================
   const jsonLd = {
@@ -229,6 +231,7 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
       : ""
   };
 
+
   const breadcrumbs = [{ label: "דף הבית", href: "/" }];
   if (article.category)
     breadcrumbs.push({
@@ -248,7 +251,11 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
     });
   }
   breadcrumbs.push({ label: article.title });
+  
+  
 
+
+  // ✅ רינדור פסקאות (כולל Honda + YouTube)
   const renderParagraph = (block, i) => {
     if (typeof block === "string") {
       const cleanText = fixRelativeImages(block.trim());
@@ -273,9 +280,12 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
       if (urlMatch) {
         let url = urlMatch[0].trim();
         if (url.includes("hondanews.eu")) url = wrapHondaProxy(url);
+        // ✅ תמיכה בקישורי Kawasaki
         else if (url.includes("content2.kawasaki.com")) {
+          // מנקה פרמטרים כמו ?w=400 מהכתובת
           url = url.split("?")[0];
         }
+
 
         if (
           /\.(jpg|jpeg|png|gif|webp)$/i.test(url) ||
@@ -328,15 +338,20 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
       if (urlMatch) {
         let url = urlMatch[0];
         if (url.includes("hondanews.eu")) url = wrapHondaProxy(url);
+        // ✅ תמיכה בקישורי Kawasaki
         else if (url.includes("content2.kawasaki.com")) {
+          // מנקה פרמטרים כמו ?w=400 מהכתובת
           url = url.split("?")[0];
         }
+
 
         if (
           /\.(jpg|jpeg|png|gif|webp)$/i.test(url) ||
           url.includes("hondanews.eu/image/") ||
           url.includes("/api/proxy-honda?") ||
           url.includes("content2.kawasaki.com/ContentStorage/")
+
+
         ) {
           return (
             <InlineImage
@@ -371,6 +386,7 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
       );
     }
 
+        // ✅ טיפול ברשימות (ממוספרות או נקודתיות)
     if (block.type === "list") {
       const isOrdered = block.format === "ordered";
       const Tag = isOrdered ? "ol" : "ul";
@@ -396,6 +412,9 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
         </Tag>
       );
     }
+
+
+
 
     if (block.type === "heading") {
       const level = block.level || 2;
@@ -425,6 +444,7 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
     return null;
   };
 
+
   const paragraphs = Array.isArray(article.content)
     ? article.content
     : article.content.split("\n\n");
@@ -432,10 +452,11 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
   return (
     <>
       <Script
-        id="structured-data"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            id="structured-data"
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+
 
       <PageContainer title={article.title} breadcrumbs={breadcrumbs}>
         <div
@@ -456,11 +477,10 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
           {article.description && (
             <p className="font-bold text-2xl text-gray-600">{article.description}</p>
           )}
-
+          
           <div className="article-content">
             {paragraphs.map(renderParagraph)}
           </div>
-
           {article.tableData && (
             <div className="article-table-section">
               <SimpleKeyValueTable data={article.tableData} />
@@ -475,21 +495,21 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
               external_media_links={article.external_media_links}
             />
           </div>
-
           <ArticleShareBottom />
-
           <div className="comments-section">
             <CommentsSection articleUrl={`${SITE_URL}${article.href}`} />
           </div>
 
           <Tags tags={article.tags} />
-
           <div className="similar-articles-section">
             <SimilarArticles currentSlug={article.slug} category={article.category} />
           </div>
+
+          
+          
+          
         </div>
       </PageContainer>
-
       <ScrollToTableButton />
       <ScrollToGalleryButton />
       <ScrollToCommentsButton />
