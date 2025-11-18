@@ -1,11 +1,15 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 
 export default function ArticleCard({ article, size = 'small' }) {
   const [isTouched, setIsTouched] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+
+  // 👇 חדש — זיהוי מיקום במרחב
+  const [showDate, setShowDate] = useState(false);
+  const cardRef = useRef(null);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -14,10 +18,36 @@ export default function ArticleCard({ article, size = 'small' }) {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // 👇 חדש — IntersectionObserver למובייל
+  useEffect(() => {
+    if (!isMobile || !cardRef.current) return;
+
+    const elem = cardRef.current;
+    const screenHeight = window.innerHeight;
+    const margin = screenHeight / 3;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShowDate(true);
+        } else {
+          setShowDate(false);
+        }
+      },
+      {
+        root: null,
+        threshold: 0.4,
+        rootMargin: `-${margin}px 0px -${margin}px 0px`
+      }
+    );
+
+    observer.observe(elem);
+    return () => observer.disconnect();
+  }, [isMobile]);
+
   const handleTouchStart = () => setIsTouched(true);
 
   const imageUrl = article.image || '/default-image.jpg';
-
   const imageAltText = article.imageAlt || article.title || 'Article image';
 
   const isLarge = size === 'large';
@@ -38,6 +68,7 @@ export default function ArticleCard({ article, size = 'small' }) {
 
   return (
     <Link
+      ref={cardRef}   // 👈 חדש — כדי למדוד את מיקום הכרטיס
       href={article.href || `/articles/${article.slug}`}
       className="group block relative overflow-hidden shadow-md transition-all duration-300 hover:shadow-xl hover:scale-[1.02] w-full"
       onTouchStart={handleTouchStart}
@@ -70,7 +101,7 @@ export default function ArticleCard({ article, size = 'small' }) {
             }
           `}
         >
-          {/* ⭐ במובייל הכותרת עצמה עם רקע שחור שקוף */}
+          {/* ⭐ במובייל כותרת עם רקע שקוף */}
           <h3
             className={`${titleSize} transition-all duration-300 ${
               isMobile
@@ -94,9 +125,10 @@ export default function ArticleCard({ article, size = 'small' }) {
             </p>
           )}
 
+          {/* 👇 חדש — הצגת התאריך במובייל לפי השליש האמצעי בלבד */}
           <p
             className={`text-s mt-1 text-white/80 
-              ${(isMobile && isTouched) || !isMobile ? 'block' : 'hidden group-hover:block'}
+              ${isMobile ? (showDate ? 'block' : 'hidden') : 'block'}
             `}
           >
             {formatDate(article.date)}
