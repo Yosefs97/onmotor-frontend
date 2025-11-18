@@ -101,11 +101,11 @@ export default function NewsTicker() {
     <div
       dir="rtl"
       className="sticky top-0 z-50 bg-[#e60000] w-full fixed top-[80px] z-[40] overflow-hidden"
-      style={{ height: "40px" }}
+      style={{ height: "20px" }}
     >
       <div className="relative flex items-center h-full px-2 text-white font-bold text-base md:text-lg whitespace-nowrap overflow-hidden">
         <span
-          className="ml-2 text-xl shrink-0"
+          className="ml-2 text-sm shrink-0"
           style={{ height: "40px", lineHeight: "40px" }}
         >
           מה חדש:
