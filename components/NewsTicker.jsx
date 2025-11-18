@@ -94,7 +94,7 @@ export default function NewsTicker() {
     if (textWidth <= containerWidth) return;
 
     let pos = shiftX;
-    let direction = 1;
+    let direction = -1;
     const speed = 0.7;
 
     const move = () => {
@@ -131,7 +131,7 @@ export default function NewsTicker() {
         <div
           ref={containerRef}
           className="relative flex-1 text-sm overflow-hidden"
-          style={{ height: "40px", lineHeight: "40px", direction: "ltr" }}
+          style={{ height: "40px", lineHeight: "40px", direction: "rtl" }}
         >
           <Link
             ref={textRef}
