@@ -66,9 +66,9 @@ export default function NewsTicker() {
     }
   }, [charIndex, currentHeadline, headlines]);
 
-  // --- הזזה בזמן ההקלדה כדי להציג תמיד את סוף המשפט ---
+  // --- הזזה בזמן הקלדה (RTL → הזזה ימינה) ---
   useEffect(() => {
-    if (!isTyping) return; // רק בזמן הקלדה
+    if (!isTyping) return;
     if (!textRef.current || !containerRef.current) return;
 
     const textWidth = textRef.current.scrollWidth;
@@ -76,41 +76,18 @@ export default function NewsTicker() {
 
     if (textWidth > containerWidth) {
       const overflow = textWidth - containerWidth;
-      setShiftX(-overflow);
+      setShiftX(overflow); // ← הזזה ימינה בעברית
     } else {
       setShiftX(0);
     }
   }, [displayedText]);
 
-  // --- תנועה רק אחרי סיום הקלדה ---
+  // --- אין תנועה אחרי סיום הקלדה ---
   useEffect(() => {
-    if (isTyping || !containerRef.current || !textRef.current) {
+    if (!isTyping) {
       cancelAnimationFrame(animRef.current);
-      return;
     }
-
-    const containerWidth = containerRef.current.clientWidth;
-    const textWidth = textRef.current.scrollWidth;
-    if (textWidth <= containerWidth) return;
-
-    let pos = shiftX;
-    let direction = -1;
-    const speed = 0.7;
-
-    const move = () => {
-      pos += direction * speed;
-
-      if (pos < -(textWidth - containerWidth + 2)) direction = 1;
-      if (pos > 0) direction = -1;
-
-      setShiftX(pos);
-      animRef.current = requestAnimationFrame(move);
-    };
-
-    animRef.current = requestAnimationFrame(move);
-
-    return () => cancelAnimationFrame(animRef.current);
-  }, [isTyping, displayedText]);
+  }, [isTyping]);
 
   if (!headlines.length) return null;
 
