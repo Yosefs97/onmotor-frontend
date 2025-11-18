@@ -1,4 +1,4 @@
-//components\NewsTicker.jsx
+//components/NewsTicker.jsx
 'use client';
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
@@ -56,7 +56,6 @@ export default function NewsTicker() {
       }, 60);
       return () => clearTimeout(timeout);
     } else {
-      // הקלדה הסתיימה → מפעילים את תנועת הגלישה
       setIsTyping(false);
       const timeout = setTimeout(() => {
         setCharIndex(0);
@@ -67,11 +66,26 @@ export default function NewsTicker() {
     }
   }, [charIndex, currentHeadline, headlines]);
 
+  // --- הזזה בזמן ההקלדה כדי להציג תמיד את סוף המשפט ---
+  useEffect(() => {
+    if (!isTyping) return; // רק בזמן הקלדה
+    if (!textRef.current || !containerRef.current) return;
+
+    const textWidth = textRef.current.scrollWidth;
+    const containerWidth = containerRef.current.clientWidth;
+
+    if (textWidth > containerWidth) {
+      const overflow = textWidth - containerWidth;
+      setShiftX(-overflow);
+    } else {
+      setShiftX(0);
+    }
+  }, [displayedText]);
+
   // --- תנועה רק אחרי סיום הקלדה ---
   useEffect(() => {
     if (isTyping || !containerRef.current || !textRef.current) {
       cancelAnimationFrame(animRef.current);
-      setShiftX(0);
       return;
     }
 
@@ -79,17 +93,20 @@ export default function NewsTicker() {
     const textWidth = textRef.current.scrollWidth;
     if (textWidth <= containerWidth) return;
 
-    let pos = 0;
-    let direction = 1;
+    let pos = shiftX;
+    let direction = -1;
     const speed = 0.7;
 
     const move = () => {
       pos += direction * speed;
-      if (pos < -(textWidth - containerWidth +2)) direction = 2;
-      if (pos > 0) direction = 2;
+
+      if (pos < -(textWidth - containerWidth + 2)) direction = 1;
+      if (pos > 0) direction = -1;
+
       setShiftX(pos);
       animRef.current = requestAnimationFrame(move);
     };
+
     animRef.current = requestAnimationFrame(move);
 
     return () => cancelAnimationFrame(animRef.current);
