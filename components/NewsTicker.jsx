@@ -100,8 +100,8 @@ export default function NewsTicker() {
     const move = () => {
       pos += direction * speed;
 
-      if (pos < -(textWidth - containerWidth + 2)) direction = 1;
-      if (pos > 0) direction = 1;
+      if (pos < -(textWidth - containerWidth + 2)) direction = -1;
+      if (pos > 0) direction = -1;
 
       setShiftX(pos);
       animRef.current = requestAnimationFrame(move);
