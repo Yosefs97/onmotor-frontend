@@ -113,7 +113,7 @@ export default function NewsTicker() {
 
         <div
           ref={containerRef}
-          className="relative flex-1 text-xl overflow-hidden"
+          className="relative flex-1 text-sm overflow-hidden"
           style={{ height: "40px", lineHeight: "40px", direction: "rtl" }}
         >
           <Link
