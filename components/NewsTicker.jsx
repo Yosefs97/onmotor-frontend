@@ -94,7 +94,7 @@ export default function NewsTicker() {
   return (
     <div
       dir="rtl"
-      className="sticky top-0 z-49 bg-[#e60000] w-full fixed top-[80px] z-[40] overflow-hidden"
+      className="sticky top-0 z-40 bg-[#e60000] w-full fixed top-[80px] z-[40] overflow-hidden"
       style={{ height: "20px" }}
     >
       <div className="relative flex items-center h-full px-2 text-white font-bold text-base md:text-lg whitespace-nowrap overflow-hidden">
