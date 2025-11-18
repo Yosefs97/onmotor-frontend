@@ -94,13 +94,13 @@ export default function NewsTicker() {
     if (textWidth <= containerWidth) return;
 
     let pos = shiftX;
-    let direction = -1;
+    let direction = 1;
     const speed = 0.7;
 
     const move = () => {
       pos += direction * speed;
 
-      if (pos < -(textWidth - containerWidth + 2)) direction = -1;
+      if (pos < -(textWidth - containerWidth + 2)) direction = 1;
       if (pos > 0) direction = -1;
 
       setShiftX(pos);
