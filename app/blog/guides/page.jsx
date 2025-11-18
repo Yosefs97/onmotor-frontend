@@ -1,5 +1,5 @@
 // app/blog/guides/page.jsx
-export const dynamic = 'force-dynamic';
+export const revalidate = 180; // או 300, אם תרצה
 
 import PageContainer from '@/components/PageContainer';
 import CategoryPage from '@/components/CategoryPage';

@@ -1,5 +1,5 @@
 //app\blog\[subcategory]\page.jsx
-export const dynamic = 'force-dynamic'; // ⬅️ מוסיף קוד רנדור דינמי (למנוע בעיות)
+export const revalidate = 180; // ⬅️ ISR במקום Dynamic
 
 import PageContainer from '@/components/PageContainer';
 import CategoryPage from '@/components/CategoryPage';

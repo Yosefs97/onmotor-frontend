@@ -1,5 +1,5 @@
 
-export const dynamic = 'force-dynamic'; // ✅ רינדור דינמי
+export const revalidate = 180; // ⬅️ ISR במקום force-dynamic
 import PageContainer from '@/components/PageContainer';
 import CategoryPage from '@/components/CategoryPage';
 
