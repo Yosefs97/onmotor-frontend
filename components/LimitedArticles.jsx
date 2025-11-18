@@ -1,3 +1,4 @@
+//components/LimitedArticles.jsx
 'use client';
 import React, { useState, useRef } from 'react';
 import ArticleCard from './ArticleCards/ArticleCard';
@@ -13,14 +14,14 @@ export default function LimitedArticles({ articles, rowsToShow = 2 }) {
 
   const handleToggle = () => {
     if (isExpanded) {
-      // הסתרה
       setVisibleCount(rowsToShow * itemsPerRow);
+
       setTimeout(() => {
         gridRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
     } else {
-      // חשיפה של עוד 2 שורות
       setVisibleCount(Math.min(visibleCount + rowsToShow * itemsPerRow, totalArticles));
+
       setTimeout(() => {
         buttonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 100);
@@ -30,8 +31,11 @@ export default function LimitedArticles({ articles, rowsToShow = 2 }) {
   const visibleArticles = articles.slice(0, visibleCount);
 
   return (
-    <div className="flex flex-col ">
-      <div ref={gridRef} className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 ">
+    <div className="flex flex-col">
+      <div
+        ref={gridRef}
+        className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-2"
+      >
         {visibleArticles.map((article) => (
           <ArticleCard key={article.id} article={article} />
         ))}
