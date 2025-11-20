@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getMainImage, resolveImageUrl } from '@/utils/resolveMainImage';
+import { getMainImage } from '@/utils/resolveMainImage';
 
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || process.env.STRAPI_API_URL;
 const PLACEHOLDER_IMG = '/default-image.jpg';

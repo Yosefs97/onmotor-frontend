@@ -1,5 +1,549 @@
 ////
 
+// components/TabLeftSidebar.jsx
+'use client';
+import React, { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
+import useIsMobile from '@/hooks/useIsMobile';
+import { getMainImage, resolveImageUrl } from '@/utils/resolveMainImage';
+
+const tabs = ['אחרונים', 'בדרכים', 'פופולרי'];
+const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
+
+/* 👇 פונקציה שמוציאה שם אתר נקי מתוך כתובת */
+function extractDomainName(url) {
+  try {
+    const host = new URL(url).hostname.replace('www.', '');
+    const parts = host.split('.');
+    let base = '';
+    if (parts.length >= 3 && ['co', 'org', 'net'].includes(parts[parts.length - 2])) {
+      base = parts[parts.length - 3];
+    } else {
+      base = parts[0];
+    }
+    return base.charAt(0).toUpperCase() + base.slice(1);
+  } catch {
+    return 'Website';
+  }
+}
+
+export default function TabLeftSidebar() {
+  const isMobile = useIsMobile();
+  const [hasInteracted, setHasInteracted] = useState(false);
+  const scrollContainerRef = useRef(null);
+  const sidebarRef = useRef(null);
+
+  const [activeTab, setActiveTab] = useState('אחרונים');
+  const [latestArticles, setLatestArticles] = useState([]);
+  const [onRoadArticles, setOnRoadArticles] = useState([]);
+  const [popularContent, setPopularContent] = useState([]);
+  const [isPaused, setIsPaused] = useState(false);
+
+  /* ✅ normalizeItem – עכשיו עם getMainImage() */
+  const normalizeItem = (obj, type = 'article') => {
+    const a = obj.attributes || obj;
+
+    // קביעת מקור (YouTube, TikTok וכו’)
+    let autoSource = '';
+    if (a.url) {
+      if (a.url.includes('youtube.com') || a.url.includes('youtu.be')) autoSource = 'YouTube';
+      else if (a.url.includes('tiktok.com')) autoSource = 'TikTok';
+      else if (a.url.includes('instagram.com')) autoSource = 'Instagram';
+      else if (a.url.includes('facebook.com')) autoSource = 'Facebook';
+      else autoSource = extractDomainName(a.url);
+    }
+
+    // ✅ שימוש בפונקציה המרכזית לבחירת תמונה
+    const { mainImage } = getMainImage(a);
+
+    return {
+      id: obj.id,
+      title: a.title || a.name || '',
+      slug: a.slug || '',
+      description: a.description || '',
+      image: mainImage,
+      date: a.date?.split('T')[0] || a.publishedAt?.split('T')[0] || '',
+      url: a.url || '',
+      views: a.views ?? null,
+      source: a.source || autoSource,
+    };
+  };
+
+  /* ✅ שליפות מה־API */
+  useEffect(() => {
+    const fetchLatest = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/articles?sort=date:desc&populate=*`);
+        const data = (await res.json()).data || [];
+        setLatestArticles(data.map((a) => normalizeItem(a, 'latest-article')));
+      } catch (err) {
+        console.error('שגיאה בטעינת אחרונים:', err);
+      }
+    };
+
+    const fetchOnRoad = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/articles?filters[tags_txt][$contains]=iroads&sort=date:desc&populate=*`);
+        const data = (await res.json()).data || [];
+        setOnRoadArticles(data.map((a) => normalizeItem(a, 'onroad-article')));
+      } catch (err) {
+        console.error("שגיאה בטעינת 'בדרכים':", err);
+      }
+    };
+
+    const fetchPopular = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/populars?sort=date:desc&populate=*`);
+        const data = (await res.json()).data || [];
+
+        const withPreview = await Promise.all(
+          data.map(async (item) => {
+            const norm = normalizeItem(item, 'popular');
+
+            if (norm.image && norm.image !== '/default-image.jpg') return norm;
+
+            // נסה להביא תצוגה מקדימה (metadata) אם אין תמונה
+            if (norm.url) {
+              try {
+                const previewRes = await fetch(`/api/preview?url=${encodeURIComponent(norm.url)}`);
+                const previewJson = await previewRes.json();
+                if (previewJson?.image) norm.image = previewJson.image;
+              } catch (err) {
+                console.error('Preview fetch error:', err);
+              }
+            }
+
+            if (!norm.image) norm.image = '/default-image.jpg';
+            return norm;
+          })
+        );
+
+        setPopularContent(withPreview);
+      } catch (err) {
+        console.error('שגיאה בטעינת פופולרי:', err);
+      }
+    };
+
+  
+
+    
+
+    fetchLatest();
+    fetchOnRoad();
+    fetchPopular();
+  }, []);
+
+  /* ✅ גלילה אנכית מתמשכת */
+  useEffect(() => {
+    if (isMobile) return;
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const speed = 1;
+    let frame;
+    const step = () => {
+      if (!isPaused) {
+        container.scrollTop += speed;
+        if (container.scrollTop >= container.scrollHeight - container.clientHeight) {
+          container.scrollTop = 0;
+        }
+      }
+      frame = requestAnimationFrame(step);
+    };
+    frame = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frame);
+  }, [activeTab, isPaused, isMobile]);
+
+  useEffect(() => {
+    if (!isMobile || !sidebarRef.current || !hasInteracted) return;
+    setTimeout(() => {
+      const y = sidebarRef.current.getBoundingClientRect().top + window.scrollY - 100;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }, 0);
+  }, [activeTab, isMobile, hasInteracted]);
+
+  /* ✅ רינדור הפריטים לפי טאב */
+  const getStyledContent = (items) => {
+    return items.map((item, i) => {
+      const even = i % 2 === 0;
+      const bg = even ? 'bg-red-50 text-black' : 'bg-neutral-900 text-white';
+      return (
+        <a
+          key={item.id}
+          href={item.url || (item.slug ? `/articles/${item.slug}` : '#')}
+          target={item.url ? '_blank' : '_self'}
+          rel={item.url ? 'noopener noreferrer' : ''}
+          className={`flex gap-2 items-start p-1 rounded transition-transform duration-200 ${bg} hover:scale-[1.03] hover:shadow-sm`}
+        >
+          <div className="w-20 h-14 relative rounded overflow-hidden flex-shrink-0">
+            <Image
+              src={item.image || '/default-image.jpg'}
+              alt={item.title}
+              fill
+              style={{ objectFit: 'cover' }}
+              className="rounded"
+            />
+          </div>
+          <div className="flex flex-col text-right">
+            <p className="font-bold text-sm line-clamp-1">{item.title}</p>
+            <p className={`text-xs ${even ? 'text-gray-700' : 'text-gray-300'} line-clamp-2`}>
+              {item.description}
+            </p>
+            {item.date && (
+              <span className={`text-xs ${even ? 'text-gray-500' : 'text-gray-400'} mt-1`}>
+                {item.date}
+              </span>
+            )}
+            {(item.views || item.source) && (
+              <span className="text-xs text-gray-400 mt-1">
+                {item.views ? `${item.views} צפיות` : ''}
+                {item.views && item.source ? ' · ' : ''}
+                {item.source || ''}
+              </span>
+            )}
+          </div>
+        </a>
+      );
+    });
+  };
+
+  let content = [];
+  if (activeTab === 'אחרונים') content = getStyledContent(latestArticles);
+  else if (activeTab === 'בדרכים') content = getStyledContent(onRoadArticles);
+  else if (activeTab === 'פופולרי') content = getStyledContent(popularContent);
+  else content = getStyledContent(viralContent);
+
+  return (
+    <div
+      ref={sidebarRef}
+      className={`flex flex-col min-h-0 bg-white shadow-md w-full text-sm ${isMobile ? 'w-screen rounded-none' : ''}`}
+    >
+      <div
+        className="flex border-b text-sm font-semibold bg-white sticky top-0 z-10 shadow-sm"
+        dir="rtl"
+      >
+        {tabs.map((tab) => (
+          <button
+            key={tab}
+            onClick={() => {
+              setActiveTab(tab);
+              setHasInteracted(true);
+            }}
+            className={`w-1/3 text-center py-2 ${
+              activeTab === tab
+                ? 'text-black border-b-2 border-red-500 bg-white'
+                : 'text-gray-500 bg-gray-100'
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+
+      <div
+        ref={scrollContainerRef}
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+        className="custom-scrollbar overflow-x-hidden p-1 space-y-1 flex-1 overflow-y-auto max-h-[380px]"
+        dir="rtl"
+      >
+        {content}
+      </div>
+    </div>
+  );
+}
+
+
+// components/IroadsBox.jsx
+'use client';
+import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
+import Link from 'next/link';
+import { getMainImage, resolveImageUrl } from '@/utils/resolveMainImage';
+
+const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || process.env.STRAPI_API_URL;
+const PLACEHOLDER_IMG = '/default-image.jpg';
+
+export default function IroadsBox() {
+  const [articles, setArticles] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  /* ✅ שליפת כתבות עם תגית iroads */
+  useEffect(() => {
+    async function fetchArticles() {
+      try {
+        const res = await fetch(
+          `${API_URL}/api/articles?filters[tags_txt][$contains]=iroads&populate=*`,
+          { cache: 'no-store' }
+        );
+        const json = await res.json();
+        setArticles(json.data || []);
+      } catch (err) {
+        console.error('שגיאה בטעינת כתבות נתיבי ישראל:', err);
+      }
+    }
+    fetchArticles();
+  }, []);
+
+  /* ✅ מעבר אוטומטי בין שקופיות */
+  useEffect(() => {
+    if (articles.length === 0) return;
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % (articles.length + 1)); // +1 עבור הלוגו
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [articles]);
+
+  if (articles.length === 0) {
+    return (
+      <div className="bg-white shadow-md rounded-md overflow-hidden relative mb-4 p-4 text-center">
+        <p className="text-gray-600 text-sm">
+          לא נמצאו כתבות עם תג "נתיבי ישראל"
+        </p>
+      </div>
+    );
+  }
+
+  const rawArticles = articles.map((a) => (a.attributes ? a.attributes : a));
+  const slides = [{ type: 'logo' }, ...rawArticles];
+  const current = slides[currentIndex];
+
+  return (
+    <div className="bg-white shadow-md rounded-md overflow-hidden relative mb-4">
+      {/* ✅ כותרת עליונה */}
+      <Link href="https://www.iroads.co.il/" target="_blank">
+        <h3 className="bg-red-600 text-white font-bold text-lg px-3 py-2 cursor-pointer hover:bg-red-700 transition text-right">
+          בכבישי הארץ
+        </h3>
+      </Link>
+
+      {/* ✅ קרוסלה */}
+      <div className="relative h-72">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={current.type === 'logo' ? 'logo' : current.id}
+            initial={{ x: 300, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -300, opacity: 0 }}
+            transition={{ duration: 0.6 }}
+            className="absolute inset-0"
+          >
+            {current.type === 'logo' ? (
+              <div className="relative w-full h-full">
+                {/* ✅ כפתור תלונה */}
+                <a
+                  href="https://www.iroads.co.il/support-form/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="absolute top-3 left-1/2 -translate-x-1/2 px-6 py-2 bg-red-600 text-white text-sm rounded-md shadow hover:bg-red-700 transition z-10"
+                >
+                  לחצו להגשת תלונה
+                </a>
+
+                {/* ✅ וידאו רקע */}
+                <a
+                  href="https://www.iroads.co.il/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full h-full"
+                >
+                  <video
+                    src="https://www.iroads.co.il/media/fgpprdnd/%D7%95%D7%99%D7%93%D7%90%D7%95-%D7%A2%D7%9E%D7%95%D7%93-%D7%94%D7%91%D7%99%D7%AA-%D7%9C%D7%9C%D7%90-%D7%A1%D7%90%D7%95%D7%A0%D7%931.mp4"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                </a>
+              </div>
+            ) : (
+              // ✅ שקופית כתבה
+              (() => {
+                const attrs = current;
+                const { mainImage, mainImageAlt } = getMainImage(attrs);
+
+                return (
+                  <Link href={attrs.slug ? `/articles/${attrs.slug}` : '#'}>
+                    <div className="relative w-full h-full cursor-pointer">
+                      <Image
+                        src={mainImage || PLACEHOLDER_IMG}
+                        alt={mainImageAlt || 'תמונה'}
+                        fill
+                        className="object-cover"
+                        loading="lazy"
+                      />
+                      <div className="absolute bottom-0 w-full bg-black/50 text-white p-2 text-sm font-semibold">
+                        {attrs.title || 'ללא כותרת'}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })()
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* ✅ חיצים */}
+      <button
+        onClick={() =>
+          setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length)
+        }
+        className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-red-600 text-white p-2 rounded-full"
+      >
+        ›
+      </button>
+      <button
+        onClick={() => setCurrentIndex((prev) => (prev + 1) % slides.length)}
+        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-red-600 text-white p-2 rounded-full"
+      >
+        ‹
+      </button>
+
+      {/* ✅ נקודות אינדיקציה */}
+      <div className="flex justify-center space-x-2 py-2">
+        {slides.map((_, idx) => (
+          <button
+            key={idx}
+            onClick={() => setCurrentIndex(idx)}
+            className={`w-2 h-2 rounded-full ${
+              idx === currentIndex ? 'bg-red-600' : 'bg-gray-400'
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+// components/GuideBox.jsx
+'use client';
+import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
+import Link from 'next/link';
+import { labelMap } from '@/utils/labelMap';
+import { getMainImage } from '@/utils/resolveMainImage';
+
+const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
+
+export default function GuideBox() {
+  const [articles, setArticles] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  /* ✅ שליפת כתבות עם ערך במשתנה Values */
+  useEffect(() => {
+    async function fetchArticles() {
+      try {
+        const res = await fetch(
+          `${API_URL}/api/articles?filters[Values][$null]=false&populate=*`,
+          { cache: 'no-store' }
+        );
+        const json = await res.json();
+        setArticles(json.data || []);
+      } catch (err) {
+        console.error('שגיאה בטעינת מדריכים:', err);
+      }
+    }
+    fetchArticles();
+  }, []);
+
+  /* ✅ מעבר אוטומטי בין כתבות */
+  useEffect(() => {
+    if (articles.length === 0) return;
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % articles.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [articles]);
+
+  if (articles.length === 0) return null;
+
+  const current = articles[currentIndex].attributes || articles[currentIndex];
+  const values = Array.isArray(current.Values) ? current.Values : [current.Values];
+
+  // ✅ שימוש בפונקציה האחידה לבחירת תמונה
+  const { mainImage, mainImageAlt } = getMainImage(current);
+
+  return (
+    <div className="bg-white shadow-md rounded-md overflow-hidden relative mb-4">
+      {/* כותרת עם לינק לדף מדריכים */}
+      <Link href="/blog/guides">
+        <h3 className="bg-red-600 text-white font-bold text-lg px-3 py-2 cursor-pointer hover:bg-red-700 transition">
+          מדריכים
+        </h3>
+      </Link>
+
+      {/* ✅ קרוסלת מדריכים */}
+      <div className="relative h-56">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={current.id}
+            initial={{ x: 300, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -300, opacity: 0 }}
+            transition={{ duration: 0.6 }}
+            className="absolute inset-0"
+          >
+            <Link href={`/articles/${current.slug}`}>
+              <div className="w-full h-full cursor-pointer">
+                <Image
+                  src={mainImage}
+                  alt={mainImageAlt || current.title || 'תמונת מדריך'}
+                  width={400}
+                  height={250}
+                  className="w-full h-40 object-cover"
+                />
+                <p className="p-2 text-sm font-semibold text-gray-800">
+                  {current.title}
+                </p>
+                {values.map((val, idx) => (
+                  <p key={idx} className="px-2 text-xs text-gray-500">
+                    {labelMap[val] || val}
+                  </p>
+                ))}
+              </div>
+            </Link>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* ✅ חיצי ניווט */}
+      <button
+        onClick={() =>
+          setCurrentIndex((prev) => (prev - 1 + articles.length) % articles.length)
+        }
+        className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-red-600 text-white p-2 rounded-full"
+      >
+        ›
+      </button>
+      <button
+        onClick={() => setCurrentIndex((prev) => (prev + 1) % articles.length)}
+        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-red-600 text-white p-2 rounded-full"
+      >
+        ‹
+      </button>
+
+      {/* ✅ נקודות אינדיקציה */}
+      <div className="flex justify-center space-x-2 py-2">
+        {articles.map((_, idx) => (
+          <button
+            key={idx}
+            onClick={() => setCurrentIndex(idx)}
+            className={`w-2 h-2 rounded-full ${
+              idx === currentIndex ? 'bg-red-600' : 'bg-gray-400'
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
 //onmotor-frontend\next.config.mjs
 /** @type {import('next').NextConfig} */
 const nextConfig = {

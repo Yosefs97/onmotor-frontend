@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import useIsMobile from '@/hooks/useIsMobile';
-import { getMainImage, resolveImageUrl } from '@/utils/resolveMainImage';
+import { getMainImage } from '@/utils/resolveMainImage';
 
 const tabs = ['אחרונים', 'בדרכים', 'פופולרי'];
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
