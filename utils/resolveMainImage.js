@@ -1,12 +1,46 @@
 // utils/resolveMainImage.js
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || process.env.STRAPI_API_URL;
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.onmotormedia.com';
 const PLACEHOLDER_IMG = '/default-image.jpg';
 
-/* ✅ ממירה כל URL לתמונה תקינה (Strapi / Cloudinary / קישור חיצוני) */
+/* ✅ עוזר: בודק אם ה־URL כבר "שלנו" (Strapi / אתר) */
+function isInternalUrl(url) {
+  if (!url || typeof url !== 'string') return false;
+  const trimmed = url.trim();
+  if (!trimmed.startsWith('http')) return false;
+  if (API_URL && trimmed.startsWith(API_URL)) return true;
+  if (SITE_URL && trimmed.startsWith(SITE_URL)) return true;
+  if (trimmed.includes('/api/proxy-media') || trimmed.includes('/api/proxy-honda')) return true;
+  return false;
+}
+
+/* ✅ עוטף קישור חיצוני דרך proxy-media (Vercel Blob) */
+function wrapWithProxyMedia(url) {
+  if (!url) return PLACEHOLDER_IMG;
+  const trimmed = url.trim();
+
+  // לא מתחיל ב־http → נתיב יחסי, נטפל בו בפונקציה הראשית
+  if (!trimmed.startsWith('http')) return trimmed;
+
+  // כתובת פנימית / כבר בפרוקסי → נשאיר כמו שהיא
+  if (isInternalUrl(trimmed)) return trimmed;
+
+  return `${SITE_URL}/api/proxy-media?url=${encodeURIComponent(trimmed)}`;
+}
+
+/* ✅ ממירה כל URL לתמונה תקינה (Strapi / קישור חיצוני) */
 export function resolveImageUrl(rawUrl) {
   if (!rawUrl) return PLACEHOLDER_IMG;
-  if (rawUrl.startsWith('http')) return rawUrl;
-  return `${API_URL}${rawUrl.startsWith('/') ? rawUrl : `/uploads/${rawUrl}`}`;
+
+  const trimmed = String(rawUrl).trim();
+
+  // קישור חיצוני → דרך proxy-media
+  if (trimmed.startsWith('http')) {
+    return wrapWithProxyMedia(trimmed);
+  }
+
+  // נתיב יחסי → Strapi
+  return `${API_URL}${trimmed.startsWith('/') ? trimmed : `/uploads/${trimmed}`}`;
 }
 
 /**
@@ -45,9 +79,9 @@ export function getMainImage(attrs = {}) {
       (l) => typeof l === 'string' && l.startsWith('http')
     );
     if (validLinks.length > 1) {
-      mainImage = validLinks[1].trim(); // השני
+      mainImage = resolveImageUrl(validLinks[1].trim()); // השני
     } else if (validLinks.length > 0) {
-      mainImage = validLinks[0].trim(); // הראשון
+      mainImage = resolveImageUrl(validLinks[0].trim()); // הראשון
     }
     mainImageAlt = 'תמונה מהמדיה החיצונית';
   }

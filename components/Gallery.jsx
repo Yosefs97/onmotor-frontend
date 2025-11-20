@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 
 const PUBLIC_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.onmotormedia.com';
 
 // ✅ מחלץ כתובות URL תקניות מכל מחרוזת או מערך
 function extractUrls(input) {
@@ -17,6 +18,23 @@ function extractUrls(input) {
   return [];
 }
 
+// ✅ עטיפה חכמה ל־proxy-media (רק חיצוני, לא הונדה / לא כבר בפרוקסי)
+function wrapWithProxyMedia(src) {
+  if (!src || typeof src !== 'string') return '';
+  const s = src.trim();
+
+  if (!s.startsWith('http')) return s;
+
+  // כבר בפרוקסי / הונדה
+  if (s.includes('/api/proxy-honda') || s.includes('/api/proxy-media')) return s;
+
+  // כתובת פנימית – Strapi / האתר
+  if (PUBLIC_API_URL && s.startsWith(PUBLIC_API_URL)) return s;
+  if (SITE_URL && s.startsWith(SITE_URL)) return s;
+
+  return `${SITE_URL}/api/proxy-media?url=${encodeURIComponent(s)}`;
+}
+
 export default function Gallery({
   images = [],
   externalImageUrls = [],
@@ -28,11 +46,9 @@ export default function Gallery({
 
   // 🧠 איחוד של שני השדות האפשריים — החדש והישן
   const mergedExternal = useMemo(() => {
-    // אם השדה החדש הוא מערך אמיתי (JSON)
     if (Array.isArray(external_media_links) && external_media_links.length > 0) {
       return external_media_links;
     }
-    // אחרת נשתמש בשדה הישן (טקסט)
     return externalImageUrls;
   }, [external_media_links, externalImageUrls]);
 
@@ -41,20 +57,18 @@ export default function Gallery({
   const directLinks = urls.filter((url) => imageExtensions.test(url));
   const pagesToScrape = urls.filter((url) => !imageExtensions.test(url) && url.startsWith('http'));
 
-  // ✅ ברגע שזוהו רק תמונות ישירות, נבטל מיד את הטעינה
   useEffect(() => {
     if (directLinks.length > 0 && pagesToScrape.length === 0) {
       setLoading(false);
     }
   }, [directLinks, pagesToScrape]);
 
-  // ✅ טוען דפי מדיה רק אם באמת קיימים כאלה
   useEffect(() => {
     let active = true;
 
     async function fetchAllExternalMedia() {
       if (pagesToScrape.length === 0) {
-        return; // אין דפים לטעון
+        return;
       }
 
       try {
@@ -88,7 +102,6 @@ export default function Gallery({
     };
   }, [pagesToScrape]);
 
-  // 🧩 מאחד את כל התמונות מכל המקורות
   const allImages = useMemo(() => {
     const strapiImages = (images || [])
       .map((img) => ({
@@ -105,7 +118,6 @@ export default function Gallery({
     );
   }, [images, directLinks, externalMediaImages]);
 
-  // ✅ נוודא שברגע שכל הנתונים מוכנים — loading false
   useEffect(() => {
     if (allImages.length > 0) setLoading(false);
   }, [allImages]);
@@ -124,7 +136,13 @@ export default function Gallery({
   const getImageUrl = (src) => {
     if (!src || typeof src !== 'string') return '';
     const s = src.trim();
-    if (s.startsWith('http')) return s;
+
+    // כתובת חיצונית → proxy-media
+    if (s.startsWith('http')) {
+      return wrapWithProxyMedia(s);
+    }
+
+    // נתיב יחסי → Strapi
     return `${PUBLIC_API_URL}${s.startsWith('/') ? s : `/uploads/${s}`}`;
   };
 
@@ -144,7 +162,6 @@ export default function Gallery({
 
   return (
     <div className="mt-8 w-full flex flex-col items-center gap-0">
-      {/* תמונה ראשית */}
       <div className="relative w-full max-w-3xl aspect-[3/2] overflow-hidden rounded shadow-lg bg-gray-100">
         <img
           key={current}
@@ -156,7 +173,6 @@ export default function Gallery({
         />
       </div>
 
-      {/* תמונות ממוזערות */}
       <div className="flex gap-2 mt-3 overflow-x-auto px-2 scrollbar-hide">
         {allImages.map((img, i) => (
           <img

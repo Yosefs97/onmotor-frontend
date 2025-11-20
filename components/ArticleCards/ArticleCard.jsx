@@ -1,3 +1,4 @@
+///C:\Users\yosef\Desktop\onmotor-frontend\components\ArticleCards\ArticleCard.jsx
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';

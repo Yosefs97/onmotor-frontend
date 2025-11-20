@@ -19,6 +19,7 @@ import ScrollToCommentsButton from "@/components/ScrollToCommentsButton";
 import { fixRelativeImages, resolveImageUrl, wrapHondaProxy } from "@/lib/fixArticleImages";
 import { getArticleImage } from "@/lib/getArticleImage";
 import ArticleShareBottom from "@/components/ArticleShareBottom";
+import { fixRelativeImages, resolveImageUrl, wrapHondaProxy } from "@/lib/fixArticleImages";
 
 
 
@@ -161,9 +162,19 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
     typeof data.external_media_links[1] === "string" &&
     data.external_media_links[1].startsWith("http")
   ) {
-    mainImage = data.external_media_links[1].trim();
+    mainImage = resolveImageUrl(data.external_media_links[1].trim());
+    mainImageAlt = "תמונה ראשית מהמדיה החיצונית";
+  } else if (
+    Array.isArray(data.external_media_links) &&
+    data.external_media_links.length > 0 &&
+    typeof data.external_media_links[0] === "string" &&
+    data.external_media_links[0].startsWith("http")
+  ) {
+    // fallback אם יש רק אחד
+    mainImage = resolveImageUrl(data.external_media_links[0].trim());
     mainImageAlt = "תמונה ראשית מהמדיה החיצונית";
   }
+
 
   const article = {
     title: data.title || "כתבה ללא כותרת",
