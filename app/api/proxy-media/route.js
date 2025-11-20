@@ -1,4 +1,6 @@
 //app/api/proxy-media/route.js
+export const runtime = "nodejs";
+
 import { NextResponse } from "next/server";
 import { put, head } from "@vercel/blob";
 
