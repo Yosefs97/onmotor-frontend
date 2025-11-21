@@ -6,12 +6,20 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.onmotormedia.c
 const STRAPI_URL =
   process.env.NEXT_PUBLIC_STRAPI_API_URL || process.env.STRAPI_API_URL || '';
 
+// 🔥 חדש — זיהוי Cloudinary
+function isCloudinary(url) {
+  return typeof url === 'string' && url.includes('res.cloudinary.com');
+}
+
 function getInlineSrc(src) {
   if (!src || typeof src !== 'string') return '';
   const s = src.trim();
 
   // לא http → נתיב יחסי / local
   if (!s.startsWith('http')) return s;
+
+  // 🔥 Cloudinary נטען ישירות — ללא פרוקסי
+  if (isCloudinary(s)) return s;
 
   // כבר בפרוקסי / הונדה
   if (s.includes('/api/proxy-honda') || s.includes('/api/proxy-media')) return s;
@@ -20,7 +28,7 @@ function getInlineSrc(src) {
   if (STRAPI_URL && s.startsWith(STRAPI_URL)) return s;
   if (SITE_URL && s.startsWith(SITE_URL)) return s;
 
-  // קישור חיצוני רגיל → proxy-media
+  // כל השאר → proxy-media
   return `${SITE_URL}/api/proxy-media?url=${encodeURIComponent(s)}`;
 }
 
