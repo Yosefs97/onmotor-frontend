@@ -18,6 +18,11 @@ function extractUrls(input) {
   return [];
 }
 
+// 🔥 חדש — זיהוי Cloudinary
+function isCloudinary(url) {
+  return typeof url === 'string' && url.includes('res.cloudinary.com');
+}
+
 // ✅ עטיפה חכמה ל־proxy-media (רק חיצוני, לא הונדה / לא כבר בפרוקסי)
 function wrapWithProxyMedia(src) {
   if (!src || typeof src !== 'string') return '';
@@ -27,6 +32,9 @@ function wrapWithProxyMedia(src) {
 
   // כבר בפרוקסי / הונדה
   if (s.includes('/api/proxy-honda') || s.includes('/api/proxy-media')) return s;
+
+  // Cloudinary — ❗ללא פרוקסי
+  if (isCloudinary(s)) return s;
 
   // כתובת פנימית – Strapi / האתר
   if (PUBLIC_API_URL && s.startsWith(PUBLIC_API_URL)) return s;
@@ -38,7 +46,7 @@ function wrapWithProxyMedia(src) {
 export default function Gallery({
   images = [],
   externalImageUrls = [],
-  external_media_links = [], // 🔹 נוסיף תמיכה בשדה החדש מ-Strapi
+  external_media_links = [],
 }) {
   const [current, setCurrent] = useState(0);
   const [externalMediaImages, setExternalMediaImages] = useState([]);
@@ -133,9 +141,13 @@ export default function Gallery({
   const next = () => setCurrent((prev) => (prev + 1) % allImages.length);
   const prev = () => setCurrent((prev) => (prev - 1 + allImages.length) % allImages.length);
 
+  // 🔥 פה התיקון — Cloudinary לא עובר דרך פרוקסי
   const getImageUrl = (src) => {
     if (!src || typeof src !== 'string') return '';
     const s = src.trim();
+
+    // Cloudinary = ישיר
+    if (isCloudinary(s)) return s;
 
     // כתובת חיצונית → proxy-media
     if (s.startsWith('http')) {
