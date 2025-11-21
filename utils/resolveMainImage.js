@@ -5,8 +5,8 @@ const PLACEHOLDER_IMG = "/default-image.jpg";
 
 /**
  * בוחר תמונה ראשית לכתבה לפי סדר עדיפות:
- * 1. תמונה שלישית בגלריה (gallery[2])
- * 2. תמונה ראשונה בגלריה (gallery[0])
+ * 1. תמונה שלישית בגלריה
+ * 2. תמונה ראשונה בגלריה
  * 3. תמונה מהשדה image
  * 4. קישור חיצוני מתוך external_media_links
  * 5. ברירת מחדל
@@ -29,15 +29,13 @@ export function getMainImage(attrs = {}) {
   else if (attrs.image?.data?.attributes?.url) {
     mainImage = resolveImageUrl(attrs.image.data.attributes.url);
     mainImageAlt = attrs.image.data.attributes.alternativeText || mainImageAlt;
-  } else if (attrs.image?.url) {
+  }
+  else if (attrs.image?.url) {
     mainImage = resolveImageUrl(attrs.image.url);
     mainImageAlt = attrs.image.alternativeText || mainImageAlt;
   }
   // 4️⃣ ניסיון: קישורים חיצוניים
-  else if (
-    Array.isArray(attrs.external_media_links) &&
-    attrs.external_media_links.length > 0
-  ) {
+  else if (Array.isArray(attrs.external_media_links) && attrs.external_media_links.length > 0) {
     const valid = attrs.external_media_links
       .filter((l) => typeof l === "string" && l.startsWith("http"))
       .map((s) => s.trim());
