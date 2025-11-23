@@ -5,14 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { scrollToBottomOfElement } from "./utils/scrollUtils";
 
-const API_URL =
-  process.env.NEXT_PUBLIC_STRAPI_API_URL ||
-  "https://onmotor-strapi.onrender.com";
-
 export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
   const [openIndex, setOpenIndex] = useState(null);
   const [subOpenIndex, setSubOpenIndex] = useState(null);
-  const [forumLinks, setForumLinks] = useState([]); // ✅ קטגוריות פורום דינמיות
   const menuRefs = useRef([]);
   const router = useRouter();
 
@@ -22,43 +17,16 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
     setSubOpenIndex(null);
   };
 
-  // 🟩 שלב 1 — טעינת קטגוריות פורום מ־Strapi
-  useEffect(() => {
-    async function loadForumCategories() {
-      try {
-        const res = await fetch(`${API_URL}/api/forum-categories?populate=*`, { cache: "no-store" });
-        const json = await res.json();
-        const formatted = json.data?.map((cat) => {
-          const name =
-            cat?.attributes?.name?.trim() ||
-            cat?.name?.trim() ||
-            "ללא שם";
-          const slug =
-            cat?.attributes?.slug?.trim() ||
-            cat?.slug?.trim() ||
-            "";
-          return {
-            title: name,
-            path: slug ? `/forum/${slug}` : "/forum",
-          };
-        }) || [];
-        setForumLinks(formatted);
-      } catch (err) {
-        console.error("⚠️ שגיאה בטעינת קטגוריות פורום:", err);
-      }
-    }
-    loadForumCategories();
-  }, []);
-
   useEffect(() => {
     if (openIndex !== null && menuRefs.current[openIndex]) {
       scrollToBottomOfElement(menuRefs.current[openIndex]);
     }
   }, [openIndex]);
 
-  // 🟨 שלב 2 — מבנה תפריט
+  // 🟨 מבנה תפריט ללא פורום וללא קריאות API
   const menus = [
     { title: 'OnMotor Parts', path: '/shop', links: [] },
+
     {
       title: 'סקירות', path: '/reviews', links: [
         { title: 'מבחני דרכים', path: '/reviews/motorcycles' },
@@ -66,6 +34,7 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
         { title: 'סקירות וידאו', path: '/reviews/video' },
       ]
     },
+
     {
       title: 'ציוד', path: '/gear', links: [
         { title: 'שטח', path: '/gear/offroad' },
@@ -74,16 +43,16 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
         { title: 'קסטום', path: '/gear/custom' },
       ]
     },
+
     { title: 'רלב"ד', path: '/law-book', links: [{ title: 'שאל את הרלב"ד', path: '/law-book/ask-question' }] },
-    {
-      title: 'פורום', path: '/forum', links: forumLinks // ✅ דינמי מ־Strapi
-    },
+
     {
       title: 'בלוג', path: '/blog', links: [
         { title: 'אחד על אחד (פודקאסט)', path: '/blog/podcast' },
         { title: 'בקסדה', path: '/blog/in-helmet' },
         { title: 'על הנייר', path: '/blog/paper' },
         { title: 'טיפים', path: '/blog/tips' },
+
         {
           title: 'מדריכים', path: '/blog/guides', links: [
             { title: 'מדריך טכני ותחזוקה', path: '/blog/guides/guide-tech' },
@@ -93,6 +62,7 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
         }
       ]
     },
+
     {
       title: 'חדשות', path: '/news', links: [
         { title: 'חדשות מקומיות', path: '/news/local' },
@@ -100,6 +70,7 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
         { title: 'מכונות חדשות', path: '/news/machine' },
       ]
     },
+
     {
       title: 'צור קשר', path: '/contact', links: [
         { title: 'וואטסאפ', path: 'https://wa.me/972522304604' },
@@ -108,10 +79,15 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
     }
   ];
 
-  // 🟥 שלב 3 — רינדור תפריט
   return (
     <div className={mobile ? "max-h-[100vh] overflow-y-0 pr-8" : ""}>
-      <nav className={mobile ? "flex flex-col gap-2 text-2xl text-right" : "flex gap-2 text-lm font-semibold"}>
+      <nav
+        className={
+          mobile
+            ? "flex flex-col gap-2 text-2xl text-right"
+            : "flex gap-2 text-lm font-semibold"
+        }
+      >
         {menus.map((menu, index) => {
           const hasLinks = menu.links && menu.links.length > 0;
           const isOnMotorParts = menu.title === 'OnMotor Parts';
@@ -134,7 +110,11 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
               <button
                 onClick={handleClick}
                 className={`flex items-center gap-1 w-full px-2 py-1 text-lm font-semibold text-right
-                  ${isOnMotorParts ? 'text-[#e60000] font-bold animate-parts-bounce' : 'hover:text-[#e60000]'}`}
+                  ${
+                    isOnMotorParts
+                      ? "text-[#e60000] font-bold animate-parts-bounce"
+                      : "hover:text-[#e60000]"
+                  }`}
               >
                 <span className="flex-1">{menu.title}</span>
                 {hasLinks && (!mobile || !isOnMotorParts) && (
@@ -149,18 +129,24 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
                 mobile ? (
                   !isOnMotorParts && (
                     <div
-                      className={`flex flex-col gap-1 mt-4 pr-4 text-lm ${openIndex === index ? "block" : "hidden"}`}
+                      className={`flex flex-col gap-1 mt-4 pr-4 text-lm ${
+                        openIndex === index ? "block" : "hidden"
+                      }`}
                     >
                       {menu.links.map((link, idx) => {
-                        const hasSubLinks = link.links && link.links.length > 0;
-                        const subOpen = subOpenIndex === `${index}-${idx}`;
+                        const hasSubLinks =
+                          link.links && link.links.length > 0;
+                        const subOpen =
+                          subOpenIndex === `${index}-${idx}`;
 
                         return (
                           <div key={idx} className="flex flex-col">
                             <button
                               onClick={() => {
                                 if (hasSubLinks) {
-                                  setSubOpenIndex(subOpen ? null : `${index}-${idx}`);
+                                  setSubOpenIndex(
+                                    subOpen ? null : `${index}-${idx}`
+                                  );
                                 } else {
                                   onClose();
                                   router.push(link.path);
@@ -169,11 +155,17 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
                               className="flex justify-between items-center py-1 hover:text-[#e60000]"
                             >
                               <span>{link.title}</span>
-                              {hasSubLinks && <span>{subOpen ? "▲" : "▼"}</span>}
+                              {hasSubLinks && (
+                                <span>{subOpen ? "▲" : "▼"}</span>
+                              )}
                             </button>
 
                             {hasSubLinks && (
-                              <div className={`flex flex-col pr-4 ${subOpen ? "block" : "hidden"}`}>
+                              <div
+                                className={`flex flex-col pr-4 ${
+                                  subOpen ? "block" : "hidden"
+                                }`}
+                              >
                                 {link.links.map((sublink, sIdx) => (
                                   <Link
                                     key={sIdx}
@@ -194,7 +186,9 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
                 ) : (
                   <div className="absolute right-0 w-56 bg-black shadow-lg rounded p-2 z-[9999] text-right hidden group-hover:flex flex-col">
                     {menu.links.map((link, idx) => {
-                      const hasSubLinks = link.links && link.links.length > 0;
+                      const hasSubLinks =
+                        link.links && link.links.length > 0;
+
                       return (
                         <div key={idx} className="relative group/sub">
                           <Link
@@ -203,7 +197,9 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
                           >
                             <span>{link.title}</span>
                             {link.title === "מדריכים" && (
-                              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs">▼</span>
+                              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs">
+                                ▼
+                              </span>
                             )}
                           </Link>
 
