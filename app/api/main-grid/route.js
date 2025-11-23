@@ -1,4 +1,4 @@
-export const revalidate = 60; // Cache בצד השרת
+export const revalidate = 60;
 
 export async function GET() {
   const base = process.env.STRAPI_API_URL;
@@ -9,9 +9,10 @@ export async function GET() {
     const res = await fetch(url, { cache: "no-store" });
     const json = await res.json();
 
-    return Response.json(json.data);
+    // תחזיר את המבנה המקורי בדיוק
+    return Response.json(json);
   } catch (e) {
     console.error("❌ API main-grid error:", e);
-    return Response.json([], { status: 500 });
+    return Response.json({ data: [] }, { status: 500 });
   }
 }
