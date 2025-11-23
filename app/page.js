@@ -9,6 +9,7 @@ import PageContainer from "@/components/PageContainer";
    ⚙️ טעינת כתבות מ־Strapi (Server Component)
    - דינאמי כדי למנוע נפילת build
    - עם revalidate כדי לחסוך Edge Requests
+   - אופטימיזציה משמעותית להקטנת צריכת API
 ----------------------------------------------------------- */
 async function fetchArticles() {
   const base = process.env.STRAPI_API_URL;
@@ -18,15 +19,22 @@ async function fetchArticles() {
     return [];
   }
 
-  const url = `${base}/api/articles?populate=*`;
+  // 🟢 גרסה אופטימלית ללא populate=* (כבד מאוד)
+  const url =
+    `${base}/api/articles?` +
+    `fields=title,slug,category,date,headline,subdescription,description,tags_txt&` +
+    `populate[image][fields]=url,alternativeText&` +
+    `populate[gallery][fields]=url,alternativeText&` +
+    `populate[external_media_links]=*&` +
+    `pagination[limit]=120&` +
+    `sort=date:desc`;
 
   try {
-    // ⏳ הגבלת זמן כדי לא להתקע אם Strapi לא מגיב
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 7000); // 7 שניות
+    const timeout = setTimeout(() => controller.abort(), 7000);
 
     const res = await fetch(url, {
-      next: { revalidate: 60 }, // Cache ל־60 שניות
+      next: { revalidate: 60 },
       signal: controller.signal,
     });
 
@@ -45,7 +53,7 @@ async function fetchArticles() {
     }));
   } catch (err) {
     console.error("❌ שגיאה בטעינת כתבות:", err.message);
-    return []; // fallback בטוח כדי לא להפיל את האתר
+    return [];
   }
 }
 
