@@ -8,18 +8,14 @@ import { labelMap } from '@/utils/labelMap';
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || process.env.STRAPI_API_URL;
 const PLACEHOLDER_IMG = '/default-image.jpg';
 
-// ----------------------
-//  פונקציה לתיקון תמונה
-// ----------------------
+// ✅ פונקציה שמוודאת כתובת תקינה לתמונה (כולל Cloudinary)
 function resolveImageUrl(rawUrl) {
   if (!rawUrl) return PLACEHOLDER_IMG;
   if (rawUrl.startsWith('http')) return rawUrl;
   return `${API_URL}${rawUrl.startsWith('/') ? rawUrl : `/uploads/${rawUrl}`}`;
 }
 
-// ----------------------
-//  קיבוץ לפי תת־קטגוריה
-// ----------------------
+// קיבוץ לפי תת־קטגוריות רגילות
 function groupBySubcategory(articles) {
   return articles.reduce((acc, article) => {
     const subcategories = Array.isArray(article.subcategory)
@@ -35,9 +31,7 @@ function groupBySubcategory(articles) {
   }, {});
 }
 
-// ----------------------
-//  קיבוץ לפי Values
-// ----------------------
+// קיבוץ לפי Values (לתתי־תתי־קטגוריות של מדריכים)
 function groupByValues(articles) {
   return articles.reduce((acc, article) => {
     const values = Array.isArray(article.Values)
@@ -53,9 +47,6 @@ function groupByValues(articles) {
   }, {});
 }
 
-// ==========================================================
-//               רכיב CategoryPage — גרסה מתוקנת
-// ==========================================================
 export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null, guideSubKey = null }) {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -65,6 +56,7 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
       try {
         let url = `${API_URL}/api/articles?populate=*`;
 
+        // ✅ סינון לפי קטגוריה ראשית
         if (categoryKey) {
           url += `&filters[category][$eq]=${categoryKey}`;
         }
@@ -73,80 +65,81 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
         const json = await res.json();
         let data = json.data || [];
 
-        // 🛠️ חשוב! ניקוי נתונים פגומים (למניעת undefined.title)
-        data = data.filter(a => a && a.attributes);
-
-        // --------------------------
-        // סינון לפי תת־קטגוריה
-        // --------------------------
+        // ✅ סינון בצד הלקוח לפי תת־קטגוריה
         if (subcategoryKey) {
           data = data.filter((a) => {
-            const sub = a.attributes.subcategory;
+            const sub = a.subcategory;
             if (!sub) return false;
             if (Array.isArray(sub)) return sub.includes(subcategoryKey);
-            return sub === subcategoryKey;
+            if (typeof sub === 'string') return sub.includes(subcategoryKey);
+            return false;
           });
         }
 
-        // --------------------------
-        // סינון לפי Values
-        // --------------------------
+        // ✅ סינון לפי Values
         if (guideSubKey) {
           data = data.filter((a) => {
-            const vals = a.attributes.Values;
+            const vals = a.Values;
             if (!vals) return false;
             if (Array.isArray(vals)) return vals.includes(guideSubKey);
-            return vals === guideSubKey;
+            if (typeof vals === 'string') return vals.includes(guideSubKey);
+            return false;
           });
         }
 
-        // --------------------------
-        // מיפוי כתבות
-        // --------------------------
+        // ✅ מיפוי כתבות עם לוגיקת תמונה אחידה
         const mapped = data.map((a) => {
-          const attrs = a.attributes || {};
-
           let mainImage = PLACEHOLDER_IMG;
-          let mainImageAlt = attrs.title || 'תמונה ראשית';
+          let mainImageAlt = a.title || 'תמונה ראשית';
 
-          const galleryItem = attrs.gallery?.[0];
-
+          // 1️⃣ גלריה
+          const galleryItem = a.gallery?.[0];
           if (galleryItem?.url) {
             mainImage = resolveImageUrl(galleryItem.url);
             mainImageAlt = galleryItem.alternativeText || mainImageAlt;
-          } else if (attrs.image?.url) {
-            mainImage = resolveImageUrl(attrs.image.url);
-            mainImageAlt = attrs.image.alternativeText || mainImageAlt;
-          } else if (Array.isArray(attrs.external_media_links)) {
-            const links = attrs.external_media_links.filter((l) => typeof l === 'string' && l.startsWith('http'));
-            if (links.length > 1) mainImage = links[1];
-            else if (links.length > 0) mainImage = links[0];
+          }
+          // 2️⃣ תמונה ראשית
+          else if (a.image?.url) {
+            mainImage = resolveImageUrl(a.image.url);
+            mainImageAlt = a.image.alternativeText || mainImageAlt;
+          }
+          // 3️⃣ external_media_links
+          else if (Array.isArray(a.external_media_links) && a.external_media_links.length > 0) {
+            const validLinks = a.external_media_links.filter(
+              (l) => typeof l === 'string' && l.startsWith('http')
+            );
+            if (validLinks.length > 1) {
+              mainImage = validLinks[1].trim(); // השני
+            } else if (validLinks.length > 0) {
+              mainImage = validLinks[0].trim(); // הראשון
+            }
+            mainImageAlt = 'תמונה ראשית מהמדיה החיצונית';
           }
 
           return {
             id: a.id,
-            title: attrs.title || '',
-            slug: attrs.slug,
+            title: a.title,
+            slug: a.slug,
             image: mainImage,
             imageAlt: mainImageAlt,
-            category: attrs.category || 'general',
-            subcategory: Array.isArray(attrs.subcategory)
-              ? attrs.subcategory
-              : [attrs.subcategory ?? 'general'],
-            Values: Array.isArray(attrs.Values)
-              ? attrs.Values
-              : [attrs.Values ?? null],
-            description: attrs.description,
-            headline: attrs.headline || attrs.title,
-            subdescription: attrs.subdescription,
-            href: `/articles/${attrs.slug}`,
-            tags: attrs.tags || [],
-            date: attrs.date || '',
-            time: attrs.time || '00:00',
+            category: a.category || 'general',
+            subcategory: Array.isArray(a.subcategory)
+              ? a.subcategory
+              : [a.subcategory ?? 'general'],
+            Values: Array.isArray(a.Values)
+              ? a.Values
+              : [a.Values ?? null],
+            description: a.description,
+            headline: a.headline || a.title,
+            subdescription: a.subdescription,
+            href: `/articles/${a.slug}`,
+            tags: a.tags || [],
+            date: a.date || '',
+            time: a.time || '00:00',
           };
         });
 
-        // מיון
+        // ✅ מיון מהחדש לישן
         const sorted = mapped.sort((a, b) => {
           const aDateTime = new Date(`${a.date}T${a.time}`);
           const bDateTime = new Date(`${b.date}T${b.time}`);
@@ -164,9 +157,15 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
     fetchArticles();
   }, [categoryKey, subcategoryKey, guideSubKey]);
 
-  if (loading) return <p className="text-center text-gray-500">טוען כתבות...</p>;
-  if (articles.length === 0) return <p className="text-center text-gray-500">אין עדיין כתבות</p>;
+  if (loading) {
+    return <p className="text-center text-gray-500">טוען כתבות...</p>;
+  }
 
+  if (articles.length === 0) {
+    return <p className="text-center text-gray-500">אין עדיין כתבות בקטגוריה זו</p>;
+  }
+
+  // ✅ לוגיקת קיבוץ
   const grouped =
     guideSubKey
       ? { [guideSubKey]: articles }
@@ -182,11 +181,18 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
       ? labelMap[subcategoryKey] || subcategoryKey
       : labelMap[categoryKey] || categoryKey;
 
+  const shouldShowMainTitle =
+    subcategoryKey !== null || guideSubKey !== null || Object.keys(grouped).length === 1;
+
   return (
     <div className="max-w-screen-xl mx-auto px-0">
       <div className="flex flex-col gap-0" dir="rtl">
-        {!subcategoryKey && !guideSubKey && (
-          <SectionWithHeader title={hebTitle} href={`/${categoryKey}`} variant="main" />
+        {!subcategoryKey && !guideSubKey && shouldShowMainTitle && (
+          <SectionWithHeader
+            title={hebTitle}
+            href={`/${categoryKey}`}
+            variant="main"
+          />
         )}
 
         {Object.entries(grouped).map(([subKey, subArticles]) => (
@@ -210,3 +216,4 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
     </div>
   );
 }
+
