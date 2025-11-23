@@ -1,26 +1,17 @@
 //app/page.js
 export const revalidate = 60;
 
-
 import React from "react";
 import MainGridContentDesktop from "@/components/MainGridContentDesktop";
 import PageContainer from "@/components/PageContainer";
 
 /* -----------------------------------------------------------
    ⚙️ טעינת כתבות מ־Strapi (Server Component)
-   - דינאמי כדי למנוע נפילת build
-   - עם revalidate כדי לחסוך Edge Requests
-   - אופטימיזציה משמעותית להקטנת צריכת API
 ----------------------------------------------------------- */
 async function fetchArticles() {
   const base = process.env.STRAPI_API_URL;
+  if (!base) return [];
 
-  if (!base) {
-    console.error("❌ STRAPI_API_URL לא הוגדר");
-    return [];
-  }
-
-  // 🟢 גרסה אופטימלית ללא populate=* (כבד מאוד)
   const url =
     `${base}/api/articles?` +
     `fields=title,slug,category,date,headline,subdescription,description,tags_txt&` +
@@ -31,20 +22,11 @@ async function fetchArticles() {
     `sort=date:desc`;
 
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 7000);
-
     const res = await fetch(url, {
       next: { revalidate: 60 },
-      signal: controller.signal,
     });
 
-    clearTimeout(timeout);
-
-    if (!res.ok) {
-      console.error("❌ שגיאת API:", res.status);
-      return [];
-    }
+    if (!res.ok) return [];
 
     const json = await res.json();
 
@@ -52,8 +34,7 @@ async function fetchArticles() {
       id: item.id,
       ...item.attributes,
     }));
-  } catch (err) {
-    console.error("❌ שגיאה בטעינת כתבות:", err.message);
+  } catch {
     return [];
   }
 }
