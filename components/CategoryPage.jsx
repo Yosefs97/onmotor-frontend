@@ -8,14 +8,14 @@ import { labelMap } from '@/utils/labelMap';
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || process.env.STRAPI_API_URL;
 const PLACEHOLDER_IMG = '/default-image.jpg';
 
-// ✅ פונקציה שמוודאת כתובת תקינה לתמונה (כולל Cloudinary)
+// ⭐ פונקציה שמוודאת כתובת תקינה לתמונה (כולל Cloudinary)
 function resolveImageUrl(rawUrl) {
   if (!rawUrl) return PLACEHOLDER_IMG;
   if (rawUrl.startsWith('http')) return rawUrl;
   return `${API_URL}${rawUrl.startsWith('/') ? rawUrl : `/uploads/${rawUrl}`}`;
 }
 
-// קיבוץ לפי תת־קטגוריות רגילות
+// ⭐ קיבוץ לפי תת־קטגוריה
 function groupBySubcategory(articles) {
   return articles.reduce((acc, article) => {
     const subcategories = Array.isArray(article.subcategory)
@@ -32,7 +32,7 @@ function groupBySubcategory(articles) {
   }, {});
 }
 
-// קיבוץ לפי Values (לתתי־תתי־קטגוריות של מדריכים)
+// ⭐ קיבוץ לפי Values (למדריכים)
 function groupByValues(articles) {
   return articles.reduce((acc, article) => {
     const values = Array.isArray(article.Values)
@@ -53,41 +53,37 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // ⭐⭐⭐ שינוי יחיד: החלפת הפניה ל־Strapi → API פנימי
   useEffect(() => {
     async function fetchArticles() {
       try {
-        // 🔵 בונים URL פנימי ל-Next ולא ל-Strapi
+        // בונים URL פנימי – ללא Strapi
         let url = '/api/articles';
-        const params = new URLSearchParams();
 
-        // תמיד דואגים ל-populate=*
+        const params = new URLSearchParams();
         params.set('populate', '*');
 
-        // ✅ סינון לפי קטגוריה ראשית (ברמת Strapi)
+        // ⭐ סינון ברמת Strapi
         if (categoryKey) {
           params.append('filters[category][$eq]', categoryKey);
         }
 
-        if (params.toString()) {
-          url += `?${params.toString()}`;
-        }
+        // בניית ה־URL הסופי
+        url += `?${params.toString()}`;
 
+        // מביאים את הנתונים מהשרת הפנימי
         const res = await fetch(url, { cache: 'no-store' });
         const json = await res.json();
 
-        // json.data מגיע מ-Strapi: [{ id, attributes: {...} }, ...]
         let data = Array.isArray(json.data) ? json.data : [];
 
-        // מרימים attributes לאובייקט שטוח כדי שיתאים ללוגיקה הישנה שלך
-        data = data.map((item) => {
-          const attrs = item.attributes || {};
-          return {
-            id: item.id,
-            ...attrs,
-          };
-        });
+        // ⭐ "הרמת" attributes לאובייקט שטוח
+        data = data.map((item) => ({
+          id: item.id,
+          ...item.attributes,
+        }));
 
-        // ✅ סינון בצד הלקוח לפי תת־קטגוריה
+        // ⭐ סינון בצד הלקוח
         if (subcategoryKey) {
           data = data.filter((a) => {
             const sub = a.subcategory;
@@ -98,7 +94,6 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
           });
         }
 
-        // ✅ סינון לפי Values (מדריכים)
         if (guideSubKey) {
           data = data.filter((a) => {
             const vals = a.Values;
@@ -109,32 +104,22 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
           });
         }
 
-        // ✅ מיפוי כתבות עם לוגיקת תמונה אחידה
+        // ⭐ מיפוי נתונים + תמונות
         const mapped = data.map((a) => {
           let mainImage = PLACEHOLDER_IMG;
           let mainImageAlt = a.title || 'תמונה ראשית';
 
-          // 1️⃣ גלריה
           const galleryItem = a.gallery?.[0];
           if (galleryItem?.url) {
             mainImage = resolveImageUrl(galleryItem.url);
             mainImageAlt = galleryItem.alternativeText || mainImageAlt;
-          }
-          // 2️⃣ תמונה ראשית
-          else if (a.image?.url) {
+          } else if (a.image?.url) {
             mainImage = resolveImageUrl(a.image.url);
             mainImageAlt = a.image.alternativeText || mainImageAlt;
-          }
-          // 3️⃣ external_media_links
-          else if (Array.isArray(a.external_media_links) && a.external_media_links.length > 0) {
-            const validLinks = a.external_media_links.filter(
-              (l) => typeof l === 'string' && l.startsWith('http')
-            );
-            if (validLinks.length > 1) {
-              mainImage = validLinks[1].trim(); // השני
-            } else if (validLinks.length > 0) {
-              mainImage = validLinks[0].trim(); // הראשון
-            }
+          } else if (Array.isArray(a.external_media_links)) {
+            const valid = a.external_media_links.filter((l) => typeof l === 'string' && l.startsWith('http'));
+            if (valid.length > 1) mainImage = valid[1];
+            else if (valid.length > 0) mainImage = valid[0];
             mainImageAlt = 'תמונה ראשית מהמדיה החיצונית';
           }
 
@@ -145,12 +130,8 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
             image: mainImage,
             imageAlt: mainImageAlt,
             category: a.category || 'general',
-            subcategory: Array.isArray(a.subcategory)
-              ? a.subcategory
-              : [a.subcategory ?? 'general'],
-            Values: Array.isArray(a.Values)
-              ? a.Values
-              : [a.Values ?? null],
+            subcategory: Array.isArray(a.subcategory) ? a.subcategory : [a.subcategory ?? 'general'],
+            Values: Array.isArray(a.Values) ? a.Values : [a.Values ?? null],
             description: a.description,
             headline: a.headline || a.title,
             subdescription: a.subdescription,
@@ -161,11 +142,11 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
           };
         });
 
-        // ✅ מיון מהחדש לישן
+        // ⭐ מיון מהחדש לישן
         const sorted = mapped.sort((a, b) => {
-          const aDateTime = new Date(`${a.date}T${a.time}`);
-          const bDateTime = new Date(`${b.date}T${b.time}`);
-          return bDateTime - aDateTime;
+          const aD = new Date(`${a.date}T${a.time}`);
+          const bD = new Date(`${b.date}T${b.time}`);
+          return bD - aD;
         });
 
         setArticles(sorted);
@@ -180,6 +161,7 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
     fetchArticles();
   }, [categoryKey, subcategoryKey, guideSubKey]);
 
+  // ⭐ העיצוב לא משתנה – בדיוק מה שיש אצלך
   if (loading) {
     return <p className="text-center text-gray-500">טוען כתבות...</p>;
   }
@@ -188,7 +170,7 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
     return <p className="text-center text-gray-500">אין עדיין כתבות בקטגוריה זו</p>;
   }
 
-  // ✅ לוגיקת קיבוץ
+  // ⭐ Grouping זהה
   const grouped =
     guideSubKey
       ? { [guideSubKey]: articles }
