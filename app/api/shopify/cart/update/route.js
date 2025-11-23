@@ -1,4 +1,6 @@
 // /app/api/shopify/cart/update/route.js
+export const runtime = "nodejs";
+
 import { sfFetch } from "../../checkout/route";
 
 export async function POST(req) {

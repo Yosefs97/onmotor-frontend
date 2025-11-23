@@ -1,4 +1,6 @@
 // /app/api/shopify/collections/route.js
+export const runtime = "nodejs";
+
 const domain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
 const token = process.env.SHOPIFY_STOREFRONT_API_TOKEN;
 const apiVersion = process.env.SHOPIFY_API_VERSION || "2024-04";
