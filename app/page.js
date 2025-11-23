@@ -1,11 +1,16 @@
 //app/page.js
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"; // ❗ חייב להישאר
 
 import React from "react";
 import MainGridContentDesktop from "@/components/MainGridContentDesktop";
 import PageContainer from "@/components/PageContainer";
-import { getMainImage } from "@/utils/resolveMainImage";
 
+/* -----------------------------------------------------------
+   ⚙️ טעינת כתבות מ־Strapi (Server Component)
+   - דינאמי כדי למנוע נפילת build
+   - עם revalidate כדי לחסוך Edge Requests
+   - אופטימיזציה משמעותית להקטנת צריכת API
+----------------------------------------------------------- */
 async function fetchArticles() {
   const base = process.env.STRAPI_API_URL;
 
@@ -14,7 +19,15 @@ async function fetchArticles() {
     return [];
   }
 
-  const url = `${base}/api/articles?populate=*`;
+  // 🟢 גרסה אופטימלית ללא populate=* (כבד מאוד)
+  const url =
+    `${base}/api/articles?` +
+    `fields=title,slug,category,date,headline,subdescription,description,tags_txt&` +
+    `populate[image][fields]=url,alternativeText&` +
+    `populate[gallery][fields]=url,alternativeText&` +
+    `populate[external_media_links]=*&` +
+    `pagination[limit]=120&` +
+    `sort=date:desc`;
 
   try {
     const controller = new AbortController();
@@ -34,46 +47,19 @@ async function fetchArticles() {
 
     const json = await res.json();
 
-    return json.data.map((item) => {
-      const attrs = item.attributes;
-
-      const { mainImage, mainImageAlt } = getMainImage(attrs);
-
-      // 🟢 תיקון category
-      const category =
-        attrs.category?.data?.attributes?.slug ||
-        attrs.category?.data?.attributes?.name ||
-        attrs.category ||
-        "general";
-
-      // 🟢 תיקון subcategory
-      const subcategory =
-        attrs.subcategory?.data?.attributes?.slug ||
-        attrs.subcategory?.data?.attributes?.name ||
-        attrs.subcategory ||
-        "general";
-
-      return {
-        id: item.id,
-        title: attrs.title,
-        slug: attrs.slug,
-        category,
-        subcategory,
-        date: attrs.date,
-        description: attrs.description,
-        subdescription: attrs.subdescription,
-        headline: attrs.headline,
-        tags: attrs.tags,
-        image: mainImage,
-        imageAlt: mainImageAlt,
-      };
-    });
+    return json.data.map((item) => ({
+      id: item.id,
+      ...item.attributes,
+    }));
   } catch (err) {
     console.error("❌ שגיאה בטעינת כתבות:", err.message);
     return [];
   }
 }
 
+/* -----------------------------------------------------------
+   🏠 עמוד הבית
+----------------------------------------------------------- */
 export default async function HomePage() {
   const articles = await fetchArticles();
 
