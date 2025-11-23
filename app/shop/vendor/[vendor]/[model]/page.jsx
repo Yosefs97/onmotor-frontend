@@ -2,14 +2,19 @@
 import ModelPageInner from './ModelPageInner';
 import { fetchShopifyModel } from '@/lib/shop/fetchShopifyModel';
 
-export const revalidate = 600; // 10 דקות קאש — מצוין למוצרים
+export const revalidate = 600;
 
 export default async function ModelPage({ params, searchParams }) {
   const vendor = searchParams.vendor || params.vendor;
   const model = searchParams.model || params.model;
 
-  // מביא נתונים בשרת (לא בלקוח)
-  const items = await fetchShopifyModel({ vendor, model, filters: searchParams });
+  // 🔥 הופכים searchParams לאובייקט רגיל
+  const filters = Object.fromEntries(
+    Object.entries(searchParams || {}).map(([k, v]) => [k, String(v)])
+  );
+
+  // 📌 מביאים נתונים מהשרת
+  const items = await fetchShopifyModel({ vendor, model, filters });
 
   return (
     <ModelPageInner
