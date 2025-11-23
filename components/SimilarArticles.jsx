@@ -48,8 +48,8 @@ export default function SimilarArticles({ currentSlug, category }) {
     async function fetchSimilarArticles() {
       try {
         const res = await fetch(
-            `/api/similar?slug=${currentSlug}&category=${category}`,
-              { cache: "force-cache" }
+          `${API_URL}/api/articles?populate=*&filters[slug][$ne]=${currentSlug}&filters[category][$eq]=${category}`,
+          { cache: 'no-store' }
         );
         const json = await res.json();
         const data = json.data || [];
@@ -201,3 +201,4 @@ export default function SimilarArticles({ currentSlug, category }) {
     </div>
   );
 }
+
