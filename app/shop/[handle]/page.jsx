@@ -3,13 +3,16 @@ import ProductPageInner from './ProductPageInner';
 import { fetchProduct } from '@/lib/shop/fetchProduct';
 import { fetchSearchResults } from '@/lib/shop/fetchSearch';
 
-export const revalidate = 600; // 10 דקות קאש — מצוין למוצרים
+export const revalidate = 600;
 
 export default async function ProductPage({ params, searchParams }) {
-  const filters = searchParams;
   const handle = params.handle;
 
-  // אם יש פילטרים → זה חיפוש ולא פרודקט יחיד
+  // 🔥 המרה של searchParams לאובייקט רגיל
+  const filters = Object.fromEntries(
+    Object.entries(searchParams || {}).map(([k, v]) => [k, String(v)])
+  );
+
   const isSearch = Object.keys(filters).length > 0;
 
   if (isSearch) {
