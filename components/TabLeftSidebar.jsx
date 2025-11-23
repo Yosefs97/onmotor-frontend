@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import useIsMobile from '@/hooks/useIsMobile';
 
 const tabs = ['אחרונים', 'בדרכים', 'פופולרי'];
@@ -39,7 +40,7 @@ export default function TabLeftSidebar() {
   const [popularContent, setPopularContent] = useState([]);
   const [isPaused, setIsPaused] = useState(false);
 
-  /* ✅ שליפה אחת מהשרת – במקום 3 fetchים + preview */
+  /* ✅ שליפה אחת מהשרת */
   useEffect(() => {
     const fetchSidebarData = async () => {
       try {
@@ -60,7 +61,7 @@ export default function TabLeftSidebar() {
     fetchSidebarData();
   }, []);
 
-  /* ✅ גלילה אנכית מתמשכת לדסקטופ – נשאר כמו שהיה */
+  /* ✅ גלילה אנכית מתמשכת לדסקטופ */
   useEffect(() => {
     if (isMobile) return;
     const container = scrollContainerRef.current;
@@ -71,10 +72,7 @@ export default function TabLeftSidebar() {
     const step = () => {
       if (!isPaused) {
         container.scrollTop += speed;
-        if (
-          container.scrollTop >=
-          container.scrollHeight - container.clientHeight
-        ) {
+        if (container.scrollTop >= container.scrollHeight - container.clientHeight) {
           container.scrollTop = 0;
         }
       }
@@ -88,82 +86,99 @@ export default function TabLeftSidebar() {
   useEffect(() => {
     if (!isMobile || !sidebarRef.current || !hasInteracted) return;
     setTimeout(() => {
-      const y =
-        sidebarRef.current.getBoundingClientRect().top +
-        window.scrollY -
-        100;
+      const y = sidebarRef.current.getBoundingClientRect().top + window.scrollY - 100;
       window.scrollTo({ top: y, behavior: 'smooth' });
     }, 0);
   }, [activeTab, isMobile, hasInteracted]);
 
-  /* ✅ רינדור הפריטים לפי טאב – בלי שינוי עיצובי */
+  /* ⭐️ רכיב תוכן שנחסוך בו כפילות */
+  function CardContent({ item, even, source }) {
+    return (
+      <>
+        <div className="w-20 h-14 relative rounded overflow-hidden flex-shrink-0">
+          <Image
+            src={item.image || '/default-image.jpg'}
+            alt={item.title || ''}
+            fill
+            style={{ objectFit: 'cover' }}
+            className="rounded"
+          />
+        </div>
+
+        <div className="flex flex-col text-right">
+          <p className="font-bold text-sm line-clamp-1">{item.title}</p>
+
+          <p
+            className={`text-xs ${
+              even ? 'text-gray-700' : 'text-gray-300'
+            } line-clamp-2`}
+          >
+            {item.description}
+          </p>
+
+          {item.date && (
+            <span
+              className={`text-xs ${
+                even ? 'text-gray-500' : 'text-gray-400'
+              } mt-1`}
+            >
+              {item.date}
+            </span>
+          )}
+
+          {(item.views || source) && (
+            <span className="text-xs text-gray-400 mt-1">
+              {item.views ? `${item.views} צפיות` : ''}
+              {item.views && source ? ' · ' : ''}
+              {source || ''}
+            </span>
+          )}
+        </div>
+      </>
+    );
+  }
+
+  /* ⭐️ הפונקציה שמחליטה אם להשתמש ב־Link או ב־a */
   const getStyledContent = (items) => {
     return items.map((item, i) => {
       const even = i % 2 === 0;
       const bg = even ? 'bg-red-50 text-black' : 'bg-neutral-900 text-white';
 
-      // fallback ל-source בצד לקוח אם חסר
-      const source =
-        item.source ||
-        (item.url ? extractDomainName(item.url) : '');
+      const source = item.source || (item.url ? extractDomainName(item.url) : '');
+
+      const isExternal = item.url && item.url.startsWith('http');
+      const internalHref = !isExternal && item.slug ? `/articles/${item.slug}` : null;
 
       return (
-        <a
-          key={item.id}
-          href={item.url || (item.slug ? `/articles/${item.slug}` : '#')}
-          target={item.url ? '_blank' : '_self'}
-          rel={item.url ? 'noopener noreferrer' : ''}
-          className={`flex gap-2 items-start p-1 rounded transition-transform duration-200 ${bg} hover:scale-[1.03] hover:shadow-sm`}
-        >
-          <div className="w-20 h-14 relative rounded overflow-hidden flex-shrink-0">
-            <Image
-              src={item.image || '/default-image.jpg'}
-              alt={item.title || ''}
-              fill
-              style={{ objectFit: 'cover' }}
-              className="rounded"
-            />
-          </div>
-          <div className="flex flex-col text-right">
-            <p className="font-bold text-sm line-clamp-1">
-              {item.title}
-            </p>
-            <p
-              className={`text-xs ${
-                even ? 'text-gray-700' : 'text-gray-300'
-              } line-clamp-2`}
+        <div key={item.id}>
+          {isExternal ? (
+            /* 🔗 חיצוני — נפתח בטאב חדש */
+            <a
+              href={item.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`flex gap-2 items-start p-1 rounded transition-transform duration-200 ${bg} hover:scale-[1.03] hover:shadow-sm`}
             >
-              {item.description}
-            </p>
-            {item.date && (
-              <span
-                className={`text-xs ${
-                  even ? 'text-gray-500' : 'text-gray-400'
-                } mt-1`}
-              >
-                {item.date}
-              </span>
-            )}
-            {(item.views || source) && (
-              <span className="text-xs text-gray-400 mt-1">
-                {item.views ? `${item.views} צפיות` : ''}
-                {item.views && source ? ' · ' : ''}
-                {source || ''}
-              </span>
-            )}
-          </div>
-        </a>
+              <CardContent item={item} even={even} source={source} />
+            </a>
+          ) : (
+            /* 🔗 פנימי — SPA ללא טעינה מחדש */
+            <Link
+              href={internalHref}
+              className={`flex gap-2 items-start p-1 rounded transition-transform duration-200 ${bg} hover:scale-[1.03] hover:shadow-sm`}
+            >
+              <CardContent item={item} even={even} source={source} />
+            </Link>
+          )}
+        </div>
       );
     });
   };
 
   let content = [];
-  if (activeTab === 'אחרונים')
-    content = getStyledContent(latestArticles);
-  else if (activeTab === 'בדרכים')
-    content = getStyledContent(onRoadArticles);
-  else if (activeTab === 'פופולרי')
-    content = getStyledContent(popularContent);
+  if (activeTab === 'אחרונים') content = getStyledContent(latestArticles);
+  else if (activeTab === 'בדרכים') content = getStyledContent(onRoadArticles);
+  else if (activeTab === 'פופולרי') content = getStyledContent(popularContent);
 
   return (
     <div
