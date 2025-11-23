@@ -67,13 +67,16 @@ function normalizeArticle(item) {
     date:
       attrs.date ||
       (attrs.publishedAt ? attrs.publishedAt.split('T')[0] : ''),
-    url: '', // כתבות פנימיות – הלינק נבנה בצד לקוח לפי slug
+    
+    // ⬅⬅⬅ תיקון חשוב: url פנימי אמיתי
+    url: attrs.slug ? `/articles/${attrs.slug}` : '',
+
     views: attrs.views ?? null,
     source: 'OnMotor',
   };
 }
 
-/* נרמול אייטם פופולרי (populars) */
+/* נרמול פופולרי (populars) */
 function normalizePopular(item) {
   const attrs = item.attributes || {};
   const { mainImage } = getMainImage(attrs);
@@ -88,9 +91,9 @@ function normalizePopular(item) {
   return {
     id: item.id,
     title: attrs.title || '',
-    slug: '', // פופולרי – בדרך כלל חיצוני
+    slug: '', // פופולרי הוא תמיד חיצוני
     description: attrs.description || '',
-    image: mainImage,
+    image: mainImage,         // ⬅ תמונה משדה image שהעלית
     date:
       attrs.date ||
       (attrs.publishedAt ? attrs.publishedAt.split('T')[0] : ''),
@@ -99,6 +102,7 @@ function normalizePopular(item) {
     source,
   };
 }
+
 
 export async function GET() {
   try {
