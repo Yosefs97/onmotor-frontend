@@ -1,5 +1,6 @@
 //app/page.js
-export const dynamic = "force-dynamic"; // ❗ חייב להישאר
+export const revalidate = 60;
+
 
 import React from "react";
 import MainGridContentDesktop from "@/components/MainGridContentDesktop";
