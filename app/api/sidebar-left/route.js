@@ -4,20 +4,16 @@ import { getMainImage } from '@/utils/resolveMainImage';
 
 const STRAPI_URL = process.env.STRAPI_API_URL;
 
-// ISR לנתיב הזה – יקטין את מספר הקריאות ל-Strapi
 export const revalidate = 120;
 
-/* 🧩 דומיין נקי (בשביל source כשצריך) */
+/* 🧩 דומיין נקי */
 function extractDomainName(url) {
   try {
     const host = new URL(url).hostname.replace('www.', '');
     const parts = host.split('.');
     let base = '';
-    if (
-      parts.length >= 3 &&
-      ['co', 'org', 'net'].includes(parts[parts.length - 2])
-    ) {
-      base = parts[parts.length - 3];
+    if (parts.length >= 3 && ['co','org','net'].includes(parts[parts.length-2])) {
+      base = parts[parts.length-3];
     } else {
       base = parts[0];
     }
@@ -27,102 +23,82 @@ function extractDomainName(url) {
   }
 }
 
-/* פוקנציה קטנה לביצוע fetch ל-Strapi עם טיפול בשגיאות */
+/* fetch ל-Strapi */
 async function fetchFromStrapi(path) {
-  if (!STRAPI_URL) {
-    console.error('❌ STRAPI_API_URL לא מוגדר');
-    return [];
-  }
+  if (!STRAPI_URL) return [];
 
   try {
     const res = await fetch(`${STRAPI_URL}${path}`, {
-      // cache בצד השרת (ISR) – כדי שלא כל בקשה של קליינט תיגע ב-Strapi
       next: { revalidate: 120 },
     });
 
-    if (!res.ok) {
-      console.error('❌ שגיאת Strapi:', res.status, path);
-      return [];
-    }
+    if (!res.ok) return [];
 
     const json = await res.json();
     return json.data || [];
   } catch (err) {
-    console.error('❌ שגיאה ב-fetchFromStrapi:', err);
+    console.error('❌ fetchFromStrapi:', err);
     return [];
   }
 }
 
-/* נרמול כתבה רגילה (articles) */
-function normalizeArticle(item) {
-  const attrs = item.attributes || {};
-  const { mainImage } = getMainImage(attrs);
+/* 🎯 normalizeItem כמו שהיה אצלך במדויק */
+function normalizeItem(obj) {
+  const a = obj.attributes || obj;
 
-  return {
-    id: item.id,
-    title: attrs.title || '',
-    slug: attrs.slug || '',
-    description: attrs.description || '',
-    image: mainImage,
-    date:
-      attrs.date ||
-      (attrs.publishedAt ? attrs.publishedAt.split('T')[0] : ''),
-    
-    // ⬅⬅⬅ תיקון חשוב: url פנימי אמיתי
-    url: attrs.slug ? `/articles/${attrs.slug}` : '',
-
-    views: attrs.views ?? null,
-    source: 'OnMotor',
-  };
-}
-
-/* נרמול פופולרי (populars) */
-function normalizePopular(item) {
-  const attrs = item.attributes || {};
-  const { mainImage } = getMainImage(attrs);
-
-  const url = attrs.url || '';
-  let source = attrs.source || '';
-
-  if (!source && url) {
-    source = extractDomainName(url);
+  // 🔵 מקור
+  let autoSource = '';
+  if (a.url) {
+    if (a.url.includes('youtube.com') || a.url.includes('youtu.be'))
+      autoSource = 'YouTube';
+    else if (a.url.includes('tiktok.com'))
+      autoSource = 'TikTok';
+    else if (a.url.includes('instagram.com'))
+      autoSource = 'Instagram';
+    else if (a.url.includes('facebook.com'))
+      autoSource = 'Facebook';
+    else
+      autoSource = extractDomainName(a.url);
   }
 
+  // 🔴 תמונה — לפי getMainImage המקורי
+  const { mainImage } = getMainImage(a);
+
   return {
-    id: item.id,
-    title: attrs.title || '',
-    slug: '', // פופולרי הוא תמיד חיצוני
-    description: attrs.description || '',
-    image: mainImage,         // ⬅ תמונה משדה image שהעלית
-    date:
-      attrs.date ||
-      (attrs.publishedAt ? attrs.publishedAt.split('T')[0] : ''),
-    url,
-    views: attrs.views ?? null,
-    source,
+    id: obj.id,
+    title: a.title || a.name || '',
+    slug: a.slug || '',
+    description: a.description || '',
+    image: mainImage,
+    date: a.date?.split('T')[0] || a.publishedAt?.split('T')[0] || '',
+
+    // 🟢 url פנימי או חיצוני — בדיוק כמו שהיה
+    url: a.url || (a.slug ? `/articles/${a.slug}` : ''),
+
+    views: a.views ?? null,
+    source: a.source || autoSource,
   };
 }
-
 
 export async function GET() {
   try {
-    // 1️⃣ אחרונים – כתבות רגילות
+    // 1️⃣ אחרונים
     const latestRaw = await fetchFromStrapi(
       '/api/articles?sort=date:desc&pagination[limit]=20&populate=*'
     );
-    const latest = latestRaw.map(normalizeArticle);
+    const latest = latestRaw.map(normalizeItem);
 
-    // 2️⃣ בדרכים – כתבות עם תגית iroads
+    // 2️⃣ בדרכים
     const onRoadRaw = await fetchFromStrapi(
       '/api/articles?filters[tags_txt][$contains]=iroads&sort=date:desc&pagination[limit]=20&populate=*'
     );
-    const onRoad = onRoadRaw.map(normalizeArticle);
+    const onRoad = onRoadRaw.map(normalizeItem);
 
-    // 3️⃣ פופולרי – מתוך collection populars, עם שדה image
+    // 3️⃣ פופולרי
     const popularRaw = await fetchFromStrapi(
-      '/api/populars?sort=date:desc&pagination[limit]=20&populate[image]=*&populate[gallery]=*'
+      '/api/populars?sort=date:desc&pagination[limit]=20&populate=*'
     );
-    const popular = popularRaw.map(normalizePopular);
+    const popular = popularRaw.map(normalizeItem);
 
     return NextResponse.json({
       latest,
