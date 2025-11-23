@@ -1,16 +1,11 @@
 //app/page.js
-export const dynamic = "force-dynamic"; // ❗ חייב להישאר
+export const dynamic = "force-dynamic";
 
 import React from "react";
 import MainGridContentDesktop from "@/components/MainGridContentDesktop";
 import PageContainer from "@/components/PageContainer";
+import { getMainImage } from "@/utils/resolveMainImage";
 
-/* -----------------------------------------------------------
-   ⚙️ טעינת כתבות מ־Strapi (Server Component)
-   - דינאמי כדי למנוע נפילת build
-   - עם revalidate כדי לחסוך Edge Requests
-   - אופטימיזציה משמעותית להקטנת צריכת API
------------------------------------------------------------ */
 async function fetchArticles() {
   const base = process.env.STRAPI_API_URL;
 
@@ -19,15 +14,7 @@ async function fetchArticles() {
     return [];
   }
 
-  // 🟢 גרסה אופטימלית ללא populate=* (כבד מאוד)
-  const url =
-    `${base}/api/articles?` +
-    `fields=title,slug,category,date,headline,subdescription,description,tags_txt&` +
-    `populate[image][fields]=url,alternativeText&` +
-    `populate[gallery][fields]=url,alternativeText&` +
-    `populate[external_media_links]=*&` +
-    `pagination[limit]=120&` +
-    `sort=date:desc`;
+  const url = `${base}/api/articles?populate=*`;
 
   try {
     const controller = new AbortController();
@@ -47,19 +34,32 @@ async function fetchArticles() {
 
     const json = await res.json();
 
-    return json.data.map((item) => ({
-      id: item.id,
-      ...item.attributes,
-    }));
+    return json.data.map((item) => {
+      const attrs = item.attributes;
+
+      const { mainImage, mainImageAlt } = getMainImage(attrs);
+
+      return {
+        id: item.id,
+        title: attrs.title,
+        slug: attrs.slug,
+        category: attrs.category,
+        date: attrs.date,
+        description: attrs.description,
+        subdescription: attrs.subdescription,
+        headline: attrs.headline,
+        tags: attrs.tags,
+        subcategory: attrs.subcategory,
+        image: mainImage,
+        imageAlt: mainImageAlt,
+      };
+    });
   } catch (err) {
     console.error("❌ שגיאה בטעינת כתבות:", err.message);
     return [];
   }
 }
 
-/* -----------------------------------------------------------
-   🏠 עמוד הבית
------------------------------------------------------------ */
 export default async function HomePage() {
   const articles = await fetchArticles();
 
