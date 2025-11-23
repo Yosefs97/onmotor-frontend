@@ -23,6 +23,594 @@ Pro
 
 ///
 
+// /components/ContactForAdBox.jsx
+'use client';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+export default function ContactForAdBox() {
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ name: '', phone: '', email: '', notes: '' });
+  const [status, setStatus] = useState(null);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStatus('loading');
+    setErrorMsg('');
+
+    try {
+      const res = await fetch('/api/contact-for-ad', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data?.error || 'Server error');
+      }
+
+      setStatus('success');
+      setForm({ name: '', phone: '', email: '', notes: '' });
+
+      setTimeout(() => setOpen(false), 2000);
+    } catch (err) {
+      console.error('❌ שגיאה בשליחה:', err);
+      setStatus('error');
+      setErrorMsg(err?.message || 'שגיאה לא ידועה');
+    }
+  };
+
+  return (
+    <div
+      dir="rtl"
+      className="mt-0.8 mb-2 border-[3px] border-[#e60000] rounded-xl bg-gray-900 text-white p-4 text-center shadow-md relative overflow-hidden transition-all duration-300"
+    >
+      <h3 className="text-xl font-bold mb-2 text-[#e60000]">
+        רוצה לפרסם באתר?
+      </h3>
+      <p className="text-base text-gray-300 mb-3">
+        השאירו פרטים ונציג יחזור אליכם בהקדם.
+      </p>
+
+      <button
+        onClick={() => setOpen(!open)}
+        className="bg-[#e60000] hover:bg-[#b50000] text-white font-bold px-4 py-2 rounded-md transition"
+      >
+        {open ? 'סגור' : 'השאירו פרטים'}
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.35 }}
+            className="mt-4 bg-gray-800 text-white p-4 rounded-md border-t-2 border-[#e60000] text-right"
+          >
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+              <input
+                type="text"
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                placeholder="שם / שם העסק"
+                required
+                className="p-2 rounded bg-gray-700 text-white w-full placeholder-gray-400"
+              />
+              <input
+                type="tel"
+                name="phone"
+                value={form.phone}
+                onChange={handleChange}
+                placeholder="מספר נייד"
+                required
+                className="p-2 rounded bg-gray-700 text-white w-full placeholder-gray-400"
+              />
+              <input
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="אימייל"
+                required
+                className="p-2 rounded bg-gray-700 text-white w-full placeholder-gray-400"
+              />
+
+              {/* 🟢 שדה הערות אופציונלי בלבד */}
+              <textarea
+                name="notes"
+                value={form.notes}
+                onChange={handleChange}
+                placeholder="פירוט נוסף (לא חובה)"
+                rows={3}
+                className="p-2 rounded bg-gray-700 text-white w-full placeholder-gray-400 resize-none"
+              />
+
+              <button
+                type="submit"
+                className="bg-[#e60000] hover:bg-[#b50000] px-4 py-2 rounded-md mt-2 font-bold"
+              >
+                הגש
+              </button>
+            </form>
+
+            {status === 'loading' && (
+              <p className="text-yellow-400 mt-2 text-sm">שולח...</p>
+            )}
+            {status === 'success' && (
+              <p className="text-green-400 mt-2 text-sm">
+                ✅ נשלח בהצלחה! נציג יחזור אליך בקרוב.
+              </p>
+            )}
+            {status === 'error' && (
+              <p className="text-red-400 mt-2 text-sm">
+                ⚠️ אירעה שגיאה בשליחה: {errorMsg}
+              </p>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+
+// components/SidebarFixed.jsx
+'use client';
+import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import ResponsiveBoxGrid from './ResponsiveBoxGrid';
+import BoxWrapper from './BoxWrapper';
+
+const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
+
+/* ✅ פונקציה מאוחדת לזיהוי כתובת מדיה (Cloudinary / Strapi / חיצוני) */
+function resolveMediaUrl(rawUrl) {
+  if (!rawUrl) return null;
+  if (rawUrl.startsWith('http')) return rawUrl;
+  return `${API_URL}${rawUrl.startsWith('/') ? rawUrl : `/uploads/${rawUrl}`}`;
+}
+
+/* ✅ פונקציה לנרמול לינקים מ-Google Drive */
+function normalizeDriveUrl(url) {
+  if (!url) return url;
+
+  // אם זה ID בלבד
+  if (/^[a-zA-Z0-9_-]{20,}$/.test(url)) {
+    return `/api/drive-proxy?id=${url}`;
+  }
+
+  // אם זה לינק רגיל של דרייב
+  if (url.includes('drive.google.com/file/d/')) {
+    const match = url.match(/\/d\/([^/]+)/);
+    if (match && match[1]) {
+      return `/api/drive-proxy?id=${match[1]}`;
+    }
+  }
+
+  return url;
+}
+
+export default function SidebarFixed() {
+  const [ads, setAds] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  /* ✅ טעינת מודעות מ-Strapi */
+  useEffect(() => {
+    async function fetchAds() {
+      try {
+        const res = await fetch(
+          `${API_URL}/api/sidebar-middles?populate=image&populate=video`
+        );
+        const json = await res.json();
+        setAds(json.data || []);
+      } catch (err) {
+        console.error('שגיאה בטעינת sidebar-middle:', err);
+      }
+    }
+    fetchAds();
+  }, []);
+
+  /* ✅ קרוסלה מתחלפת כל 5 שניות */
+  useEffect(() => {
+    if (ads.length > 2) {
+      const interval = setInterval(() => {
+        setCurrentIndex((prev) => (prev + 2) % ads.length);
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [ads]);
+
+  /* ✅ החזרת מודעה לפי אינדקס */
+  const getAdAt = (index) => {
+    if (!ads.length) return null;
+    return ads[index % ads.length];
+  };
+
+  /* ✅ כרטיס מודעה עם לוגיקת תמונה חדשה */
+  const AdCard = ({ ad }) => {
+    if (!ad) return null;
+
+    const attrs = ad; // הנתונים מגיעים מ-Strapi
+
+    // נורמליזציה של כל הנתיבים
+    const driveUrl = normalizeDriveUrl(attrs.mediaUrl || null);
+
+    // תמונה מ-Strapi (Cloudinary או יחסית)
+    const imageUrl = Array.isArray(attrs.image) && attrs.image.length > 0
+      ? resolveMediaUrl(attrs.image[0].url)
+      : resolveMediaUrl(attrs.image?.url);
+
+    // וידאו מ-Strapi
+    const videoUrl = Array.isArray(attrs.video) && attrs.video.length > 0
+      ? resolveMediaUrl(attrs.video[0].url)
+      : resolveMediaUrl(attrs.video?.url);
+
+    // ✅ סדר עדיפויות: mediaUrl (דרייב/חיצוני) > video > image
+    let finalUrl = driveUrl || videoUrl || imageUrl;
+    let isVideo =
+      (finalUrl && finalUrl.endsWith('.mp4')) ||
+      finalUrl?.includes('youtube') ||
+      finalUrl?.includes('vimeo');
+
+    let content = null;
+
+    if (!finalUrl) {
+      content = (
+        <div className="w-full h-full bg-gray-800 flex items-center justify-center text-white">
+          אין מדיה זמינה
+        </div>
+      );
+    } else if (isVideo) {
+      content = (
+        <video
+          src={finalUrl}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover"
+        />
+      );
+    } else {
+      content = (
+        <img
+          src={finalUrl}
+          alt={attrs.title || 'ad'}
+          className="w-full h-full object-cover"
+          loading="lazy"
+        />
+      );
+    }
+
+    return (
+      <div className="border-[3px] border-[#e60000] rounded-xl overflow-hidden shadow-xl bg-black transition-all hover:shadow-[#e60000]/50">
+        <div className="w-full aspect-[16/8]">{content}</div>
+
+        {/* כפתורים */}
+        <div className="flex justify-center gap-2 p-3">
+          {attrs.link && (
+            <a
+              href={attrs.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="relative bg-gradient-to-r from-[#1f1f1f] to-[#3a3a3a] text-white font-bold px-4 py-2 rounded-lg text-center text-sm transition-all duration-300 hover:scale-105 hover:from-[#e60000] hover:to-[#b50000]"
+            >
+              {attrs.title ? attrs.title : 'לאתר המפרסם'}
+            </a>
+          )}
+          {attrs.slug && (
+            <a
+              href={`/articles/${attrs.slug}`}
+              className="bg-[#e60000] text-white px-3 py-2 rounded-md hover:bg-[#b50000] text-sm transition-all duration-300"
+            >
+              לכתבה
+            </a>
+          )}
+        </div>
+
+      </div>
+    );
+  };
+
+  return (
+    <div className="relative bg-gray-900 py-4 sticky top-25">
+      <ResponsiveBoxGrid>
+        <BoxWrapper>
+          <div className="overflow-hidden flex flex-col gap-4">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentIndex}
+                initial={{ y: 50, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -50, opacity: 0 }}
+                transition={{ duration: 1 }}
+              >
+                <AdCard ad={getAdAt(currentIndex)} />
+              </motion.div>
+              <motion.div
+                key={currentIndex + 1}
+                initial={{ y: 50, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -50, opacity: 0 }}
+                transition={{ duration: 1, delay: 0.1 }}
+              >
+                <AdCard ad={getAdAt(currentIndex + 1)} />
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </BoxWrapper>
+      </ResponsiveBoxGrid>
+    </div>
+  );
+}
+
+// components/SidebarMiddleLayer.jsx
+'use client';
+import SidebarFixed from './SidebarFixed';
+import ContactForAdBox from './ContactForAdBox';
+
+export default function SidebarMiddleLayer() {
+  return (
+    <div className="sidebar-middle-layer sticky top-7 flex flex-col gap-0 w-full flex-1">
+      {/* תוכן הסיידר שמתעדכן */}
+      <div className="flex-1">
+        <SidebarFixed />
+      </div>
+
+      {/* שכבת יצירת קשר קבועה */}
+      <div className=" bottom-0 bg-gray-900">
+        <ContactForAdBox />
+      </div>
+    </div>
+  );
+}
+
+
+// components/NavigationMenu.jsx
+'use client';
+import React, { useState, useRef, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { scrollToBottomOfElement } from "./utils/scrollUtils";
+
+const API_URL =
+  process.env.NEXT_PUBLIC_STRAPI_API_URL ||
+  "https://onmotor-strapi.onrender.com";
+
+export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
+  const [openIndex, setOpenIndex] = useState(null);
+  const [subOpenIndex, setSubOpenIndex] = useState(null);
+  const [forumLinks, setForumLinks] = useState([]); // ✅ קטגוריות פורום דינמיות
+  const menuRefs = useRef([]);
+  const router = useRouter();
+
+  const toggleMenu = (index) => {
+    const newIndex = openIndex === index ? null : index;
+    setOpenIndex(newIndex);
+    setSubOpenIndex(null);
+  };
+
+  // 🟩 שלב 1 — טעינת קטגוריות פורום מ־Strapi
+  useEffect(() => {
+    async function loadForumCategories() {
+      try {
+        const res = await fetch(`${API_URL}/api/forum-categories?populate=*`, { cache: "no-store" });
+        const json = await res.json();
+        const formatted = json.data?.map((cat) => {
+          const name =
+            cat?.attributes?.name?.trim() ||
+            cat?.name?.trim() ||
+            "ללא שם";
+          const slug =
+            cat?.attributes?.slug?.trim() ||
+            cat?.slug?.trim() ||
+            "";
+          return {
+            title: name,
+            path: slug ? `/forum/${slug}` : "/forum",
+          };
+        }) || [];
+        setForumLinks(formatted);
+      } catch (err) {
+        console.error("⚠️ שגיאה בטעינת קטגוריות פורום:", err);
+      }
+    }
+    loadForumCategories();
+  }, []);
+
+  useEffect(() => {
+    if (openIndex !== null && menuRefs.current[openIndex]) {
+      scrollToBottomOfElement(menuRefs.current[openIndex]);
+    }
+  }, [openIndex]);
+
+  // 🟨 שלב 2 — מבנה תפריט
+  const menus = [
+    { title: 'OnMotor Parts', path: '/shop', links: [] },
+    {
+      title: 'סקירות', path: '/reviews', links: [
+        { title: 'מבחני דרכים', path: '/reviews/motorcycles' },
+        { title: 'סקירות ציוד', path: '/reviews/gear' },
+        { title: 'סקירות וידאו', path: '/reviews/video' },
+      ]
+    },
+    {
+      title: 'ציוד', path: '/gear', links: [
+        { title: 'שטח', path: '/gear/offroad' },
+        { title: 'כביש', path: '/gear/road' },
+        { title: 'אדוונצ׳ר', path: '/gear/adventure' },
+        { title: 'קסטום', path: '/gear/custom' },
+      ]
+    },
+    { title: 'רלב"ד', path: '/law-book', links: [{ title: 'שאל את הרלב"ד', path: '/law-book/ask-question' }] },
+    {
+      title: 'פורום', path: '/forum', links: forumLinks // ✅ דינמי מ־Strapi
+    },
+    {
+      title: 'בלוג', path: '/blog', links: [
+        { title: 'אחד על אחד (פודקאסט)', path: '/blog/podcast' },
+        { title: 'בקסדה', path: '/blog/in-helmet' },
+        { title: 'על הנייר', path: '/blog/paper' },
+        { title: 'טיפים', path: '/blog/tips' },
+        {
+          title: 'מדריכים', path: '/blog/guides', links: [
+            { title: 'מדריך טכני ותחזוקה', path: '/blog/guides/guide-tech' },
+            { title: 'מדריך לרוכב המתחיל', path: '/blog/guides/guide-beginner' },
+            { title: 'מדריך לרוכב המתקדם', path: '/blog/guides/guide-advanced' },
+          ]
+        }
+      ]
+    },
+    {
+      title: 'חדשות', path: '/news', links: [
+        { title: 'חדשות מקומיות', path: '/news/local' },
+        { title: 'חדשות מהעולם', path: '/news/global' },
+        { title: 'מכונות חדשות', path: '/news/machine' },
+      ]
+    },
+    {
+      title: 'צור קשר', path: '/contact', links: [
+        { title: 'וואטסאפ', path: 'https://wa.me/972522304604' },
+        { title: 'שלח מייל', path: 'mailto:onmotormedia@gmail.com' },
+      ]
+    }
+  ];
+
+  // 🟥 שלב 3 — רינדור תפריט
+  return (
+    <div className={mobile ? "max-h-[100vh] overflow-y-0 pr-8" : ""}>
+      <nav className={mobile ? "flex flex-col gap-2 text-2xl text-right" : "flex gap-2 text-lm font-semibold"}>
+        {menus.map((menu, index) => {
+          const hasLinks = menu.links && menu.links.length > 0;
+          const isOnMotorParts = menu.title === 'OnMotor Parts';
+
+          const handleClick = () => {
+            if (mobile && hasLinks && !isOnMotorParts) {
+              toggleMenu(index);
+            } else {
+              onClose();
+              router.push(menu.path);
+            }
+          };
+
+          return (
+            <div
+              key={index}
+              className={`relative ${!mobile ? "group" : ""}`}
+              ref={(el) => (menuRefs.current[index] = el)}
+            >
+              <button
+                onClick={handleClick}
+                className={`flex items-center gap-1 w-full px-2 py-1 text-lm font-semibold text-right
+                  ${isOnMotorParts ? 'text-[#e60000] font-bold animate-parts-bounce' : 'hover:text-[#e60000]'}`}
+              >
+                <span className="flex-1">{menu.title}</span>
+                {hasLinks && (!mobile || !isOnMotorParts) && (
+                  <span className="text-xl">
+                    {mobile ? (openIndex === index ? "▲" : "▼") : "▼"}
+                  </span>
+                )}
+              </button>
+
+              {/* dropdown */}
+              {hasLinks && (
+                mobile ? (
+                  !isOnMotorParts && (
+                    <div
+                      className={`flex flex-col gap-1 mt-4 pr-4 text-lm ${openIndex === index ? "block" : "hidden"}`}
+                    >
+                      {menu.links.map((link, idx) => {
+                        const hasSubLinks = link.links && link.links.length > 0;
+                        const subOpen = subOpenIndex === `${index}-${idx}`;
+
+                        return (
+                          <div key={idx} className="flex flex-col">
+                            <button
+                              onClick={() => {
+                                if (hasSubLinks) {
+                                  setSubOpenIndex(subOpen ? null : `${index}-${idx}`);
+                                } else {
+                                  onClose();
+                                  router.push(link.path);
+                                }
+                              }}
+                              className="flex justify-between items-center py-1 hover:text-[#e60000]"
+                            >
+                              <span>{link.title}</span>
+                              {hasSubLinks && <span>{subOpen ? "▲" : "▼"}</span>}
+                            </button>
+
+                            {hasSubLinks && (
+                              <div className={`flex flex-col pr-4 ${subOpen ? "block" : "hidden"}`}>
+                                {link.links.map((sublink, sIdx) => (
+                                  <Link
+                                    key={sIdx}
+                                    href={sublink.path}
+                                    onClick={onClose}
+                                    className="block py-1 hover:text-[#e60000] text-right"
+                                  >
+                                    {sublink.title}
+                                  </Link>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )
+                ) : (
+                  <div className="absolute right-0 w-56 bg-black shadow-lg rounded p-2 z-[9999] text-right hidden group-hover:flex flex-col">
+                    {menu.links.map((link, idx) => {
+                      const hasSubLinks = link.links && link.links.length > 0;
+                      return (
+                        <div key={idx} className="relative group/sub">
+                          <Link
+                            href={link.path}
+                            className="block px-4 py-2 text-sm text-white hover:text-[#e60000] whitespace-nowrap text-right relative"
+                          >
+                            <span>{link.title}</span>
+                            {link.title === "מדריכים" && (
+                              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs">▼</span>
+                            )}
+                          </Link>
+
+                          {hasSubLinks && (
+                            <div className="absolute top-full right-0 w-54 bg-black shadow-lg rounded p-2 z-[9999] text-right hidden group-hover/sub:flex flex-col">
+                              {link.links.map((sublink, sIdx) => (
+                                <Link
+                                  key={sIdx}
+                                  href={sublink.path}
+                                  className="block px-4 py-2 text-sm text-white hover:text-[#e60000] whitespace-nowrap text-right"
+                                >
+                                  {sublink.title}
+                                </Link>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )
+              )}
+            </div>
+          );
+        })}
+      </nav>
+    </div>
+  );
+}
+
 
 
 // /components/ManufacturerGrid.jsx

@@ -7,23 +7,21 @@ import BoxWrapper from './BoxWrapper';
 
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 
-/* ✅ פונקציה מאוחדת לזיהוי כתובת מדיה (Cloudinary / Strapi / חיצוני) */
+/* פונקציה לזיהוי כתובת מדיה */
 function resolveMediaUrl(rawUrl) {
   if (!rawUrl) return null;
   if (rawUrl.startsWith('http')) return rawUrl;
   return `${API_URL}${rawUrl.startsWith('/') ? rawUrl : `/uploads/${rawUrl}`}`;
 }
 
-/* ✅ פונקציה לנרמול לינקים מ-Google Drive */
+/* נרמול גוגל דרייב */
 function normalizeDriveUrl(url) {
   if (!url) return url;
 
-  // אם זה ID בלבד
   if (/^[a-zA-Z0-9_-]{20,}$/.test(url)) {
     return `/api/drive-proxy?id=${url}`;
   }
 
-  // אם זה לינק רגיל של דרייב
   if (url.includes('drive.google.com/file/d/')) {
     const match = url.match(/\/d\/([^/]+)/);
     if (match && match[1]) {
@@ -34,103 +32,73 @@ function normalizeDriveUrl(url) {
   return url;
 }
 
-export default function SidebarFixed() {
-  const [ads, setAds] = useState([]);
+export default function SidebarFixed({ ads }) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  /* ✅ טעינת מודעות מ-Strapi */
-  useEffect(() => {
-    async function fetchAds() {
-      try {
-        const res = await fetch(
-          `${API_URL}/api/sidebar-middles?populate=image&populate=video`
-        );
-        const json = await res.json();
-        setAds(json.data || []);
-      } catch (err) {
-        console.error('שגיאה בטעינת sidebar-middle:', err);
-      }
-    }
-    fetchAds();
-  }, []);
-
-  /* ✅ קרוסלה מתחלפת כל 5 שניות */
+  /* 🔁 קרוסלה מתחלפת כל 5 שניות */
   useEffect(() => {
     if (ads.length > 2) {
-      const interval = setInterval(() => {
-        setCurrentIndex((prev) => (prev + 2) % ads.length);
-      }, 5000);
+      const interval = setInterval(
+        () => setCurrentIndex((prev) => (prev + 2) % ads.length),
+        5000
+      );
       return () => clearInterval(interval);
     }
   }, [ads]);
 
-  /* ✅ החזרת מודעה לפי אינדקס */
-  const getAdAt = (index) => {
-    if (!ads.length) return null;
-    return ads[index % ads.length];
+  const getAdAt = (i) => {
+    if (!ads || !ads.length) return null;
+    return ads[i % ads.length];
   };
 
-  /* ✅ כרטיס מודעה עם לוגיקת תמונה חדשה */
   const AdCard = ({ ad }) => {
     if (!ad) return null;
 
-    const attrs = ad; // הנתונים מגיעים מ-Strapi
+    const attrs = ad;
 
-    // נורמליזציה של כל הנתיבים
     const driveUrl = normalizeDriveUrl(attrs.mediaUrl || null);
 
-    // תמונה מ-Strapi (Cloudinary או יחסית)
     const imageUrl = Array.isArray(attrs.image) && attrs.image.length > 0
       ? resolveMediaUrl(attrs.image[0].url)
       : resolveMediaUrl(attrs.image?.url);
 
-    // וידאו מ-Strapi
     const videoUrl = Array.isArray(attrs.video) && attrs.video.length > 0
       ? resolveMediaUrl(attrs.video[0].url)
       : resolveMediaUrl(attrs.video?.url);
 
-    // ✅ סדר עדיפויות: mediaUrl (דרייב/חיצוני) > video > image
-    let finalUrl = driveUrl || videoUrl || imageUrl;
-    let isVideo =
+    const finalUrl = driveUrl || videoUrl || imageUrl;
+
+    const isVideo =
       (finalUrl && finalUrl.endsWith('.mp4')) ||
       finalUrl?.includes('youtube') ||
       finalUrl?.includes('vimeo');
 
-    let content = null;
-
-    if (!finalUrl) {
-      content = (
-        <div className="w-full h-full bg-gray-800 flex items-center justify-center text-white">
-          אין מדיה זמינה
-        </div>
-      );
-    } else if (isVideo) {
-      content = (
-        <video
-          src={finalUrl}
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="w-full h-full object-cover"
-        />
-      );
-    } else {
-      content = (
-        <img
-          src={finalUrl}
-          alt={attrs.title || 'ad'}
-          className="w-full h-full object-cover"
-          loading="lazy"
-        />
-      );
-    }
+    const content = !finalUrl ? (
+      <div className="w-full h-full bg-gray-800 flex items-center justify-center text-white">
+        אין מדיה זמינה
+      </div>
+    ) : isVideo ? (
+      <video
+        src={finalUrl}
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="w-full h-full object-cover"
+      />
+    ) : (
+      <img
+        src={finalUrl}
+        alt={attrs.title || 'ad'}
+        className="w-full h-full object-cover"
+        loading="lazy"
+      />
+    );
 
     return (
       <div className="border-[3px] border-[#e60000] rounded-xl overflow-hidden shadow-xl bg-black transition-all hover:shadow-[#e60000]/50">
         <div className="w-full aspect-[16/8]">{content}</div>
 
-        {/* כפתורים */}
         <div className="flex justify-center gap-2 p-3">
           {attrs.link && (
             <a
@@ -151,7 +119,6 @@ export default function SidebarFixed() {
             </a>
           )}
         </div>
-
       </div>
     );
   };
