@@ -3,7 +3,7 @@ import ContactForAdBox from './ContactForAdBox';
 
 async function getSidebarAds() {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_SITE_URL}/api/sidebar-middle`,
+    "/api/sidebar-middle",
     { next: { revalidate: 120 } }
   );
   const json = await res.json();
@@ -18,6 +18,7 @@ export default async function SidebarMiddleLayer() {
       <div className="flex-1">
         <SidebarFixed ads={ads} />
       </div>
+
       <div className=" bottom-0 bg-gray-900">
         <ContactForAdBox />
       </div>
