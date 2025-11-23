@@ -53,7 +53,7 @@ export default function MainGridContentDesktop() {
   useEffect(() => {
     async function fetchArticles() {
       try {
-        const res = await fetch(`${API_URL}/api/articles?populate=*`, { cache: 'no-store' });
+        const res = await fetch('/api/main-grid', { cache: 'no-store' });
         const json = await res.json();
 
         const mapped = json.data?.map((a) => {
