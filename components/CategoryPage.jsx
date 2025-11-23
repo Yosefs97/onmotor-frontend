@@ -23,6 +23,7 @@ function groupBySubcategory(articles) {
       : [article.subcategory];
 
     subcategories.forEach((subcat) => {
+      if (!subcat) return;
       if (!acc[subcat]) acc[subcat] = [];
       acc[subcat].push(article);
     });
@@ -39,6 +40,7 @@ function groupByValues(articles) {
       : [article.Values];
 
     values.forEach((val) => {
+      if (!val) return;
       if (!acc[val]) acc[val] = [];
       acc[val].push(article);
     });
@@ -54,17 +56,36 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
   useEffect(() => {
     async function fetchArticles() {
       try {
-        let url = `/api/articles`;
+        // 🔵 בונים URL פנימי ל-Next ולא ל-Strapi
+        let url = '/api/articles';
+        const params = new URLSearchParams();
 
-        // ✅ סינון לפי קטגוריה ראשית
+        // תמיד דואגים ל-populate=*
+        params.set('populate', '*');
+
+        // ✅ סינון לפי קטגוריה ראשית (ברמת Strapi)
         if (categoryKey) {
-          url += `&filters[category][$eq]=${categoryKey}`;
+          params.append('filters[category][$eq]', categoryKey);
+        }
+
+        if (params.toString()) {
+          url += `?${params.toString()}`;
         }
 
         const res = await fetch(url, { cache: 'no-store' });
         const json = await res.json();
-        let data = json.data || [];
 
+        // json.data מגיע מ-Strapi: [{ id, attributes: {...} }, ...]
+        let data = Array.isArray(json.data) ? json.data : [];
+
+        // מרימים attributes לאובייקט שטוח כדי שיתאים ללוגיקה הישנה שלך
+        data = data.map((item) => {
+          const attrs = item.attributes || {};
+          return {
+            id: item.id,
+            ...attrs,
+          };
+        });
 
         // ✅ סינון בצד הלקוח לפי תת־קטגוריה
         if (subcategoryKey) {
@@ -77,7 +98,7 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
           });
         }
 
-        // ✅ סינון לפי Values
+        // ✅ סינון לפי Values (מדריכים)
         if (guideSubKey) {
           data = data.filter((a) => {
             const vals = a.Values;
@@ -150,6 +171,7 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
         setArticles(sorted);
       } catch (err) {
         console.error('שגיאה בטעינת כתבות:', err);
+        setArticles([]);
       } finally {
         setLoading(false);
       }
@@ -217,4 +239,3 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
     </div>
   );
 }
-
