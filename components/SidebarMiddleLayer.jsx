@@ -1,13 +1,28 @@
 import SidebarFixed from './SidebarFixed';
 import ContactForAdBox from './ContactForAdBox';
 
+const STRAPI_URL =
+  process.env.STRAPI_API_URL ||
+  process.env.NEXT_PUBLIC_STRAPI_API_URL;
+
 async function getSidebarAds() {
+  if (!STRAPI_URL) return [];
+
   const res = await fetch(
-    "/api/sidebar-middle",
+    `${STRAPI_URL}/api/sidebar-middles?populate=image&populate=video`,
     { next: { revalidate: 120 } }
   );
+
+  if (!res.ok) return [];
+
   const json = await res.json();
-  return json.items || [];
+
+  return (
+    json.data?.map((item) => ({
+      id: item.id,
+      ...item.attributes,
+    })) || []
+  );
 }
 
 export default async function SidebarMiddleLayer() {
