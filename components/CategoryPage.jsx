@@ -54,16 +54,17 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
   useEffect(() => {
     async function fetchArticles() {
       try {
-        let url = `${API_URL}/api/articles?populate=*`;
+        let url = `/api/articles`;
 
         // ✅ סינון לפי קטגוריה ראשית
         if (categoryKey) {
           url += `&filters[category][$eq]=${categoryKey}`;
         }
 
-        const res = await fetch(url);
+        const res = await fetch(url, { cache: 'no-store' });
         const json = await res.json();
         let data = json.data || [];
+
 
         // ✅ סינון בצד הלקוח לפי תת־קטגוריה
         if (subcategoryKey) {
