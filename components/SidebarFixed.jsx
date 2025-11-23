@@ -1,6 +1,7 @@
 // components/SidebarFixed.jsx
 'use client';
-import { useState, useEffect } from 'react';
+
+import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ResponsiveBoxGrid from './ResponsiveBoxGrid';
 import BoxWrapper from './BoxWrapper';
@@ -34,10 +35,49 @@ function normalizeDriveUrl(url) {
   return url;
 }
 
-export default function SidebarFixed({ ads }) {
+export default function SidebarFixed() {
+  const [ads, setAds] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const hasFetched = useRef(false);
 
-  // ❗ שים לב – אין פה fetch בכלל, רק קרוסלה
+  /* ✅ טעינת מודעות מ-Strapi – פעם אחת בלבד בקליינט */
+  useEffect(() => {
+    if (!API_URL) {
+      console.error('❌ NEXT_PUBLIC_STRAPI_API_URL לא מוגדר');
+      return;
+    }
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+
+    async function fetchAds() {
+      try {
+        const res = await fetch(
+          `${API_URL}/api/sidebar-middles?populate=image&populate=video`
+        );
+
+        if (!res.ok) {
+          console.error('❌ שגיאה בטעינת sidebar-middle:', res.status);
+          return;
+        }
+
+        const json = await res.json();
+
+        const items =
+          json.data?.map((item) => ({
+            id: item.id,
+            ...item.attributes,
+          })) || [];
+
+        setAds(items);
+      } catch (err) {
+        console.error('❌ שגיאה בטעינת sidebar-middle:', err);
+      }
+    }
+
+    fetchAds();
+  }, []);
+
+  /* ✅ קרוסלה מתחלפת כל 5 שניות */
   useEffect(() => {
     if (ads.length > 2) {
       const interval = setInterval(() => {
@@ -47,26 +87,32 @@ export default function SidebarFixed({ ads }) {
     }
   }, [ads]);
 
+  /* ✅ החזרת מודעה לפי אינדקס */
   const getAdAt = (index) => {
     if (!ads.length) return null;
     return ads[index % ads.length];
   };
 
+  /* ✅ כרטיס מודעה עם לוגיקת תמונה חדשה */
   const AdCard = ({ ad }) => {
     if (!ad) return null;
 
-    const attrs = ad; // אחרי ה-API החדש זה כבר יהיה attributes שטוח
+    const attrs = ad; // כבר שטוח (id + attributes)
 
+    // נורמליזציה של כל הנתיבים
     const driveUrl = normalizeDriveUrl(attrs.mediaUrl || null);
 
+    // תמונה מ-Strapi (Cloudinary או יחסית)
     const imageUrl = Array.isArray(attrs.image) && attrs.image.length > 0
       ? resolveMediaUrl(attrs.image[0].url)
       : resolveMediaUrl(attrs.image?.url);
 
+    // וידאו מ-Strapi
     const videoUrl = Array.isArray(attrs.video) && attrs.video.length > 0
       ? resolveMediaUrl(attrs.video[0].url)
       : resolveMediaUrl(attrs.video?.url);
 
+    // ✅ סדר עדיפויות: mediaUrl (דרייב/חיצוני) > video > image
     let finalUrl = driveUrl || videoUrl || imageUrl;
     let isVideo =
       (finalUrl && finalUrl.endsWith('.mp4')) ||
@@ -106,6 +152,8 @@ export default function SidebarFixed({ ads }) {
     return (
       <div className="border-[3px] border-[#e60000] rounded-xl overflow-hidden shadow-xl bg-black transition-all hover:shadow-[#e60000]/50">
         <div className="w-full aspect-[16/8]">{content}</div>
+
+        {/* כפתורים */}
         <div className="flex justify-center gap-2 p-3">
           {attrs.link && (
             <a
