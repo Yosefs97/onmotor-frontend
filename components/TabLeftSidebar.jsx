@@ -1,20 +1,22 @@
 // components/TabLeftSidebar.jsx
 'use client';
+
 import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import useIsMobile from '@/hooks/useIsMobile';
-import { getMainImage } from '@/utils/resolveMainImage';
 
 const tabs = ['אחרונים', 'בדרכים', 'פופולרי'];
-const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 
-/* 👇 פונקציה שמוציאה שם אתר נקי מתוך כתובת */
+/* 👇 פונקציה שמוציאה שם אתר נקי מתוך כתובת (למקרה שאין source מהשרת) */
 function extractDomainName(url) {
   try {
     const host = new URL(url).hostname.replace('www.', '');
     const parts = host.split('.');
     let base = '';
-    if (parts.length >= 3 && ['co', 'org', 'net'].includes(parts[parts.length - 2])) {
+    if (
+      parts.length >= 3 &&
+      ['co', 'org', 'net'].includes(parts[parts.length - 2])
+    ) {
       base = parts[parts.length - 3];
     } else {
       base = parts[0];
@@ -37,101 +39,28 @@ export default function TabLeftSidebar() {
   const [popularContent, setPopularContent] = useState([]);
   const [isPaused, setIsPaused] = useState(false);
 
-  /* ✅ normalizeItem – עכשיו עם getMainImage() */
-  const normalizeItem = (obj, type = 'article') => {
-    const a = obj.attributes || obj;
-
-    // קביעת מקור (YouTube, TikTok וכו’)
-    let autoSource = '';
-    if (a.url) {
-      if (a.url.includes('youtube.com') || a.url.includes('youtu.be')) autoSource = 'YouTube';
-      else if (a.url.includes('tiktok.com')) autoSource = 'TikTok';
-      else if (a.url.includes('instagram.com')) autoSource = 'Instagram';
-      else if (a.url.includes('facebook.com')) autoSource = 'Facebook';
-      else autoSource = extractDomainName(a.url);
-    }
-
-    // ✅ שימוש בפונקציה המרכזית לבחירת תמונה
-    const { mainImage } = getMainImage(a);
-
-    return {
-      id: obj.id,
-      title: a.title || a.name || '',
-      slug: a.slug || '',
-      description: a.description || '',
-      image: mainImage,
-      date: a.date?.split('T')[0] || a.publishedAt?.split('T')[0] || '',
-      url: a.url || '',
-      views: a.views ?? null,
-      source: a.source || autoSource,
-    };
-  };
-
-  /* ✅ שליפות מה־API */
+  /* ✅ שליפה אחת מהשרת – במקום 3 fetchים + preview */
   useEffect(() => {
-    const fetchLatest = async () => {
+    const fetchSidebarData = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/articles?sort=date:desc&populate=*`);
-        const data = (await res.json()).data || [];
-        setLatestArticles(data.map((a) => normalizeItem(a, 'latest-article')));
+        const res = await fetch('/api/sidebar-left');
+        if (!res.ok) {
+          console.error('שגיאה בטעינת sidebar-left:', res.status);
+          return;
+        }
+        const json = await res.json();
+        setLatestArticles(json.latest || []);
+        setOnRoadArticles(json.onRoad || []);
+        setPopularContent(json.popular || []);
       } catch (err) {
-        console.error('שגיאה בטעינת אחרונים:', err);
+        console.error('שגיאה בטעינת sidebar-left:', err);
       }
     };
 
-    const fetchOnRoad = async () => {
-      try {
-        const res = await fetch(`${API_URL}/api/articles?filters[tags_txt][$contains]=iroads&sort=date:desc&populate=*`);
-        const data = (await res.json()).data || [];
-        setOnRoadArticles(data.map((a) => normalizeItem(a, 'onroad-article')));
-      } catch (err) {
-        console.error("שגיאה בטעינת 'בדרכים':", err);
-      }
-    };
-
-    const fetchPopular = async () => {
-      try {
-        const res = await fetch(`${API_URL}/api/populars?sort=date:desc&populate=*`);
-        const data = (await res.json()).data || [];
-
-        const withPreview = await Promise.all(
-          data.map(async (item) => {
-            const norm = normalizeItem(item, 'popular');
-
-            if (norm.image && norm.image !== '/default-image.jpg') return norm;
-
-            // נסה להביא תצוגה מקדימה (metadata) אם אין תמונה
-            if (norm.url) {
-              try {
-                const previewRes = await fetch(`/api/preview?url=${encodeURIComponent(norm.url)}`);
-                const previewJson = await previewRes.json();
-                if (previewJson?.image) norm.image = previewJson.image;
-              } catch (err) {
-                console.error('Preview fetch error:', err);
-              }
-            }
-
-            if (!norm.image) norm.image = '/default-image.jpg';
-            return norm;
-          })
-        );
-
-        setPopularContent(withPreview);
-      } catch (err) {
-        console.error('שגיאה בטעינת פופולרי:', err);
-      }
-    };
-
-  
-
-    
-
-    fetchLatest();
-    fetchOnRoad();
-    fetchPopular();
+    fetchSidebarData();
   }, []);
 
-  /* ✅ גלילה אנכית מתמשכת */
+  /* ✅ גלילה אנכית מתמשכת לדסקטופ – נשאר כמו שהיה */
   useEffect(() => {
     if (isMobile) return;
     const container = scrollContainerRef.current;
@@ -142,7 +71,10 @@ export default function TabLeftSidebar() {
     const step = () => {
       if (!isPaused) {
         container.scrollTop += speed;
-        if (container.scrollTop >= container.scrollHeight - container.clientHeight) {
+        if (
+          container.scrollTop >=
+          container.scrollHeight - container.clientHeight
+        ) {
           container.scrollTop = 0;
         }
       }
@@ -152,19 +84,29 @@ export default function TabLeftSidebar() {
     return () => cancelAnimationFrame(frame);
   }, [activeTab, isPaused, isMobile]);
 
+  /* ✅ גלילה למיקום ה-sidebar במובייל לאחר בחירת טאב */
   useEffect(() => {
     if (!isMobile || !sidebarRef.current || !hasInteracted) return;
     setTimeout(() => {
-      const y = sidebarRef.current.getBoundingClientRect().top + window.scrollY - 100;
+      const y =
+        sidebarRef.current.getBoundingClientRect().top +
+        window.scrollY -
+        100;
       window.scrollTo({ top: y, behavior: 'smooth' });
     }, 0);
   }, [activeTab, isMobile, hasInteracted]);
 
-  /* ✅ רינדור הפריטים לפי טאב */
+  /* ✅ רינדור הפריטים לפי טאב – בלי שינוי עיצובי */
   const getStyledContent = (items) => {
     return items.map((item, i) => {
       const even = i % 2 === 0;
       const bg = even ? 'bg-red-50 text-black' : 'bg-neutral-900 text-white';
+
+      // fallback ל-source בצד לקוח אם חסר
+      const source =
+        item.source ||
+        (item.url ? extractDomainName(item.url) : '');
+
       return (
         <a
           key={item.id}
@@ -176,27 +118,37 @@ export default function TabLeftSidebar() {
           <div className="w-20 h-14 relative rounded overflow-hidden flex-shrink-0">
             <Image
               src={item.image || '/default-image.jpg'}
-              alt={item.title}
+              alt={item.title || ''}
               fill
               style={{ objectFit: 'cover' }}
               className="rounded"
             />
           </div>
           <div className="flex flex-col text-right">
-            <p className="font-bold text-sm line-clamp-1">{item.title}</p>
-            <p className={`text-xs ${even ? 'text-gray-700' : 'text-gray-300'} line-clamp-2`}>
+            <p className="font-bold text-sm line-clamp-1">
+              {item.title}
+            </p>
+            <p
+              className={`text-xs ${
+                even ? 'text-gray-700' : 'text-gray-300'
+              } line-clamp-2`}
+            >
               {item.description}
             </p>
             {item.date && (
-              <span className={`text-xs ${even ? 'text-gray-500' : 'text-gray-400'} mt-1`}>
+              <span
+                className={`text-xs ${
+                  even ? 'text-gray-500' : 'text-gray-400'
+                } mt-1`}
+              >
                 {item.date}
               </span>
             )}
-            {(item.views || item.source) && (
+            {(item.views || source) && (
               <span className="text-xs text-gray-400 mt-1">
                 {item.views ? `${item.views} צפיות` : ''}
-                {item.views && item.source ? ' · ' : ''}
-                {item.source || ''}
+                {item.views && source ? ' · ' : ''}
+                {source || ''}
               </span>
             )}
           </div>
@@ -206,15 +158,19 @@ export default function TabLeftSidebar() {
   };
 
   let content = [];
-  if (activeTab === 'אחרונים') content = getStyledContent(latestArticles);
-  else if (activeTab === 'בדרכים') content = getStyledContent(onRoadArticles);
-  else if (activeTab === 'פופולרי') content = getStyledContent(popularContent);
-  else content = getStyledContent(viralContent);
+  if (activeTab === 'אחרונים')
+    content = getStyledContent(latestArticles);
+  else if (activeTab === 'בדרכים')
+    content = getStyledContent(onRoadArticles);
+  else if (activeTab === 'פופולרי')
+    content = getStyledContent(popularContent);
 
   return (
     <div
       ref={sidebarRef}
-      className={`flex flex-col min-h-0 bg-white shadow-md w-full text-sm ${isMobile ? 'w-screen rounded-none' : ''}`}
+      className={`flex flex-col min-h-0 bg-white shadow-md w-full text-sm ${
+        isMobile ? 'w-screen rounded-none' : ''
+      }`}
     >
       <div
         className="flex border-b text-sm font-semibold bg-white sticky top-0 z-10 shadow-sm"
