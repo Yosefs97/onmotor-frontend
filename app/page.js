@@ -39,17 +39,31 @@ async function fetchArticles() {
 
       const { mainImage, mainImageAlt } = getMainImage(attrs);
 
+      // 🟢 תיקון category
+      const category =
+        attrs.category?.data?.attributes?.slug ||
+        attrs.category?.data?.attributes?.name ||
+        attrs.category ||
+        "general";
+
+      // 🟢 תיקון subcategory
+      const subcategory =
+        attrs.subcategory?.data?.attributes?.slug ||
+        attrs.subcategory?.data?.attributes?.name ||
+        attrs.subcategory ||
+        "general";
+
       return {
         id: item.id,
         title: attrs.title,
         slug: attrs.slug,
-        category: attrs.category,
+        category,
+        subcategory,
         date: attrs.date,
         description: attrs.description,
         subdescription: attrs.subdescription,
         headline: attrs.headline,
         tags: attrs.tags,
-        subcategory: attrs.subcategory,
         image: mainImage,
         imageAlt: mainImageAlt,
       };
