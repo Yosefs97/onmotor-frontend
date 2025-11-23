@@ -8,14 +8,14 @@ import { labelMap } from '@/utils/labelMap';
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || process.env.STRAPI_API_URL;
 const PLACEHOLDER_IMG = '/default-image.jpg';
 
-// ⭐ פונקציה שמוודאת כתובת תקינה לתמונה (כולל Cloudinary)
+// ✅ פונקציה שמוודאת כתובת תקינה לתמונה (כולל Cloudinary)
 function resolveImageUrl(rawUrl) {
   if (!rawUrl) return PLACEHOLDER_IMG;
   if (rawUrl.startsWith('http')) return rawUrl;
   return `${API_URL}${rawUrl.startsWith('/') ? rawUrl : `/uploads/${rawUrl}`}`;
 }
 
-// ⭐ קיבוץ לפי תת־קטגוריה
+// קיבוץ לפי תת־קטגוריות רגילות
 function groupBySubcategory(articles) {
   return articles.reduce((acc, article) => {
     const subcategories = Array.isArray(article.subcategory)
@@ -23,7 +23,6 @@ function groupBySubcategory(articles) {
       : [article.subcategory];
 
     subcategories.forEach((subcat) => {
-      if (!subcat) return;
       if (!acc[subcat]) acc[subcat] = [];
       acc[subcat].push(article);
     });
@@ -32,7 +31,7 @@ function groupBySubcategory(articles) {
   }, {});
 }
 
-// ⭐ קיבוץ לפי Values (למדריכים)
+// קיבוץ לפי Values (לתתי־תתי־קטגוריות של מדריכים)
 function groupByValues(articles) {
   return articles.reduce((acc, article) => {
     const values = Array.isArray(article.Values)
@@ -40,7 +39,6 @@ function groupByValues(articles) {
       : [article.Values];
 
     values.forEach((val) => {
-      if (!val) return;
       if (!acc[val]) acc[val] = [];
       acc[val].push(article);
     });
@@ -53,37 +51,21 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // ⭐⭐⭐ שינוי יחיד: החלפת הפניה ל־Strapi → API פנימי
   useEffect(() => {
     async function fetchArticles() {
       try {
-        // בונים URL פנימי – ללא Strapi
-        let url = '/api/articles';
+        let url = `${API_URL}/api/articles?populate=*`;
 
-        const params = new URLSearchParams();
-        params.set('populate', '*');
-
-        // ⭐ סינון ברמת Strapi
+        // ✅ סינון לפי קטגוריה ראשית
         if (categoryKey) {
-          params.append('filters[category][$eq]', categoryKey);
+          url += `&filters[category][$eq]=${categoryKey}`;
         }
 
-        // בניית ה־URL הסופי
-        url += `?${params.toString()}`;
-
-        // מביאים את הנתונים מהשרת הפנימי
-        const res = await fetch(url, { cache: 'no-store' });
+        const res = await fetch(url);
         const json = await res.json();
+        let data = json.data || [];
 
-        let data = Array.isArray(json.data) ? json.data : [];
-
-        // ⭐ "הרמת" attributes לאובייקט שטוח
-        data = data.map((item) => ({
-          id: item.id,
-          ...item.attributes,
-        }));
-
-        // ⭐ סינון בצד הלקוח
+        // ✅ סינון בצד הלקוח לפי תת־קטגוריה
         if (subcategoryKey) {
           data = data.filter((a) => {
             const sub = a.subcategory;
@@ -94,6 +76,7 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
           });
         }
 
+        // ✅ סינון לפי Values
         if (guideSubKey) {
           data = data.filter((a) => {
             const vals = a.Values;
@@ -104,22 +87,32 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
           });
         }
 
-        // ⭐ מיפוי נתונים + תמונות
+        // ✅ מיפוי כתבות עם לוגיקת תמונה אחידה
         const mapped = data.map((a) => {
           let mainImage = PLACEHOLDER_IMG;
           let mainImageAlt = a.title || 'תמונה ראשית';
 
+          // 1️⃣ גלריה
           const galleryItem = a.gallery?.[0];
           if (galleryItem?.url) {
             mainImage = resolveImageUrl(galleryItem.url);
             mainImageAlt = galleryItem.alternativeText || mainImageAlt;
-          } else if (a.image?.url) {
+          }
+          // 2️⃣ תמונה ראשית
+          else if (a.image?.url) {
             mainImage = resolveImageUrl(a.image.url);
             mainImageAlt = a.image.alternativeText || mainImageAlt;
-          } else if (Array.isArray(a.external_media_links)) {
-            const valid = a.external_media_links.filter((l) => typeof l === 'string' && l.startsWith('http'));
-            if (valid.length > 1) mainImage = valid[1];
-            else if (valid.length > 0) mainImage = valid[0];
+          }
+          // 3️⃣ external_media_links
+          else if (Array.isArray(a.external_media_links) && a.external_media_links.length > 0) {
+            const validLinks = a.external_media_links.filter(
+              (l) => typeof l === 'string' && l.startsWith('http')
+            );
+            if (validLinks.length > 1) {
+              mainImage = validLinks[1].trim(); // השני
+            } else if (validLinks.length > 0) {
+              mainImage = validLinks[0].trim(); // הראשון
+            }
             mainImageAlt = 'תמונה ראשית מהמדיה החיצונית';
           }
 
@@ -130,8 +123,12 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
             image: mainImage,
             imageAlt: mainImageAlt,
             category: a.category || 'general',
-            subcategory: Array.isArray(a.subcategory) ? a.subcategory : [a.subcategory ?? 'general'],
-            Values: Array.isArray(a.Values) ? a.Values : [a.Values ?? null],
+            subcategory: Array.isArray(a.subcategory)
+              ? a.subcategory
+              : [a.subcategory ?? 'general'],
+            Values: Array.isArray(a.Values)
+              ? a.Values
+              : [a.Values ?? null],
             description: a.description,
             headline: a.headline || a.title,
             subdescription: a.subdescription,
@@ -142,17 +139,16 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
           };
         });
 
-        // ⭐ מיון מהחדש לישן
+        // ✅ מיון מהחדש לישן
         const sorted = mapped.sort((a, b) => {
-          const aD = new Date(`${a.date}T${a.time}`);
-          const bD = new Date(`${b.date}T${b.time}`);
-          return bD - aD;
+          const aDateTime = new Date(`${a.date}T${a.time}`);
+          const bDateTime = new Date(`${b.date}T${b.time}`);
+          return bDateTime - aDateTime;
         });
 
         setArticles(sorted);
       } catch (err) {
         console.error('שגיאה בטעינת כתבות:', err);
-        setArticles([]);
       } finally {
         setLoading(false);
       }
@@ -161,7 +157,6 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
     fetchArticles();
   }, [categoryKey, subcategoryKey, guideSubKey]);
 
-  // ⭐ העיצוב לא משתנה – בדיוק מה שיש אצלך
   if (loading) {
     return <p className="text-center text-gray-500">טוען כתבות...</p>;
   }
@@ -170,7 +165,7 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
     return <p className="text-center text-gray-500">אין עדיין כתבות בקטגוריה זו</p>;
   }
 
-  // ⭐ Grouping זהה
+  // ✅ לוגיקת קיבוץ
   const grouped =
     guideSubKey
       ? { [guideSubKey]: articles }
@@ -221,3 +216,4 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
     </div>
   );
 }
+
