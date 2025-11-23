@@ -1,9 +1,7 @@
 // app/page.js
 export const dynamic = "force-dynamic";
-
-import React from "react";
-import MainGridContentDesktop from "@/components/MainGridContentDesktop";
 import PageContainer from "@/components/PageContainer";
+import MainGridContentDesktop from "@/components/MainGridContentDesktop";
 
 const PLACEHOLDER_IMG = "/default-image.jpg";
 
@@ -14,38 +12,25 @@ function resolveImageUrl(rawUrl) {
   return `${base}${rawUrl.startsWith("/") ? rawUrl : `/uploads/${rawUrl}`}`;
 }
 
-// לוגיקה של בחירת תמונה – כמו בגרסה הישנה שלך
 function extractMainImage(attrs) {
   let mainImage = PLACEHOLDER_IMG;
   let mainImageAlt = attrs.title || "תמונה ראשית";
 
-  // 1. תמונה ראשית (Strapi relation)
   if (attrs.image?.data?.attributes?.url) {
     mainImage = resolveImageUrl(attrs.image.data.attributes.url);
     mainImageAlt = attrs.image.data.attributes.alternativeText || mainImageAlt;
-  }
-
-  // 2. תמונה רגילה
-  else if (attrs.image?.url) {
+  } else if (attrs.image?.url) {
     mainImage = resolveImageUrl(attrs.image.url);
     mainImageAlt = attrs.image.alternativeText || mainImageAlt;
-  }
-
-  // 3. גלריה
-  else if (attrs.gallery?.[0]?.url) {
+  } else if (attrs.gallery?.[0]?.url) {
     mainImage = resolveImageUrl(attrs.gallery[0].url);
     mainImageAlt = attrs.gallery[0].alternativeText || mainImageAlt;
-  }
-
-  // 4. external_media_links
-  else if (Array.isArray(attrs.external_media_links)) {
+  } else if (Array.isArray(attrs.external_media_links)) {
     const valid = attrs.external_media_links.filter(
       (l) => typeof l === "string" && l.startsWith("http")
     );
-
     if (valid.length > 1) mainImage = valid[1].trim();
     else if (valid.length > 0) mainImage = valid[0].trim();
-
     mainImageAlt = "תמונה מהמדיה החיצונית";
   }
 
@@ -54,42 +39,34 @@ function extractMainImage(attrs) {
 
 async function fetchArticles() {
   const base = process.env.STRAPI_API_URL;
-
   const url = `${base}/api/articles?populate=*`;
 
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 7000);
-
-    const res = await fetch(url, {
-      next: { revalidate: 60 },
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeout);
-
+    const res = await fetch(url, { next: { revalidate: 60 } });
     const json = await res.json();
-    if (!json.data) return [];
 
-    return json.data.map((item) => {
-      const attrs = item.attributes;
-      const { mainImage, mainImageAlt } = extractMainImage(attrs);
+    return (
+      json.data?.map((a) => {
+        const attrs = a.attributes;
+        const { mainImage, mainImageAlt } = extractMainImage(attrs);
 
-      return {
-        id: item.id,
-        title: attrs.title,
-        slug: attrs.slug,
-        category: attrs.category,
-        date: attrs.date,
-        description: attrs.description,
-        headline: attrs.headline || attrs.title,
-        subdescription: attrs.subdescription,
-        tags: attrs.tags || [],
+        return {
+          id: a.id,
+          title: attrs.title,
+          slug: attrs.slug,
+          category: attrs.category || "general",
+          date: attrs.date,
+          description: attrs.description,
+          headline: attrs.headline || attrs.title,
+          subdescription: attrs.subdescription,
+          tags: attrs.tags || [],
+          href: `/articles/${attrs.slug}`,
 
-        image: mainImage,
-        imageAlt: mainImageAlt,
-      };
-    });
+          image: mainImage,
+          imageAlt: mainImageAlt,
+        };
+      }) || []
+    );
   } catch (err) {
     console.error("❌ שגיאה:", err.message);
     return [];
@@ -104,12 +81,11 @@ export default async function HomePage() {
       <MainGridContentDesktop articles={articles} />
 
       <h1 className="text-2xl font-bold text-[#e60000] px-4 mt-4">
-        OnMotor Media - מגזין אופנועים ישראלי
+        OnMotor Media – מגזין אופנועים ישראלי
       </h1>
 
       <p className="px-4 mt-2 mb-4 text-gray-700">
-        מגזין אופנועים בישראל – חדשות, סקירות, מבחני דרכים, ציוד וטיפים
-        לקהילת הרוכבים.
+        מגזין אופנועים בישראל – חדשות, סקירות ומבחני דרכים.
       </p>
     </PageContainer>
   );
