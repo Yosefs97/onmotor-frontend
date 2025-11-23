@@ -1,27 +1,29 @@
 // components/SidebarFixed.jsx
 'use client';
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ResponsiveBoxGrid from './ResponsiveBoxGrid';
 import BoxWrapper from './BoxWrapper';
 
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 
-/* פונקציה לזיהוי כתובת מדיה */
+/* ✅ פונקציה מאוחדת לזיהוי כתובת מדיה (Cloudinary / Strapi / חיצוני) */
 function resolveMediaUrl(rawUrl) {
   if (!rawUrl) return null;
   if (rawUrl.startsWith('http')) return rawUrl;
   return `${API_URL}${rawUrl.startsWith('/') ? rawUrl : `/uploads/${rawUrl}`}`;
 }
 
-/* נרמול גוגל דרייב */
+/* ✅ פונקציה לנרמול לינקים מ-Google Drive */
 function normalizeDriveUrl(url) {
   if (!url) return url;
 
+  // אם זה ID בלבד
   if (/^[a-zA-Z0-9_-]{20,}$/.test(url)) {
     return `/api/drive-proxy?id=${url}`;
   }
 
+  // אם זה לינק רגיל של דרייב
   if (url.includes('drive.google.com/file/d/')) {
     const match = url.match(/\/d\/([^/]+)/);
     if (match && match[1]) {
@@ -35,26 +37,25 @@ function normalizeDriveUrl(url) {
 export default function SidebarFixed({ ads }) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  /* 🔁 קרוסלה מתחלפת כל 5 שניות */
+  // ❗ שים לב – אין פה fetch בכלל, רק קרוסלה
   useEffect(() => {
     if (ads.length > 2) {
-      const interval = setInterval(
-        () => setCurrentIndex((prev) => (prev + 2) % ads.length),
-        5000
-      );
+      const interval = setInterval(() => {
+        setCurrentIndex((prev) => (prev + 2) % ads.length);
+      }, 5000);
       return () => clearInterval(interval);
     }
   }, [ads]);
 
-  const getAdAt = (i) => {
-    if (!ads || !ads.length) return null;
-    return ads[i % ads.length];
+  const getAdAt = (index) => {
+    if (!ads.length) return null;
+    return ads[index % ads.length];
   };
 
   const AdCard = ({ ad }) => {
     if (!ad) return null;
 
-    const attrs = ad;
+    const attrs = ad; // אחרי ה-API החדש זה כבר יהיה attributes שטוח
 
     const driveUrl = normalizeDriveUrl(attrs.mediaUrl || null);
 
@@ -66,39 +67,45 @@ export default function SidebarFixed({ ads }) {
       ? resolveMediaUrl(attrs.video[0].url)
       : resolveMediaUrl(attrs.video?.url);
 
-    const finalUrl = driveUrl || videoUrl || imageUrl;
-
-    const isVideo =
+    let finalUrl = driveUrl || videoUrl || imageUrl;
+    let isVideo =
       (finalUrl && finalUrl.endsWith('.mp4')) ||
       finalUrl?.includes('youtube') ||
       finalUrl?.includes('vimeo');
 
-    const content = !finalUrl ? (
-      <div className="w-full h-full bg-gray-800 flex items-center justify-center text-white">
-        אין מדיה זמינה
-      </div>
-    ) : isVideo ? (
-      <video
-        src={finalUrl}
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="w-full h-full object-cover"
-      />
-    ) : (
-      <img
-        src={finalUrl}
-        alt={attrs.title || 'ad'}
-        className="w-full h-full object-cover"
-        loading="lazy"
-      />
-    );
+    let content = null;
+
+    if (!finalUrl) {
+      content = (
+        <div className="w-full h-full bg-gray-800 flex items-center justify-center text-white">
+          אין מדיה זמינה
+        </div>
+      );
+    } else if (isVideo) {
+      content = (
+        <video
+          src={finalUrl}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover"
+        />
+      );
+    } else {
+      content = (
+        <img
+          src={finalUrl}
+          alt={attrs.title || 'ad'}
+          className="w-full h-full object-cover"
+          loading="lazy"
+        />
+      );
+    }
 
     return (
       <div className="border-[3px] border-[#e60000] rounded-xl overflow-hidden shadow-xl bg-black transition-all hover:shadow-[#e60000]/50">
         <div className="w-full aspect-[16/8]">{content}</div>
-
         <div className="flex justify-center gap-2 p-3">
           {attrs.link && (
             <a
