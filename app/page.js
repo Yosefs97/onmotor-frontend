@@ -1,59 +1,101 @@
 // app/page.js
-export const dynamic = "force-dynamic"; // ❗ חייב להישאר כדי למנוע build failure
+export const dynamic = "force-dynamic";
 
 import React from "react";
 import MainGridContentDesktop from "@/components/MainGridContentDesktop";
 import PageContainer from "@/components/PageContainer";
 
-/* -----------------------------------------------------------
-   ⚙️ טעינת כתבות מ־Strapi (Server Component)
-   - SSR דינאמי כדי לא לקרוס בבילד
-   - עם revalidate להפחתת Edge Requests
------------------------------------------------------------ */
+const PLACEHOLDER_IMG = "/default-image.jpg";
+
+function resolveImageUrl(rawUrl) {
+  const base = process.env.STRAPI_API_URL;
+  if (!rawUrl) return PLACEHOLDER_IMG;
+  if (rawUrl.startsWith("http")) return rawUrl;
+  return `${base}${rawUrl.startsWith("/") ? rawUrl : `/uploads/${rawUrl}`}`;
+}
+
+// לוגיקה של בחירת תמונה – כמו בגרסה הישנה שלך
+function extractMainImage(attrs) {
+  let mainImage = PLACEHOLDER_IMG;
+  let mainImageAlt = attrs.title || "תמונה ראשית";
+
+  // 1. תמונה ראשית (Strapi relation)
+  if (attrs.image?.data?.attributes?.url) {
+    mainImage = resolveImageUrl(attrs.image.data.attributes.url);
+    mainImageAlt = attrs.image.data.attributes.alternativeText || mainImageAlt;
+  }
+
+  // 2. תמונה רגילה
+  else if (attrs.image?.url) {
+    mainImage = resolveImageUrl(attrs.image.url);
+    mainImageAlt = attrs.image.alternativeText || mainImageAlt;
+  }
+
+  // 3. גלריה
+  else if (attrs.gallery?.[0]?.url) {
+    mainImage = resolveImageUrl(attrs.gallery[0].url);
+    mainImageAlt = attrs.gallery[0].alternativeText || mainImageAlt;
+  }
+
+  // 4. external_media_links
+  else if (Array.isArray(attrs.external_media_links)) {
+    const valid = attrs.external_media_links.filter(
+      (l) => typeof l === "string" && l.startsWith("http")
+    );
+
+    if (valid.length > 1) mainImage = valid[1].trim();
+    else if (valid.length > 0) mainImage = valid[0].trim();
+
+    mainImageAlt = "תמונה מהמדיה החיצונית";
+  }
+
+  return { mainImage, mainImageAlt };
+}
+
 async function fetchArticles() {
   const base = process.env.STRAPI_API_URL;
-
-  if (!base) {
-    console.error("❌ STRAPI_API_URL לא מוגדר");
-    return [];
-  }
 
   const url = `${base}/api/articles?populate=*`;
 
   try {
-    // הגבלת זמן כדי להימנע מתלות בשירות איטי
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 7000);
 
     const res = await fetch(url, {
-      next: { revalidate: 60 }, // Cache ב־Vercel ל־60 שניות
+      next: { revalidate: 60 },
       signal: controller.signal,
     });
 
     clearTimeout(timeout);
 
-    if (!res.ok) {
-      console.error("❌ שגיאת API:", res.status);
-      return [];
-    }
-
     const json = await res.json();
+    if (!json.data) return [];
 
-    return (
-      json.data?.map((item) => ({
+    return json.data.map((item) => {
+      const attrs = item.attributes;
+      const { mainImage, mainImageAlt } = extractMainImage(attrs);
+
+      return {
         id: item.id,
-        ...item.attributes,
-      })) || []
-    );
+        title: attrs.title,
+        slug: attrs.slug,
+        category: attrs.category,
+        date: attrs.date,
+        description: attrs.description,
+        headline: attrs.headline || attrs.title,
+        subdescription: attrs.subdescription,
+        tags: attrs.tags || [],
+
+        image: mainImage,
+        imageAlt: mainImageAlt,
+      };
+    });
   } catch (err) {
-    console.error("❌ שגיאה בטעינת כתבות:", err.message);
-    return []; // fallback בטוח
+    console.error("❌ שגיאה:", err.message);
+    return [];
   }
 }
 
-/* -----------------------------------------------------------
-   🏠 עמוד הבית
------------------------------------------------------------ */
 export default async function HomePage() {
   const articles = await fetchArticles();
 
@@ -67,7 +109,7 @@ export default async function HomePage() {
 
       <p className="px-4 mt-2 mb-4 text-gray-700">
         מגזין אופנועים בישראל – חדשות, סקירות, מבחני דרכים, ציוד וטיפים
-        לקהילת הרוכבים התוססת בישראל.
+        לקהילת הרוכבים.
       </p>
     </PageContainer>
   );
