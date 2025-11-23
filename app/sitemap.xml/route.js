@@ -1,3 +1,4 @@
+//app\sitemap.xml\route.js
 export const dynamic = 'force-dynamic';
 
 export async function GET() {

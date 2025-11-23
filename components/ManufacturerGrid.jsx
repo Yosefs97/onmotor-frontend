@@ -1,37 +1,15 @@
 // /components/ManufacturerGrid.jsx
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import ScrollSearchBar from './ScrollSearchBar';
 
-export default function ManufacturerGrid() {
-  const [manufacturers, setManufacturers] = useState([]);
-  const [loading, setLoading] = useState(true);
+export default function ManufacturerGrid({ manufacturers }) {
   const containerRef = useRef(null);
   const animationRef = useRef(null);
   const [hasScrolled, setHasScrolled] = useState(false);
-
-  useEffect(() => {
-    async function fetchManufacturers() {
-      try {
-        const res = await fetch('/api/shopify/collections?limit=50');
-        const data = await res.json();
-        const items = data.items || [];
-
-        // ✅ מיון אלפביתי
-        items.sort((a, b) => a.title.localeCompare(b.title, 'en', { sensitivity: 'base' }));
-
-        setManufacturers(items);
-      } catch (err) {
-        console.error('Failed to fetch manufacturers:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchManufacturers();
-  }, []);
 
   // 🎬 אנימציית "רמז גלילה"
   useEffect(() => {
@@ -39,8 +17,8 @@ export default function ManufacturerGrid() {
     if (!el) return;
 
     let start = null;
-    const maxOffset = 60; // כמה פיקסלים לזוז
-    const duration = 1000; // כמה זמן האנימציה
+    const maxOffset = 60;
+    const duration = 1000;
 
     const animate = (timestamp) => {
       if (!start) start = timestamp;
@@ -69,8 +47,8 @@ export default function ManufacturerGrid() {
     };
   }, [hasScrolled]);
 
-  if (loading) return <p className="text-center py-8">טוען יצרנים...</p>;
-  if (!manufacturers.length) return <p className="text-center py-8">לא נמצאו יצרנים</p>;
+  if (!manufacturers.length)
+    return <p className="text-center py-8">לא נמצאו יצרנים</p>;
 
   return (
     <div>

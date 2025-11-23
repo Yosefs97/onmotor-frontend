@@ -1,14 +1,19 @@
-
-
-'use client';
-export const dynamic = 'force-dynamic';
-import { Suspense } from 'react';
+// /app/shop/vendor/[vendor]/page.jsx
 import VendorPageInner from './VendorPageInner';
+import { fetchVendorModels } from '@/lib/shop/fetchVendorModels';
 
-export default function VendorPage() {
+export const revalidate = 600; // קאש של 10 דקות — יציב ומהיר
+
+export default async function VendorPage({ params, searchParams }) {
+  const vendor = searchParams.vendor || params.vendor;
+
+  // 📌 מביא את הדגמים מהשרת (לא מהדפדפן!)
+  const models = await fetchVendorModels({ vendor, filters: searchParams });
+
   return (
-    <Suspense fallback={<div className="text-center py-6">טוען דגמים...</div>}>
-      <VendorPageInner />
-    </Suspense>
+    <VendorPageInner
+      vendor={vendor}
+      models={models}   // ← מעבירים נתון מוכן
+    />
   );
 }

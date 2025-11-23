@@ -1,14 +1,21 @@
-
-
-'use client';
-export const dynamic = 'force-dynamic';
-import { Suspense } from 'react';
+// /app/shop/vendor/[vendor]/[model]/page.jsx
 import ModelPageInner from './ModelPageInner';
+import { fetchShopifyModel } from '@/lib/shop/fetchShopifyModel';
 
-export default function ModelPage() {
+export const revalidate = 600; // 10 דקות קאש — מצוין למוצרים
+
+export default async function ModelPage({ params, searchParams }) {
+  const vendor = searchParams.vendor || params.vendor;
+  const model = searchParams.model || params.model;
+
+  // מביא נתונים בשרת (לא בלקוח)
+  const items = await fetchShopifyModel({ vendor, model, filters: searchParams });
+
   return (
-    <Suspense fallback={<div className="text-center py-6">טוען מוצרים...</div>}>
-      <ModelPageInner />
-    </Suspense>
+    <ModelPageInner
+      items={items}
+      vendor={vendor}
+      model={model}
+    />
   );
 }
