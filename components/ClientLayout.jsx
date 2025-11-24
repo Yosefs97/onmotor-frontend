@@ -78,10 +78,10 @@ export default function ClientLayout({ children, tickerHeadlines = [] }) {
           ${isMobile
             ? (isAtTop
                 // ✅ תיקון: הורדנו את ה-Z-Index ל-30 (במקום 9998) כדי שהתפריט יכסה אותו
-                ? `sticky z-30`
+                ? `sticky z-20`
                 : "relative")
             // ✅ תיקון גם בדסקטופ: z-30
-            : `sticky z-30`
+            : `sticky z-20`
           }
         `}
         style={{
