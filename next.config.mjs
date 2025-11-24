@@ -1,24 +1,28 @@
 // onmotor-frontend/next.config.mjs
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // 👇 1. הגדרת זיכרון צד-לקוח (Client Router Cache)
-  // זה יגרום לכך שגולש שעובר בין דפים לא ישלח בקשה לשרת אם הוא חוזר לדף שביקר בו ב-5 הדקות האחרונות.
   experimental: {
     staleTimes: {
-      dynamic: 300, // 5 דקות (עבור דפי כתבות, חדשות וכו')
-      static: 600,  // 10 דקות (עבור דפים קבועים כמו אודות, צור קשר)
+      dynamic: 300, // 5 דקות
+      static: 600,  // 10 דקות
     },
   },
 
   images: {
-    unoptimized: true, // ✅ ביטול אופטימיזציית תמונות (חוסך עיבוד שרת, אך קבצים כבדים יותר)
+    unoptimized: true, // ביטול אופטימיזציה (חוסך מעבד)
+    
+    // 👇 2. תוספת חשובה: מכריח את Next.js להגדיר זמן חיים ארוך לתמונות
+    minimumCacheTTL: 31536000, 
+
     domains: [
       "localhost",
       "cdn.shopify.com",
       "www.onmotormedia.com",
       "i.ytimg.com",
       "img.youtube.com",
-      "*.tiktokcdn.com", // הערה: בשימוש עם כוכביות עדיף להשתמש ב-remotePatterns, אבל זה יעבוד
+      "*.tiktokcdn.com", 
       "*.tiktokcdn-us.com",
       "*.tiktokcdn-va.com",
       "*.cdninstagram.com",
@@ -41,6 +45,35 @@ const nextConfig = {
       "honda.com",
       "bmw-motorrad.com",
     ],
+  },
+
+  // 👇 3. חומת המגן: כותרות Cache אגרסיביות
+  // זה ימנע מהדפדפן לשלוח בקשות "בדיקה" (304) על תמונות וקבצים סטטיים
+  async headers() {
+    return [
+      {
+        // חל על כל סוגי התמונות והפונטים
+        source: '/:all*(svg|jpg|jpeg|png|gif|webp|avif|ico|woff|woff2|ttf|eot)',
+        locale: false,
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable', // שמור לשנה!
+          },
+        ],
+      },
+      {
+        // חל על סקריפטים ועיצוב (אם הם בתיקיית public)
+        source: '/:all*(js|css)',
+        locale: false,
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ];
   },
 };
 
