@@ -14,25 +14,73 @@ function resolveImageUrl(rawUrl) {
   return `${API_URL}${rawUrl.startsWith('/') ? rawUrl : `/uploads/${rawUrl}`}`;
 }
 
-export default function SimilarArticles({ currentSlug, category }) {
+// פונקציה לעיבוד הנתונים שהגיעו מהשרת לפורמט של ArticleCard
+function mapArticles(data) {
+  return data.map((a) => {
+    const attrs = a.attributes || a; // תמיכה במבנה שטוח או מקונן
+    let mainImage = PLACEHOLDER_IMG;
+    let mainImageAlt = attrs.title || 'תמונה ראשית';
+
+    const galleryItem = attrs.gallery?.data?.[0]?.attributes || attrs.gallery?.[0];
+    const imageItem = attrs.image?.data?.attributes || attrs.image;
+
+    if (galleryItem?.url) {
+      mainImage = resolveImageUrl(galleryItem.url);
+      mainImageAlt = galleryItem.alternativeText || mainImageAlt;
+    } else if (imageItem?.url) {
+      mainImage = resolveImageUrl(imageItem.url);
+      mainImageAlt = imageItem.alternativeText || mainImageAlt;
+    } else if (
+      Array.isArray(attrs.external_media_links) &&
+      attrs.external_media_links.length > 0
+    ) {
+      const validLinks = attrs.external_media_links.filter(
+        (l) => typeof l === 'string' && l.startsWith('http')
+      );
+      if (validLinks.length > 1) mainImage = validLinks[1].trim();
+      else if (validLinks.length > 0) mainImage = validLinks[0].trim();
+      mainImageAlt = 'תמונה ראשית מהמדיה החיצונית';
+    }
+
+    return {
+      id: a.id,
+      title: attrs.title,
+      slug: attrs.slug,
+      href: `/articles/${attrs.slug}`,
+      headline: attrs.headline || attrs.title,
+      description: attrs.description || '',
+      date: attrs.date,
+      image: mainImage,
+      imageAlt: mainImageAlt,
+    };
+  });
+}
+
+// 👇 הקומפוננטה כעת מקבלת `articles` מוכנים מהשרת
+export default function SimilarArticles({ articles = [] }) {
   const [similar, setSimilar] = useState([]);
   const [currentGroup, setCurrentGroup] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
+  // 👉 עיבוד הנתונים הראשוני
+  useEffect(() => {
+    if (articles && articles.length > 0) {
+      setSimilar(mapArticles(articles));
+    }
+  }, [articles]);
+
   // 👉 Swipe states
   const [touchStartX, setTouchStartX] = useState(null);
   const [touchEndX, setTouchEndX] = useState(null);
+  
+  const nextGroup = () => setCurrentGroup((prev) => (prev + 1) % groups.length);
+  const prevGroup = () => setCurrentGroup((prev) => (prev - 1 + groups.length) % groups.length);
+
   const handleSwipe = () => {
     if (!isMobile) return;
     const dx = touchEndX - touchStartX;
-    // ב־RTL: החלקה שמאלה → prev
-    if (dx < -50) {
-      prevGroup(); 
-    }
-    // ב־RTL: החלקה ימינה → next
-    if (dx > 50) {
-      prevGroup();
-    }
+    if (dx < -50) prevGroup(); // RTL logic
+    if (dx > 50) nextGroup();  // RTL logic
   };
 
   // זיהוי מובייל
@@ -43,68 +91,7 @@ export default function SimilarArticles({ currentSlug, category }) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // שליפת כתבות דומות
-  useEffect(() => {
-    async function fetchSimilarArticles() {
-      try {
-        const res = await fetch(
-          `${API_URL}/api/articles?populate=*&filters[slug][$ne]=${currentSlug}&filters[category][$eq]=${category}`,
-          { cache: 'no-store' }
-        );
-        const json = await res.json();
-        const data = json.data || [];
-
-        const mapped = data.map((a) => {
-          let mainImage = PLACEHOLDER_IMG;
-          let mainImageAlt = a.title || 'תמונה ראשית';
-
-          const galleryItem = a.gallery?.[0];
-          if (galleryItem?.url) {
-            mainImage = resolveImageUrl(galleryItem.url);
-            mainImageAlt = galleryItem.alternativeText || mainImageAlt;
-          } else if (a.image?.url) {
-            mainImage = resolveImageUrl(a.image.url);
-            mainImageAlt = a.image.alternativeText || mainImageAlt;
-          } else if (
-            Array.isArray(a.external_media_links) &&
-            a.external_media_links.length > 0
-          ) {
-            const validLinks = a.external_media_links.filter(
-              (l) => typeof l === 'string' && l.startsWith('http')
-            );
-
-            if (validLinks.length > 1) {
-              mainImage = validLinks[1].trim();
-            } else if (validLinks.length > 0) {
-              mainImage = validLinks[0].trim();
-            }
-
-            mainImageAlt = 'תמונה ראשית מהמדיה החיצונית';
-          }
-
-          return {
-            id: a.id,
-            title: a.title,
-            slug: a.slug,
-            href: `/articles/${a.slug}`,
-            headline: a.headline || a.title,
-            description: a.description || '',
-            date: a.date,
-            image: mainImage,
-            imageAlt: mainImageAlt,
-          };
-        });
-
-        setSimilar(mapped);
-      } catch (err) {
-        console.error('שגיאה בטעינת כתבות דומות:', err);
-      }
-    }
-
-    fetchSimilarArticles();
-  }, [currentSlug, category]);
-
-  // חלוקה לקבוצות (3 לדסקטופ, 2 למובייל)
+  // חלוקה לקבוצות
   const groupSize = isMobile ? 2 : 3;
   const groups = [];
   for (let i = 0; i < similar.length; i += groupSize) {
@@ -115,21 +102,13 @@ export default function SimilarArticles({ currentSlug, category }) {
   useEffect(() => {
     if (isMobile) return;
     if (groups.length <= 1) return;
-
     const interval = setInterval(() => {
       setCurrentGroup((prev) => (prev + 1) % groups.length);
     }, 6000);
-
     return () => clearInterval(interval);
   }, [groups.length, isMobile]);
 
   if (!similar.length) return null;
-
-  const nextGroup = () =>
-    setCurrentGroup((prev) => (prev + 1) % groups.length);
-
-  const prevGroup = () =>
-    setCurrentGroup((prev) => (prev - 1 + groups.length) % groups.length);
 
   return (
     <div className="mt-10 relative bg-white p-4 rounded-md shadow-md">
@@ -145,42 +124,21 @@ export default function SimilarArticles({ currentSlug, category }) {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -200, opacity: 0 }}
             transition={{ duration: 0.6 }}
-            className={`grid ${
-              isMobile ? 'grid-cols-2' : 'grid-cols-3'
-            } gap-4`}
-            
-            // 👉 תמיכה בהחלקה במובייל
+            className={`grid ${isMobile ? 'grid-cols-2' : 'grid-cols-3'} gap-4`}
             onTouchStart={(e) => setTouchStartX(e.touches[0].clientX)}
             onTouchMove={(e) => setTouchEndX(e.touches[0].clientX)}
             onTouchEnd={handleSwipe}
           >
             {groups[currentGroup].map((article) => (
-              <ArticleCard
-                key={article.slug || article.id}
-                article={article}
-              />
+              <ArticleCard key={article.slug || article.id} article={article} />
             ))}
           </motion.div>
         </AnimatePresence>
 
         {groups.length > 1 && (
           <>
-            <button
-              onClick={nextGroup}
-              className="absolute left-2 top-1/2 transform -translate-y-1/2
-              bg-red-600/90 hover:bg-red-600/60 text-white p-3 rounded-full text-2xl transition"
-              aria-label="הקודם"
-            >
-              ›
-            </button>
-            <button
-              onClick={prevGroup}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2
-              bg-red-600/90 hover:bg-red-600/60 text-white p-3 rounded-full text-2xl transition"
-              aria-label="הבא"
-            >
-              ‹
-            </button>
+            <button onClick={nextGroup} className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-red-600/90 hover:bg-red-600/60 text-white p-3 rounded-full text-2xl transition">›</button>
+            <button onClick={prevGroup} className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-red-600/90 hover:bg-red-600/60 text-white p-3 rounded-full text-2xl transition">‹</button>
           </>
         )}
       </div>
@@ -191,9 +149,7 @@ export default function SimilarArticles({ currentSlug, category }) {
             <button
               key={idx}
               onClick={() => setCurrentGroup(idx)}
-              className={`w-3 h-3 rounded-full transition ${
-                idx === currentGroup ? 'bg-red-600' : 'bg-gray-400'
-              }`}
+              className={`w-3 h-3 rounded-full transition ${idx === currentGroup ? 'bg-red-600' : 'bg-gray-400'}`}
             />
           ))}
         </div>
@@ -201,4 +157,3 @@ export default function SimilarArticles({ currentSlug, category }) {
     </div>
   );
 }
-

@@ -6,7 +6,7 @@ export async function GET() {
   try {
     const url = `${base}/api/articles?populate=*`;
 
-    const res = await fetch(url, { cache: "no-store" });
+    const res = await fetch(url, { next: { revalidate: 3600 } });
     const json = await res.json();
 
     // תחזיר את המבנה המקורי בדיוק

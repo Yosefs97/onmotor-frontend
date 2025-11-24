@@ -37,7 +37,7 @@ export default function TagPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`${API_URL}/api/articles?populate=*`, { cache: 'no-store' });
+        const res = await fetch(`${API_URL}/api/articles?populate=*`, { next: { revalidate: 3600 } });
         const json = await res.json();
 
         const filtered = (json.data || []).filter(a => {

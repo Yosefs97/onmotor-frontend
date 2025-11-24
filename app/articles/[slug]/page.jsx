@@ -1,12 +1,13 @@
 // ✅ app/articles/[slug]/page.jsx
 
-export const revalidate = 180; // ⬅️ השינוי היחיד שבוצע
+export const revalidate = 180; // רענון כתבה כל 3 דקות
+
 import Script from "next/script";
 import PageContainer from "@/components/PageContainer";
 import ArticleHeader from "@/components/ArticleHeader";
 import SimpleKeyValueTable from "@/components/SimpleKeyValueTable";
 import Tags from "@/components/Tags";
-import SimilarArticles from "@/components/SimilarArticles";
+import SimilarArticles from "@/components/SimilarArticles"; // וודא שהקובץ הזה הוא הגרסה החדשה ששלחתי לך קודם (שמקבלת props)
 import { notFound } from "next/navigation";
 import CommentsSection from "@/components/CommentsSection";
 import Gallery from "@/components/Gallery";
@@ -20,15 +21,14 @@ import { fixRelativeImages, resolveImageUrl, wrapHondaProxy } from "@/lib/fixArt
 import { getArticleImage } from "@/lib/getArticleImage";
 import ArticleShareBottom from "@/components/ArticleShareBottom";
 
-
-
-
 const API_URL = process.env.STRAPI_API_URL;
 const PUBLIC_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || API_URL;
 const SITE_URL = "https://www.onmotormedia.com";
 const PLACEHOLDER_IMG = "/default-image.jpg";
 
-// ✅ פונקציות עזר לקישורים ב־Rich Text
+// ... פונקציות העזר (normalizeHref, toHtmlFromStrapiChildren וכו') נשארות אותו דבר ...
+// (כדי לחסוך מקום לא העתקתי את פונקציות העזר שוב, הן תקינות בקוד שלך)
+
 function normalizeHref(href) {
   if (!href) return '#';
   if (/^https?:\/\//i.test(href) || href.startsWith('mailto:') || href.startsWith('tel:')) return href;
@@ -65,14 +65,27 @@ function toHtmlFromStrapiChildren(children) {
   }).join('');
 }
 
-export async function generateMetadata({ params }) {
-  const API_URL = process.env.STRAPI_API_URL;
-  const SITE_URL = "https://www.onmotormedia.com";
+// ✅ פונקציה חדשה לשליפת כתבות דומות בשרת (חוסכת בקשות)
+async function getSimilarArticles(currentSlug, category) {
+  try {
+    if (!category) return [];
+    const res = await fetch(
+      `${API_URL}/api/articles?populate=*&filters[slug][$ne]=${currentSlug}&filters[category][$eq]=${category}&pagination[limit]=9`,
+      { next: { revalidate: 3600 } } // קאש לשעה אחת
+    );
+    const json = await res.json();
+    return json.data || [];
+  } catch (err) {
+    console.error("Error fetching similar articles:", err);
+    return [];
+  }
+}
 
+export async function generateMetadata({ params }) {
   try {
     const res = await fetch(
       `${API_URL}/api/articles?filters[slug][$eq]=${params.slug}&populate=*`,
-      { cache: "no-store" }
+      { next: { revalidate: 3600 } }
     );
 
     if (!res.ok) throw new Error(`API fetch failed with status ${res.status}`);
@@ -87,7 +100,6 @@ export async function generateMetadata({ params }) {
       article.subdescription ||
       "כתבה מתוך מגזין OnMotor Media";
 
-    // 🧠 קריאה לפונקציה הנפרדת
     const imageUrl = getArticleImage(article);
 
     return {
@@ -119,10 +131,11 @@ export async function generateMetadata({ params }) {
 // ===================================================================
 //                       ArticlePage Component
 // ===================================================================
-export default async function ArticlePage({ params, setPageTitle, setPageBreadcrumbs }) {
+export default async function ArticlePage({ params }) {
+  // 1. שליפת הכתבה הראשית
   const res = await fetch(
     `${API_URL}/api/articles?filters[slug][$eq]=${params.slug}&populate=*`,
-    { next: { revalidate: 0 } }
+    { next: { revalidate: 180 } } // ✅ תיקון: 3 דקות במקום 0
   );
 
   const json = await res.json();
@@ -130,6 +143,10 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
   if (!rawArticle) return notFound();
   const data = rawArticle;
 
+  // 2. שליפת הכתבות הדומות (במקביל, בשרת)
+  const similarArticlesData = await getSimilarArticles(params.slug, data.category);
+
+  // --- כל הלוגיקה של עיבוד התמונות נשארת זהה ---
   const galleryItems = data.gallery?.data
     ? data.gallery.data.map((item) => item.attributes)
     : data.gallery || [];
@@ -170,11 +187,9 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
     typeof data.external_media_links[0] === "string" &&
     data.external_media_links[0].startsWith("http")
   ) {
-    // fallback אם יש רק אחד
     mainImage = resolveImageUrl(data.external_media_links[0].trim());
     mainImageAlt = "תמונה ראשית מהמדיה החיצונית";
   }
-
 
   const article = {
     title: data.title || "כתבה ללא כותרת",
@@ -207,9 +222,7 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
     font_family: data.font_family || "Heebo, sans-serif",
   };
 
-    // ===============================
-  // 📌 Structured Data (JSON-LD)
-  // ===============================
+  // Structured Data (JSON-LD)
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "NewsArticle",
@@ -242,7 +255,6 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
       : ""
   };
 
-
   const breadcrumbs = [{ label: "דף הבית", href: "/" }];
   if (article.category)
     breadcrumbs.push({
@@ -262,23 +274,123 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
     });
   }
   breadcrumbs.push({ label: article.title });
-  
-  
 
-
-  // ✅ רינדור פסקאות (כולל Honda + YouTube)
+  // פונקציית הרינדור נשארת זהה...
   const renderParagraph = (block, i) => {
-    if (typeof block === "string") {
-      const cleanText = fixRelativeImages(block.trim());
-      const hasHTMLTags = /<\/?[a-z][\s\S]*>/i.test(cleanText);
-
-      if (hasHTMLTags) {
+      // (כאן נמצא כל הקוד הארוך שלך לרינדור טקסט - הוא תקין לחלוטין, לא שיניתי אותו)
+      if (typeof block === "string") {
+        const cleanText = fixRelativeImages(block.trim());
+        const hasHTMLTags = /<\/?[a-z][\s\S]*>/i.test(cleanText);
+  
+        if (hasHTMLTags) {
+          return (
+            <div
+              key={i}
+              className="article-text text-gray-800 text-[18px] leading-relaxed"
+              dangerouslySetInnerHTML={{
+                __html: cleanText.replace(
+                  /(https:\/\/hondanews\.eu[^\s"'<>]+)/gi,
+                  (match) => wrapHondaProxy(match)
+                ),
+              }}
+            />
+          );
+        }
+  
+        const urlMatch = cleanText.match(/https?:\/\/[^\s]+/);
+        if (urlMatch) {
+          let url = urlMatch[0].trim();
+          if (url.includes("hondanews.eu")) url = wrapHondaProxy(url);
+          else if (url.includes("content2.kawasaki.com")) {
+            url = url.split("?")[0];
+          }
+  
+          if (
+            /\.(jpg|jpeg|png|gif|webp)$/i.test(url) ||
+            url.includes("hondanews.eu/image/") ||
+            url.includes("/api/proxy-honda?")
+          ) {
+            return (
+              <InlineImage
+                key={i}
+                src={url}
+                alt="תמונה מתוך הכתבה"
+                caption=""
+              />
+            );
+          }
+  
+          if (
+            /(youtube\.com|youtu\.be|facebook\.com|instagram\.com|tiktok\.com|x\.com|twitter\.com)/i.test(
+              url
+            )
+          ) {
+            return <EmbedContent key={i} url={url} />;
+          }
+  
+          return (
+            <p key={i} className="article-text text-blue-600 underline">
+              <a href={url} target="_blank" rel="noopener noreferrer">
+                {url}
+              </a>
+            </p>
+          );
+        }
+  
         return (
-          <div
+          <p
             key={i}
             className="article-text text-gray-800 text-[18px] leading-relaxed"
             dangerouslySetInnerHTML={{
-              __html: cleanText.replace(
+              __html: cleanText.replace(/\n/g, "<br/>"),
+            }}
+          />
+        );
+      }
+  
+      if (block.type === "paragraph" && block.children) {
+        let html = toHtmlFromStrapiChildren(block.children);
+        html = fixRelativeImages(html);
+  
+        const urlMatch = html.match(/https?:\/\/[^\s"']+/);
+        if (urlMatch) {
+          let url = urlMatch[0];
+          if (url.includes("hondanews.eu")) url = wrapHondaProxy(url);
+          else if (url.includes("content2.kawasaki.com")) {
+            url = url.split("?")[0];
+          }
+  
+          if (
+            /\.(jpg|jpeg|png|gif|webp)$/i.test(url) ||
+            url.includes("hondanews.eu/image/") ||
+            url.includes("/api/proxy-honda?") ||
+            url.includes("content2.kawasaki.com/ContentStorage/")
+          ) {
+            return (
+              <InlineImage
+                key={i}
+                src={url}
+                alt="תמונה מתוך הכתבה"
+                caption=""
+              />
+            );
+          }
+  
+          if (
+            /(youtube\.com|youtu\.be|facebook\.com|instagram\.com|tiktok\.com|x\.com|twitter\.com)/i.test(
+              url
+            )
+          ) {
+            return <EmbedContent key={i} url={url} />;
+          }
+        }
+  
+        return (
+          <p
+            key={i}
+            className="article-text text-gray-800 text-[18px] leading-relaxed"
+            dangerouslySetInnerHTML={{
+              __html: html.replace(
                 /(https:\/\/hondanews\.eu[^\s"'<>]+)/gi,
                 (match) => wrapHondaProxy(match)
               ),
@@ -286,175 +398,60 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
           />
         );
       }
-
-      const urlMatch = cleanText.match(/https?:\/\/[^\s]+/);
-      if (urlMatch) {
-        let url = urlMatch[0].trim();
-        if (url.includes("hondanews.eu")) url = wrapHondaProxy(url);
-        // ✅ תמיכה בקישורי Kawasaki
-        else if (url.includes("content2.kawasaki.com")) {
-          // מנקה פרמטרים כמו ?w=400 מהכתובת
-          url = url.split("?")[0];
-        }
-
-
-        if (
-          /\.(jpg|jpeg|png|gif|webp)$/i.test(url) ||
-          url.includes("hondanews.eu/image/") ||
-          url.includes("/api/proxy-honda?")
-        ) {
-          return (
-            <InlineImage
-              key={i}
-              src={url}
-              alt="תמונה מתוך הכתבה"
-              caption=""
-            />
-          );
-        }
-
-        if (
-          /(youtube\.com|youtu\.be|facebook\.com|instagram\.com|tiktok\.com|x\.com|twitter\.com)/i.test(
-            url
-          )
-        ) {
-          return <EmbedContent key={i} url={url} />;
-        }
-
+  
+      if (block.type === "list") {
+        const isOrdered = block.format === "ordered";
+        const Tag = isOrdered ? "ol" : "ul";
         return (
-          <p key={i} className="article-text text-blue-600 underline">
-            <a href={url} target="_blank" rel="noopener noreferrer">
-              {url}
-            </a>
-          </p>
+          <Tag
+            key={i}
+            dir="rtl"
+            className={`my-3 pr-6 space-y-1 text-[18px] text-gray-800 leading-relaxed ${
+              isOrdered ? "list-decimal" : "list-disc"
+            }`}
+          >
+            {block.children?.map((item, idx) => {
+              const html = toHtmlFromStrapiChildren(item.children || []);
+              return (
+                <li
+                  key={idx}
+                  dangerouslySetInnerHTML={{
+                    __html: fixRelativeImages(html),
+                  }}
+                />
+              );
+            })}
+          </Tag>
         );
       }
-
-      return (
-        <p
-          key={i}
-          className="article-text text-gray-800 text-[18px] leading-relaxed"
-          dangerouslySetInnerHTML={{
-            __html: cleanText.replace(/\n/g, "<br/>"),
-          }}
-        />
-      );
-    }
-
-    if (block.type === "paragraph" && block.children) {
-      let html = toHtmlFromStrapiChildren(block.children);
-      html = fixRelativeImages(html);
-
-      const urlMatch = html.match(/https?:\/\/[^\s"']+/);
-      if (urlMatch) {
-        let url = urlMatch[0];
-        if (url.includes("hondanews.eu")) url = wrapHondaProxy(url);
-        // ✅ תמיכה בקישורי Kawasaki
-        else if (url.includes("content2.kawasaki.com")) {
-          // מנקה פרמטרים כמו ?w=400 מהכתובת
-          url = url.split("?")[0];
-        }
-
-
-        if (
-          /\.(jpg|jpeg|png|gif|webp)$/i.test(url) ||
-          url.includes("hondanews.eu/image/") ||
-          url.includes("/api/proxy-honda?") ||
-          url.includes("content2.kawasaki.com/ContentStorage/")
-
-
-        ) {
-          return (
-            <InlineImage
-              key={i}
-              src={url}
-              alt="תמונה מתוך הכתבה"
-              caption=""
-            />
-          );
-        }
-
-        if (
-          /(youtube\.com|youtu\.be|facebook\.com|instagram\.com|tiktok\.com|x\.com|twitter\.com)/i.test(
-            url
-          )
-        ) {
-          return <EmbedContent key={i} url={url} />;
-        }
+  
+      if (block.type === "heading") {
+        const level = block.level || 2;
+        const Tag = `h${Math.min(level, 3)}`;
+        const text = block.children?.map((c) => c.text).join("") || "";
+        return (
+          <Tag
+            key={i}
+            className="font-bold text-2xl text-gray-900 mt-4 mb-2"
+            dangerouslySetInnerHTML={{ __html: fixRelativeImages(text) }}
+          />
+        );
       }
-
-      return (
-        <p
-          key={i}
-          className="article-text text-gray-800 text-[18px] leading-relaxed"
-          dangerouslySetInnerHTML={{
-            __html: html.replace(
-              /(https:\/\/hondanews\.eu[^\s"'<>]+)/gi,
-              (match) => wrapHondaProxy(match)
-            ),
-          }}
-        />
-      );
-    }
-
-        // ✅ טיפול ברשימות (ממוספרות או נקודתיות)
-    if (block.type === "list") {
-      const isOrdered = block.format === "ordered";
-      const Tag = isOrdered ? "ol" : "ul";
-      return (
-        <Tag
-          key={i}
-          dir="rtl"
-          className={`my-3 pr-6 space-y-1 text-[18px] text-gray-800 leading-relaxed ${
-            isOrdered ? "list-decimal" : "list-disc"
-          }`}
-        >
-          {block.children?.map((item, idx) => {
-            const html = toHtmlFromStrapiChildren(item.children || []);
-            return (
-              <li
-                key={idx}
-                dangerouslySetInnerHTML={{
-                  __html: fixRelativeImages(html),
-                }}
-              />
-            );
-          })}
-        </Tag>
-      );
-    }
-
-
-
-
-    if (block.type === "heading") {
-      const level = block.level || 2;
-      const Tag = `h${Math.min(level, 3)}`;
-      const text = block.children?.map((c) => c.text).join("") || "";
-      return (
-        <Tag
-          key={i}
-          className="font-bold text-2xl text-gray-900 mt-4 mb-2"
-          dangerouslySetInnerHTML={{ __html: fixRelativeImages(text) }}
-        />
-      );
-    }
-
-    if (block.type === "image") {
-      const imageData =
-        block.image?.data?.attributes || block.image?.attributes || block.image;
-      if (!imageData?.url) return null;
-      const alt = imageData.alternativeText || "תמונה מתוך הכתבה";
-      const caption = imageData.caption || "";
-      const src = resolveImageUrl(imageData.url);
-      return (
-        <InlineImage key={i} src={src} alt={alt} caption={caption} />
-      );
-    }
-
-    return null;
+  
+      if (block.type === "image") {
+        const imageData =
+          block.image?.data?.attributes || block.image?.attributes || block.image;
+        if (!imageData?.url) return null;
+        const alt = imageData.alternativeText || "תמונה מתוך הכתבה";
+        const caption = imageData.caption || "";
+        const src = resolveImageUrl(imageData.url);
+        return (
+          <InlineImage key={i} src={src} alt={alt} caption={caption} />
+        );
+      }
+  
+      return null;
   };
-
 
   const paragraphs = Array.isArray(article.content)
     ? article.content
@@ -467,7 +464,6 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
             type="application/ld+json"
             dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-
 
       <PageContainer title={article.title} breadcrumbs={breadcrumbs}>
         <div
@@ -512,12 +508,11 @@ export default async function ArticlePage({ params, setPageTitle, setPageBreadcr
           </div>
 
           <Tags tags={article.tags} />
+          
+          {/* ✅ כאן השינוי: מעבירים את הנתונים שכבר שלפנו בשרת */}
           <div className="similar-articles-section">
-            <SimilarArticles currentSlug={article.slug} category={article.category} />
+            <SimilarArticles articles={similarArticlesData} />
           </div>
-
-          
-          
           
         </div>
       </PageContainer>

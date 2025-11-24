@@ -19,7 +19,7 @@ export default function GuideBox() {
       try {
         const res = await fetch(
           `${API_URL}/api/articles?filters[Values][$null]=false&populate=*`,
-          { cache: 'no-store' }
+          { next: { revalidate: 3600 } }
         );
         const json = await res.json();
         setArticles(json.data || []);

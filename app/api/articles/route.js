@@ -19,7 +19,7 @@ export async function GET(request) {
 
     const url = `${base}/api/articles?${params.toString()}`;
 
-    const res = await fetch(url, { cache: 'no-store' });
+    const res = await fetch(url, { next: { revalidate: 3600 } });
     if (!res.ok) {
       console.error('❌ שגיאת Strapi:', res.status, await res.text());
       return Response.json({ data: [] }, { status: res.status });
