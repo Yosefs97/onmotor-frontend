@@ -170,6 +170,7 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
                                   <Link
                                     key={sIdx}
                                     href={sublink.path}
+                                    prefetch={false}
                                     onClick={onClose}
                                     className="block py-1 hover:text-[#e60000] text-right"
                                   >
@@ -193,6 +194,7 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
                         <div key={idx} className="relative group/sub">
                           <Link
                             href={link.path}
+                            prefetch={false}
                             className="block px-4 py-2 text-sm text-white hover:text-[#e60000] whitespace-nowrap text-right relative"
                           >
                             <span>{link.title}</span>
@@ -209,6 +211,7 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
                                 <Link
                                   key={sIdx}
                                   href={sublink.path}
+                                  prefetch={false}
                                   className="block px-4 py-2 text-sm text-white hover:text-[#e60000] whitespace-nowrap text-right"
                                 >
                                   {sublink.title}

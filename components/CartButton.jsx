@@ -21,7 +21,7 @@ export default function CartButton() {
   }, []);
 
   return (
-    <Link href="/shop/cart" className="relative inline-flex items-center">
+    <Link href="/shop/cart" className="relative inline-flex items-center" prefetch={false}>
       <ShoppingCart className="w-6 h-6 text-gray-800 hover:text-[#e60000]" />
       {count > 0 && (
         <span className="absolute -top-2 -right-2 bg-[#e60000] text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">

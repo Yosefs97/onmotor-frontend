@@ -165,6 +165,7 @@ export default function TabLeftSidebar() {
             /* 🔗 פנימי — SPA ללא טעינה מחדש */
             <Link
               href={internalHref}
+              prefetch={false}
               className={`flex gap-2 items-start p-1 rounded transition-transform duration-200 ${bg} hover:scale-[1.03] hover:shadow-sm`}
             >
               <CardContent item={item} even={even} source={source} />

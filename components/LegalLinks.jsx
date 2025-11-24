@@ -21,6 +21,7 @@ export default function LegalLinks({ layout = 'horizontal', isMobile = false, on
           <Link
             key={link.href}
             href={link.href}
+            prefetch={false}
             onClick={onLinkClick}
             className="px-4 py-1 border border-[#e60000] text-[#e60000] rounded-md hover:bg-[#e60000] hover:text-white transition text-sm"
           >
@@ -51,6 +52,7 @@ export default function LegalLinks({ layout = 'horizontal', isMobile = false, on
           <Link
             key={link.href}
             href={link.href}
+            prefetch={false}
             onClick={() => {
               setIsOpen(false);
               if (onLinkClick) onLinkClick();

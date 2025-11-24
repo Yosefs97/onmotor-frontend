@@ -105,7 +105,7 @@ export default function AutoShopBreadcrumbs({ product = null, filters = null }) 
       <nav dir="rtl" className="text-l font-bold">
         {parts.map((p, idx) => (
           <span key={idx}>
-            <Link href={p.href} className="text-red-600 hover:underline">
+            <Link href={p.href} className="text-red-600 hover:underline" prefetch={false}>
               {p.label}
             </Link>
             {idx < parts.length - 1 && <span className="mx-1 text-xl font-bold text-gray-900">/</span>}

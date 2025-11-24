@@ -56,7 +56,7 @@ export default function IroadsBox() {
   return (
     <div className="bg-white shadow-md rounded-md overflow-hidden relative mb-4">
       {/* ✅ כותרת עליונה */}
-      <Link href="https://www.iroads.co.il/" target="_blank">
+      <Link href="https://www.iroads.co.il/" prefetch={false} target="_blank">
         <h3 className="bg-red-600 text-white font-bold text-lg px-3 py-2 cursor-pointer hover:bg-red-700 transition text-right">
           בכבישי הארץ
         </h3>
@@ -109,7 +109,7 @@ export default function IroadsBox() {
                 const { mainImage, mainImageAlt } = getMainImage(attrs);
 
                 return (
-                  <Link href={attrs.slug ? `/articles/${attrs.slug}` : '#'}>
+                  <Link href={attrs.slug ? `/articles/${attrs.slug}` : '#'} prefetch={false}>
                     <div className="relative w-full h-full cursor-pointer">
                       <Image
                         src={mainImage || PLACEHOLDER_IMG}

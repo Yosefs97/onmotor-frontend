@@ -46,6 +46,7 @@ export default function RelatedArticles({ tags = [] }) {
             <Link
               key={article.id}
               href={attr.href || `/articles/${attr.slug}`}
+              prefetch={false}
               className="border rounded-lg overflow-hidden hover:shadow"
             >
               {attr.image && (

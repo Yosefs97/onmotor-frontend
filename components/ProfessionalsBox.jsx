@@ -190,6 +190,7 @@ export default function ProfessionalsBox() {
               {article && (
                 <Link
                   href={`/articles/${article.attributes.slug}`}
+                  prefetch={false}
                   className="absolute top-3 left-3 px-3 py-1 bg-gray-800 text-white text-xs rounded-md shadow hover:bg-gray-900 transition z-10"
                 >
                   לכתבה על {current.title_pros}

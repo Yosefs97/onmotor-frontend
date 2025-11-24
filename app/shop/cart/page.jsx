@@ -130,6 +130,7 @@ export default function CartPage() {
                   <div className="flex-1">
                     <Link
                       href={`/shop/${node.merchandise.product.handle}`}
+                      prefetch={false}
                       className="font-medium text-blue-600 hover:underline block"
                     >
                       {node.merchandise.product.title}

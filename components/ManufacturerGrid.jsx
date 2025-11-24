@@ -62,6 +62,7 @@ export default function ManufacturerGrid({ manufacturers }) {
           <Link
             key={m.id}
             href={`/shop/vendor/${m.handle}`}
+            prefetch={false}
             data-name={m.title}
             className="min-w-[160px] flex-shrink-0 border rounded-lg p-4 shadow hover:shadow-lg transition snap-start bg-white"
           >

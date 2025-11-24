@@ -29,6 +29,7 @@ export default function CartUnderHeader() {
         <CartButton />
         <Link
           href="/shop/cart"
+          prefetch={false}
           className="bg-[#e60000] text-white left-0 px-2 py-2 rounded text-sm font-bold hover:bg-red-700 transition"
         >
           לסל הקניות

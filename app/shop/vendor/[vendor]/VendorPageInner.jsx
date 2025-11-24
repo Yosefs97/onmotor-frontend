@@ -65,6 +65,7 @@ export default function VendorPageInner({ vendor, models }) {
           <Link
             key={m.name}
             href={`/shop/vendor/${vendor}/${m.handle}`}
+            prefetch={false}
             className="min-w-[160px] flex-shrink-0 border rounded-lg p-4 shadow hover:shadow-lg transition snap-start bg-white"
           >
             {m.image && (

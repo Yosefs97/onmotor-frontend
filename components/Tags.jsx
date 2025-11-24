@@ -29,6 +29,7 @@ export default function Tags({ tags = [] }) {
             <Link
               key={index}
               href={`/tags/${slug}`}
+              prefetch={false}
               className="bg-gray-800 text-gray-100 px-2 py-1 text-sm rounded hover:bg-gray-700"
             >
               #{name}

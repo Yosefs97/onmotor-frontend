@@ -113,6 +113,7 @@ export default function NewsTicker() {
           <Link
             ref={textRef}
             href={headlines[currentHeadline].link}
+            prefetch={false}
             className="absolute right-0 top-0 transition-transform duration-75 ease-linear"
             style={{
               transform: `translateX(${shiftX}px)`,

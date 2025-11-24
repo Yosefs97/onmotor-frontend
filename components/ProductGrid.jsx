@@ -19,6 +19,7 @@ export default function ProductGrid({ products = [], loading = false, onLoadMore
             <Link
               key={p.id}
               href={`/shop/${p.handle}`}
+              prefetch={false}
               data-name={p.title}
               className="border rounded-lg overflow-hidden hover:shadow transition"
             >

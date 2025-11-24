@@ -35,6 +35,7 @@ export default function RelatedProducts({ vendor, productType, model, excludeHan
             <Link
               key={p.id}
               href={`/shop/${p.handle}`}
+              prefetch={false}
               className="border rounded-lg overflow-hidden hover:shadow"
             >
               {img && <img src={img} alt={p.title} className="w-full h-32 object-cover" />}

@@ -50,7 +50,7 @@ export default function GuideBox() {
   return (
     <div className="bg-white shadow-md rounded-md overflow-hidden relative mb-4">
       {/* כותרת עם לינק לדף מדריכים */}
-      <Link href="/blog/guides">
+      <Link href="/blog/guides" prefetch={false}>
         <h3 className="bg-red-600 text-white font-bold text-lg px-3 py-2 cursor-pointer hover:bg-red-700 transition">
           מדריכים
         </h3>
@@ -67,7 +67,7 @@ export default function GuideBox() {
             transition={{ duration: 0.6 }}
             className="absolute inset-0"
           >
-            <Link href={`/articles/${current.slug}`}>
+            <Link href={`/articles/${current.slug}`} prefetch={false}> 
               <div className="w-full h-full cursor-pointer">
                 <Image
                   src={mainImage}

@@ -8,7 +8,7 @@ export default function Breadcrumbs({ items }) {
         <span key={index}>
           {index > 0 && <span className="mx-1 text-black">/</span>}
           {index < items.length - 1 ? (
-            <Link href={item.href} className="hover:underline text-black">
+            <Link href={item.href} className="hover:underline text-black" prefetch={false}>
               {item.label}
             </Link>
           ) : (
