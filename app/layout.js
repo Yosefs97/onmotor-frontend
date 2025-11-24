@@ -1,4 +1,4 @@
-//app/layout.js
+// app/layout.js
 
 import './globals.css';
 import { AuthModalProvider } from '@/contexts/AuthModalProvider';
@@ -8,24 +8,20 @@ import Script from 'next/script';
 import { Heebo } from 'next/font/google';
 
 const heebo = Heebo({
-  subsets: ['hebrew', 'latin'],
-  weight: ['400', '500', '700'],
-  display: 'swap',
+  subsets: ['hebrew', 'latin'],
+  weight: ['400', '500', '700'],
+  display: 'swap',
 });
 
-//  ========= ⬇️ התיקון כאן ⬇️ =========
-// החזרנו את אובייקט המטא-דאטה הראשי.
-// זה ישמש כברירת מחדל, והכתבות ידרסו אותו נקודתית.
+// ✅ מטא-דאטה (תקין)
 export const metadata = {
   metadataBase: new URL("https://www.onmotormedia.com"),
-
   title: {
     default: "OnMotor Media – מגזין אופנועים ישראלי | חדשות, סקירות וקהילה",
     template: "%s | OnMotor Media",
   },
   description:
     "מגזין אופנועים ישראלי מוביל – חדשות אופנועים, סקירות דגמים, סקירת ציוד ומבחני דרך. כל מה שרוכב בישראל צריך לדעת.",
-
   openGraph: {
     title: "OnMotor Media – מגזין אופנועים ישראלי",
     description:
@@ -43,7 +39,6 @@ export const metadata = {
     locale: "he_IL",
     type: "website",
   },
-
   twitter: {
     card: "summary_large_image",
     title: "OnMotor Media – מגזין אופנועים ישראלי",
@@ -53,43 +48,71 @@ export const metadata = {
   },
 };
 
-//  ========= ⬆️ התיקון כאן ⬆️ =========
+// ✅ פונקציה חדשה לשליפת כותרות בשרת (הייתה חסרה בקוד שלך)
+async function getTickerHeadlines() {
+  const API_URL = process.env.STRAPI_API_URL;
+  try {
+    const url = `${API_URL}/api/articles?filters[$or][0][tags_txt][$contains]=חדשנות&filters[$or][1][tags_txt][$contains]=2025&filters[$or][2][tags_txt][$contains]=חוק וסדר&sort=publishedAt:desc`;
+    
+    // קאש ל-5 דקות (300 שניות) כדי למנוע עומס בקשות
+    const res = await fetch(url, { next: { revalidate: 300 } });
+    const data = await res.json();
 
+    if (data?.data?.length > 0) {
+      return data.data.map((article) => {
+        const attrs = article.attributes || article;
+        return {
+          text: attrs.headline || attrs.title || "כתבה ללא כותרת",
+          link: `/articles/${attrs.slug}`,
+        };
+      });
+    }
+    return [];
+  } catch (err) {
+    console.error("Server Error fetching ticker:", err);
+    return [];
+  }
+}
 
-export default function RootLayout({ children }) {
-  return (
-    <html lang="he" dir="rtl" className={heebo.className}>
-      <head>
-        {/* Structured Data - עוזר לגוגל לזהות את הלוגו שלך */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "Organization",
-              "name": "OnMotor Media",
-              "url": "https://www.onmotormedia.com",
-              "logo": "https://www.onmotormedia.com/OnMotorLogonoback.png",
-            }),
-          }}
-        />
-      </head>
+// ✅ הוספנו async כדי שנוכל להשתמש ב-await
+export default async function RootLayout({ children }) {
+  
+  // ✅ שליפת הנתונים בפועל (היה חסר בקוד שלך)
+  const tickerHeadlines = await getTickerHeadlines();
 
-      <body className="flex flex-col min-h-screen">
-           {/* טוען את Facebook SDK גלובלי */}
-        <AuthModalProvider>
-          <ScrollToTopButton />
-          <ClientLayout tickerHeadlines={tickerHeadlines}>{children}</ClientLayout>
-        </AuthModalProvider>
+  return (
+    <html lang="he" dir="rtl" className={heebo.className}>
+      <head>
+        {/* Structured Data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "OnMotor Media",
+              "url": "https://www.onmotormedia.com",
+              "logo": "https://www.onmotormedia.com/OnMotorLogonoback.png",
+            }),
+          }}
+        />
+      </head>
 
-        {/* תוסף הנגישות */}
-        <Script src="https://cdn.enable.co.il/licenses/enable-L491236ornf8p4x2-1025-75004/init.js" />
-        {/* Facebook SDK – נטען רק אחרי Hydration */}
+      <body className="flex flex-col min-h-screen">
+        <AuthModalProvider>
+          <ScrollToTopButton />
+          {/* ✅ כעת המשתנה tickerHeadlines מוגדר ומועבר תקין */}
+          <ClientLayout tickerHeadlines={tickerHeadlines}>{children}</ClientLayout>
+        </AuthModalProvider>
+
+        {/* תוסף הנגישות */}
+        <Script src="https://cdn.enable.co.il/licenses/enable-L491236ornf8p4x2-1025-75004/init.js" />
+        {/* Facebook SDK */}
         <Script
           src="https://connect.facebook.net/he_IL/sdk.js#xfbml=1&version=v23.0"
           strategy="lazyOnload"
         />
-      </body>
-    </html>
-  );
+      </body>
+    </html>
+  );
 }
