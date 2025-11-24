@@ -71,6 +71,7 @@ export default function ArticleCard({ article, size = 'small' }) {
     <Link
       ref={cardRef}   // 👈 חדש — כדי למדוד את מיקום הכרטיס
       href={article.href || `/articles/${article.slug}`}
+      prefetch={false}  // 👈 התיקון כאן: מונע טעינה אוטומטית בעת גלילה
       className="group block relative overflow-hidden shadow-md transition-all duration-300 hover:shadow-xl hover:scale-[1.02] w-full"
       onTouchStart={handleTouchStart}
     >

@@ -29,11 +29,11 @@ export default function SectionWithHeader({ title, href = '#', variant = 'home',
     >
       {backgroundImage && <div className="absolute inset-0 bg-black/50 z-0 rounded" />}
       <div className="relative z-10 w-full flex justify-between items-center">
-        <Link href={href}>
+        <Link href={href} prefetch={false}> 
           <h2 className={`${titleClass} cursor-pointer hover:text-red-600`}>{titleHeb}</h2>
         </Link>
         {href &&  variant !== 'main' && (
-          <Link href={href} className="text-sm text-red-600 hover:underline">
+          <Link href={href} className="text-sm text-red-600 hover:underline" prefetch={false}>
             {linkLabel}
           </Link>
         )}
