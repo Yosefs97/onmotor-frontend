@@ -13,7 +13,6 @@ const heebo = Heebo({
   display: 'swap',
 });
 
-// ✅ מטא-דאטה (תקין)
 export const metadata = {
   metadataBase: new URL("https://www.onmotormedia.com"),
   title: {
@@ -48,13 +47,11 @@ export const metadata = {
   },
 };
 
-// ✅ פונקציה חדשה לשליפת כותרות בשרת (הייתה חסרה בקוד שלך)
+// ✅ פונקציה לשליפת כותרות לניוז-טיקר
 async function getTickerHeadlines() {
   const API_URL = process.env.STRAPI_API_URL;
   try {
     const url = `${API_URL}/api/articles?filters[$or][0][tags_txt][$contains]=חדשנות&filters[$or][1][tags_txt][$contains]=2025&filters[$or][2][tags_txt][$contains]=חוק וסדר&sort=publishedAt:desc`;
-    
-    // קאש ל-5 דקות (300 שניות) כדי למנוע עומס בקשות
     const res = await fetch(url, { next: { revalidate: 300 } });
     const data = await res.json();
 
@@ -74,16 +71,68 @@ async function getTickerHeadlines() {
   }
 }
 
-// ✅ הוספנו async כדי שנוכל להשתמש ב-await
+// ✅ פונקציה חדשה לשליפת נתוני הסיידבר (אחרונים, בדרכים, פופולרי)
+async function getSidebarData() {
+  const API_URL = process.env.STRAPI_API_URL;
+
+  // פונקציית עזר
+  const fetchStrapi = async (query) => {
+    try {
+      const res = await fetch(`${API_URL}/api/articles?${query}`, { next: { revalidate: 3600 } });
+      const json = await res.json();
+      return json.data || [];
+    } catch (e) { return []; }
+  };
+
+  const mapData = (items) => items.map(item => {
+    const a = item.attributes || item;
+    let imageUrl = '/default-image.jpg';
+    if (a.image?.data?.attributes?.url) imageUrl = a.image.data.attributes.url;
+
+    // הרכבת כתובת תמונה מלאה
+    const fullImage = imageUrl.startsWith('http') 
+      ? imageUrl 
+      : `${process.env.NEXT_PUBLIC_STRAPI_API_URL || ''}${imageUrl}`;
+
+    return {
+      id: item.id,
+      title: a.title,
+      description: a.headline || a.description || '',
+      date: a.date,
+      image: fullImage,
+      slug: a.slug,
+      views: a.views || 0,
+      url: a.original_url || null // אם יש שדה כזה ב-Strapi לקישורים חיצוניים
+    };
+  });
+
+  // שליפות במקביל
+  const [latest, onRoad, popular] = await Promise.all([
+    // 1. אחרונים
+    fetchStrapi('sort=publishedAt:desc&pagination[limit]=10&populate=image'),
+    // 2. בדרכים (לפי תגית)
+    fetchStrapi('filters[tags_txt][$contains]=בדרכים&sort=publishedAt:desc&pagination[limit]=10&populate=image'),
+    // 3. פופולרי (לפי צפיות)
+    fetchStrapi('sort=views:desc&pagination[limit]=10&populate=image')
+  ]);
+
+  return {
+    latest: mapData(latest),
+    onRoad: mapData(onRoad),
+    popular: mapData(popular)
+  };
+}
+
 export default async function RootLayout({ children }) {
-  
-  // ✅ שליפת הנתונים בפועל (היה חסר בקוד שלך)
-  const tickerHeadlines = await getTickerHeadlines();
+  // ✅ שליפת כל הנתונים במקביל
+  const tickerDataPromise = getTickerHeadlines();
+  const sidebarDataPromise = getSidebarData();
+
+  const [tickerHeadlines, sidebarData] = await Promise.all([tickerDataPromise, sidebarDataPromise]);
 
   return (
     <html lang="he" dir="rtl" className={heebo.className}>
       <head>
-        {/* Structured Data */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -101,13 +150,14 @@ export default async function RootLayout({ children }) {
       <body className="flex flex-col min-h-screen">
         <AuthModalProvider>
           <ScrollToTopButton />
-          {/* ✅ כעת המשתנה tickerHeadlines מוגדר ומועבר תקין */}
-          <ClientLayout tickerHeadlines={tickerHeadlines}>{children}</ClientLayout>
+          
+          {/* ✅ העברת הנתונים ל-ClientLayout */}
+          <ClientLayout tickerHeadlines={tickerHeadlines} sidebarData={sidebarData}>
+            {children}
+          </ClientLayout>
         </AuthModalProvider>
 
-        {/* תוסף הנגישות */}
         <Script src="https://cdn.enable.co.il/licenses/enable-L491236ornf8p4x2-1025-75004/init.js" />
-        {/* Facebook SDK */}
         <Script
           src="https://connect.facebook.net/he_IL/sdk.js#xfbml=1&version=v23.0"
           strategy="lazyOnload"

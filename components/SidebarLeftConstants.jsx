@@ -1,4 +1,5 @@
-// components/SidebarConstants.jsx
+// components\SidebarLeftConstants.jsx
+
 'use client';
 import React from 'react';
 import PriceCheckBox from './PriceCheckBox';
@@ -9,10 +10,14 @@ import IroadsBox from './IroadsBox';
 import ProfessionalsBox from './ProfessionalsBox';
 import TabLeftSidebar from './TabLeftSidebar';
 
-export default function SidebarConstants() {
+// 👇 מקבל sidebarData
+export default function SidebarConstants({ sidebarData }) {
   return (
     <div className="bg-gray-900 p-2 space-y-2 relative sticky top-0 bottom-0">
-      <TabLeftSidebar />
+      
+      {/* 👇 הנה היעד הסופי! מעבירים את הנתונים כ-initialData */}
+      <TabLeftSidebar initialData={sidebarData} />
+      
       <hr className="border-t-2 border-red-600 my-1" />
       <PriceCheckBox />
       <hr className="border-t-2 border-red-600 my-3" />
@@ -27,7 +32,6 @@ export default function SidebarConstants() {
       <ProfessionalsBox />
       <hr className="border-t-2 border-red-600 my-1" />
 
-      {/* אפשר להוסיף כאן קבועים נוספים */}
     </div>
   );
 }

@@ -12,15 +12,15 @@ import SidebarMiddleLayer from "./SidebarMiddleLayer";
 import SidebarLeftLayer from "./SidebarLeftLayer";
 import useIsMobile from "@/hooks/useIsMobile";
 
-// 👇 הוספנו את tickerHeadlines כ-Prop
-export default function ClientLayout({ children, tickerHeadlines = [] }) {
+// 👇 מקבלים גם sidebarData
+export default function ClientLayout({ children, tickerHeadlines = [], sidebarData = {} }) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
 
   const [isAtTop, setIsAtTop] = useState(true);
   const [headerHeight, setHeaderHeight] = useState(60);
 
-  /* 📌 טעינת סקריפטים (טוויטר/טיקטוק) */
+  /* 📌 טעינת סקריפטים */
   useEffect(() => {
     const scripts = [
       { id: "twitter-embed-script", src: "https://platform.twitter.com/widgets.js" },
@@ -39,7 +39,7 @@ export default function ClientLayout({ children, tickerHeadlines = [] }) {
     });
   }, []);
 
-  /* 📌 זיהוי גלילה במובייל */
+  /* 📌 זיהוי גלילה */
   useEffect(() => {
     if (!isMobile) return;
     const onScroll = () => {
@@ -49,7 +49,7 @@ export default function ClientLayout({ children, tickerHeadlines = [] }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, [isMobile]);
 
-  /* 📌 חישוב גובה Header באופן דינמי */
+  /* 📌 חישוב גובה Header */
   useEffect(() => {
     const header = document.querySelector("header");
     if (!header) return;
@@ -65,22 +65,16 @@ export default function ClientLayout({ children, tickerHeadlines = [] }) {
 
   return (
     <>
-      {/* 🍔 תפריט מובייל */}
       <div className="fixed top-4 right-0 z-[9999] lg:hidden">
         <MobileMenu />
       </div>
 
       <Header />
 
-      {/* 📰 NewsTicker */}
       <div
         className={`
           ${isMobile
-            ? (isAtTop
-                // ✅ תיקון: הורדנו את ה-Z-Index ל-30 (במקום 9998) כדי שהתפריט יכסה אותו
-                ? `sticky z-20`
-                : "relative")
-            // ✅ תיקון גם בדסקטופ: z-30
+            ? (isAtTop ? `sticky z-20` : "relative")
             : `sticky z-20`
           }
         `}
@@ -88,31 +82,28 @@ export default function ClientLayout({ children, tickerHeadlines = [] }) {
           top: isMobile ? (isAtTop ? headerHeight : 0) : headerHeight,
         }}
       >
-        {/* 👇 מעבירים את הנתונים לטיקר */}
         <NewsTicker headlines={tickerHeadlines} />
       </div>
 
       {isShopPage && <MobileShopFilterBar />}
 
-      {/* 🌍 פריסת העמוד */}
       <div className="w-screen sm:w-full overflow-x-hidden sm:overflow-visible bg-[#f9f9f9]" dir="rtl">
         <main
           className={`min-h-screen flex flex-col max-w-[1440px] mx-auto mb-0 px-0 sm:px-0 pt-[1px] pb-[2px] text-right bg-gray-100
             ${isShopPage ? '' : 'lg:flex-row'}
           `}
         >
-          {/* תוכן מרכזי */}
           {children}
 
-          {/* סיידרים – מוצגים רק אם זה לא shop */}
           {!isShopPage && (
             <>
               <div className={`w-full lg:w-1/4 flex-shrink-0 px-0 sm:px-0 ${!isMobile ? 'border-l border-[#e60000]' : ''}`}>
-                <SidebarMiddleLayer />
+                <SidebarMiddleLayer sidebarData={sidebarData} />
               </div>
 
               <div className={`w-full lg:w-1/4 flex-shrink-0 px-0 sm:px-0 ${!isMobile ? 'border-r border-[#e60000]' : ''}`}>
-                <SidebarLeftLayer />
+                {/* 👇 הנה השינוי: מעבירים את הנתונים לשכבה השמאלית */}
+                <SidebarLeftLayer sidebarData={sidebarData} />
               </div>
             </>
           )}

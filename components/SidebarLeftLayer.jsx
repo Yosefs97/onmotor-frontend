@@ -1,15 +1,17 @@
-// components\SidebarLeftLayer.jsx
+// components/SidebarLeftLayer.jsx
 'use client';
 import React from 'react';
 
 import SidebarLeftConstants from './SidebarLeftConstants';
 
-export default function SidebarLeftLayer() {
+// 👇 מקבל sidebarData
+export default function SidebarLeftLayer({ sidebarData }) {
   return (
     <div className="w-full flex flex-col h-full">
       {/* השכבה של SidebarLeftConstants */}
       <div className="w-full flex-1 ">
-        <SidebarLeftConstants />
+        {/* 👇 מעביר הלאה לרכיב הקבועים (שלא שלחת לי, אבל הוא חייב לקבל את זה) */}
+        <SidebarLeftConstants sidebarData={sidebarData} />
       </div>
     </div>
   );

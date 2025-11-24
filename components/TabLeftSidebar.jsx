@@ -8,16 +8,12 @@ import useIsMobile from '@/hooks/useIsMobile';
 
 const tabs = ['אחרונים', 'בדרכים', 'פופולרי'];
 
-/* 👇 פונקציה שמוציאה שם אתר נקי מתוך כתובת (למקרה שאין source מהשרת) */
 function extractDomainName(url) {
   try {
     const host = new URL(url).hostname.replace('www.', '');
     const parts = host.split('.');
     let base = '';
-    if (
-      parts.length >= 3 &&
-      ['co', 'org', 'net'].includes(parts[parts.length - 2])
-    ) {
+    if (parts.length >= 3 && ['co', 'org', 'net'].includes(parts[parts.length - 2])) {
       base = parts[parts.length - 3];
     } else {
       base = parts[0];
@@ -28,38 +24,23 @@ function extractDomainName(url) {
   }
 }
 
-export default function TabLeftSidebar() {
+// 👇 מקבל את הנתונים כ-Prop
+export default function TabLeftSidebar({ initialData = { latest: [], onRoad: [], popular: [] } }) {
   const isMobile = useIsMobile();
   const [hasInteracted, setHasInteracted] = useState(false);
   const scrollContainerRef = useRef(null);
   const sidebarRef = useRef(null);
 
   const [activeTab, setActiveTab] = useState('אחרונים');
-  const [latestArticles, setLatestArticles] = useState([]);
-  const [onRoadArticles, setOnRoadArticles] = useState([]);
-  const [popularContent, setPopularContent] = useState([]);
+  
+  // ✅ משתמשים בנתונים שהגיעו מהשרת
+  const latestArticles = initialData?.latest || [];
+  const onRoadArticles = initialData?.onRoad || [];
+  const popularContent = initialData?.popular || [];
+
   const [isPaused, setIsPaused] = useState(false);
 
-  /* ✅ שליפה אחת מהשרת */
-  useEffect(() => {
-    const fetchSidebarData = async () => {
-      try {
-        const res = await fetch('/api/sidebar-left');
-        if (!res.ok) {
-          console.error('שגיאה בטעינת sidebar-left:', res.status);
-          return;
-        }
-        const json = await res.json();
-        setLatestArticles(json.latest || []);
-        setOnRoadArticles(json.onRoad || []);
-        setPopularContent(json.popular || []);
-      } catch (err) {
-        console.error('שגיאה בטעינת sidebar-left:', err);
-      }
-    };
-
-    fetchSidebarData();
-  }, []);
+  // ❌ נמחק ה-useEffect של ה-fetch!
 
   /* ✅ גלילה אנכית מתמשכת לדסקטופ */
   useEffect(() => {
@@ -91,7 +72,7 @@ export default function TabLeftSidebar() {
     }, 0);
   }, [activeTab, isMobile, hasInteracted]);
 
-  /* ⭐️ רכיב תוכן שנחסוך בו כפילות */
+  /* ⭐️ רכיב תוכן */
   function CardContent({ item, even, source }) {
     return (
       <>
@@ -107,25 +88,14 @@ export default function TabLeftSidebar() {
 
         <div className="flex flex-col text-right">
           <p className="font-bold text-sm line-clamp-1">{item.title}</p>
-
-          <p
-            className={`text-xs ${
-              even ? 'text-gray-700' : 'text-gray-300'
-            } line-clamp-2`}
-          >
+          <p className={`text-xs ${even ? 'text-gray-700' : 'text-gray-300'} line-clamp-2`}>
             {item.description}
           </p>
-
           {item.date && (
-            <span
-              className={`text-xs ${
-                even ? 'text-gray-500' : 'text-gray-400'
-              } mt-1`}
-            >
+            <span className={`text-xs ${even ? 'text-gray-500' : 'text-gray-400'} mt-1`}>
               {item.date}
             </span>
           )}
-
           {(item.views || source) && (
             <span className="text-xs text-gray-400 mt-1">
               {item.views ? `${item.views} צפיות` : ''}
@@ -138,21 +108,18 @@ export default function TabLeftSidebar() {
     );
   }
 
-  /* ⭐️ הפונקציה שמחליטה אם להשתמש ב־Link או ב־a */
   const getStyledContent = (items) => {
     return items.map((item, i) => {
       const even = i % 2 === 0;
       const bg = even ? 'bg-red-50 text-black' : 'bg-neutral-900 text-white';
 
       const source = item.source || (item.url ? extractDomainName(item.url) : '');
-
       const isExternal = item.url && item.url.startsWith('http');
       const internalHref = !isExternal && item.slug ? `/articles/${item.slug}` : null;
 
       return (
         <div key={item.id}>
           {isExternal ? (
-            /* 🔗 חיצוני — נפתח בטאב חדש */
             <a
               href={item.url}
               target="_blank"
@@ -162,7 +129,6 @@ export default function TabLeftSidebar() {
               <CardContent item={item} even={even} source={source} />
             </a>
           ) : (
-            /* 🔗 פנימי — SPA ללא טעינה מחדש */
             <Link
               href={internalHref}
               prefetch={false}
