@@ -25,24 +25,22 @@ function extractDomainName(url) {
 }
 
 // 👇 מקבל את הנתונים כ-Prop
-export default function TabLeftSidebar({ initialData = { latest: [], onRoad: [], popular: [] } }) {
+export default function TabLeftSidebar({ initialData = null }) {
   const isMobile = useIsMobile();
   const [hasInteracted, setHasInteracted] = useState(false);
   const scrollContainerRef = useRef(null);
   const sidebarRef = useRef(null);
-
   const [activeTab, setActiveTab] = useState('אחרונים');
-  
-  // ✅ משתמשים בנתונים שהגיעו מהשרת
-  const latestArticles = initialData?.latest || [];
-  const onRoadArticles = initialData?.onRoad || [];
-  const popularContent = initialData?.popular || [];
-
   const [isPaused, setIsPaused] = useState(false);
 
-  // ❌ נמחק ה-useEffect של ה-fetch!
+  // ✅ ברירת מחדל למקרה שהמידע לא הגיע
+  const data = initialData || { latest: [], onRoad: [], popular: [] };
 
-  /* ✅ גלילה אנכית מתמשכת לדסקטופ */
+  const latestArticles = data.latest || [];
+  const onRoadArticles = data.onRoad || [];
+  const popularContent = data.popular || [];
+
+  // --- גלילה אוטומטית (דסקטופ) ---
   useEffect(() => {
     if (isMobile) return;
     const container = scrollContainerRef.current;
@@ -63,7 +61,7 @@ export default function TabLeftSidebar({ initialData = { latest: [], onRoad: [],
     return () => cancelAnimationFrame(frame);
   }, [activeTab, isPaused, isMobile]);
 
-  /* ✅ גלילה למיקום ה-sidebar במובייל לאחר בחירת טאב */
+  // --- גלילה למיקום במובייל ---
   useEffect(() => {
     if (!isMobile || !sidebarRef.current || !hasInteracted) return;
     setTimeout(() => {
@@ -72,59 +70,68 @@ export default function TabLeftSidebar({ initialData = { latest: [], onRoad: [],
     }, 0);
   }, [activeTab, isMobile, hasInteracted]);
 
-  /* ⭐️ רכיב תוכן */
+  /* רכיב תוכן פנימי */
   function CardContent({ item, even, source }) {
     return (
       <>
-        <div className="w-20 h-14 relative rounded overflow-hidden flex-shrink-0">
+        <div className="w-20 h-14 relative rounded overflow-hidden flex-shrink-0 bg-gray-200">
           <Image
-            src={item.image || '/default-image.jpg'}
-            alt={item.title || ''}
+            src={item.image} // הקישור מגיע כבר מתוקן מהשרת
+            alt={item.title || 'תמונה'}
             fill
             style={{ objectFit: 'cover' }}
             className="rounded"
+            // placeholder="blur" // אפשר להוסיף אם יש blurDataURL
           />
         </div>
 
-        <div className="flex flex-col text-right">
-          <p className="font-bold text-sm line-clamp-1">{item.title}</p>
+        <div className="flex flex-col text-right flex-1 min-w-0">
+          <p className="font-bold text-sm line-clamp-1 text-inherit">{item.title}</p>
+
           <p className={`text-xs ${even ? 'text-gray-700' : 'text-gray-300'} line-clamp-2`}>
             {item.description}
           </p>
-          {item.date && (
-            <span className={`text-xs ${even ? 'text-gray-500' : 'text-gray-400'} mt-1`}>
-              {item.date}
-            </span>
-          )}
-          {(item.views || source) && (
-            <span className="text-xs text-gray-400 mt-1">
-              {item.views ? `${item.views} צפיות` : ''}
-              {item.views && source ? ' · ' : ''}
-              {source || ''}
-            </span>
-          )}
+
+          <div className="flex items-center gap-1 mt-1 flex-wrap">
+             {item.date && (
+              <span className={`text-[10px] ${even ? 'text-gray-500' : 'text-gray-400'}`}>
+                {new Date(item.date).toLocaleDateString('he-IL')}
+              </span>
+            )}
+             {(item.views > 0 || source) && (
+              <span className={`text-[10px] ${even ? 'text-gray-400' : 'text-gray-500'}`}>
+                 {item.views > 0 && ` · ${item.views} צפיות`}
+                 {source && ` · ${source}`}
+              </span>
+            )}
+          </div>
         </div>
       </>
     );
   }
 
   const getStyledContent = (items) => {
+    if (!items || items.length === 0) {
+      return <div className="p-4 text-center text-gray-500 text-xs">אין כתבות להצגה</div>;
+    }
+
     return items.map((item, i) => {
       const even = i % 2 === 0;
       const bg = even ? 'bg-red-50 text-black' : 'bg-neutral-900 text-white';
-
-      const source = item.source || (item.url ? extractDomainName(item.url) : '');
+      
+      const source = item.url ? extractDomainName(item.url) : '';
       const isExternal = item.url && item.url.startsWith('http');
-      const internalHref = !isExternal && item.slug ? `/articles/${item.slug}` : null;
+      // תיקון: אם אין slug, לא ליצור לינק שבור
+      const internalHref = !isExternal && item.slug ? `/articles/${item.slug}` : '#';
 
       return (
-        <div key={item.id}>
+        <div key={item.id || i}>
           {isExternal ? (
             <a
               href={item.url}
               target="_blank"
               rel="noopener noreferrer"
-              className={`flex gap-2 items-start p-1 rounded transition-transform duration-200 ${bg} hover:scale-[1.03] hover:shadow-sm`}
+              className={`flex gap-2 items-start p-1 rounded transition-transform duration-200 ${bg} hover:scale-[1.02] hover:shadow-sm`}
             >
               <CardContent item={item} even={even} source={source} />
             </a>
@@ -132,7 +139,7 @@ export default function TabLeftSidebar({ initialData = { latest: [], onRoad: [],
             <Link
               href={internalHref}
               prefetch={false}
-              className={`flex gap-2 items-start p-1 rounded transition-transform duration-200 ${bg} hover:scale-[1.03] hover:shadow-sm`}
+              className={`flex gap-2 items-start p-1 rounded transition-transform duration-200 ${bg} hover:scale-[1.02] hover:shadow-sm`}
             >
               <CardContent item={item} even={even} source={source} />
             </Link>
@@ -154,10 +161,8 @@ export default function TabLeftSidebar({ initialData = { latest: [], onRoad: [],
         isMobile ? 'w-screen rounded-none' : ''
       }`}
     >
-      <div
-        className="flex border-b text-sm font-semibold bg-white sticky top-0 z-10 shadow-sm"
-        dir="rtl"
-      >
+      {/* כותרות הטאבים */}
+      <div className="flex border-b text-sm font-semibold bg-white sticky top-0 z-10 shadow-sm" dir="rtl">
         {tabs.map((tab) => (
           <button
             key={tab}
@@ -165,10 +170,10 @@ export default function TabLeftSidebar({ initialData = { latest: [], onRoad: [],
               setActiveTab(tab);
               setHasInteracted(true);
             }}
-            className={`w-1/3 text-center py-2 ${
+            className={`w-1/3 text-center py-2 transition-colors ${
               activeTab === tab
                 ? 'text-black border-b-2 border-red-500 bg-white'
-                : 'text-gray-500 bg-gray-100'
+                : 'text-gray-500 bg-gray-50 hover:bg-gray-100'
             }`}
           >
             {tab}
@@ -176,6 +181,7 @@ export default function TabLeftSidebar({ initialData = { latest: [], onRoad: [],
         ))}
       </div>
 
+      {/* תוכן הטאבים */}
       <div
         ref={scrollContainerRef}
         onMouseEnter={() => setIsPaused(true)}
