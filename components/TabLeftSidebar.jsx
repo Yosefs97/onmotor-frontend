@@ -24,7 +24,6 @@ function extractDomainName(url) {
   }
 }
 
-// 👇 מקבל את הנתונים כ-Prop
 export default function TabLeftSidebar({ initialData = null }) {
   const isMobile = useIsMobile();
   const [hasInteracted, setHasInteracted] = useState(false);
@@ -33,14 +32,13 @@ export default function TabLeftSidebar({ initialData = null }) {
   const [activeTab, setActiveTab] = useState('אחרונים');
   const [isPaused, setIsPaused] = useState(false);
 
-  // ✅ ברירת מחדל למקרה שהמידע לא הגיע
+  // ברירת מחדל
   const data = initialData || { latest: [], onRoad: [], popular: [] };
 
   const latestArticles = data.latest || [];
   const onRoadArticles = data.onRoad || [];
   const popularContent = data.popular || [];
 
-  // --- גלילה אוטומטית (דסקטופ) ---
   useEffect(() => {
     if (isMobile) return;
     const container = scrollContainerRef.current;
@@ -61,7 +59,6 @@ export default function TabLeftSidebar({ initialData = null }) {
     return () => cancelAnimationFrame(frame);
   }, [activeTab, isPaused, isMobile]);
 
-  // --- גלילה למיקום במובייל ---
   useEffect(() => {
     if (!isMobile || !sidebarRef.current || !hasInteracted) return;
     setTimeout(() => {
@@ -70,32 +67,29 @@ export default function TabLeftSidebar({ initialData = null }) {
     }, 0);
   }, [activeTab, isMobile, hasInteracted]);
 
-  /* רכיב תוכן פנימי */
   function CardContent({ item, even, source }) {
     return (
       <>
         <div className="w-20 h-14 relative rounded overflow-hidden flex-shrink-0 bg-gray-200">
+          {/* ✅ התמונה מגיעה מוכנה מהשרת */}
           <Image
-            src={item.image} // הקישור מגיע כבר מתוקן מהשרת
-            alt={item.title || 'תמונה'}
+            src={item.image || '/default-image.jpg'}
+            alt={item.title || ''}
             fill
             style={{ objectFit: 'cover' }}
             className="rounded"
-            // placeholder="blur" // אפשר להוסיף אם יש blurDataURL
           />
         </div>
 
         <div className="flex flex-col text-right flex-1 min-w-0">
           <p className="font-bold text-sm line-clamp-1 text-inherit">{item.title}</p>
-
           <p className={`text-xs ${even ? 'text-gray-700' : 'text-gray-300'} line-clamp-2`}>
             {item.description}
           </p>
-
           <div className="flex items-center gap-1 mt-1 flex-wrap">
              {item.date && (
               <span className={`text-[10px] ${even ? 'text-gray-500' : 'text-gray-400'}`}>
-                {new Date(item.date).toLocaleDateString('he-IL')}
+                {item.date}
               </span>
             )}
              {(item.views > 0 || source) && (
@@ -121,7 +115,6 @@ export default function TabLeftSidebar({ initialData = null }) {
       
       const source = item.url ? extractDomainName(item.url) : '';
       const isExternal = item.url && item.url.startsWith('http');
-      // תיקון: אם אין slug, לא ליצור לינק שבור
       const internalHref = !isExternal && item.slug ? `/articles/${item.slug}` : '#';
 
       return (
@@ -161,7 +154,6 @@ export default function TabLeftSidebar({ initialData = null }) {
         isMobile ? 'w-screen rounded-none' : ''
       }`}
     >
-      {/* כותרות הטאבים */}
       <div className="flex border-b text-sm font-semibold bg-white sticky top-0 z-10 shadow-sm" dir="rtl">
         {tabs.map((tab) => (
           <button
@@ -181,7 +173,6 @@ export default function TabLeftSidebar({ initialData = null }) {
         ))}
       </div>
 
-      {/* תוכן הטאבים */}
       <div
         ref={scrollContainerRef}
         onMouseEnter={() => setIsPaused(true)}

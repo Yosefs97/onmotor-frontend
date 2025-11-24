@@ -7,13 +7,15 @@ import ScrollToTopButton from '@/components/ScrollToTopButton';
 import Script from 'next/script';
 import { Heebo } from 'next/font/google';
 
+// 👇 ייבוא הלוגיקה שלך לבחירת תמונה
+import { getMainImage } from '@/utils/resolveMainImage';
+
 const heebo = Heebo({
   subsets: ['hebrew', 'latin'],
   weight: ['400', '500', '700'],
   display: 'swap',
 });
 
-// ... metadata code ... (נשאר אותו דבר)
 export const metadata = {
   metadataBase: new URL("https://www.onmotormedia.com"),
   title: {
@@ -21,10 +23,23 @@ export const metadata = {
     template: "%s | OnMotor Media",
   },
   description: "מגזין אופנועים ישראלי מוביל...",
-  // ... שאר המטא דאטה ...
+  openGraph: {
+    title: "OnMotor Media – מגזין אופנועים ישראלי",
+    description: "חדשות אופנועים, סקירות, ציוד וניסיון מהשטח...",
+    url: "https://www.onmotormedia.com",
+    siteName: "OnMotor Media",
+    images: [{ url: "https://www.onmotormedia.com/full_Logo.jpg", width: 1200, height: 630 }],
+    locale: "he_IL",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "OnMotor Media – מגזין אופנועים ישראלי",
+    images: ["https://www.onmotormedia.com/full_Logo.jpg"],
+  },
 };
 
-// --- פונקציה לשליפת טיקר ---
+// --- פונקציה לשליפת כותרות לניוז-טיקר ---
 async function getTickerHeadlines() {
   const API_URL = process.env.STRAPI_API_URL;
   try {
@@ -48,17 +63,16 @@ async function getTickerHeadlines() {
   }
 }
 
-// ✅ פונקציה מעודכנת לשליפת נתוני הסיידבר
+// ✅ פונקציה לשליפת נתוני הסיידבר (עם שימוש ב-getMainImage)
 async function getSidebarData() {
   const API_URL = process.env.STRAPI_API_URL;
-  const PUBLIC_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || API_URL; // כתובת חיצונית לתמונות
 
-  // פונקציית עזר גנרית
+  // פונקציית עזר לשליפה
   const fetchStrapi = async (query) => {
     try {
-      // populate=* מבטיח שנקבל גם תמונות
+      // populate=* חובה כדי לקבל את הגלריות והתמונות
       const url = `${API_URL}/api/articles?${query}`;
-      const res = await fetch(url, { next: { revalidate: 3600 } });
+      const res = await fetch(url, { next: { revalidate: 3600 } }); // קאש לשעה
       const json = await res.json();
       return json.data || [];
     } catch (e) {
@@ -67,50 +81,40 @@ async function getSidebarData() {
     }
   };
 
-  // ✅ פונקציה למיפוי ותיקון כתובות תמונה
+  // ✅ פונקציה למיפוי הנתונים באמצעות הלוגיקה שלך
   const mapData = (items) => items.map(item => {
-    const a = item.attributes || item;
+    const attrs = item.attributes || item;
     
-    // ניסיון לשלוף תמונה מכמה מקורות
-    let rawImageUrl = 
-        a.image?.data?.attributes?.url || 
-        a.image?.url || 
-        null;
+    // 🔥 כאן אנחנו משתמשים בפונקציה שלך כדי לבחור את התמונה הטובה ביותר
+    const { mainImage } = getMainImage(attrs);
 
-    let finalImageUrl = '/default-image.jpg';
-
-    if (rawImageUrl) {
-      // אם זו כתובת מלאה (https://...) נשתמש בה
-      if (rawImageUrl.startsWith('http')) {
-        finalImageUrl = rawImageUrl;
-      } else {
-        // אם זו כתובת יחסית (/uploads/...) נוסיף את הדומיין של השרת
-        finalImageUrl = `${PUBLIC_URL}${rawImageUrl}`;
-      }
+    // וידוא אחרון שהכתובת היא אבסולוטית (למקרה ש-resolveImageUrl החזיר נתיב יחסי)
+    let finalImageUrl = mainImage;
+    if (mainImage && mainImage.startsWith('/')) {
+       finalImageUrl = `${process.env.NEXT_PUBLIC_STRAPI_API_URL || API_URL}${mainImage}`;
     }
 
     return {
       id: item.id,
-      title: a.title,
-      description: a.headline || a.description || '',
-      date: a.date,
-      image: finalImageUrl, // הכתובת המתוקנת
-      slug: a.slug,
-      views: a.views || 0,
-      url: a.original_url || null 
+      title: attrs.title,
+      description: attrs.headline || attrs.description || '',
+      date: attrs.date,
+      image: finalImageUrl, // הכתובת המוכנה לשימוש
+      slug: attrs.slug,
+      views: attrs.views || 0,
+      url: attrs.original_url || null 
     };
   });
 
   // שליפות במקביל
   const [latest, onRoad, popular] = await Promise.all([
-    // 1. אחרונים (הכי חדשים)
+    // 1. אחרונים
     fetchStrapi('sort=publishedAt:desc&pagination[limit]=10&populate=*'),
     
-    // 2. בדרכים (לפי תגית)
-    // וודא ב-Strapi שיש לך כתבות עם התגית "בדרכים" בשדה tags_txt או tags
+    // 2. בדרכים
     fetchStrapi('filters[tags_txt][$contains]=בדרכים&sort=publishedAt:desc&pagination[limit]=10&populate=*'),
     
-    // 3. פופולרי (לפי צפיות)
+    // 3. פופולרי
     fetchStrapi('sort=views:desc&pagination[limit]=10&populate=*')
   ]);
 
@@ -122,6 +126,7 @@ async function getSidebarData() {
 }
 
 export default async function RootLayout({ children }) {
+  // שליפת הנתונים במקביל
   const tickerDataPromise = getTickerHeadlines();
   const sidebarDataPromise = getSidebarData();
 
@@ -130,13 +135,25 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="he" dir="rtl" className={heebo.className}>
       <head>
-         {/* ... (סקריפט Schema.org) ... */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "OnMotor Media",
+              "url": "https://www.onmotormedia.com",
+              "logo": "https://www.onmotormedia.com/OnMotorLogonoback.png",
+            }),
+          }}
+        />
       </head>
 
       <body className="flex flex-col min-h-screen">
         <AuthModalProvider>
           <ScrollToTopButton />
           
+          {/* ✅ העברת הנתונים המוכנים (כולל התמונות הנכונות) למטה */}
           <ClientLayout tickerHeadlines={tickerHeadlines} sidebarData={sidebarData}>
             {children}
           </ClientLayout>
