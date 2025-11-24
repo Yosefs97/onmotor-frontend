@@ -4,31 +4,13 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getMainImage } from '@/utils/resolveMainImage';
 
-const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || process.env.STRAPI_API_URL;
-const PLACEHOLDER_IMG = '/default-image.jpg';
-
-export default function IroadsBox() {
-  const [articles, setArticles] = useState([]);
+// 👇 מקבל נתונים מהאבא
+export default function IroadsBox({ initialArticles = [] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  /* ✅ שליפת כתבות עם תגית iroads */
-  useEffect(() => {
-    async function fetchArticles() {
-      try {
-        const res = await fetch(
-          `${API_URL}/api/articles?filters[tags_txt][$contains]=iroads&populate=*`,
-          { cache: 'no-store' }
-        );
-        const json = await res.json();
-        setArticles(json.data || []);
-      } catch (err) {
-        console.error('שגיאה בטעינת כתבות נתיבי ישראל:', err);
-      }
-    }
-    fetchArticles();
-  }, []);
+  // ❌ אין fetch! הנתונים מגיעים מוכנים.
+  const articles = initialArticles;
 
   /* ✅ מעבר אוטומטי בין שקופיות */
   useEffect(() => {
@@ -49,8 +31,8 @@ export default function IroadsBox() {
     );
   }
 
-  const rawArticles = articles.map((a) => (a.attributes ? a.attributes : a));
-  const slides = [{ type: 'logo' }, ...rawArticles];
+  // הנתונים ב-layout.js כבר עברו "נירמול" (mapData), אז לא צריך attributes
+  const slides = [{ type: 'logo' }, ...articles];
   const current = slides[currentIndex];
 
   return (
@@ -104,27 +86,20 @@ export default function IroadsBox() {
               </div>
             ) : (
               // ✅ שקופית כתבה
-              (() => {
-                const attrs = current;
-                const { mainImage, mainImageAlt } = getMainImage(attrs);
-
-                return (
-                  <Link href={attrs.slug ? `/articles/${attrs.slug}` : '#'} prefetch={false}>
-                    <div className="relative w-full h-full cursor-pointer">
-                      <Image
-                        src={mainImage || PLACEHOLDER_IMG}
-                        alt={mainImageAlt || 'תמונה'}
-                        fill
-                        className="object-cover"
-                        loading="lazy"
-                      />
-                      <div className="absolute bottom-0 w-full bg-black/50 text-white p-2 text-sm font-semibold">
-                        {attrs.title || 'ללא כותרת'}
-                      </div>
-                    </div>
-                  </Link>
-                );
-              })()
+              <Link href={current.slug ? `/articles/${current.slug}` : '#'} prefetch={false}>
+                <div className="relative w-full h-full cursor-pointer">
+                  <Image
+                    src={current.image || '/default-image.jpg'} // התמונה כבר טופלה בשרת
+                    alt={current.title || 'תמונה'}
+                    fill
+                    className="object-cover"
+                    loading="lazy"
+                  />
+                  <div className="absolute bottom-0 w-full bg-black/50 text-white p-2 text-sm font-semibold">
+                    {current.title || 'ללא כותרת'}
+                  </div>
+                </div>
+              </Link>
             )}
           </motion.div>
         </AnimatePresence>

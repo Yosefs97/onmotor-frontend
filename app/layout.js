@@ -122,7 +122,7 @@ async function getSidebarData() {
   });
 
   // שליפות במקביל עם שאילתות מתוקנות
-  const [latest, onRoad, popular] = await Promise.all([
+  const [latest, onRoad, popular, iroads] = await Promise.all([
     // 1. אחרונים
     fetchStrapi('Latest', 'sort=publishedAt:desc&pagination[limit]=10&populate=*'),
     
@@ -130,13 +130,16 @@ async function getSidebarData() {
     fetchStrapi('OnRoad', 'filters[$or][0][tags_txt][$contains]=iroads&filters[$or][1][tags_txt][$contains]=בדרכים&sort=publishedAt:desc&pagination[limit]=10&populate=*'),
     
     // 3. פופולרי (תיקון: מיון לפי views במקום API נפרד)
-    fetchStrapi('Popular', 'sort=views:desc&pagination[limit]=10&populate=*')
+    fetchStrapi('Popular', 'sort=views:desc&pagination[limit]=10&populate=*'),
+    // 👇 השליפה החדשה לנתיבי ישראל
+    fetchStrapi('IroadsBox', 'filters[tags_txt][$contains]=iroads&sort=publishedAt:desc&pagination[limit]=5&populate=*')
   ]);
 
   return {
     latest: mapData(latest),
     onRoad: mapData(onRoad),
-    popular: mapData(popular)
+    popular: mapData(popular),
+    iroads: mapData(iroads)
   };
 }
 

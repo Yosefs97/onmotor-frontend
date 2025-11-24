@@ -12,6 +12,7 @@ import TabLeftSidebar from './TabLeftSidebar';
 
 // 👇 מקבל sidebarData
 export default function SidebarConstants({ sidebarData }) {
+  const iroadsArticles = sidebarData?.iroads || [];
   return (
     <div className="bg-gray-900 p-2 space-y-2 relative sticky top-0 bottom-0">
       
@@ -27,7 +28,7 @@ export default function SidebarConstants({ sidebarData }) {
       <hr className="border-t-2 border-red-600 my-3" />
       <FollowUsBox />
       <hr className="border-t-2 border-red-600 my-3" />
-      <IroadsBox />
+      <IroadsBox initialArticles={iroadsArticles} />
       <hr className="border-t-2 border-red-600 my-1" />
       <ProfessionalsBox />
       <hr className="border-t-2 border-red-600 my-1" />
