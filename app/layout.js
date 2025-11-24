@@ -79,7 +79,7 @@ export default function RootLayout({ children }) {
            {/* טוען את Facebook SDK גלובלי */}
         <AuthModalProvider>
           <ScrollToTopButton />
-          <ClientLayout>{children}</ClientLayout>
+          <ClientLayout tickerHeadlines={tickerHeadlines}>{children}</ClientLayout>
         </AuthModalProvider>
 
         {/* תוסף הנגישות */}

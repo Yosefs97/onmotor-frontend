@@ -12,7 +12,8 @@ import SidebarMiddleLayer from "./SidebarMiddleLayer";
 import SidebarLeftLayer from "./SidebarLeftLayer";
 import useIsMobile from "@/hooks/useIsMobile";
 
-export default function ClientLayout({ children }) {
+// 👇 הוספנו את tickerHeadlines כ-Prop
+export default function ClientLayout({ children, tickerHeadlines = [] }) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
 
@@ -32,6 +33,7 @@ export default function ClientLayout({ children }) {
         script.id = id;
         script.async = true;
         script.src = src;
+        script.start = src;
         document.body.appendChild(script);
       }
     });
@@ -40,11 +42,9 @@ export default function ClientLayout({ children }) {
   /* 📌 זיהוי גלילה במובייל */
   useEffect(() => {
     if (!isMobile) return;
-
     const onScroll = () => {
       setIsAtTop(window.scrollY < 10);
     };
-
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, [isMobile]);
@@ -53,14 +53,11 @@ export default function ClientLayout({ children }) {
   useEffect(() => {
     const header = document.querySelector("header");
     if (!header) return;
-
     const updateHeight = () => {
       setHeaderHeight(header.getBoundingClientRect().height);
     };
-
     updateHeight();
     window.addEventListener("resize", updateHeight);
-
     return () => window.removeEventListener("resize", updateHeight);
   }, []);
 
@@ -75,21 +72,24 @@ export default function ClientLayout({ children }) {
 
       <Header />
 
-      {/* 📰 NewsTicker – במובייל יזוז במורד הדף, בדסקטופ נשאר מקובע */}
+      {/* 📰 NewsTicker */}
       <div
         className={`
           ${isMobile
             ? (isAtTop
-                ? `sticky z-[9998]`
+                // ✅ תיקון: הורדנו את ה-Z-Index ל-30 (במקום 9998) כדי שהתפריט יכסה אותו
+                ? `sticky z-30`
                 : "relative")
-            : `sticky z-[9998]`
+            // ✅ תיקון גם בדסקטופ: z-30
+            : `sticky z-30`
           }
         `}
         style={{
           top: isMobile ? (isAtTop ? headerHeight : 0) : headerHeight,
         }}
       >
-        <NewsTicker />
+        {/* 👇 מעבירים את הנתונים לטיקר */}
+        <NewsTicker headlines={tickerHeadlines} />
       </div>
 
       {isShopPage && <MobileShopFilterBar />}

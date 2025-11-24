@@ -135,7 +135,7 @@ export default async function ArticlePage({ params }) {
   // 1. שליפת הכתבה הראשית
   const res = await fetch(
     `${API_URL}/api/articles?filters[slug][$eq]=${params.slug}&populate=*`,
-    { next: { revalidate: 180 } } // ✅ תיקון: 3 דקות במקום 0
+    { next: { revalidate: 3600 } } // ✅ תיקון: 3 דקות במקום 0
   );
 
   const json = await res.json();
