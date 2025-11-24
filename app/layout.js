@@ -112,7 +112,7 @@ async function getSidebarData() {
     fetchStrapi('sort=publishedAt:desc&pagination[limit]=10&populate=*'),
     
     // 2. בדרכים
-    fetchStrapi('filters[tags_txt][$contains]=בדרכים&sort=publishedAt:desc&pagination[limit]=10&populate=*'),
+    fetchStrapi('filters[tags_txt][$contains]=iroads&sort=publishedAt:desc&pagination[limit]=10&populate=*'),
     
     // 3. פופולרי
     fetchStrapi('sort=views:desc&pagination[limit]=10&populate=*')
