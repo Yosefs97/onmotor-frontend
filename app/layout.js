@@ -63,35 +63,50 @@ async function getTickerHeadlines() {
   }
 }
 
-// ✅ פונקציה לשליפת נתוני הסיידבר (עם שימוש ב-getMainImage)
+// ✅ פונקציה מתוקנת לשליפת נתוני הסיידבר
 async function getSidebarData() {
   const API_URL = process.env.STRAPI_API_URL;
+  const PUBLIC_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || API_URL;
 
   // פונקציית עזר לשליפה
-  const fetchStrapi = async (query) => {
+  const fetchStrapi = async (label, query) => {
     try {
       // populate=* חובה כדי לקבל את הגלריות והתמונות
       const url = `${API_URL}/api/articles?${query}`;
-      const res = await fetch(url, { next: { revalidate: 3600 } }); // קאש לשעה
+      const res = await fetch(url, { next: { revalidate: 300 } }); // הורדתי זמן רענון ל-5 דקות לצורך בדיקות
+      
+      if (!res.ok) {
+        console.error(`❌ Error fetching ${label}: ${res.status}`);
+        return [];
+      }
+
       const json = await res.json();
-      return json.data || [];
+      const items = json.data || [];
+      console.log(`✅ ${label}: Found ${items.length} items`); // לוג לשרת
+      return items;
     } catch (e) {
-      console.error("Error in fetchStrapi:", query, e);
+      console.error(`❌ Crash fetching ${label}:`, e);
       return [];
     }
   };
 
-  // ✅ פונקציה למיפוי הנתונים באמצעות הלוגיקה שלך
+  // ✅ פונקציה למיפוי הנתונים + תיקון תמונות מוחלט
   const mapData = (items) => items.map(item => {
     const attrs = item.attributes || item;
     
-    // 🔥 כאן אנחנו משתמשים בפונקציה שלך כדי לבחור את התמונה הטובה ביותר
+    // 1. שימוש בלוגיקה שלך לבחירת התמונה הכי טובה
     const { mainImage } = getMainImage(attrs);
 
-    // וידוא אחרון שהכתובת היא אבסולוטית (למקרה ש-resolveImageUrl החזיר נתיב יחסי)
-    let finalImageUrl = mainImage;
-    if (mainImage && mainImage.startsWith('/')) {
-       finalImageUrl = `${process.env.NEXT_PUBLIC_STRAPI_API_URL || API_URL}${mainImage}`;
+    // 2. תיקון נתיב התמונה (אם הוא יחסי)
+    let finalImageUrl = '/default-image.jpg';
+    
+    if (mainImage && mainImage !== '/default-image.jpg') {
+      if (mainImage.startsWith('http')) {
+        finalImageUrl = mainImage; // כתובת מלאה
+      } else {
+        // כתובת יחסית (למשל /uploads/img.jpg) - נוסיף את הדומיין
+        finalImageUrl = `${PUBLIC_URL}${mainImage.startsWith('/') ? '' : '/'}${mainImage}`;
+      }
     }
 
     return {
@@ -99,23 +114,23 @@ async function getSidebarData() {
       title: attrs.title,
       description: attrs.headline || attrs.description || '',
       date: attrs.date,
-      image: finalImageUrl, // הכתובת המוכנה לשימוש
+      image: finalImageUrl, // הכתובת המוכנה והמתוקנת
       slug: attrs.slug,
       views: attrs.views || 0,
       url: attrs.original_url || null 
     };
   });
 
-  // שליפות במקביל
+  // שליפות במקביל עם שאילתות מתוקנות
   const [latest, onRoad, popular] = await Promise.all([
     // 1. אחרונים
-    fetchStrapi('sort=publishedAt:desc&pagination[limit]=10&populate=*'),
+    fetchStrapi('Latest', 'sort=publishedAt:desc&pagination[limit]=10&populate=*'),
     
-    // 2. בדרכים
-    fetchStrapi('filters[tags_txt][$contains]=iroads&sort=publishedAt:desc&pagination[limit]=10&populate=*'),
+    // 2. בדרכים (תיקון: בודק גם "iroads" וגם "בדרכים")
+    fetchStrapi('OnRoad', 'filters[$or][0][tags_txt][$contains]=iroads&filters[$or][1][tags_txt][$contains]=בדרכים&sort=publishedAt:desc&pagination[limit]=10&populate=*'),
     
-    // 3. פופולרי
-    fetchStrapi('sort=views:desc&pagination[limit]=10&populate=*')
+    // 3. פופולרי (תיקון: מיון לפי views במקום API נפרד)
+    fetchStrapi('Popular', 'sort=views:desc&pagination[limit]=10&populate=*')
   ]);
 
   return {

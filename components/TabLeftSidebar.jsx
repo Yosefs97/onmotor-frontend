@@ -32,7 +32,6 @@ export default function TabLeftSidebar({ initialData = null }) {
   const [activeTab, setActiveTab] = useState('אחרונים');
   const [isPaused, setIsPaused] = useState(false);
 
-  // ברירת מחדל
   const data = initialData || { latest: [], onRoad: [], popular: [] };
 
   const latestArticles = data.latest || [];
@@ -71,13 +70,14 @@ export default function TabLeftSidebar({ initialData = null }) {
     return (
       <>
         <div className="w-20 h-14 relative rounded overflow-hidden flex-shrink-0 bg-gray-200">
-          {/* ✅ התמונה מגיעה מוכנה מהשרת */}
           <Image
-            src={item.image || '/default-image.jpg'}
-            alt={item.title || ''}
+            src={item.image}
+            alt={item.title || 'תמונה'}
             fill
+            sizes="80px"
             style={{ objectFit: 'cover' }}
             className="rounded"
+            unoptimized // מוסיף את זה ליתר ביטחון למקרה של בעיות דומיין חיצוני
           />
         </div>
 
@@ -106,7 +106,7 @@ export default function TabLeftSidebar({ initialData = null }) {
 
   const getStyledContent = (items) => {
     if (!items || items.length === 0) {
-      return <div className="p-4 text-center text-gray-500 text-xs">אין כתבות להצגה</div>;
+      return <div className="p-4 text-center text-gray-500 text-xs">אין כתבות להצגה בקטגוריה זו</div>;
     }
 
     return items.map((item, i) => {
