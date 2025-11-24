@@ -8,22 +8,6 @@ import useIsMobile from '@/hooks/useIsMobile';
 
 const tabs = ['אחרונים', 'בדרכים', 'פופולרי'];
 
-function extractDomainName(url) {
-  try {
-    const host = new URL(url).hostname.replace('www.', '');
-    const parts = host.split('.');
-    let base = '';
-    if (parts.length >= 3 && ['co', 'org', 'net'].includes(parts[parts.length - 2])) {
-      base = parts[parts.length - 3];
-    } else {
-      base = parts[0];
-    }
-    return base.charAt(0).toUpperCase() + base.slice(1);
-  } catch {
-    return 'Website';
-  }
-}
-
 export default function TabLeftSidebar({ initialData = null }) {
   const isMobile = useIsMobile();
   const [hasInteracted, setHasInteracted] = useState(false);
@@ -32,12 +16,14 @@ export default function TabLeftSidebar({ initialData = null }) {
   const [activeTab, setActiveTab] = useState('אחרונים');
   const [isPaused, setIsPaused] = useState(false);
 
+  // הנתונים מגיעים כבר מעובדים מהשרת
   const data = initialData || { latest: [], onRoad: [], popular: [] };
-
+  
   const latestArticles = data.latest || [];
   const onRoadArticles = data.onRoad || [];
   const popularContent = data.popular || [];
 
+  // --- גלילה אוטומטית ---
   useEffect(() => {
     if (isMobile) return;
     const container = scrollContainerRef.current;
@@ -58,6 +44,7 @@ export default function TabLeftSidebar({ initialData = null }) {
     return () => cancelAnimationFrame(frame);
   }, [activeTab, isPaused, isMobile]);
 
+  // --- גלילה במובייל למיקום ---
   useEffect(() => {
     if (!isMobile || !sidebarRef.current || !hasInteracted) return;
     setTimeout(() => {
@@ -66,18 +53,18 @@ export default function TabLeftSidebar({ initialData = null }) {
     }, 0);
   }, [activeTab, isMobile, hasInteracted]);
 
-  function CardContent({ item, even, source }) {
+  /* ⭐️ רכיב תוכן */
+  function CardContent({ item, even }) {
     return (
       <>
         <div className="w-20 h-14 relative rounded overflow-hidden flex-shrink-0 bg-gray-200">
           <Image
-            src={item.image}
-            alt={item.title || 'תמונה'}
+            src={item.image || '/default-image.jpg'}
+            alt={item.title || ''}
             fill
-            sizes="80px"
             style={{ objectFit: 'cover' }}
             className="rounded"
-            unoptimized // מוסיף את זה ליתר ביטחון למקרה של בעיות דומיין חיצוני
+            unoptimized // ליתר ביטחון
           />
         </div>
 
@@ -86,16 +73,18 @@ export default function TabLeftSidebar({ initialData = null }) {
           <p className={`text-xs ${even ? 'text-gray-700' : 'text-gray-300'} line-clamp-2`}>
             {item.description}
           </p>
+          
           <div className="flex items-center gap-1 mt-1 flex-wrap">
              {item.date && (
               <span className={`text-[10px] ${even ? 'text-gray-500' : 'text-gray-400'}`}>
                 {item.date}
               </span>
             )}
-             {(item.views > 0 || source) && (
+             {(item.views || item.source) && (
               <span className={`text-[10px] ${even ? 'text-gray-400' : 'text-gray-500'}`}>
-                 {item.views > 0 && ` · ${item.views} צפיות`}
-                 {source && ` · ${source}`}
+                 {item.views && `${item.views} צפיות`}
+                 {item.views && item.source && ' · '}
+                 {item.source}
               </span>
             )}
           </div>
@@ -113,28 +102,29 @@ export default function TabLeftSidebar({ initialData = null }) {
       const even = i % 2 === 0;
       const bg = even ? 'bg-red-50 text-black' : 'bg-neutral-900 text-white';
       
-      const source = item.url ? extractDomainName(item.url) : '';
-      const isExternal = item.url && item.url.startsWith('http');
+      // המידע מגיע כבר מעובד מהשרת (url, source, slug וכו')
+      const isExternal = !!item.url && item.url.startsWith('http');
       const internalHref = !isExternal && item.slug ? `/articles/${item.slug}` : '#';
+      const targetUrl = isExternal ? item.url : internalHref;
 
       return (
         <div key={item.id || i}>
           {isExternal ? (
             <a
-              href={item.url}
+              href={targetUrl}
               target="_blank"
               rel="noopener noreferrer"
               className={`flex gap-2 items-start p-1 rounded transition-transform duration-200 ${bg} hover:scale-[1.02] hover:shadow-sm`}
             >
-              <CardContent item={item} even={even} source={source} />
+              <CardContent item={item} even={even} />
             </a>
           ) : (
             <Link
-              href={internalHref}
+              href={targetUrl}
               prefetch={false}
               className={`flex gap-2 items-start p-1 rounded transition-transform duration-200 ${bg} hover:scale-[1.02] hover:shadow-sm`}
             >
-              <CardContent item={item} even={even} source={source} />
+              <CardContent item={item} even={even} />
             </Link>
           )}
         </div>
