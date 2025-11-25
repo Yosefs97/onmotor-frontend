@@ -144,7 +144,7 @@ export default function TagsIndex() {
           const tagSlug = slugify(tagName);
 
           return (
-            <div key={tagName} className="border-b border-gray-200 pb-8 last:border-0">
+            <div key={tagName} className="border-b border-gray-200 pb-2 last:border-0">
               
               {/* כותרת הסקציה */}
               <div className="flex justify-between items-end mb-4 border-r-4 border-[#e60000] pr-3">
