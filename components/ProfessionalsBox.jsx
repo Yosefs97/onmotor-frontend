@@ -13,16 +13,7 @@ function resolveMediaUrl(rawUrl) {
   return `${API_URL}${rawUrl.startsWith('/') ? rawUrl : `/uploads/${rawUrl}`}`;
 }
 
-/* ✅ נרמול קישורי דרייב */
-function normalizeDriveUrl(url) {
-  if (!url) return null;
-  if (/^[a-zA-Z0-9_-]{20,}$/.test(url)) return `/api/drive-proxy?id=${url}`;
-  if (url.includes('drive.google.com/file/d/')) {
-    const match = url.match(/\/d\/([^/]+)/);
-    if (match && match[1]) return `/api/drive-proxy?id=${match[1]}`;
-  }
-  return url;
-}
+
 
 export default function ProfessionalsBox() {
   const [pros, setPros] = useState([]);
@@ -107,7 +98,7 @@ export default function ProfessionalsBox() {
   const article = findArticleByTag(current.tag_name);
 
   // ✅ נרמול כל סוגי המדיה
-  const driveUrl = normalizeDriveUrl(current?.mediaUrl || '');
+  
   const imageUrl =
     current?.image?.url
       ? resolveMediaUrl(current.image.url)
@@ -123,7 +114,7 @@ export default function ProfessionalsBox() {
       : null;
 
   // ✅ עדיפות: Google Drive / mediaUrl → video → image
-  const finalUrl = driveUrl || videoUrl || imageUrl;
+  const finalUrl =  videoUrl || imageUrl;
 
   const isVideo =
     (finalUrl && finalUrl.endsWith('.mp4')) ||

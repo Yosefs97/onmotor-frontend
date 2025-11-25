@@ -15,25 +15,7 @@ function resolveMediaUrl(rawUrl) {
   return `${API_URL}${rawUrl.startsWith('/') ? rawUrl : `/uploads/${rawUrl}`}`;
 }
 
-/* ✅ פונקציה לנרמול לינקים מ-Google Drive */
-function normalizeDriveUrl(url) {
-  if (!url) return url;
 
-  // אם זה ID בלבד
-  if (/^[a-zA-Z0-9_-]{20,}$/.test(url)) {
-    return `/api/drive-proxy?id=${url}`;
-  }
-
-  // אם זה לינק רגיל של דרייב
-  if (url.includes('drive.google.com/file/d/')) {
-    const match = url.match(/\/d\/([^/]+)/);
-    if (match && match[1]) {
-      return `/api/drive-proxy?id=${match[1]}`;
-    }
-  }
-
-  return url;
-}
 
 export default function SidebarFixed() {
   const [ads, setAds] = useState([]);
@@ -100,7 +82,7 @@ export default function SidebarFixed() {
     const attrs = ad; // כבר שטוח (id + attributes)
 
     // נורמליזציה של כל הנתיבים
-    const driveUrl = normalizeDriveUrl(attrs.mediaUrl || null);
+   
 
     // תמונה מ-Strapi (Cloudinary או יחסית)
     const imageUrl = Array.isArray(attrs.image) && attrs.image.length > 0
@@ -113,7 +95,7 @@ export default function SidebarFixed() {
       : resolveMediaUrl(attrs.video?.url);
 
     // ✅ סדר עדיפויות: mediaUrl (דרייב/חיצוני) > video > image
-    let finalUrl = driveUrl || videoUrl || imageUrl;
+    let finalUrl =  videoUrl || imageUrl;
     let isVideo =
       (finalUrl && finalUrl.endsWith('.mp4')) ||
       finalUrl?.includes('youtube') ||
