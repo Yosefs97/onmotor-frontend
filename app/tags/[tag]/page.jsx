@@ -3,20 +3,20 @@
 
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image'; // ✅ נדרש לתצוגת המובייל החדשה
 import PageContainer from '@/components/PageContainer';
 import ArticleCard from '@/components/ArticleCards/ArticleCard';
 
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || process.env.STRAPI_API_URL;
 const PLACEHOLDER_IMG = '/default-image.jpg';
 
-// ✅ פונקציה לתיקון כתובת תמונה
 function resolveImageUrl(rawUrl) {
   if (!rawUrl) return PLACEHOLDER_IMG;
   if (rawUrl.startsWith('http')) return rawUrl;
   return `${API_URL}${rawUrl.startsWith('/') ? rawUrl : `/uploads/${rawUrl}`}`;
 }
 
-// ✅ פונקציה לניקוי תגית לטובת התאמה לשדה
 function slugify(text) {
   if (!text) return '';
   return text
@@ -34,16 +34,14 @@ export default function TagPage() {
 
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(10); // ✅ סטייט לניהול כמות מוצגת
 
   useEffect(() => {
-    let isMounted = true; // למניעת עדכוני state אם הרכיב ירד מהמסך
+    let isMounted = true;
 
     (async () => {
       try {
         setLoading(true);
-        
-        // 🚀 אופטימיזציה: מושכים רק את ה-100 הכתבות החדשות ביותר
-        // במקום להעמיס את כל מסד הנתונים על הדפדפן של המשתמש
         const res = await fetch(
           `${API_URL}/api/articles?populate=*&pagination[limit]=100&sort=createdAt:desc`, 
           { next: { revalidate: 3600 } }
@@ -53,7 +51,6 @@ export default function TagPage() {
         const json = await res.json();
 
         if (isMounted) {
-          // סינון חכם בצד לקוח (כי ה-Slug ב-URL לא תמיד זהה לאיך שזה שמור ב-DB)
           const targetSlug = slugify(decodedTag);
 
           const filtered = (json.data || []).filter(a => {
@@ -61,28 +58,15 @@ export default function TagPage() {
             return Array.isArray(tags) && tags.some(t => slugify(t) === targetSlug);
           });
 
-          // נרמול הנתונים לתצוגה
           const normalized = filtered.map(a => {
             let mainImage = PLACEHOLDER_IMG;
-            let mainImageAlt = a.title || 'תמונה ראשית';
-
-            // 1. גלריה
+            // לוגיקת תמונה מקוצרת...
             const galleryItem = a.gallery?.[0];
-            if (galleryItem?.url) {
-              mainImage = resolveImageUrl(galleryItem.url);
-              mainImageAlt = galleryItem.alternativeText || mainImageAlt;
-            } 
-            // 2. תמונה ראשית
-            else if (a.image?.url) {
-              mainImage = resolveImageUrl(a.image.url);
-              mainImageAlt = a.image.alternativeText || mainImageAlt;
-            } 
-            // 3. לינקים חיצוניים
+            if (galleryItem?.url) mainImage = resolveImageUrl(galleryItem.url);
+            else if (a.image?.url) mainImage = resolveImageUrl(a.image.url);
             else if (Array.isArray(a.external_media_links) && a.external_media_links.length > 0) {
-              const externalLinks = a.external_media_links.filter(l => typeof l === 'string' && l.startsWith('http'));
-              if (externalLinks.length > 1) mainImage = externalLinks[1].trim();
-              else if (externalLinks.length > 0) mainImage = externalLinks[0].trim();
-              mainImageAlt = 'תמונה ראשית מהמדיה החיצונית';
+                const l = a.external_media_links.filter(x => x.startsWith('http'));
+                if (l.length) mainImage = l[l.length > 1 ? 1 : 0].trim();
             }
 
             return {
@@ -92,11 +76,14 @@ export default function TagPage() {
               href: `/articles/${a.slug}`,
               headline: a.headline || a.title,
               description: a.description || '',
-              date: a.date || new Date().toISOString(),
+              date: a.date || new Date().toISOString(), // תאריך למיון
+              displayDate: new Date(a.date).toLocaleDateString('he-IL'), // תאריך לתצוגה
               image: mainImage,
-              imageAlt: mainImageAlt,
             };
           });
+
+          // ✅ מיון סופי לפי תאריך (חדש לישן)
+          normalized.sort((a, b) => new Date(b.date) - new Date(a.date));
 
           setArticles(normalized);
         }
@@ -107,13 +94,18 @@ export default function TagPage() {
       }
     })();
 
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, [decodedTag]);
 
-  // הצגה נקייה של שם התגית בכותרת
   const displayTag = decodedTag.replace(/-/g, ' ');
+  
+  // ✅ פונקציה לטעינת עוד כתבות
+  const showMoreArticles = () => {
+    setVisibleCount(prev => prev + 10);
+  };
+
+  const visibleArticles = articles.slice(0, visibleCount);
+  const hasMore = visibleCount < articles.length;
 
   const breadcrumbs = [
     { label: 'דף הבית', href: '/' },
@@ -122,7 +114,7 @@ export default function TagPage() {
 
   return (
     <PageContainer title={`כתבות עם תגית: ${displayTag}`} breadcrumbs={breadcrumbs}>
-      <div className="space-y-6">
+      <div className="space-y-6 min-h-[50vh]">
         {loading && (
           <div className="text-center py-10 text-gray-500">טוען כתבות...</div>
         )}
@@ -130,15 +122,68 @@ export default function TagPage() {
         {!loading && articles.length === 0 && (
           <div className="text-center py-10 text-gray-500">
             <p className="text-xl font-bold">לא נמצאו כתבות</p>
-            <p>לא נמצאו כתבות חדשות עבור התגית "{displayTag}"</p>
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0">
-          {articles.map(article => (
+        {/* ======================================================== */}
+        {/* 📱 תצוגת מובייל בלבד (רשימה עם תמונה בצד)                 */}
+        {/* ======================================================== */}
+        <div className="block md:hidden space-y-4">
+          {visibleArticles.map(article => (
+            <Link 
+              key={article.id} 
+              href={article.href} 
+              prefetch={false}
+              className="flex flex-row gap-3 border-b border-gray-100 pb-4 last:border-0"
+            >
+              {/* תמונה מימין (ב-RTL זה הראשון) */}
+              <div className="w-1/3 relative aspect-[4/3] flex-shrink-0">
+                <Image
+                  src={article.image}
+                  alt={article.title}
+                  fill
+                  className="object-cover rounded-md"
+                  sizes="(max-width: 768px) 33vw, 100vw"
+                />
+              </div>
+
+              {/* טקסט משמאל */}
+              <div className="w-2/3 flex flex-col justify-start gap-1">
+                <h3 className="text-sm font-bold leading-tight text-gray-900 line-clamp-2">
+                  {article.headline}
+                </h3>
+                <span className="text-xs text-gray-400">
+                  {article.displayDate}
+                </span>
+                <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed mt-1">
+                  {article.description}
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {/* ======================================================== */}
+        {/* 💻 תצוגת דסקטופ/טאבלט (גריד רגיל)                        */}
+        {/* ======================================================== */}
+        <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-4">
+          {visibleArticles.map(article => (
             <ArticleCard key={article.id} article={article} />
           ))}
         </div>
+
+        {/* ✅ כפתור טען עוד (מופיע רק אם יש עוד כתבות) */}
+        {!loading && hasMore && (
+          <div className="flex justify-center pt-6">
+            <button
+              onClick={showMoreArticles}
+              className="px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-full text-sm font-medium transition-colors border border-gray-300 shadow-sm"
+            >
+              הצג עוד כתבות
+            </button>
+          </div>
+        )}
+
       </div>
     </PageContainer>
   );
