@@ -134,7 +134,7 @@ export default function TagPage() {
               key={article.id} 
               href={article.href} 
               prefetch={false}
-              className="flex flex-row gap-3 border-b border-gray-100 pb-4 last:border-0"
+              className="flex flex-row gap-0.5 border-b border-red-100 pb-4 last:border-0"
             >
               {/* תמונה מימין (ב-RTL זה הראשון) */}
               <div className="w-1/3 relative aspect-[4/3] flex-shrink-0">
@@ -166,7 +166,7 @@ export default function TagPage() {
         {/* ======================================================== */}
         {/* 💻 תצוגת דסקטופ/טאבלט (גריד רגיל)                        */}
         {/* ======================================================== */}
-        <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-0">
           {visibleArticles.map(article => (
             <ArticleCard key={article.id} article={article} />
           ))}
