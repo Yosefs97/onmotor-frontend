@@ -27,7 +27,6 @@ export async function GET() {
   const staticUrls = [
     { url: SITE_URL, lastmod: new Date().toISOString() },
     { url: `${SITE_URL}/contact`, lastmod: new Date().toISOString() },
-    { url: `${SITE_URL}/about`, lastmod: new Date().toISOString() },
   ];
 
   const urls = [...staticUrls, ...articles];
