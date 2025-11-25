@@ -134,7 +134,7 @@ export default function TagPage() {
               key={article.id} 
               href={article.href} 
               prefetch={false}
-              className="flex flex-row gap-0.5 border-b border-red-100 pb-4 last:border-0"
+              className="flex flex-row gap-0.5 border-b border-red-100 pb-1 last:border-0"
             >
               {/* תמונה מימין (ב-RTL זה הראשון) */}
               <div className="w-1/3 relative aspect-[4/3] flex-shrink-0">
