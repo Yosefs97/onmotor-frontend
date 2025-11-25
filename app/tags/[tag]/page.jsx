@@ -128,7 +128,7 @@ export default function TagPage() {
         {/* ======================================================== */}
         {/* 📱 תצוגת מובייל בלבד (רשימה עם תמונה בצד)                 */}
         {/* ======================================================== */}
-        <div className="block md:hidden space-y-4">
+        <div className="block md:hidden space-y-0.5">
           {visibleArticles.map(article => (
             <Link 
               key={article.id} 
