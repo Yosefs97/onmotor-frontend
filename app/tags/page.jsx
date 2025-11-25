@@ -126,7 +126,7 @@ export default function TagsIndex() {
 
   return (
     <PageContainer title="אינדקס תגיות" breadcrumbs={breadcrumbs}>
-      <div className="space-y-12 min-h-[50vh]">
+      <div className="space-y-1 min-h-[50vh]">
         {loading && (
           <div className="text-center py-10 text-gray-500">טוען תגיות...</div>
         )}
@@ -203,7 +203,7 @@ export default function TagsIndex() {
               {/* ======================================================== */}
               {/* 💻 תצוגת דסקטופ - גריד כרטיסיות                          */}
               {/* ======================================================== */}
-              <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-0">
                 {previewArticles.map(article => (
                   <ArticleCard key={article.id} article={article} />
                 ))}
