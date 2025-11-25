@@ -140,7 +140,7 @@ export default function TagsIndex() {
           const tagSlug = slugify(tagName);
 
           return (
-            <div key={tagName} className="border-b border-gray-200 pb-8 last:border-0">
+            <div key={tagName} className="border-b border-gray-200 pb-1 last:border-0">
               
               {/* כותרת התגית */}
               <div className="flex justify-between items-end mb-4 border-r-4 border-[#e60000] pr-3">
@@ -180,7 +180,7 @@ export default function TagsIndex() {
                     </div>
 
                     {/* טקסט משמאל */}
-                    <div className="w-2/3 flex flex-col justify-start gap-1">
+                    <div className="w-2/3 flex flex-col justify-start gap-0">
                       <h3 className="text-sm font-bold leading-tight text-gray-900 line-clamp-2">
                         {article.headline}
                       </h3>
@@ -198,7 +198,7 @@ export default function TagsIndex() {
               {/* ======================================================== */}
               {/* 💻 תצוגת דסקטופ - גריד                                   */}
               {/* ======================================================== */}
-              <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-0">
                 {previewArticles.map(article => (
                   <ArticleCard key={article.id} article={article} />
                 ))}

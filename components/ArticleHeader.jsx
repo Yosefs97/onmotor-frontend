@@ -1,6 +1,7 @@
 // components/ArticleHeader.jsx
 'use client';
 import React from 'react';
+import Link from 'next/link'; // ✅ 1. ייבוא רכיב ה-Link
 import ArticleShare from './ArticleShare';
 
 export default function ArticleHeader({
@@ -11,14 +12,12 @@ export default function ArticleHeader({
   imageAlt = "תמונה ראשית",
   title = "כותרת כתבה",
   subdescription = "",
-  tags = [], // ✅ נוספה תמיכה ב-tags
+  tags = [],
 }) {
-  // --- ⭐️ לוגיקה חדשה ופשוטה ⭐️ ---
   const finalImage = image || "/images/default-article.jpg";
 
-  // ✅ נשלוף את שם הצלם מתוך האיבר הראשון של tags (אם קיים)
+  // נשלוף את שם הצלם מתוך האיבר הראשון של tags (אם קיים)
   const photographer = tags.length > 0 ? tags[0] : author;
-  // --- ⭐️ סוף לוגיקה ⭐️ ---
 
   return (
     <div className="flex flex-col gap-4 mb-6 text-gray-800 text-right">
@@ -46,10 +45,17 @@ export default function ArticleHeader({
           🕒 {date} | {time}
         </span>
         <span>🎥 צילום: <span className="text-gray-800 font-semibold">{photographer}</span></span>
-        <span className="ml-auto text-xs text-blue-600 underline cursor-pointer hover:text-blue-800">
-          עבור לגריד 🔁
-        </span>
-        <div className="ml-auto">
+        
+        {/* ✅✅✅ השינוי כאן: לינק חכם וחסכוני לדף התגיות ✅✅✅ */}
+        <Link 
+          href="/tags" 
+          prefetch={false} // חוסך משאבים: לא טוען ברקע, רק בלחיצה
+          className="ml-auto text-xs text-blue-600 underline cursor-pointer hover:text-blue-800"
+        >
+          אינדקס תגיות 🏷️
+        </Link>
+
+        <div className="ml-2">
           <ArticleShare />
         </div>
       </div>
