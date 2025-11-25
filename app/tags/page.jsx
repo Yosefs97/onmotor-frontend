@@ -39,7 +39,8 @@ export default function TagsIndex() {
     (async () => {
       try {
         setLoading(true);
-        // מושכים כמות גדולה של כתבות כדי לייצר מספיק קבוצות
+        // 1️⃣ שליפה: אנחנו כבר מבקשים מהשרת למיין לפי תאריך (sort=createdAt:desc)
+        // זה מבטיח שהכתבות מגיעות בסדר הנכון
         const res = await fetch(
           `${API_URL}/api/articles?populate=*&pagination[limit]=100&sort=createdAt:desc`, 
           { next: { revalidate: 3600 } }
@@ -51,9 +52,8 @@ export default function TagsIndex() {
         if (isMounted) {
           const groups = {};
 
-          // מעבר על הכתבות ומיון לפי תגיות
+          // 2️⃣ מיון וחלוקה לקבוצות
           (json.data || []).forEach(a => {
-            // נרמול הכתבה
             let mainImage = PLACEHOLDER_IMG;
             const galleryItem = a.gallery?.[0];
             if (galleryItem?.url) mainImage = resolveImageUrl(galleryItem.url);
@@ -75,14 +75,13 @@ export default function TagsIndex() {
               image: mainImage,
             };
 
-            // שיוך הכתבה לכל אחת מהתגיות שלה
             const tags = a.tags || [];
             if (Array.isArray(tags)) {
               tags.forEach(tag => {
                 const tagName = typeof tag === 'string' ? tag : tag.name;
                 if (tagName) {
                   if (!groups[tagName]) groups[tagName] = [];
-                  // מונעים כפילויות של אותה כתבה באותה תגית (למקרה חריג)
+                  // בדיקת כפילויות
                   if (!groups[tagName].find(x => x.id === articleData.id)) {
                     groups[tagName].push(articleData);
                   }
@@ -91,7 +90,7 @@ export default function TagsIndex() {
             }
           });
 
-          // סינון: נשמור רק תגיות שיש בהן לפחות 2 כתבות, כדי שהדף ייראה מלא
+          // סינון תגיות ריקות
           const filteredGroups = {};
           Object.keys(groups).forEach(key => {
             if (groups[key].length >= 1) {
@@ -116,12 +115,18 @@ export default function TagsIndex() {
     { label: 'אינדקס תגיות' },
   ];
 
-  // מיון התגיות לפי א-ב או לפי כמות כתבות (כרגע אקראי לפי סדר שליפה)
-  const sortedTags = Object.keys(groupedArticles).sort();
+  // 3️⃣ מיון התגיות עצמן לפי התאריך של הכתבה הכי חדשה בהן
+  const sortedTags = Object.keys(groupedArticles).sort((tagA, tagB) => {
+    // לוקחים את הכתבה הראשונה בכל קבוצה (שהיא החדשה ביותר כי המידע הגיע ממויין)
+    const dateA = new Date(groupedArticles[tagA][0].date);
+    const dateB = new Date(groupedArticles[tagB][0].date);
+    // מחזירים בסדר יורד (הכי חדש למעלה)
+    return dateB - dateA;
+  });
 
   return (
     <PageContainer title="אינדקס תגיות" breadcrumbs={breadcrumbs}>
-      <div className="space-y-2 min-h-[50vh]">
+      <div className="space-y-12 min-h-[50vh]">
         {loading && (
           <div className="text-center py-10 text-gray-500">טוען תגיות...</div>
         )}
@@ -132,25 +137,25 @@ export default function TagsIndex() {
           </div>
         )}
 
-        {/* מעבר על כל תגית ויצירת סקציה */}
+        {/* לולאה על כל התגיות (ממוינות לפי זמן) */}
         {sortedTags.map(tagName => {
           const articles = groupedArticles[tagName];
-          // מציגים רק את ה-4 הראשונות בכל תגית בדף הראשי
           const previewArticles = articles.slice(0, 4); 
           const tagSlug = slugify(tagName);
 
           return (
-            <div key={tagName} className="border-b border-gray-200 pb-1 last:border-0">
+            <div key={tagName} className="border-b border-gray-200 pb-8 last:border-0">
               
-              {/* כותרת התגית */}
+              {/* כותרת הסקציה */}
               <div className="flex justify-between items-end mb-4 border-r-4 border-[#e60000] pr-3">
                 <h2 className="text-2xl font-bold text-gray-900">
-                  <Link href={`/tags/${tagSlug}`} className="hover:text-[#e60000] transition-colors">
+                  <Link href={`/tags/${tagSlug}`} prefetch={false} className="hover:text-[#e60000] transition-colors">
                     {tagName}
                   </Link>
                 </h2>
                 <Link 
                   href={`/tags/${tagSlug}`}
+                  prefetch={false}
                   className="text-sm text-gray-500 hover:text-[#e60000] font-medium"
                 >
                   לכל הכתבות ({articles.length}) &larr;
@@ -158,7 +163,7 @@ export default function TagsIndex() {
               </div>
 
               {/* ======================================================== */}
-              {/* 📱 תצוגת מובייל - העיצוב הצפוף החדש שלך                 */}
+              {/* 📱 תצוגת מובייל - העיצוב החדש והצפוף (רשימה)             */}
               {/* ======================================================== */}
               <div className="block md:hidden space-y-0.5">
                 {previewArticles.map(article => (
@@ -179,15 +184,15 @@ export default function TagsIndex() {
                       />
                     </div>
 
-                    {/* טקסט משמאל */}
+                    {/* טקסט משמאל - צפוף ומסודר */}
                     <div className="w-2/3 flex flex-col justify-start gap-0">
                       <h3 className="text-sm font-bold leading-tight text-gray-900 line-clamp-2">
                         {article.headline}
                       </h3>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-gray-400 mt-0.5">
                         {article.displayDate}
                       </span>
-                      <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed mt-1">
+                      <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed mt-0.5">
                         {article.description}
                       </p>
                     </div>
@@ -196,9 +201,9 @@ export default function TagsIndex() {
               </div>
 
               {/* ======================================================== */}
-              {/* 💻 תצוגת דסקטופ - גריד                                   */}
+              {/* 💻 תצוגת דסקטופ - גריד כרטיסיות                          */}
               {/* ======================================================== */}
-              <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-0">
+              <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {previewArticles.map(article => (
                   <ArticleCard key={article.id} article={article} />
                 ))}
