@@ -7,7 +7,7 @@ import PageContainer from "@/components/PageContainer";
 import ArticleHeader from "@/components/ArticleHeader";
 import SimpleKeyValueTable from "@/components/SimpleKeyValueTable";
 import Tags from "@/components/Tags";
-import SimilarArticles from "@/components/SimilarArticles"; // וודא שהקובץ הזה הוא הגרסה החדשה ששלחתי לך קודם (שמקבלת props)
+import SimilarArticles from "@/components/SimilarArticles";
 import { notFound } from "next/navigation";
 import CommentsSection from "@/components/CommentsSection";
 import Gallery from "@/components/Gallery";
@@ -17,7 +17,7 @@ import EmbedContent from "@/components/EmbedContent";
 import ScrollToTableButton from "@/components/ScrollToTableButton";
 import ScrollToGalleryButton from "@/components/ScrollToGalleryButton";
 import ScrollToCommentsButton from "@/components/ScrollToCommentsButton";
-import { fixRelativeImages, resolveImageUrl, wrapHondaProxy } from "@/lib/fixArticleImages";
+import { fixRelativeImages, resolveImageUrl } from "@/lib/fixArticleImages"; // ✅ הוסר wrapHondaProxy
 import { getArticleImage } from "@/lib/getArticleImage";
 import ArticleShareBottom from "@/components/ArticleShareBottom";
 
@@ -26,8 +26,7 @@ const PUBLIC_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || API_URL;
 const SITE_URL = "https://www.onmotormedia.com";
 const PLACEHOLDER_IMG = "/default-image.jpg";
 
-// ... פונקציות העזר (normalizeHref, toHtmlFromStrapiChildren וכו') נשארות אותו דבר ...
-// (כדי לחסוך מקום לא העתקתי את פונקציות העזר שוב, הן תקינות בקוד שלך)
+// ... פונקציות העזר ...
 
 function normalizeHref(href) {
   if (!href) return '#';
@@ -65,13 +64,13 @@ function toHtmlFromStrapiChildren(children) {
   }).join('');
 }
 
-// ✅ פונקציה חדשה לשליפת כתבות דומות בשרת (חוסכת בקשות)
+// ✅ פונקציה לשליפת כתבות דומות בשרת
 async function getSimilarArticles(currentSlug, category) {
   try {
     if (!category) return [];
     const res = await fetch(
       `${API_URL}/api/articles?populate=*&filters[slug][$ne]=${currentSlug}&filters[category][$eq]=${category}&pagination[limit]=9`,
-      { next: { revalidate: 3600 } } // קאש לשעה אחת
+      { next: { revalidate: 3600 } }
     );
     const json = await res.json();
     return json.data || [];
@@ -135,7 +134,7 @@ export default async function ArticlePage({ params }) {
   // 1. שליפת הכתבה הראשית
   const res = await fetch(
     `${API_URL}/api/articles?filters[slug][$eq]=${params.slug}&populate=*`,
-    { next: { revalidate: 3600 } } // ✅ תיקון: 3 דקות במקום 0
+    { next: { revalidate: 3600 } }
   );
 
   const json = await res.json();
@@ -143,10 +142,9 @@ export default async function ArticlePage({ params }) {
   if (!rawArticle) return notFound();
   const data = rawArticle;
 
-  // 2. שליפת הכתבות הדומות (במקביל, בשרת)
+  // 2. שליפת כתבות דומות
   const similarArticlesData = await getSimilarArticles(params.slug, data.category);
 
-  // --- כל הלוגיקה של עיבוד התמונות נשארת זהה ---
   const galleryItems = data.gallery?.data
     ? data.gallery.data.map((item) => item.attributes)
     : data.gallery || [];
@@ -167,6 +165,7 @@ export default async function ArticlePage({ params }) {
   let mainImage = PLACEHOLDER_IMG;
   let mainImageAlt = "תמונה ראשית";
 
+  // לוגיקת בחירת תמונה ראשית (לפי סדר עדיפויות)
   if (galleryItems?.length > 0 && galleryItems[0]?.url) {
     mainImage = resolveImageUrl(galleryItems[0].url);
     mainImageAlt = galleryItems[0].alternativeText || "תמונה ראשית";
@@ -275,9 +274,8 @@ export default async function ArticlePage({ params }) {
   }
   breadcrumbs.push({ label: article.title });
 
-  // פונקציית הרינדור נשארת זהה...
+  // ✅ פונקציית הרינדור - נוקתה לחלוטין מפרוקסי
   const renderParagraph = (block, i) => {
-      // (כאן נמצא כל הקוד הארוך שלך לרינדור טקסט - הוא תקין לחלוטין, לא שיניתי אותו)
       if (typeof block === "string") {
         const cleanText = fixRelativeImages(block.trim());
         const hasHTMLTags = /<\/?[a-z][\s\S]*>/i.test(cleanText);
@@ -288,10 +286,7 @@ export default async function ArticlePage({ params }) {
               key={i}
               className="article-text text-gray-800 text-[18px] leading-relaxed"
               dangerouslySetInnerHTML={{
-                __html: cleanText.replace(
-                  /(https:\/\/hondanews\.eu[^\s"'<>]+)/gi,
-                  (match) => wrapHondaProxy(match)
-                ),
+                __html: cleanText // הוסר ה-replace של הפרוקסי
               }}
             />
           );
@@ -300,16 +295,9 @@ export default async function ArticlePage({ params }) {
         const urlMatch = cleanText.match(/https?:\/\/[^\s]+/);
         if (urlMatch) {
           let url = urlMatch[0].trim();
-          if (url.includes("hondanews.eu")) url = wrapHondaProxy(url);
-          else if (url.includes("content2.kawasaki.com")) {
-            url = url.split("?")[0];
-          }
-  
-          if (
-            /\.(jpg|jpeg|png|gif|webp)$/i.test(url) ||
-            url.includes("hondanews.eu/image/") ||
-            url.includes("/api/proxy-honda?")
-          ) {
+          
+          // בדיקה אם זו תמונה
+          if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
             return (
               <InlineImage
                 key={i}
@@ -320,6 +308,7 @@ export default async function ArticlePage({ params }) {
             );
           }
   
+          // בדיקה אם זה הטמעה (וידאו/רשתות)
           if (
             /(youtube\.com|youtu\.be|facebook\.com|instagram\.com|tiktok\.com|x\.com|twitter\.com)/i.test(
               url
@@ -328,6 +317,7 @@ export default async function ArticlePage({ params }) {
             return <EmbedContent key={i} url={url} />;
           }
   
+          // סתם לינק
           return (
             <p key={i} className="article-text text-blue-600 underline">
               <a href={url} target="_blank" rel="noopener noreferrer">
@@ -355,17 +345,8 @@ export default async function ArticlePage({ params }) {
         const urlMatch = html.match(/https?:\/\/[^\s"']+/);
         if (urlMatch) {
           let url = urlMatch[0];
-          if (url.includes("hondanews.eu")) url = wrapHondaProxy(url);
-          else if (url.includes("content2.kawasaki.com")) {
-            url = url.split("?")[0];
-          }
-  
-          if (
-            /\.(jpg|jpeg|png|gif|webp)$/i.test(url) ||
-            url.includes("hondanews.eu/image/") ||
-            url.includes("/api/proxy-honda?") ||
-            url.includes("content2.kawasaki.com/ContentStorage/")
-          ) {
+          
+          if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
             return (
               <InlineImage
                 key={i}
@@ -390,10 +371,7 @@ export default async function ArticlePage({ params }) {
             key={i}
             className="article-text text-gray-800 text-[18px] leading-relaxed"
             dangerouslySetInnerHTML={{
-              __html: html.replace(
-                /(https:\/\/hondanews\.eu[^\s"'<>]+)/gi,
-                (match) => wrapHondaProxy(match)
-              ),
+              __html: html // הוסר ה-replace של הפרוקסי
             }}
           />
         );
@@ -509,7 +487,6 @@ export default async function ArticlePage({ params }) {
 
           <Tags tags={article.tags} />
           
-          {/* ✅ כאן השינוי: מעבירים את הנתונים שכבר שלפנו בשרת */}
           <div className="similar-articles-section">
             <SimilarArticles articles={similarArticlesData} />
           </div>
