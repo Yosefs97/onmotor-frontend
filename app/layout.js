@@ -6,7 +6,7 @@ import ClientLayout from '@/components/ClientLayout';
 import ScrollToTopButton from '@/components/ScrollToTopButton';
 import Script from 'next/script';
 import { Heebo } from 'next/font/google';
-import { getMainImage } from '@/utils/resolveMainImage'; // וודא שהקובץ הזה קיים אצלך
+import { getMainImage } from '@/utils/resolveMainImage';
 
 const heebo = Heebo({
   subsets: ['hebrew', 'latin'],
@@ -20,9 +20,43 @@ export const metadata = {
     default: "OnMotor Media – מגזין אופנועים ישראלי",
     template: "%s | OnMotor Media",
   },
-  description: "מגזין אופנועים ישראלי מוביל...",
-  // ... שאר המטא דאטה ...
+  description:
+    "מגזין אופנועים ישראלי מוביל – חדשות אופנועים, סקירות דגמים, סקירת ציוד ומבחני דרך. כל מה שרוכב בישראל צריך לדעת.",
+  
+  // ✅✅✅ כאן השינוי: הגדרת האייקון לדפדפן וגוגל ✅✅✅
+  icons: {
+    icon: '/icon.png',       // וודא שיש לך קובץ בשם icon.png בתיקיית app
+    shortcut: '/icon.png',
+    apple: '/icon.png',      // אייקון לאייפון/אייפד
+  },
+
+  openGraph: {
+    title: "OnMotor Media – מגזין אופנועים ישראלי",
+    description:
+      "חדשות אופנועים, סקירות, ציוד וניסיון מהשטח – מגזין האופנועים לרוכב בישראל.",
+    url: "https://www.onmotormedia.com",
+    siteName: "OnMotor Media",
+    images: [
+      {
+        url: "https://www.onmotormedia.com/full_Logo.jpg",
+        width: 1200,
+        height: 630,
+        alt: "OnMotor Media Logo",
+      },
+    ],
+    locale: "he_IL",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "OnMotor Media – מגזין אופנועים ישראלי",
+    description:
+      "חדשות אופנועים, סקירות דגמים לקהילת הרוכבים של ישראל.",
+    images: ["https://www.onmotormedia.com/full_Logo.jpg"],
+  },
 };
+
+// ... שאר הקוד נשאר ללא שינוי ...
 
 // --- פונקציה לשליפת טיקר (ללא שינוי) ---
 async function getTickerHeadlines() {
@@ -47,7 +81,6 @@ async function getTickerHeadlines() {
   }
 }
 
-// 🛠️ פונקציית עזר לחילוץ דומיין (מהקוד הישן שלך)
 function extractDomainName(url) {
   try {
     const host = new URL(url).hostname.replace('www.', '');
@@ -61,16 +94,14 @@ function extractDomainName(url) {
   }
 }
 
-// ✅ פונקציה ראשית לשליפת נתוני סיידבר (הועתקה מ-route.js והותאמה לשרת)
 async function getSidebarData() {
   const API_URL = process.env.STRAPI_API_URL;
   const PUBLIC_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || API_URL;
 
-  // פונקציית Fetch גנרית שתומכת ב-Endpoints שונים
   const fetchStrapi = async (endpoint, query) => {
     try {
       const url = `${API_URL}/api/${endpoint}?${query}`;
-      const res = await fetch(url, { next: { revalidate: 300 } }); // קאש ל-5 דקות
+      const res = await fetch(url, { next: { revalidate: 300 } });
       if (!res.ok) return [];
       const json = await res.json();
       return json.data || [];
@@ -80,11 +111,9 @@ async function getSidebarData() {
     }
   };
 
-  // פונקציית נרמול (מיפוי) - משלבת את הלוגיקה מהקוד הישן שלך
   const normalizeItem = (item) => {
     const a = item.attributes || item;
     
-    // 1. חישוב מקור (Source)
     let autoSource = '';
     if (a.url) {
       if (a.url.includes('youtube.com') || a.url.includes('youtu.be')) autoSource = 'YouTube';
@@ -94,7 +123,6 @@ async function getSidebarData() {
       else autoSource = extractDomainName(a.url);
     }
 
-    // 2. טיפול בתמונה (עם getMainImage שלך + תיקון נתיב יחסי)
     const { mainImage } = getMainImage(a);
     let finalImageUrl = '/default-image.jpg';
     
@@ -119,18 +147,10 @@ async function getSidebarData() {
     };
   };
 
-  // ✅ שליפות במקביל - בדיוק לפי הלוגיקה הישנה
   const [latestRaw, onRoadRaw, popularRaw, iroadsRaw] = await Promise.all([
-    // 1. אחרונים
     fetchStrapi('articles', 'sort=date:desc&pagination[limit]=20&populate=*'),
-    
-    // 2. בדרכים (שימוש בפילטר iroads המקורי)
     fetchStrapi('articles', 'filters[tags_txt][$contains]=iroads&sort=date:desc&pagination[limit]=20&populate=*'),
-    
-    // 3. פופולרי (פנייה ל-API הייחודי populars)
     fetchStrapi('populars', 'sort=date:desc&pagination[limit]=20&populate=*'),
-
-    // 4. נתיבי ישראל (עבור הבוקס התחתון)
     fetchStrapi('articles', 'filters[tags_txt][$contains]=iroads&sort=publishedAt:desc&pagination[limit]=5&populate=*')
   ]);
 
