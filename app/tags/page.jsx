@@ -121,7 +121,7 @@ export default function TagsIndex() {
 
   return (
     <PageContainer title="אינדקס תגיות" breadcrumbs={breadcrumbs}>
-      <div className="space-y-12 min-h-[50vh]">
+      <div className="space-y-2 min-h-[50vh]">
         {loading && (
           <div className="text-center py-10 text-gray-500">טוען תגיות...</div>
         )}
