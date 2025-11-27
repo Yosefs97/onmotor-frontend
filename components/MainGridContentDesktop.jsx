@@ -1,4 +1,3 @@
-
 // components/MainGridContentDesktop.jsx
 'use client';
 import React, { useEffect, useState } from 'react';
@@ -60,10 +59,13 @@ export default function MainGridContentDesktop() {
           const attrs = a.attributes || a;
           const { mainImage, mainImageAlt } = getMainImage(attrs);
 
+          // ✅ תיקון: בדיקה אם יש href בעברית
+          const correctSlug = attrs.href || attrs.slug;
+
           return {
             id: a.id,
             title: attrs.title,
-            slug: attrs.slug,
+            slug: correctSlug,
             image: mainImage,
             imageAlt: mainImageAlt,
             category: attrs.category || 'general',
@@ -74,7 +76,8 @@ export default function MainGridContentDesktop() {
             description: attrs.description,
             headline: attrs.headline || attrs.title,
             subdescription: attrs.subdescription,
-            href: `/articles/${attrs.slug}`,
+            // ✅ יצירת הלינק הנכון
+            href: `/articles/${correctSlug}`,
             tags: attrs.tags || [],
           };
         }) || [];
