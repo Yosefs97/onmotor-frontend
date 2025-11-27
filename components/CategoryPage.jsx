@@ -87,7 +87,7 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
           });
         }
 
-        // ✅ מיפוי כתבות עם לוגיקת תמונה אחידה
+        // ✅ מיפוי כתבות עם לוגיקת תמונה אחידה ולינקים בעברית
         const mapped = data.map((a) => {
           let mainImage = PLACEHOLDER_IMG;
           let mainImageAlt = a.title || 'תמונה ראשית';
@@ -116,10 +116,13 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
             mainImageAlt = 'תמונה ראשית מהמדיה החיצונית';
           }
 
+          // ✅✅✅ כאן התיקון: שימוש ב-href אם קיים
+          const correctSlug = a.href || a.slug;
+
           return {
             id: a.id,
             title: a.title,
-            slug: a.slug,
+            slug: correctSlug,
             image: mainImage,
             imageAlt: mainImageAlt,
             category: a.category || 'general',
@@ -132,7 +135,8 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
             description: a.description,
             headline: a.headline || a.title,
             subdescription: a.subdescription,
-            href: `/articles/${a.href || a.slug}`,
+            // ✅ יצירת הלינק עם העברית
+            href: `/articles/${correctSlug}`,
             tags: a.tags || [],
             date: a.date || '',
             time: a.time || '00:00',
@@ -216,4 +220,3 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
     </div>
   );
 }
-
