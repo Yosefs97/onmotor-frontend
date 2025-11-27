@@ -12,7 +12,7 @@ async function fetchArticles() {
   const base = process.env.STRAPI_API_URL;
   if (!base) return [];
 
-  // ✅ הוספתי את href לרשימת השדות
+  // ✅ מוודאים ש-href נמצא ברשימת השדות
   const url =
     `${base}/api/articles?` +
     `fields=title,slug,href,category,date,headline,subdescription,description,tags_txt&` +
@@ -31,12 +31,19 @@ async function fetchArticles() {
 
     const json = await res.json();
 
-    return json.data.map((item) => ({
-      id: item.id,
-      ...item.attributes,
-      // ✅ אם יש href (עברית) משתמשים בו, אחרת ב-slug
-      slug: item.attributes.href || item.attributes.slug, 
-    }));
+    return json.data.map((item) => {
+      // ✅ חישוב הסלאג הנכון (עברית אם יש, אנגלית אם אין)
+      const correctSlug = item.attributes.href || item.attributes.slug;
+
+      return {
+        id: item.id,
+        ...item.attributes,
+        // אנו מעדכנים את הסלאג שיהיה העברית
+        slug: correctSlug,
+        // ✅ וזה החלק החשוב ביותר: יצירת נתיב מלא ללינק
+        href: `/articles/${correctSlug}`, 
+      };
+    });
   } catch {
     return [];
   }
