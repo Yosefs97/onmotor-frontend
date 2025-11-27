@@ -42,7 +42,7 @@ async function fetchFromStrapi(path) {
   }
 }
 
-/* 🎯 normalizeItem כמו שהיה אצלך במדויק */
+/* 🎯 normalizeItem */
 function normalizeItem(obj) {
   const a = obj.attributes || obj;
 
@@ -64,16 +64,19 @@ function normalizeItem(obj) {
   // 🔴 תמונה — לפי getMainImage המקורי
   const { mainImage } = getMainImage(a);
 
+  // ✅ תיקון: שימוש ב-href אם קיים
+  const correctSlug = a.href || a.slug;
+
   return {
     id: obj.id,
     title: a.title || a.name || '',
-    slug: a.slug || '',
+    slug: correctSlug,
     description: a.description || '',
     image: mainImage,
     date: a.date?.split('T')[0] || a.publishedAt?.split('T')[0] || '',
 
-    // 🟢 url פנימי או חיצוני — בדיוק כמו שהיה
-    url: a.url || (a.slug ? `/articles/${a.slug}` : ''),
+    // 🟢 url פנימי או חיצוני - עם ה-slug הנכון
+    url: a.url || (correctSlug ? `/articles/${correctSlug}` : ''),
 
     views: a.views ?? null,
     source: a.source || autoSource,

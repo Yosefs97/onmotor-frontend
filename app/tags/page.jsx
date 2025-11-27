@@ -10,8 +10,6 @@ import ArticleCard from '@/components/ArticleCards/ArticleCard';
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || process.env.STRAPI_API_URL;
 const PLACEHOLDER_IMG = '/default-image.jpg';
 
-// --- פונקציות עזר ---
-
 function resolveImageUrl(rawUrl) {
   if (!rawUrl) return PLACEHOLDER_IMG;
   if (rawUrl.startsWith('http')) return rawUrl;
@@ -24,9 +22,9 @@ function slugify(text) {
     .toString()
     .toLowerCase()
     .trim()
-    .replace(/\s+/g, '-')       
+    .replace(/\s+/g, '-') 
     .replace(/[^\w\-א-ת]+/g, '') 
-    .replace(/\-\-+/g, '-');     
+    .replace(/\-\-+/g, '-'); 
 }
 
 export default function TagsIndex() {
@@ -39,8 +37,6 @@ export default function TagsIndex() {
     (async () => {
       try {
         setLoading(true);
-        // 1️⃣ שליפה: אנחנו כבר מבקשים מהשרת למיין לפי תאריך (sort=createdAt:desc)
-        // זה מבטיח שהכתבות מגיעות בסדר הנכון
         const res = await fetch(
           `${API_URL}/api/articles?populate=*&pagination[limit]=100&sort=createdAt:desc`, 
           { next: { revalidate: 3600 } }
@@ -52,7 +48,6 @@ export default function TagsIndex() {
         if (isMounted) {
           const groups = {};
 
-          // 2️⃣ מיון וחלוקה לקבוצות
           (json.data || []).forEach(a => {
             let mainImage = PLACEHOLDER_IMG;
             const galleryItem = a.gallery?.[0];
@@ -63,11 +58,14 @@ export default function TagsIndex() {
                 if (l.length) mainImage = l[l.length > 1 ? 1 : 0].trim();
             }
 
+            // ✅ תיקון: שימוש ב-href אם קיים
+            const correctSlug = a.href || a.slug;
+
             const articleData = {
               id: a.id,
               title: a.title,
-              slug: a.slug,
-              href: `/articles/${a.slug}`,
+              slug: correctSlug,
+              href: `/articles/${correctSlug}`,
               headline: a.headline || a.title,
               description: a.description || '',
               date: a.date || new Date().toISOString(),
@@ -81,7 +79,6 @@ export default function TagsIndex() {
                 const tagName = typeof tag === 'string' ? tag : tag.name;
                 if (tagName) {
                   if (!groups[tagName]) groups[tagName] = [];
-                  // בדיקת כפילויות
                   if (!groups[tagName].find(x => x.id === articleData.id)) {
                     groups[tagName].push(articleData);
                   }
@@ -90,7 +87,6 @@ export default function TagsIndex() {
             }
           });
 
-          // סינון תגיות ריקות
           const filteredGroups = {};
           Object.keys(groups).forEach(key => {
             if (groups[key].length >= 1) {
@@ -115,12 +111,9 @@ export default function TagsIndex() {
     { label: 'אינדקס תגיות' },
   ];
 
-  // 3️⃣ מיון התגיות עצמן לפי התאריך של הכתבה הכי חדשה בהן
   const sortedTags = Object.keys(groupedArticles).sort((tagA, tagB) => {
-    // לוקחים את הכתבה הראשונה בכל קבוצה (שהיא החדשה ביותר כי המידע הגיע ממויין)
     const dateA = new Date(groupedArticles[tagA][0].date);
     const dateB = new Date(groupedArticles[tagB][0].date);
-    // מחזירים בסדר יורד (הכי חדש למעלה)
     return dateB - dateA;
   });
 
@@ -137,7 +130,6 @@ export default function TagsIndex() {
           </div>
         )}
 
-        {/* לולאה על כל התגיות (ממוינות לפי זמן) */}
         {sortedTags.map(tagName => {
           const articles = groupedArticles[tagName];
           const previewArticles = articles.slice(0, 4); 
@@ -146,7 +138,6 @@ export default function TagsIndex() {
           return (
             <div key={tagName} className="border-b border-gray-200 pb-2 last:border-0">
               
-              {/* כותרת הסקציה */}
               <div className="flex justify-between items-end mb-4 border-r-4 border-[#e60000] pr-3">
                 <h2 className="text-2xl font-bold text-gray-900">
                   <Link href={`/tags/${tagSlug}`} prefetch={false} className="hover:text-[#e60000] transition-colors">
@@ -162,9 +153,7 @@ export default function TagsIndex() {
                 </Link>
               </div>
 
-              {/* ======================================================== */}
-              {/* 📱 תצוגת מובייל - העיצוב החדש והצפוף (רשימה)             */}
-              {/* ======================================================== */}
+              {/* 📱 מובייל */}
               <div className="block md:hidden space-y-0.5">
                 {previewArticles.map(article => (
                   <Link 
@@ -173,7 +162,6 @@ export default function TagsIndex() {
                     prefetch={false}
                     className="flex flex-row gap-0.5 border-b border-red-100 pb-1 last:border-0"
                   >
-                    {/* תמונה מימין */}
                     <div className="w-1/3 relative aspect-[4/3] flex-shrink-0">
                       <Image
                         src={article.image}
@@ -183,8 +171,6 @@ export default function TagsIndex() {
                         sizes="(max-width: 768px) 33vw"
                       />
                     </div>
-
-                    {/* טקסט משמאל - צפוף ומסודר */}
                     <div className="w-2/3 flex flex-col justify-start gap-0">
                       <h3 className="text-sm font-bold leading-tight text-gray-900 line-clamp-2">
                         {article.headline}
@@ -200,9 +186,7 @@ export default function TagsIndex() {
                 ))}
               </div>
 
-              {/* ======================================================== */}
-              {/* 💻 תצוגת דסקטופ - גריד כרטיסיות                          */}
-              {/* ======================================================== */}
+              {/* 💻 דסקטופ */}
               <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-0">
                 {previewArticles.map(article => (
                   <ArticleCard key={article.id} article={article} />

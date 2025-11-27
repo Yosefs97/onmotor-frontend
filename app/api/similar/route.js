@@ -1,3 +1,4 @@
+//app\api\similar\route.js
 import { NextResponse } from "next/server";
 
 export const revalidate = 300; // Cache 5 דקות

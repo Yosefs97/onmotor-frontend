@@ -1,4 +1,4 @@
-// ✅ app/articles/[slug]/page.jsx
+// app/articles/[slug]/page.jsx
 
 export const revalidate = 180; // רענון כתבה כל 3 דקות
 
@@ -64,13 +64,13 @@ function toHtmlFromStrapiChildren(children) {
   }).join('');
 }
 
-// ✅ פונקציה לשליפת כתבות דומות בשרת (מתוקן לתמיכה בעברית)
-async function getSimilarArticles(currentHref, category) {
+// ✅ פונקציה לשליפת כתבות דומות בשרת (תומך בעברית)
+async function getSimilarArticles(currentSlugOrHref, category) {
   try {
     if (!category) return [];
-    // שימוש ב-filters[href] במקום slug וקידוד העברית ל-URL
+    // מסננים לפי ה-slug/href הנוכחי כדי לא להציג את הכתבה פעמיים
     const res = await fetch(
-      `${API_URL}/api/articles?populate=*&filters[href][$ne]=${encodeURIComponent(currentHref)}&filters[category][$eq]=${category}&pagination[limit]=9`,
+      `${API_URL}/api/articles?populate=*&filters[href][$ne]=${encodeURIComponent(currentSlugOrHref)}&filters[slug][$ne]=${encodeURIComponent(currentSlugOrHref)}&filters[category][$eq]=${category}&pagination[limit]=9`,
       { next: { revalidate: 3600 } }
     );
     const json = await res.json();
@@ -83,12 +83,11 @@ async function getSimilarArticles(currentHref, category) {
 
 export async function generateMetadata({ params }) {
   try {
-    // ✅ פענוח הכתובת (למשל מ-%D7%99 ל-"ימאהה")
     const decodedSlug = decodeURIComponent(params.slug);
 
-    // ✅ שליפה לפי שדה href
+    // ✅ חיפוש כפול: או href שווה לערך, או slug שווה לערך
     const res = await fetch(
-      `${API_URL}/api/articles?filters[href][$eq]=${encodeURIComponent(decodedSlug)}&populate=*`,
+      `${API_URL}/api/articles?filters[$or][0][href][$eq]=${encodeURIComponent(decodedSlug)}&filters[$or][1][slug][$eq]=${encodeURIComponent(decodedSlug)}&populate=*`,
       { next: { revalidate: 3600 } }
     );
 
@@ -109,7 +108,6 @@ export async function generateMetadata({ params }) {
     return {
       title: `${title} | OnMotor Media`,
       description,
-      // כאן משתמשים בכתובת המקורית מהדפדפן (params.slug) או המפעונחת, תלוי איך תרצה שהקנוניקל יראה
       alternates: { canonical: `${SITE_URL}/articles/${params.slug}` },
       openGraph: {
         title,
@@ -137,12 +135,11 @@ export async function generateMetadata({ params }) {
 //                       ArticlePage Component
 // ===================================================================
 export default async function ArticlePage({ params }) {
-  // ✅ 1. פענוח ה-Slug המגיע מהדפדפן (לצורך חיפוש ב-DB)
   const decodedSlug = decodeURIComponent(params.slug);
 
-  // ✅ 2. שליפת הכתבה הראשית לפי שדה href (במקום slug)
+  // ✅ חיפוש חכם: תומך גם בלינקים ישנים (slug) וגם בחדשים (href)
   const res = await fetch(
-    `${API_URL}/api/articles?filters[href][$eq]=${encodeURIComponent(decodedSlug)}&populate=*`,
+    `${API_URL}/api/articles?filters[$or][0][href][$eq]=${encodeURIComponent(decodedSlug)}&filters[$or][1][slug][$eq]=${encodeURIComponent(decodedSlug)}&populate=*`,
     { next: { revalidate: 3600 } }
   );
 
@@ -151,8 +148,9 @@ export default async function ArticlePage({ params }) {
   if (!rawArticle) return notFound();
   const data = rawArticle;
 
-  // 3. שליפת כתבות דומות (שולחים את ה-decodedSlug כדי לסנן את הנוכחית)
-  const similarArticlesData = await getSimilarArticles(decodedSlug, data.category);
+  // שימוש ב-href האמיתי לסינון דומים (אם קיים), אחרת ב-slug
+  const realIdentifier = data.href || data.slug;
+  const similarArticlesData = await getSimilarArticles(realIdentifier, data.category);
 
   const galleryItems = data.gallery?.data
     ? data.gallery.data.map((item) => item.attributes)
@@ -174,7 +172,7 @@ export default async function ArticlePage({ params }) {
   let mainImage = PLACEHOLDER_IMG;
   let mainImageAlt = "תמונה ראשית";
 
-  // לוגיקת בחירת תמונה ראשית (לפי סדר עדיפויות)
+  // לוגיקת בחירת תמונה ראשית
   if (galleryItems?.length > 0 && galleryItems[0]?.url) {
     mainImage = resolveImageUrl(galleryItems[0].url);
     mainImageAlt = galleryItems[0].alternativeText || "תמונה ראשית";
@@ -210,7 +208,8 @@ export default async function ArticlePage({ params }) {
     tags: data.tags || [],
     content: data.content || "",
     tableData: data.tableData || {},
-    href: `/articles/${params.slug}`, // שומרים על הלינק המקורי
+    // כאן אנחנו יוצרים את הלינק הפנימי עם העברית אם אפשר
+    href: `/articles/${data.href || params.slug}`,
     category: data.category || "general",
     subcategory: Array.isArray(data.subcategory)
       ? data.subcategory[0]
@@ -222,7 +221,7 @@ export default async function ArticlePage({ params }) {
       : [],
     headline: data.headline || data.title,
     subdescription: data.subdescription || "",
-    slug: params.slug, // שומרים על המזהה המקורי
+    slug: params.slug,
     gallery,
     externalImageUrls,
     externalMediaUrl,
@@ -305,7 +304,6 @@ export default async function ArticlePage({ params }) {
         if (urlMatch) {
           let url = urlMatch[0].trim();
           
-          // בדיקה אם זו תמונה
           if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
             return (
               <InlineImage
@@ -317,7 +315,6 @@ export default async function ArticlePage({ params }) {
             );
           }
   
-          // בדיקה אם זה הטמעה (וידאו/רשתות)
           if (
             /(youtube\.com|youtu\.be|facebook\.com|instagram\.com|tiktok\.com|x\.com|twitter\.com)/i.test(
               url
@@ -326,7 +323,6 @@ export default async function ArticlePage({ params }) {
             return <EmbedContent key={i} url={url} />;
           }
   
-          // סתם לינק
           return (
             <p key={i} className="article-text text-blue-600 underline">
               <a href={url} target="_blank" rel="noopener noreferrer">

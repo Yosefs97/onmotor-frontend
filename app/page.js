@@ -1,4 +1,4 @@
-//app/page.js
+// app/page.js
 export const revalidate = 60;
 
 import React from "react";
@@ -12,9 +12,10 @@ async function fetchArticles() {
   const base = process.env.STRAPI_API_URL;
   if (!base) return [];
 
+  // ✅ הוספתי את href לרשימת השדות
   const url =
     `${base}/api/articles?` +
-    `fields=title,slug,category,date,headline,subdescription,description,tags_txt&` +
+    `fields=title,slug,href,category,date,headline,subdescription,description,tags_txt&` +
     `populate[image][fields]=url,alternativeText&` +
     `populate[gallery][fields]=url,alternativeText&` +
     `populate[external_media_links]=*&` +
@@ -33,6 +34,8 @@ async function fetchArticles() {
     return json.data.map((item) => ({
       id: item.id,
       ...item.attributes,
+      // ✅ אם יש href (עברית) משתמשים בו, אחרת ב-slug
+      slug: item.attributes.href || item.attributes.slug, 
     }));
   } catch {
     return [];

@@ -23,11 +23,10 @@ export const metadata = {
   description:
     "מגזין אופנועים ישראלי מוביל – חדשות אופנועים, סקירות דגמים, סקירת ציוד ומבחני דרך. כל מה שרוכב בישראל צריך לדעת.",
   
-  // ✅✅✅ כאן השינוי: הגדרת האייקון לדפדפן וגוגל ✅✅✅
   icons: {
-    icon: '/icon.png',       // וודא שיש לך קובץ בשם icon.png בתיקיית app
+    icon: '/icon.png',
     shortcut: '/icon.png',
-    apple: '/icon.png',      // אייקון לאייפון/אייפד
+    apple: '/icon.png',
   },
 
   openGraph: {
@@ -56,21 +55,22 @@ export const metadata = {
   },
 };
 
-// ... שאר הקוד נשאר ללא שינוי ...
-
-// --- פונקציה לשליפת טיקר (ללא שינוי) ---
+// --- פונקציה לשליפת טיקר ---
 async function getTickerHeadlines() {
   const API_URL = process.env.STRAPI_API_URL;
   try {
-    const url = `${API_URL}/api/articles?filters[$or][0][tags_txt][$contains]=חדשנות&filters[$or][1][tags_txt][$contains]=2025&filters[$or][2][tags_txt][$contains]=חוק וסדר&sort=publishedAt:desc`;
+    // ✅ populate=* כדי להביא גם את ה-href
+    const url = `${API_URL}/api/articles?filters[$or][0][tags_txt][$contains]=חדשנות&filters[$or][1][tags_txt][$contains]=2025&filters[$or][2][tags_txt][$contains]=חוק וסדר&sort=publishedAt:desc&populate=*`;
     const res = await fetch(url, { next: { revalidate: 300 } });
     const data = await res.json();
     if (data?.data?.length > 0) {
       return data.data.map((article) => {
         const attrs = article.attributes || article;
+        // ✅ תיקון: שימוש ב-href אם קיים
+        const correctSlug = attrs.href || attrs.slug;
         return {
           text: attrs.headline || attrs.title || "כתבה ללא כותרת",
-          link: `/articles/${attrs.slug}`,
+          link: `/articles/${correctSlug}`,
         };
       });
     }
@@ -134,14 +134,17 @@ async function getSidebarData() {
       }
     }
 
+    // ✅ תיקון: שימוש ב-href אם קיים
+    const correctSlug = a.href || a.slug;
+
     return {
       id: item.id,
       title: a.title || a.name || '',
-      slug: a.slug || '',
+      slug: correctSlug,
       description: a.description || '',
       image: finalImageUrl,
       date: a.date?.split('T')[0] || a.publishedAt?.split('T')[0] || '',
-      url: a.url || (a.slug ? `/articles/${a.slug}` : null),
+      url: a.url || (correctSlug ? `/articles/${correctSlug}` : null),
       views: a.views ?? null,
       source: a.source || autoSource,
     };

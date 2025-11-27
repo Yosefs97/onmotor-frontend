@@ -4,7 +4,7 @@
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image'; // ✅ נדרש לתצוגת המובייל החדשה
+import Image from 'next/image'; 
 import PageContainer from '@/components/PageContainer';
 import ArticleCard from '@/components/ArticleCards/ArticleCard';
 
@@ -23,9 +23,9 @@ function slugify(text) {
     .toString()
     .toLowerCase()
     .trim()
-    .replace(/\s+/g, '-')       
+    .replace(/\s+/g, '-') 
     .replace(/[^\w\-א-ת]+/g, '') 
-    .replace(/\-\-+/g, '-');     
+    .replace(/\-\-+/g, '-'); 
 }
 
 export default function TagPage() {
@@ -34,7 +34,7 @@ export default function TagPage() {
 
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [visibleCount, setVisibleCount] = useState(10); // ✅ סטייט לניהול כמות מוצגת
+  const [visibleCount, setVisibleCount] = useState(10); 
 
   useEffect(() => {
     let isMounted = true;
@@ -60,7 +60,6 @@ export default function TagPage() {
 
           const normalized = filtered.map(a => {
             let mainImage = PLACEHOLDER_IMG;
-            // לוגיקת תמונה מקוצרת...
             const galleryItem = a.gallery?.[0];
             if (galleryItem?.url) mainImage = resolveImageUrl(galleryItem.url);
             else if (a.image?.url) mainImage = resolveImageUrl(a.image.url);
@@ -69,20 +68,22 @@ export default function TagPage() {
                 if (l.length) mainImage = l[l.length > 1 ? 1 : 0].trim();
             }
 
+            // ✅ תיקון: שימוש ב-href אם קיים
+            const correctSlug = a.href || a.slug;
+
             return {
               id: a.id,
               title: a.title,
-              slug: a.slug,
-              href: `/articles/${a.slug}`,
+              slug: correctSlug,
+              href: `/articles/${correctSlug}`,
               headline: a.headline || a.title,
               description: a.description || '',
-              date: a.date || new Date().toISOString(), // תאריך למיון
-              displayDate: new Date(a.date).toLocaleDateString('he-IL'), // תאריך לתצוגה
+              date: a.date || new Date().toISOString(), 
+              displayDate: new Date(a.date).toLocaleDateString('he-IL'), 
               image: mainImage,
             };
           });
 
-          // ✅ מיון סופי לפי תאריך (חדש לישן)
           normalized.sort((a, b) => new Date(b.date) - new Date(a.date));
 
           setArticles(normalized);
@@ -99,7 +100,6 @@ export default function TagPage() {
 
   const displayTag = decodedTag.replace(/-/g, ' ');
   
-  // ✅ פונקציה לטעינת עוד כתבות
   const showMoreArticles = () => {
     setVisibleCount(prev => prev + 10);
   };
@@ -125,9 +125,7 @@ export default function TagPage() {
           </div>
         )}
 
-        {/* ======================================================== */}
-        {/* 📱 תצוגת מובייל בלבד (רשימה עם תמונה בצד)                 */}
-        {/* ======================================================== */}
+        {/* 📱 מובייל */}
         <div className="block md:hidden space-y-0.5">
           {visibleArticles.map(article => (
             <Link 
@@ -136,7 +134,6 @@ export default function TagPage() {
               prefetch={false}
               className="flex flex-row gap-0.5 border-b border-red-100 pb-1 last:border-0"
             >
-              {/* תמונה מימין (ב-RTL זה הראשון) */}
               <div className="w-1/3 relative aspect-[4/3] flex-shrink-0">
                 <Image
                   src={article.image}
@@ -147,7 +144,6 @@ export default function TagPage() {
                 />
               </div>
 
-              {/* טקסט משמאל */}
               <div className="w-2/3 flex flex-col justify-start gap-1">
                 <h3 className="text-sm font-bold leading-tight text-gray-900 line-clamp-2">
                   {article.headline}
@@ -163,16 +159,14 @@ export default function TagPage() {
           ))}
         </div>
 
-        {/* ======================================================== */}
-        {/* 💻 תצוגת דסקטופ/טאבלט (גריד רגיל)                        */}
-        {/* ======================================================== */}
+        {/* 💻 דסקטופ */}
         <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-0">
           {visibleArticles.map(article => (
             <ArticleCard key={article.id} article={article} />
           ))}
         </div>
 
-        {/* ✅ כפתור טען עוד (מופיע רק אם יש עוד כתבות) */}
+        {/* כפתור טען עוד */}
         {!loading && hasMore && (
           <div className="flex justify-center pt-6">
             <button
