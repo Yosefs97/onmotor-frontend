@@ -17,7 +17,7 @@ import EmbedContent from "@/components/EmbedContent";
 import ScrollToTableButton from "@/components/ScrollToTableButton";
 import ScrollToGalleryButton from "@/components/ScrollToGalleryButton";
 import ScrollToCommentsButton from "@/components/ScrollToCommentsButton";
-import { fixRelativeImages, resolveImageUrl } from "@/lib/fixArticleImages"; // ✅ הוסר wrapHondaProxy
+import { fixRelativeImages, resolveImageUrl } from "@/lib/fixArticleImages";
 import { getArticleImage } from "@/lib/getArticleImage";
 import ArticleShareBottom from "@/components/ArticleShareBottom";
 
@@ -64,12 +64,13 @@ function toHtmlFromStrapiChildren(children) {
   }).join('');
 }
 
-// ✅ פונקציה לשליפת כתבות דומות בשרת
-async function getSimilarArticles(currentSlug, category) {
+// ✅ פונקציה לשליפת כתבות דומות בשרת (מתוקן לתמיכה בעברית)
+async function getSimilarArticles(currentHref, category) {
   try {
     if (!category) return [];
+    // שימוש ב-filters[href] במקום slug וקידוד העברית ל-URL
     const res = await fetch(
-      `${API_URL}/api/articles?populate=*&filters[slug][$ne]=${currentSlug}&filters[category][$eq]=${category}&pagination[limit]=9`,
+      `${API_URL}/api/articles?populate=*&filters[href][$ne]=${encodeURIComponent(currentHref)}&filters[category][$eq]=${category}&pagination[limit]=9`,
       { next: { revalidate: 3600 } }
     );
     const json = await res.json();
@@ -82,8 +83,12 @@ async function getSimilarArticles(currentSlug, category) {
 
 export async function generateMetadata({ params }) {
   try {
+    // ✅ פענוח הכתובת (למשל מ-%D7%99 ל-"ימאהה")
+    const decodedSlug = decodeURIComponent(params.slug);
+
+    // ✅ שליפה לפי שדה href
     const res = await fetch(
-      `${API_URL}/api/articles?filters[slug][$eq]=${params.slug}&populate=*`,
+      `${API_URL}/api/articles?filters[href][$eq]=${encodeURIComponent(decodedSlug)}&populate=*`,
       { next: { revalidate: 3600 } }
     );
 
@@ -104,6 +109,7 @@ export async function generateMetadata({ params }) {
     return {
       title: `${title} | OnMotor Media`,
       description,
+      // כאן משתמשים בכתובת המקורית מהדפדפן (params.slug) או המפעונחת, תלוי איך תרצה שהקנוניקל יראה
       alternates: { canonical: `${SITE_URL}/articles/${params.slug}` },
       openGraph: {
         title,
@@ -131,9 +137,12 @@ export async function generateMetadata({ params }) {
 //                       ArticlePage Component
 // ===================================================================
 export default async function ArticlePage({ params }) {
-  // 1. שליפת הכתבה הראשית
+  // ✅ 1. פענוח ה-Slug המגיע מהדפדפן (לצורך חיפוש ב-DB)
+  const decodedSlug = decodeURIComponent(params.slug);
+
+  // ✅ 2. שליפת הכתבה הראשית לפי שדה href (במקום slug)
   const res = await fetch(
-    `${API_URL}/api/articles?filters[slug][$eq]=${params.slug}&populate=*`,
+    `${API_URL}/api/articles?filters[href][$eq]=${encodeURIComponent(decodedSlug)}&populate=*`,
     { next: { revalidate: 3600 } }
   );
 
@@ -142,8 +151,8 @@ export default async function ArticlePage({ params }) {
   if (!rawArticle) return notFound();
   const data = rawArticle;
 
-  // 2. שליפת כתבות דומות
-  const similarArticlesData = await getSimilarArticles(params.slug, data.category);
+  // 3. שליפת כתבות דומות (שולחים את ה-decodedSlug כדי לסנן את הנוכחית)
+  const similarArticlesData = await getSimilarArticles(decodedSlug, data.category);
 
   const galleryItems = data.gallery?.data
     ? data.gallery.data.map((item) => item.attributes)
@@ -201,7 +210,7 @@ export default async function ArticlePage({ params }) {
     tags: data.tags || [],
     content: data.content || "",
     tableData: data.tableData || {},
-    href: `/articles/${params.slug}`,
+    href: `/articles/${params.slug}`, // שומרים על הלינק המקורי
     category: data.category || "general",
     subcategory: Array.isArray(data.subcategory)
       ? data.subcategory[0]
@@ -213,7 +222,7 @@ export default async function ArticlePage({ params }) {
       : [],
     headline: data.headline || data.title,
     subdescription: data.subdescription || "",
-    slug: params.slug,
+    slug: params.slug, // שומרים על המזהה המקורי
     gallery,
     externalImageUrls,
     externalMediaUrl,
@@ -274,7 +283,7 @@ export default async function ArticlePage({ params }) {
   }
   breadcrumbs.push({ label: article.title });
 
-  // ✅ פונקציית הרינדור - נוקתה לחלוטין מפרוקסי
+  // פונקציית הרינדור
   const renderParagraph = (block, i) => {
       if (typeof block === "string") {
         const cleanText = fixRelativeImages(block.trim());
@@ -286,7 +295,7 @@ export default async function ArticlePage({ params }) {
               key={i}
               className="article-text text-gray-800 text-[18px] leading-relaxed"
               dangerouslySetInnerHTML={{
-                __html: cleanText // הוסר ה-replace של הפרוקסי
+                __html: cleanText
               }}
             />
           );
@@ -371,7 +380,7 @@ export default async function ArticlePage({ params }) {
             key={i}
             className="article-text text-gray-800 text-[18px] leading-relaxed"
             dangerouslySetInnerHTML={{
-              __html: html // הוסר ה-replace של הפרוקסי
+              __html: html
             }}
           />
         );
