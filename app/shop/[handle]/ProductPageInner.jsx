@@ -1,163 +1,132 @@
-
-//app\shop\[handle]\ProductPageInner.jsx
+// /app/shop/[handle]/ProductPageInner.jsx
 'use client';
-import { useEffect, useState } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
-import RelatedProducts from '@/components/RelatedProducts';
-import RelatedArticles from '@/components/RelatedArticles';
+
+import { useState } from 'react'; // 1. הוספנו את זה
 import ShopLayoutInternal from '@/components/ShopLayoutInternal';
 import ProductGrid from '@/components/ProductGrid';
-import WhatsAppButton from '@/components/WhatsAppButton';
 import ProductGallery from '@/components/ProductGallery';
+import RelatedProducts from '@/components/RelatedProducts';
+import RelatedArticles from '@/components/RelatedArticles';
+import WhatsAppButton from '@/components/WhatsAppButton';
 import { getProductYearRange, formatYearRange } from '@/lib/productYears';
 
-export default function ProductPage() {
-  const { handle } = useParams();
-  const searchParams = useSearchParams();
-  const filters = Object.fromEntries(searchParams.entries());
-
-  const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
+export default function ProductPageInner({ type, product, items }) {
+  // ניהול מצב לחיצה על כפתור ההוספה
   const [adding, setAdding] = useState(false);
 
-  const [items, setItems] = useState([]);
-  const [loadingSearch, setLoadingSearch] = useState(false);
-
-  useEffect(() => {
-    if (Object.keys(filters).length > 0) {
-      setProduct(null);
-      return;
-    }
-    (async () => {
-      setLoading(true);
-      const res = await fetch(`/api/shopify/product/${handle}`);
-      const json = await res.json();
-      setProduct(json.item || null);
-      setLoading(false);
-    })();
-  }, [handle, JSON.stringify(filters)]);
-
-  useEffect(() => {
-    if (Object.keys(filters).length === 0) return;
-    const fetchSearch = async () => {
-      setLoadingSearch(true);
-      const params = new URLSearchParams({ ...filters, limit: '24' });
-      const res = await fetch(`/api/shopify/search?${params.toString()}`);
-      const json = await res.json();
-      setItems(json.items || []);
-      setLoadingSearch(false);
-    };
-    fetchSearch();
-  }, [JSON.stringify(filters)]);
-
-  if (Object.keys(filters).length > 0) {
+  // -------- מצב: חיפוש --------
+  if (type === 'search') {
     return (
       <ShopLayoutInternal>
-        {loadingSearch && <div className="py-6 text-center">טוען חיפוש...</div>}
-        {!loadingSearch && <ProductGrid products={items} />}
+        <ProductGrid products={items} />
       </ShopLayoutInternal>
     );
   }
 
-  if (loading) return <div dir="rtl">טוען...</div>;
-  if (!product) return <div dir="rtl">מוצר לא נמצא</div>;
+  // -------- מצב: מוצר יחיד --------
+  if (!product) {
+    return <ShopLayoutInternal><div dir="rtl">מוצר לא נמצא</div></ShopLayoutInternal>;
+  }
 
   const firstVariant = product.variants?.edges?.[0]?.node;
   const tags = product.tags || [];
 
-  // ✅ מודל מהתגים
-  let modelTag = null;
-  const modelFromTag = tags.find((t) => t.toLowerCase().startsWith('model:'));
-  if (modelFromTag) modelTag = modelFromTag.replace('model:', '');
+  // מודל מהתגים
+  const modelTag = tags.find((t) => t.toLowerCase().startsWith('model:'))
+    ?.replace('model:', '');
 
-  // ✅ טווח שנים אך ורק מה־metafields
+  // טווח שנים
   const yr = getProductYearRange(product);
   const yrText = formatYearRange(yr);
 
+  // 2. פונקציית ההוספה לעגלה
   const addToCart = async () => {
     if (!firstVariant) return;
     setAdding(true);
-    const res = await fetch('/api/shopify/cart/add', {
-      method: 'POST',
-      body: JSON.stringify({
-        variantId: firstVariant.id,
-        quantity: 1,
-      }),
-    });
-    const json = await res.json();
-    setAdding(false);
-    if (json.cart) {
-      window.dispatchEvent(new Event('cartUpdated'));
-    } else {
-      alert('שגיאה בהוספת המוצר לעגלה');
+    
+    try {
+      const res = await fetch('/api/shopify/cart/add', {
+        method: 'POST',
+        body: JSON.stringify({
+          variantId: firstVariant.id,
+          quantity: 1,
+        }),
+      });
+      
+      const json = await res.json();
+      
+      if (json.cart) {
+        // אירוע שמעדכן את העגלה באתר (פותח דרואר או מעדכן מספר)
+        window.dispatchEvent(new Event('cartUpdated')); 
+      } else {
+        alert('שגיאה בהוספת המוצר לעגלה');
+      }
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      alert('אירעה שגיאה, אנא נסה שנית');
+    } finally {
+      setAdding(false);
     }
   };
 
   const whatsappMessage =
     `שלום,\n` +
-    `אני מעוניין בחלק "${product.title}" עבור דגם "${modelTag || firstVariant?.title}".\n` +
-    `מספר מק״ט: ${firstVariant?.sku || 'N/A'}\n` +
+    `אני מעוניין בחלק "${product.title}".\n` +
+    `דגם: ${modelTag || firstVariant?.title}\n` +
+    `מק״ט: ${firstVariant?.sku || 'N/A'}\n` +
     (yrText ? `שנים: ${yrText}` : '');
 
   return (
     <ShopLayoutInternal product={product}>
       <div className="grid md:grid-cols-2 gap-6">
-        <ProductGallery images={product.images?.edges} title={product.title} />
+
+        <ProductGallery
+          images={product.images?.edges}
+          title={product.title}
+        />
 
         <div className="space-y-3 text-gray-900">
-          <h1 className="text-2xl font-bold text-gray-900">{product.title}</h1>
+
+          <h1 className="text-2xl font-bold">{product.title}</h1>
+
           <div
-            className="prose max-w-none text-gray-900"
+            className="prose max-w-none"
             dangerouslySetInnerHTML={{ __html: product.descriptionHtml }}
           />
 
           {firstVariant && (
-            <div className="text-sm space-y-1 border-t pt-2 text-gray-900">
+            <div className="text-sm space-y-1 border-t pt-2">
+
+              <div><strong>מחיר:</strong> {firstVariant.price.amount} {firstVariant.price.currencyCode}</div>
+              <div><strong>מק״ט:</strong> {firstVariant.sku || 'N/A'}</div>
+              <div><strong>מלאי:</strong> {firstVariant.quantityAvailable}</div>
+
               <div>
-                <span className="font-bold text-gray-900">מחיר: </span>
-                {firstVariant.price.amount} {firstVariant.price.currencyCode}
+                <strong>דגם:</strong> {modelTag || '—'}
               </div>
-              <div>
-                <span className="font-bold text-gray-900">מק״ט: </span>
-                {firstVariant.sku || 'N/A'}
-              </div>
-              <div>
-                <span className="font-bold text-gray-900">מלאי: </span>
-                {firstVariant.quantityAvailable}
-              </div>
-              <div>
-                <span className="font-bold text-gray-900">דגם: </span>
-                {modelTag ? (
-                  <a
-                    href={`/shop/vendor/${product.vendor}/${encodeURIComponent(modelTag)}`}
-                    className="text-blue-600 underline"
-                  >
-                    {modelTag}
-                  </a>
-                ) : (
-                  '—'
-                )}
-              </div>
+
               {yrText && (
-                <div>
-                  <span className="font-bold text-gray-900">שנים: </span>
-                  {yrText}
-                </div>
+                <div><strong>שנים:</strong> {yrText}</div>
               )}
             </div>
           )}
 
-          {firstVariant?.availableForSale && firstVariant?.quantityAvailable > 0 ? (
-            <button
-              onClick={addToCart}
-              disabled={adding || !firstVariant}
-              className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition disabled:opacity-50"
-            >
-              {adding ? 'מוסיף...' : 'הוסף לעגלה'}
-            </button>
+          {/* 3. כאן השינוי המרכזי: אם זמין למכירה -> כפתור הוספה לעגלה */}
+          {firstVariant?.availableForSale ? (
+             <button
+             onClick={addToCart}
+             disabled={adding || !firstVariant}
+             className="w-full md:w-auto bg-red-600 text-white px-6 py-3 rounded-md hover:bg-red-700 transition disabled:opacity-50 font-bold flex items-center justify-center gap-2"
+           >
+             {adding ? 'מוסיף...' : 'הוסף לעגלה'}
+           </button>
           ) : (
-            <WhatsAppButton message={whatsappMessage} label="נגמר המלאי – צור קשר" />
+            <WhatsAppButton
+              message={whatsappMessage}
+              label="נגמר המלאי – צור קשר"
+            />
           )}
+
         </div>
       </div>
 
@@ -169,12 +138,9 @@ export default function ProductPage() {
       />
 
       <RelatedArticles
-        tags={[
-          product.vendor,
-          modelTag,
-          modelTag ? modelTag.charAt(0).toUpperCase() + modelTag.slice(1) : null,
-        ].filter(Boolean)}
+        tags={[product.vendor, modelTag].filter(Boolean)}
       />
+
     </ShopLayoutInternal>
   );
 }
