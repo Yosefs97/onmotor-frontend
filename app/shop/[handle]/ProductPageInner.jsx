@@ -1,7 +1,7 @@
 // /app/shop/[handle]/ProductPageInner.jsx
 'use client';
 
-import { useState } from 'react'; // 1. הוספנו את זה
+import { useState } from 'react';
 import ShopLayoutInternal from '@/components/ShopLayoutInternal';
 import ProductGrid from '@/components/ProductGrid';
 import ProductGallery from '@/components/ProductGallery';
@@ -39,7 +39,7 @@ export default function ProductPageInner({ type, product, items }) {
   const yr = getProductYearRange(product);
   const yrText = formatYearRange(yr);
 
-  // 2. פונקציית ההוספה לעגלה
+  // פונקציית ההוספה לעגלה
   const addToCart = async () => {
     if (!firstVariant) return;
     setAdding(true);
@@ -56,7 +56,7 @@ export default function ProductPageInner({ type, product, items }) {
       const json = await res.json();
       
       if (json.cart) {
-        // אירוע שמעדכן את העגלה באתר (פותח דרואר או מעדכן מספר)
+        // אירוע שמעדכן את העגלה באתר
         window.dispatchEvent(new Event('cartUpdated')); 
       } else {
         alert('שגיאה בהוספת המוצר לעגלה');
@@ -75,6 +75,10 @@ export default function ProductPageInner({ type, product, items }) {
     `דגם: ${modelTag || firstVariant?.title}\n` +
     `מק״ט: ${firstVariant?.sku || 'N/A'}\n` +
     (yrText ? `שנים: ${yrText}` : '');
+
+  // תנאי לוגי: האם להציג כפתור הוספה לעגלה?
+  // רק אם זמין למכירה וגם הכמות גדולה מ-0
+  const showAddToCart = firstVariant?.availableForSale && firstVariant?.quantityAvailable > 0;
 
   return (
     <ShopLayoutInternal product={product}>
@@ -111,8 +115,8 @@ export default function ProductPageInner({ type, product, items }) {
             </div>
           )}
 
-          {/* 3. כאן השינוי המרכזי: אם זמין למכירה -> כפתור הוספה לעגלה */}
-          {firstVariant?.availableForSale ? (
+          {/* לוגיקה מעודכנת לכפתורים */}
+          {showAddToCart ? (
              <button
              onClick={addToCart}
              disabled={adding || !firstVariant}
@@ -123,7 +127,8 @@ export default function ProductPageInner({ type, product, items }) {
           ) : (
             <WhatsAppButton
               message={whatsappMessage}
-              label="נגמר המלאי – צור קשר"
+              // אם המלאי 0 אבל המוצר עדיין "AvailableForSale", נציג בירור מלאי. אחרת - נגמר המלאי.
+              label={firstVariant?.availableForSale ? "הזמנה / בירור מלאי" : "נגמר המלאי – צור קשר"}
             />
           )}
 
