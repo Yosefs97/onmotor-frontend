@@ -53,6 +53,10 @@ export const metadata = {
       "חדשות אופנועים, סקירות דגמים לקהילת הרוכבים של ישראל.",
     images: ["https://www.onmotormedia.com/full_Logo.jpg"],
   },
+  // 👇👇👇 הוסף את החלק הזה כאן 👇👇👇
+  other: {
+    'fb:pages': '1702134291174147', // ⚠️ שים כאן את ה-ID המספרי האמיתי של העמוד שלך
+  },
 };
 
 // --- פונקציה לשליפת טיקר ---
