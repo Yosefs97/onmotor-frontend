@@ -83,7 +83,9 @@ async function getSimilarArticles(currentSlugOrHref, category) {
 
 export async function generateMetadata({ params }) {
   try {
-    const decodedSlug = decodeURIComponent(params.slug);
+    // ✅ תיקון ל-Next.js 15: חייבים לעשות await ל-params
+    const resolvedParams = await params;
+    const decodedSlug = decodeURIComponent(resolvedParams.slug);
 
     // ✅ חיפוש כפול: או href שווה לערך, או slug שווה לערך
     const res = await fetch(
@@ -108,13 +110,13 @@ export async function generateMetadata({ params }) {
     return {
       title: `${title} | OnMotor Media`,
       description,
-      alternates: { canonical: `${SITE_URL}/articles/${params.slug}` },
+      alternates: { canonical: `${SITE_URL}/articles/${resolvedParams.slug}` },
       openGraph: {
         title,
         description,
         type: "article",
         locale: "he_IL",
-        url: `${SITE_URL}/articles/${params.slug}`,
+        url: `${SITE_URL}/articles/${resolvedParams.slug}`,
         siteName: "OnMotor Media",
         images: [{ url: imageUrl, width: 1200, height: 630, alt: title }],
       },
@@ -132,10 +134,12 @@ export async function generateMetadata({ params }) {
 }
 
 // ===================================================================
-//                       ArticlePage Component
+//                        ArticlePage Component
 // ===================================================================
 export default async function ArticlePage({ params }) {
-  const decodedSlug = decodeURIComponent(params.slug);
+  // ✅ תיקון ל-Next.js 15: חייבים לעשות await ל-params
+  const resolvedParams = await params;
+  const decodedSlug = decodeURIComponent(resolvedParams.slug);
 
   // ✅ חיפוש חכם: תומך גם בלינקים ישנים (slug) וגם בחדשים (href)
   const res = await fetch(
@@ -209,7 +213,7 @@ export default async function ArticlePage({ params }) {
     content: data.content || "",
     tableData: data.tableData || {},
     // כאן אנחנו יוצרים את הלינק הפנימי עם העברית אם אפשר
-    href: `/articles/${data.href || params.slug}`,
+    href: `/articles/${data.href || resolvedParams.slug}`,
     category: data.category || "general",
     subcategory: Array.isArray(data.subcategory)
       ? data.subcategory[0]
@@ -221,7 +225,7 @@ export default async function ArticlePage({ params }) {
       : [],
     headline: data.headline || data.title,
     subdescription: data.subdescription || "",
-    slug: params.slug,
+    slug: resolvedParams.slug, // עדכון לשימוש ב-resolvedParams
     gallery,
     externalImageUrls,
     externalMediaUrl,
@@ -287,7 +291,7 @@ export default async function ArticlePage({ params }) {
       if (typeof block === "string") {
         const cleanText = fixRelativeImages(block.trim());
         const hasHTMLTags = /<\/?[a-z][\s\S]*>/i.test(cleanText);
-  
+   
         if (hasHTMLTags) {
           return (
             <div
@@ -299,11 +303,11 @@ export default async function ArticlePage({ params }) {
             />
           );
         }
-  
+   
         const urlMatch = cleanText.match(/https?:\/\/[^\s]+/);
         if (urlMatch) {
           let url = urlMatch[0].trim();
-          
+           
           if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
             return (
               <InlineImage
@@ -314,7 +318,7 @@ export default async function ArticlePage({ params }) {
               />
             );
           }
-  
+   
           if (
             /(youtube\.com|youtu\.be|facebook\.com|instagram\.com|tiktok\.com|x\.com|twitter\.com)/i.test(
               url
@@ -322,7 +326,7 @@ export default async function ArticlePage({ params }) {
           ) {
             return <EmbedContent key={i} url={url} />;
           }
-  
+   
           return (
             <p key={i} className="article-text text-blue-600 underline">
               <a href={url} target="_blank" rel="noopener noreferrer">
@@ -331,7 +335,7 @@ export default async function ArticlePage({ params }) {
             </p>
           );
         }
-  
+   
         return (
           <p
             key={i}
@@ -342,15 +346,15 @@ export default async function ArticlePage({ params }) {
           />
         );
       }
-  
+   
       if (block.type === "paragraph" && block.children) {
         let html = toHtmlFromStrapiChildren(block.children);
         html = fixRelativeImages(html);
-  
+   
         const urlMatch = html.match(/https?:\/\/[^\s"']+/);
         if (urlMatch) {
           let url = urlMatch[0];
-          
+           
           if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
             return (
               <InlineImage
@@ -361,7 +365,7 @@ export default async function ArticlePage({ params }) {
               />
             );
           }
-  
+   
           if (
             /(youtube\.com|youtu\.be|facebook\.com|instagram\.com|tiktok\.com|x\.com|twitter\.com)/i.test(
               url
@@ -370,7 +374,7 @@ export default async function ArticlePage({ params }) {
             return <EmbedContent key={i} url={url} />;
           }
         }
-  
+   
         return (
           <p
             key={i}
@@ -381,7 +385,7 @@ export default async function ArticlePage({ params }) {
           />
         );
       }
-  
+   
       if (block.type === "list") {
         const isOrdered = block.format === "ordered";
         const Tag = isOrdered ? "ol" : "ul";
@@ -407,7 +411,7 @@ export default async function ArticlePage({ params }) {
           </Tag>
         );
       }
-  
+   
       if (block.type === "heading") {
         const level = block.level || 2;
         const Tag = `h${Math.min(level, 3)}`;
@@ -420,7 +424,7 @@ export default async function ArticlePage({ params }) {
           />
         );
       }
-  
+   
       if (block.type === "image") {
         const imageData =
           block.image?.data?.attributes || block.image?.attributes || block.image;
@@ -432,7 +436,7 @@ export default async function ArticlePage({ params }) {
           <InlineImage key={i} src={src} alt={alt} caption={caption} />
         );
       }
-  
+   
       return null;
   };
 
@@ -467,7 +471,7 @@ export default async function ArticlePage({ params }) {
           {article.description && (
             <p className="font-bold text-2xl text-gray-600">{article.description}</p>
           )}
-          
+           
           <div className="article-content">
             {paragraphs.map(renderParagraph)}
           </div>
@@ -491,11 +495,11 @@ export default async function ArticlePage({ params }) {
           </div>
 
           <Tags tags={article.tags} />
-          
+           
           <div className="similar-articles-section">
             <SimilarArticles articles={similarArticlesData} />
           </div>
-          
+           
         </div>
       </PageContainer>
       <ScrollToTableButton />
