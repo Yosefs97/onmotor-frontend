@@ -10,7 +10,10 @@ const labelMap = {
 };
 
 export default async function ReviewsSubcategoryPage({ params }) {
-  const subcategory = params.subcategory;
+  // 👇 השינוי: חייבים לעשות await ל-params בגרסה 15
+  const resolvedParams = await params;
+  const subcategory = resolvedParams.subcategory;
+  
   const subcategoryLabel = labelMap[subcategory] || subcategory;
 
   return (
