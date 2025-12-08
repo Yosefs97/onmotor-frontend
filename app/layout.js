@@ -53,10 +53,10 @@ export const metadata = {
       "חדשות אופנועים, סקירות דגמים לקהילת הרוכבים של ישראל.",
     images: ["https://www.onmotormedia.com/full_Logo.jpg"],
   },
-  // 👇👇👇 הוסף את החלק הזה כאן 👇👇👇
-  other: {
-    'fb:pages': '1671844356419083', // ⚠️ אל תשכח: כאן עדיין צריך את ה-ID של העמוד העסקי (לא האפליקציה)
-    'fb:app_id': '1702134291174147', // ✅ כאן נכנס ה-App ID שמצאת עכשיו
+  
+  // ✅ תיקון 1: שימוש באובייקט המובנה ל-App ID
+  facebook: {
+    appId: '1702134291174147',
   },
 };
 
@@ -64,14 +64,12 @@ export const metadata = {
 async function getTickerHeadlines() {
   const API_URL = process.env.STRAPI_API_URL;
   try {
-    // ✅ populate=* כדי להביא גם את ה-href
     const url = `${API_URL}/api/articles?filters[$or][0][tags_txt][$contains]=חדשנות&filters[$or][1][tags_txt][$contains]=2025&filters[$or][2][tags_txt][$contains]=חוק וסדר&sort=publishedAt:desc&populate=*`;
     const res = await fetch(url, { next: { revalidate: 300 } });
     const data = await res.json();
     if (data?.data?.length > 0) {
       return data.data.map((article) => {
         const attrs = article.attributes || article;
-        // ✅ תיקון: שימוש ב-href אם קיים
         const correctSlug = attrs.href || attrs.slug;
         return {
           text: attrs.headline || attrs.title || "כתבה ללא כותרת",
@@ -139,7 +137,6 @@ async function getSidebarData() {
       }
     }
 
-    // ✅ תיקון: שימוש ב-href אם קיים
     const correctSlug = a.href || a.slug;
 
     return {
@@ -179,6 +176,9 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="he" dir="rtl" className={heebo.className}>
       <head>
+        {/* ✅ תיקון 2: הוספה ידנית של fb:pages כדי לקבל property במקום name */}
+        <meta property="fb:pages" content="1671844356419083" />
+        
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
