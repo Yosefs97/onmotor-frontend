@@ -1,6 +1,5 @@
 //app\blog\[subcategory]\page.jsx
-export const revalidate = 180; // ⬅️ ISR במקום Dynamic
-
+export const revalidate = 180;
 import PageContainer from '@/components/PageContainer';
 import CategoryPage from '@/components/CategoryPage';
 
@@ -16,7 +15,10 @@ const labelMap = {
 };
 
 export default async function BlogSubcategoryPage({ params }) {
-  const subcategory = params.subcategory;
+  // 👇 השינוי: מחכים ל-params
+  const resolvedParams = await params;
+  const subcategory = resolvedParams.subcategory;
+
   const subcategoryLabel = labelMap[subcategory] || subcategory;
 
   return (
