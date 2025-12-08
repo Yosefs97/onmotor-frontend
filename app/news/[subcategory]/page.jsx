@@ -1,8 +1,7 @@
 ///app\news\[subcategory]\page.jsx
-export const revalidate = 180; // ⬅️ ISR במקום force-dynamic
+export const revalidate = 180; 
 import PageContainer from '@/components/PageContainer';
 import CategoryPage from '@/components/CategoryPage';
-
 
 const labelMap = {
   local: 'חדשות מקומיות',
@@ -11,7 +10,10 @@ const labelMap = {
 };
 
 export default async function NewsSubcategoryPage({ params }) {
-  const subcategory = params.subcategory;
+  // 👇 השינוי: מחכים ל-params
+  const resolvedParams = await params;
+  const subcategory = resolvedParams.subcategory;
+  
   const subcategoryLabel = labelMap[subcategory] || subcategory;
 
   return (
