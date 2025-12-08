@@ -54,10 +54,7 @@ export const metadata = {
     images: ["https://www.onmotormedia.com/full_Logo.jpg"],
   },
   
-  // ✅ תיקון 1: שימוש באובייקט המובנה ל-App ID
-  facebook: {
-    appId: '1702134291174147',
-  },
+  // ❌ הוסר מכאן ה-facebook כדי למנוע התנגשויות. הוספנו אותו ידנית למטה ב-Head.
 };
 
 // --- פונקציה לשליפת טיקר ---
@@ -176,8 +173,11 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="he" dir="rtl" className={heebo.className}>
       <head>
-        {/* ✅ תיקון 2: הוספה ידנית של fb:pages כדי לקבל property במקום name */}
+        {/* ✅ מזהה דף (Page ID) - ידני */}
         <meta property="fb:pages" content="1671844356419083" />
+
+        {/* ✅ מזהה אפליקציה (App ID) - ידני */}
+        <meta property="fb:app_id" content="1702134291174147" />
         
         <script
           type="application/ld+json"
