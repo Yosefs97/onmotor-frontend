@@ -2,7 +2,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import useIsMobile from '@/hooks/useIsMobile';
-import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { FaChevronDown, FaChevronUp, FaWhatsapp } from 'react-icons/fa'; // הוספתי אייקון וואטסאפ
 import PrivacyPolicy from '@/components/PrivacyPolicy';
 
 export default function NewsletterBox({ mode = 'inline' }) {
@@ -14,6 +14,9 @@ export default function NewsletterBox({ mode = 'inline' }) {
   const [isOpen, setIsOpen] = useState(true);
   const [showTerms, setShowTerms] = useState(false);
 
+  // ✅ הקישור לערוץ שלך
+  const CHANNEL_LINK = "https://whatsapp.com/channel/0029Vb6Oh5xL2ATxMU7Xbz2M";
+
   useEffect(() => {
     setHydrated(true);
   }, []);
@@ -23,9 +26,9 @@ export default function NewsletterBox({ mode = 'inline' }) {
       <div dir="rtl" className="text-center py-0">
         <button
           onClick={() => setIsOpen(true)}
-          className="text-sm bg-white text-black rounded shadow hover:bg-gray-300 transition"
+          className="text-sm bg-white text-black rounded shadow hover:bg-gray-300 transition px-3 py-1 flex items-center justify-center gap-2 mx-auto"
         >
-          הרשמה לניוזלטר <FaChevronDown className="inline" />
+          הרשמה לניוזלטר <FaChevronDown />
         </button>
       </div>
     );
@@ -36,7 +39,7 @@ export default function NewsletterBox({ mode = 'inline' }) {
       {isMobile && mode === 'side' && (
         <button
           onClick={() => setIsOpen(false)}
-          className="text-sm bg-white text-black px-3 py-3 shadow hover:bg-gray-200 transition"
+          className="text-sm bg-white text-black px-3 py-3 shadow hover:bg-gray-200 transition mb-2 rounded"
         >
           סגור ניוזלטר <FaChevronUp className="inline" />
         </button>
@@ -46,7 +49,7 @@ export default function NewsletterBox({ mode = 'inline' }) {
         className={`transition-all duration-500 ease-in-out overflow-hidden mt-2 border border-red-400
           ${mode === 'inline' ? 'w-full max-w-full bg-white text-black' : ''}
           ${mode === 'modal' ? '' : mode === 'side' ? 'fixed top-0 left-0 bg-white z-50 w-full' : ''}
-          border border-red-500 rounded-lg p-4 text-sm shadow-md h-full flex items-center justify-center`}
+          border border-red-500 rounded-lg p-4 text-sm shadow-md h-full flex flex-col items-center justify-center`}
       >
         <form className="w-full mb-0">
           <label className="block mb-1 text-lg font-bold text-red-600">הרשמה לניוזלטר</label>
@@ -55,7 +58,7 @@ export default function NewsletterBox({ mode = 'inline' }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="onmotormedia@gmail.com"
-            className="w-full px-1 py-1 border border-gray-300 rounded text-right text-sm"
+            className="w-full px-2 py-1 border border-gray-300 rounded text-right text-sm"
           />
 
           <div className={`flex items-center mt-2 ${isMobile ? 'justify-end' : ''}`}>
@@ -78,7 +81,7 @@ export default function NewsletterBox({ mode = 'inline' }) {
             </label>
           </div>
 
-          {/* ✅ מדיניות פרטיות נפתחת מתחת */}
+          {/* מדיניות פרטיות נפתחת */}
           {showTerms && (
             <PrivacyPolicy
               onClose={() => setShowTerms(false)}
@@ -89,7 +92,7 @@ export default function NewsletterBox({ mode = 'inline' }) {
             />
           )}
 
-          {/* כפתור וואטסאפ */}
+          {/* --- כפתור 1: הרשמה עם מייל --- */}
           <a
             href={`https://wa.me/972522304604?text=הרשמה לניוזלטר: ${encodeURIComponent(email)}`}
             target="_blank"
@@ -103,12 +106,33 @@ export default function NewsletterBox({ mode = 'inline' }) {
                 setTimeout(() => setSuccess(false), 3000);
               }
             }}
-            className="block mt-2 bg-[#25D366] text-white px-3 py-1 rounded hover:bg-green-600 text-sm text-center"
+            className="flex items-center justify-center gap-2 mt-3 bg-[#25D366] text-white px-3 py-2 rounded hover:bg-green-600 text-sm w-full font-bold shadow-sm"
           >
-            הרשמה בוואטסאפ
+            <FaWhatsapp size={18} />
+            הרשמה במייל (אישי)
           </a>
+          
+          {success && <p className="text-green-600 mt-1 text-xs font-bold">הבקשה נשלחה לחלון הצ'אט!</p>}
 
-          {success && <p className="text-green-600 mt-1 text-xs">ההרשמה הצליחה!</p>}
+          {/* --- קו מפריד --- */}
+          <div className="flex items-center my-3 w-full">
+            <div className="flex-grow border-t border-gray-300"></div>
+            <span className="flex-shrink-0 mx-2 text-gray-400 text-xs">או</span>
+            <div className="flex-grow border-t border-gray-300"></div>
+          </div>
+
+          {/* --- כפתור 2: ערוץ העדכונים --- */}
+          <a
+            href={CHANNEL_LINK}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 bg-gray-800 text-white px-3 py-2 rounded hover:bg-gray-900 text-sm w-full font-bold shadow-sm"
+          >
+            <FaWhatsapp size={18} />
+            הצטרפות לערוץ העדכונים
+          </a>
+          <p className="text-[11px] text-gray-500 mt-1">עדכונים שוטפים בוואטסאפ ללא הרשמה</p>
+
         </form>
       </div>
     </div>
