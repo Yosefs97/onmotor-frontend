@@ -123,7 +123,7 @@ export default function NewsletterBox({ mode = 'inline' }) {
 
           {/* --- כפתור 2: ערוץ העדכונים --- */}
           <a
-            href={CHANNEL_LINK}
+            href={'https://whatsapp.com/channel/0029Vb6Oh5xL2ATxMU7Xbz2M'}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 bg-gray-800 text-white px-3 py-2 rounded hover:bg-gray-900 text-sm w-full font-bold shadow-sm"
