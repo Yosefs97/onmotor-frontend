@@ -1,4 +1,3 @@
-// /app/shop/[handle]/page.jsx
 import ProductPageInner from './ProductPageInner';
 import { fetchProduct } from '@/lib/shop/fetchProduct';
 import { fetchSearchResults } from '@/lib/shop/fetchSearch';
@@ -6,11 +5,15 @@ import { fetchSearchResults } from '@/lib/shop/fetchSearch';
 export const revalidate = 600;
 
 export default async function ProductPage({ params, searchParams }) {
-  const handle = params.handle;
+  // 👇👇👇 תיקון קריטי ל-Next.js 15: חובה לעשות await למשתנים האלה
+  const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
 
-  // 🔥 המרה של searchParams לאובייקט רגיל
+  const handle = resolvedParams.handle;
+
+  // 🔥 שימוש ב-resolvedSearchParams במקום searchParams הישן
   const filters = Object.fromEntries(
-    Object.entries(searchParams || {}).map(([k, v]) => [k, String(v)])
+    Object.entries(resolvedSearchParams || {}).map(([k, v]) => [k, String(v)])
   );
 
   const isSearch = Object.keys(filters).length > 0;
