@@ -9,67 +9,63 @@ import ScrollSearchBar from './ScrollSearchBar';
 export default function ManufacturerGrid({ manufacturers }) {
   const containerRef = useRef(null);
   const animationRef = useRef(null);
-  const [hasScrolled, setHasScrolled] = useState(false);
+  // משתמשים ב-Ref כדי לעקוב אחרי הסטטוס בלי לגרום לרינדור מחדש בתוך הלולאה
+  const isUserInteracting = useRef(false);
 
-  // 🎬 אנימציית "רמז גלילה" משופרת
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
-    // פונקציית ביטול כדי לא להשאיר זנבות אם הקומפוננטה יוצאת
-    let animationFrameId;
+    let start = null;
     let timeoutId;
 
-    const startAnimation = () => {
-      let start = null;
-      // חישוב דינמי: חצי מרוחב הקונטיינר (או 250px, הגדול מביניהם)
-      const screenWidth = el.clientWidth;
-      const maxOffset = Math.max(screenWidth * 0.6, 200); 
-      const duration = 2000; // הארכנו ל-2 שניות לתנועה רכה יותר
+    const stopAnimation = () => {
+      isUserInteracting.current = true;
+      if (animationRef.current) cancelAnimationFrame(animationRef.current);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
 
-      const animate = (timestamp) => {
-        if (!start) start = timestamp;
-        const progress = timestamp - start;
-        
-        // שימוש בפונקציית Easing (Ease In Out) לתנועה טבעית יותר מסתם סינוס
-        // אבל נשמור על סינוס כי הוא פשוט ועושה את העבודה (0 -> 1 -> 0)
-        const ease = Math.sin((progress / duration) * Math.PI); 
-        
-        el.scrollLeft = ease * maxOffset;
+    const animate = (timestamp) => {
+      if (isUserInteracting.current) return; // עצירה אם המשתמש נגע
 
-        if (!hasScrolled && progress < duration) {
-          animationFrameId = requestAnimationFrame(animate);
-        } else {
-            // בסיום האנימציה, לוודא שחזרנו ל-0 נקי
-            if (!hasScrolled) el.scrollLeft = 0;
+      if (!start) start = timestamp;
+      const duration = 2500; // 2.5 שניות לכל התנועה (הלוך חזור)
+      const progress = timestamp - start;
+
+      // חישוב התקדמות (0 עד 1 וחזרה ל-0)
+      // Math.PI מבטיח חצי עיגול של סינוס (עולה ויורד)
+      const ease = Math.sin((Math.min(progress / duration, 1)) * Math.PI);
+      
+      // המרחק: 60% מהמסך או מינימום 200 פיקסלים
+      const amountToScroll = Math.max(el.clientWidth * 0.6, 200);
+      
+      el.scrollLeft = ease * amountToScroll;
+
+      if (progress < duration) {
+        animationRef.current = requestAnimationFrame(animate);
+      } else {
+        // וידוא בסיום שהחזרנו ל-0
+        el.scrollLeft = 0;
+      }
+    };
+
+    // מתחילים את האנימציה בדיליי קצר
+    timeoutId = setTimeout(() => {
+        if(!isUserInteracting.current) {
+            animationRef.current = requestAnimationFrame(animate);
         }
-      };
+    }, 1000);
 
-      animationFrameId = requestAnimationFrame(animate);
-    };
-
-    const handleUserScroll = () => {
-      // אם המשתמש נגע - נעצור הכל
-      setHasScrolled(true);
-      cancelAnimationFrame(animationFrameId);
-      clearTimeout(timeoutId);
-    };
-
-    el.addEventListener('scroll', handleUserScroll, { once: true });
-    el.addEventListener('touchstart', handleUserScroll, { once: true }); // חשוב למובייל
-    el.addEventListener('wheel', handleUserScroll, { once: true });
-
-    // מתחילים רק אחרי שנייה, כדי לתת לדף להיטען ולמשתמש להבין מה קורה
-    timeoutId = setTimeout(startAnimation, 1000);
+    // מאזינים רק לאינטראקציה ישירה של משתמש (ולא ל-scroll הכללי)
+    const events = ['touchstart', 'wheel', 'mousedown', 'keydown'];
+    events.forEach(evt => el.addEventListener(evt, stopAnimation, { once: true }));
 
     return () => {
-      el.removeEventListener('scroll', handleUserScroll);
-      el.removeEventListener('touchstart', handleUserScroll);
-      el.removeEventListener('wheel', handleUserScroll);
-      cancelAnimationFrame(animationFrameId);
+      events.forEach(evt => el.removeEventListener(evt, stopAnimation));
+      cancelAnimationFrame(animationRef.current);
       clearTimeout(timeoutId);
     };
-  }, [hasScrolled]);
+  }, []); // רוץ רק פעם אחת בטעינה
 
   if (!manufacturers.length)
     return <p className="text-center py-8">לא נמצאו יצרנים</p>;
@@ -80,7 +76,8 @@ export default function ManufacturerGrid({ manufacturers }) {
 
       <div
         ref={containerRef}
-        className="scroll-container flex overflow-x-scroll space-x-1 pb-4 px-2 snap-x snap-mandatory scroll-smooth"
+        // הסרתי את scroll-smooth כדי למנוע התנגשות עם ה-JS
+        className="scroll-container flex overflow-x-scroll space-x-1 pb-4 px-2 snap-x snap-mandatory"
       >
         {manufacturers.map((m) => (
           <Link
@@ -88,7 +85,8 @@ export default function ManufacturerGrid({ manufacturers }) {
             href={`/shop/vendor/${m.handle}`}
             prefetch={false}
             data-name={m.title}
-            className="min-w-[160px] flex-shrink-0 border rounded-lg p-4 shadow hover:shadow-lg transition snap-start bg-white"
+            // הוספתי select-none כדי למנוע סימון טקסט בזמן גרירה
+            className="min-w-[160px] flex-shrink-0 border rounded-lg p-4 shadow hover:shadow-lg transition snap-start bg-white select-none"
           >
             {m.image?.url && (
               <div className="relative w-full h-24 mb-2">
@@ -97,6 +95,8 @@ export default function ManufacturerGrid({ manufacturers }) {
                   alt={m.image.altText || m.title}
                   fill
                   style={{ objectFit: 'contain' }}
+                  // מונע גרירה של התמונה עצמה במקום הגלילה
+                  draggable={false} 
                 />
               </div>
             )}
