@@ -44,7 +44,7 @@ export default function AutoShopBreadcrumbs({ product = null, filters = null }) 
           setTitle(`דגמים ${filters.vendor}`);
         }
       } else {
-        setTitle('מותגים');
+        setTitle('דגמים');
       }
 
       if (filters.category) {
@@ -61,7 +61,7 @@ export default function AutoShopBreadcrumbs({ product = null, filters = null }) 
 
     // דף חנות ראשי
     if (segments[0] === 'shop' && segments.length === 1) {
-      setTitle('מותגים'); // 👈 במקום "חנות"
+      setTitle('דגמים'); // 👈 במקום "חנות"
       setParts(crumbs);
       return;
     }
