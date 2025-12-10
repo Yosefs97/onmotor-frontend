@@ -11,39 +11,63 @@ export default function ManufacturerGrid({ manufacturers }) {
   const animationRef = useRef(null);
   const [hasScrolled, setHasScrolled] = useState(false);
 
-  // 🎬 אנימציית "רמז גלילה"
+  // 🎬 אנימציית "רמז גלילה" משופרת
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
-    let start = null;
-    const maxOffset = 60;
-    const duration = 1000;
+    // פונקציית ביטול כדי לא להשאיר זנבות אם הקומפוננטה יוצאת
+    let animationFrameId;
+    let timeoutId;
 
-    const animate = (timestamp) => {
-      if (!start) start = timestamp;
-      const progress = timestamp - start;
-      const offset = Math.sin((progress / duration) * Math.PI) * maxOffset;
-      el.scrollLeft = offset;
+    const startAnimation = () => {
+      let start = null;
+      // חישוב דינמי: חצי מרוחב הקונטיינר (או 250px, הגדול מביניהם)
+      const screenWidth = el.clientWidth;
+      const maxOffset = Math.max(screenWidth * 0.6, 200); 
+      const duration = 2000; // הארכנו ל-2 שניות לתנועה רכה יותר
 
-      if (!hasScrolled && progress < duration * 2) {
-        animationRef.current = requestAnimationFrame(animate);
-      } else {
-        cancelAnimationFrame(animationRef.current);
-      }
+      const animate = (timestamp) => {
+        if (!start) start = timestamp;
+        const progress = timestamp - start;
+        
+        // שימוש בפונקציית Easing (Ease In Out) לתנועה טבעית יותר מסתם סינוס
+        // אבל נשמור על סינוס כי הוא פשוט ועושה את העבודה (0 -> 1 -> 0)
+        const ease = Math.sin((progress / duration) * Math.PI); 
+        
+        el.scrollLeft = ease * maxOffset;
+
+        if (!hasScrolled && progress < duration) {
+          animationFrameId = requestAnimationFrame(animate);
+        } else {
+            // בסיום האנימציה, לוודא שחזרנו ל-0 נקי
+            if (!hasScrolled) el.scrollLeft = 0;
+        }
+      };
+
+      animationFrameId = requestAnimationFrame(animate);
     };
 
     const handleUserScroll = () => {
+      // אם המשתמש נגע - נעצור הכל
       setHasScrolled(true);
-      cancelAnimationFrame(animationRef.current);
+      cancelAnimationFrame(animationFrameId);
+      clearTimeout(timeoutId);
     };
 
     el.addEventListener('scroll', handleUserScroll, { once: true });
-    animationRef.current = requestAnimationFrame(animate);
+    el.addEventListener('touchstart', handleUserScroll, { once: true }); // חשוב למובייל
+    el.addEventListener('wheel', handleUserScroll, { once: true });
+
+    // מתחילים רק אחרי שנייה, כדי לתת לדף להיטען ולמשתמש להבין מה קורה
+    timeoutId = setTimeout(startAnimation, 1000);
 
     return () => {
       el.removeEventListener('scroll', handleUserScroll);
-      cancelAnimationFrame(animationRef.current);
+      el.removeEventListener('touchstart', handleUserScroll);
+      el.removeEventListener('wheel', handleUserScroll);
+      cancelAnimationFrame(animationFrameId);
+      clearTimeout(timeoutId);
     };
   }, [hasScrolled]);
 
