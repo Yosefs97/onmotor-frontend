@@ -6,11 +6,14 @@ import ShopLayoutInternal from '@/components/ShopLayoutInternal';
 import Image from 'next/image';
 import Link from 'next/link';
 import ScrollSearchBar from '@/components/ScrollSearchBar';
+import AutoShopBreadcrumbs from '@/components/AutoShopBreadcrumbs'; // 👈 1. הוספת הייבוא
 
 export default function VendorPageInner({ vendor, models }) {
   const containerRef = useRef(null);
   const animationRef = useRef(null);
   const [hasScrolled, setHasScrolled] = useState(false);
+  
+  const decodedVendor = decodeURIComponent(vendor);
 
   // 🎬 אנימציית "רמז גלילה"
   useEffect(() => {
@@ -50,9 +53,15 @@ export default function VendorPageInner({ vendor, models }) {
 
   return (
     <ShopLayoutInternal>
+      
+      {/* 👈 2. מיקום הפירורים: מעבירים יצרן בלבד */}
+      <div className="px-2 md:px-0 mt-2">
+         <AutoShopBreadcrumbs filters={{ vendor: decodedVendor }} />
+      </div>
+
       {/* 🔍 שורת חיפוש */}
       <ScrollSearchBar
-        placeholder={`החלק שמאלה או חפש דגם ${vendor}`}
+        placeholder={`החלק שמאלה או חפש דגם ${decodedVendor}`}
         containerRef={containerRef}
       />
 
