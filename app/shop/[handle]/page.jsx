@@ -1,3 +1,4 @@
+//app\shop\[handle]\page.jsx
 import ProductPageInner from './ProductPageInner';
 import { fetchProduct } from '@/lib/shop/fetchProduct';
 import { fetchSearchResults } from '@/lib/shop/fetchSearch';
