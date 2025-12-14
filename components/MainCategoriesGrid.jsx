@@ -10,7 +10,7 @@ export default function MainCategoriesGrid({ categories = [] }) {
 
   return (
     <section className="py-10 px-4 max-w-7xl mx-auto" dir="rtl">
-      <div className="flex items-center gap-3 mb-8">
+      <div className="flex items-center gap-0.5 mb-8">
         <div className="w-1.5 h-8 bg-red-600 rounded-full" />
         <h2 className="text-3xl font-bold text-gray-900">
           החנות לרוכב
