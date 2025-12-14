@@ -2,6 +2,7 @@
 import ShopLayoutInternal from '@/components/ShopLayoutInternal';
 import ProductGrid from '@/components/ProductGrid';
 import { fetchCollection } from '@/lib/shop/fetchCollection';
+import AutoShopBreadcrumbs from '@/components/AutoShopBreadcrumbs'; // 👈 הייבוא של הרכיב שלך
 import Link from 'next/link';
 
 export const revalidate = 600;
@@ -12,7 +13,7 @@ export default async function CollectionPage({ params, searchParams }) {
   const resolvedSearchParams = await searchParams;
 
   const handle = resolvedParams.handle;
-  const selectedVendor = resolvedSearchParams.vendor; // האם נבחר יצרן?
+  const selectedVendor = resolvedSearchParams.vendor; 
 
   const filters = Object.fromEntries(
     Object.entries(resolvedSearchParams || {}).map(([k, v]) => [k, String(v)])
@@ -29,56 +30,57 @@ export default async function CollectionPage({ params, searchParams }) {
     );
   }
 
-  // 2. יצירת רשימת יצרנים נקייה מתוך המוצרים שנמצאו
-  // Set מבטיח שכל יצרן יופיע רק פעם אחת
+  // 2. יצירת רשימת יצרנים נקייה
   const allVendors = [...new Set(collectionData.products.map(p => p.vendor))].filter(Boolean).sort();
 
-  // 3. סינון המוצרים להצגה (אם נבחר יצרן ספציפי)
+  // 3. סינון המוצרים להצגה
   const displayedProducts = selectedVendor
     ? collectionData.products.filter(p => p.vendor === selectedVendor)
     : collectionData.products;
 
   return (
     <ShopLayoutInternal>
-      <div className="mb-6 px-2">
-        {/* כותרת ראשית */}
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-1.5 h-8 bg-red-600 rounded-full" />
-          <h1 className="text-3xl font-bold text-gray-900">
-            {collectionData.title}
-          </h1>
-        </div>
+      <div className="px-2 md:px-4 mt-4 mb-6">
         
+        {/* 👇 שילוב פירורי הלחם */}
+        <AutoShopBreadcrumbs 
+          collection={{ 
+            title: collectionData.title, 
+            handle: handle 
+          }} 
+        />
+
+        {/* תיאור הקטגוריה (אם קיים) */}
         {collectionData.description && (
-          <div className="text-gray-600 mb-6">{collectionData.description}</div>
+          <div className="text-gray-600 mb-6 mt-2 text-sm md:text-base">
+            {collectionData.description}
+          </div>
         )}
 
-        {/* 🔥 סרגל מותגים - יופיע רק אם יש יותר ממותג אחד בקטגוריה */}
+        {/* סרגל מותגים - רק אם יש מה לסנן */}
         {allVendors.length > 1 && (
-          <div className="mb-8">
-            <h3 className="text-sm font-semibold text-gray-500 mb-3">סנן לפי יצרן:</h3>
+          <div className="mb-8 mt-4">
+            <h3 className="text-sm font-semibold text-gray-500 mb-2">סנן לפי יצרן:</h3>
             <div className="flex flex-wrap gap-2">
               
-              {/* כפתור "הכל" */}
               <Link
                 href={`/shop/collection/${handle}`}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all border ${
+                className={`px-3 py-1 rounded-full text-xs md:text-sm font-medium transition-all border ${
                   !selectedVendor 
-                    ? 'bg-red-600 text-white border-red-600 shadow-md' 
+                    ? 'bg-red-600 text-white border-red-600 shadow-sm' 
                     : 'bg-white text-gray-700 border-gray-200 hover:border-red-600 hover:text-red-600'
                 }`}
               >
                 הכל
               </Link>
 
-              {/* כפתורים לכל יצרן */}
               {allVendors.map(vendor => (
                 <Link
                   key={vendor}
                   href={`/shop/collection/${handle}?vendor=${encodeURIComponent(vendor)}`}
-                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all border ${
+                  className={`px-3 py-1 rounded-full text-xs md:text-sm font-medium transition-all border ${
                     selectedVendor === vendor
-                      ? 'bg-red-600 text-white border-red-600 shadow-md'
+                      ? 'bg-red-600 text-white border-red-600 shadow-sm'
                       : 'bg-white text-gray-700 border-gray-200 hover:border-red-600 hover:text-red-600'
                   }`}
                 >
@@ -90,11 +92,11 @@ export default async function CollectionPage({ params, searchParams }) {
         )}
       </div>
 
-      {/* רכיב הגריד הקיים שלך - ללא שינוי */}
+      {/* הגריד של המוצרים */}
       {displayedProducts.length > 0 ? (
         <ProductGrid products={displayedProducts} />
       ) : (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
+        <div className="text-center py-12 bg-gray-50 rounded-lg mx-2">
           <p className="text-gray-500 text-lg">
             לא נמצאו מוצרים של <span className="font-bold">{selectedVendor}</span> בקטגוריה זו.
           </p>

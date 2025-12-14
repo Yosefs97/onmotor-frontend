@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-export default function AutoShopBreadcrumbs({ product = null, filters = null }) {
+// 👇 הוספתי את prop ה-collection
+export default function AutoShopBreadcrumbs({ product = null, filters = null, collection = null }) {
   const pathname = usePathname();
   const [parts, setParts] = useState([]);
   const [title, setTitle] = useState('');
@@ -13,8 +14,21 @@ export default function AutoShopBreadcrumbs({ product = null, filters = null }) 
   useEffect(() => {
     let crumbs = [{ href: '/shop', label: 'חנות' }];
 
-    // 🟥 מצב 1: מוצר (עמוד מוצר מלא)
+    // 🟥 מצב 1: עמוד אוסף/קטגוריה (החדש!)
+    if (collection) {
+      crumbs.push({ 
+        href: `/shop/collection/${collection.handle}`, 
+        label: collection.title 
+      });
+      setTitle(collection.title);
+      setParts(crumbs);
+      return;
+    }
+
+    // 🟥 מצב 2: מוצר (עמוד מוצר מלא)
     if (product) {
+      // אם המוצר שייך לאוסף ספציפי (למשל קסדות), אפשר להוסיף כאן לוגיקה בעתיד
+      
       if (product.vendor) {
         crumbs.push({ href: `/shop/vendor/${product.vendor}`, label: product.vendor });
       }
@@ -32,7 +46,7 @@ export default function AutoShopBreadcrumbs({ product = null, filters = null }) 
       return;
     }
 
-    // 🟥 מצב 2: חנות עם פילטרים
+    // 🟥 מצב 3: חנות עם פילטרים (חלפים)
     if (filters && (filters.vendor || filters.model || filters.category)) {
       if (filters.vendor) {
         crumbs.push({ href: `/shop/vendor/${filters.vendor}`, label: filters.vendor });
@@ -56,12 +70,24 @@ export default function AutoShopBreadcrumbs({ product = null, filters = null }) 
       return;
     }
 
-    // 🟥 מצב 3: URL רגיל
+    // 🟥 מצב 4: URL רגיל (ניתוח הנתיב)
     const segments = pathname.split('/').filter(Boolean);
 
     // דף חנות ראשי
     if (segments[0] === 'shop' && segments.length === 1) {
-      setTitle('דגמים'); // 👈 במקום "חנות"
+      setTitle('דגמים');
+      setParts(crumbs);
+      return;
+    }
+
+    // 👇 טיפול במקרה שמגיעים בלי Prop (למשל ריענון) לקטגוריה
+    if (segments[0] === 'shop' && segments[1] === 'collection' && segments.length === 3) {
+      // במקרה הזה הכותרת אולי תהיה באנגלית (ה-Handle) אם לא הועבר prop, 
+      // אבל זה גיבוי טוב.
+      const handle = segments[2];
+      crumbs.push({ href: pathname, label: handle }); 
+      // אם יש collection prop הוא ידרוס את זה למעלה, אז זה רק Fallback
+      setTitle(collection?.title || handle); 
       setParts(crumbs);
       return;
     }
@@ -70,7 +96,7 @@ export default function AutoShopBreadcrumbs({ product = null, filters = null }) 
     if (segments[0] === 'shop' && segments[1] === 'vendor' && segments.length === 3) {
       const vendor = decodeURIComponent(segments[2]);
       crumbs.push({ href: `/shop/vendor/${vendor}`, label: vendor });
-      setTitle(`דגמים ${vendor}`); // 👈 במקום "חלקים"
+      setTitle(`דגמים ${vendor}`);
       setParts(crumbs);
       return;
     }
@@ -96,24 +122,35 @@ export default function AutoShopBreadcrumbs({ product = null, filters = null }) 
     }
 
     // fallback
-    setTitle('חנות');
+    // setTitle('חנות'); // אפשר להשאיר ריק אם רוצים
     setParts(crumbs);
-  }, [pathname, product, filters]);
+  }, [pathname, product, filters, collection]); // הוספתי collection ל-dependency array
 
   return (
-    <div className="mb-4 space-y-2">
-      <nav dir="rtl" className="text-l font-bold">
+    <div className="mb-4 space-y-2 px-2 md:px-0">
+      <nav dir="rtl" className="text-sm md:text-base font-bold text-gray-600">
         {parts.map((p, idx) => (
-          <span key={idx}>
-            <Link href={p.href} className="text-red-600 hover:underline" prefetch={false}>
-              {p.label}
-            </Link>
-            {idx < parts.length - 1 && <span className="mx-1 text-xl font-bold text-gray-900">/</span>}
+          <span key={idx} className="inline-flex items-center">
+            {/* הלינק האחרון לא לחיץ (כי אנחנו בו) */}
+            {idx === parts.length - 1 ? (
+              <span className="text-gray-900">{p.label}</span>
+            ) : (
+              <Link href={p.href} className="text-red-600 hover:underline" prefetch={false}>
+                {p.label}
+              </Link>
+            )}
+            
+            {idx < parts.length - 1 && (
+              <span className="mx-2 text-gray-400">/</span>
+            )}
           </span>
         ))}
       </nav>
-      <div className="w-full border-b border-red-600"></div>
-      {title && <h1 className="text-2xl font-bold text-red-600">{title}</h1>}
+      
+      <div className="w-full border-b border-gray-200"></div>
+      
+      {/* כותרת הדף מוצגת רק אם הוגדרה */}
+      {title && <h1 className="text-3xl font-bold text-gray-900 mt-2">{title}</h1>}
     </div>
   );
 }
