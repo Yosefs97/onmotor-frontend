@@ -1,8 +1,9 @@
+// components/ShopLayoutInternal.jsx
 'use client';
 import { Suspense } from 'react';
 import ShopSidebar from '@/components/ShopSidebar';
 import MobileShopFilterBar from '@/components/MobileShopFilterBar';
-import AutoShopBreadcrumbs from '@/components/AutoShopBreadcrumbs';
+// ❌ מחקתי את הייבוא של AutoShopBreadcrumbs מכאן
 import ShopInfoAccordion from '@/components/ShopInfoAccordion';
 import { useSearchParams, usePathname, useRouter } from 'next/navigation';
 import { buildUrlFromFilters } from '@/utils/buildUrlFromFilters';
@@ -11,8 +12,6 @@ function ShopLayoutInternalContent({ children, product = null }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
-
-  const filters = Object.fromEntries(searchParams.entries());
 
   const handleSearch = (newFilters) => {
     const url = buildUrlFromFilters(newFilters, pathname, product);
@@ -26,7 +25,9 @@ function ShopLayoutInternalContent({ children, product = null }) {
       </div>
 
       <div className="md:col-span-3 space-y-6">
-        <AutoShopBreadcrumbs filters={filters} product={product} />
+        
+        {/* ❌ מחקתי מכאן את <AutoShopBreadcrumbs /> */}
+        {/* עכשיו האחריות להציג פירורים היא של הדף עצמו */}
 
         <div className="md:hidden">
           <MobileShopFilterBar onFilterChange={handleSearch} product={product} />
