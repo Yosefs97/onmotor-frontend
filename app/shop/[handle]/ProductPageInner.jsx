@@ -8,16 +8,17 @@ import ProductGallery from '@/components/ProductGallery';
 import RelatedProducts from '@/components/RelatedProducts';
 import RelatedArticles from '@/components/RelatedArticles';
 import WhatsAppButton from '@/components/WhatsAppButton';
+import AutoShopBreadcrumbs from '@/components/AutoShopBreadcrumbs'; // 👈 1. הוספת הייבוא
 import { getProductYearRange, formatYearRange } from '@/lib/productYears';
 
 export default function ProductPageInner({ type, product, items }) {
-  // ניהול מצב לחיצה על כפתור ההוספה
   const [adding, setAdding] = useState(false);
 
   // -------- מצב: חיפוש --------
   if (type === 'search') {
     return (
       <ShopLayoutInternal>
+         {/* אפשר להוסיף גם כאן אם תרצה בעתיד */}
         <ProductGrid products={items} />
       </ShopLayoutInternal>
     );
@@ -31,15 +32,12 @@ export default function ProductPageInner({ type, product, items }) {
   const firstVariant = product.variants?.edges?.[0]?.node;
   const tags = product.tags || [];
 
-  // מודל מהתגים
   const modelTag = tags.find((t) => t.toLowerCase().startsWith('model:'))
     ?.replace('model:', '');
 
-  // טווח שנים
   const yr = getProductYearRange(product);
   const yrText = formatYearRange(yr);
 
-  // פונקציית ההוספה לעגלה
   const addToCart = async () => {
     if (!firstVariant) return;
     setAdding(true);
@@ -56,7 +54,6 @@ export default function ProductPageInner({ type, product, items }) {
       const json = await res.json();
       
       if (json.cart) {
-        // אירוע שמעדכן את העגלה באתר
         window.dispatchEvent(new Event('cartUpdated')); 
       } else {
         alert('שגיאה בהוספת המוצר לעגלה');
@@ -76,12 +73,16 @@ export default function ProductPageInner({ type, product, items }) {
     `מק״ט: ${firstVariant?.sku || 'N/A'}\n` +
     (yrText ? `שנים: ${yrText}` : '');
 
-  // תנאי לוגי: האם להציג כפתור הוספה לעגלה?
-  // רק אם זמין למכירה וגם הכמות גדולה מ-0
   const showAddToCart = firstVariant?.availableForSale && firstVariant?.quantityAvailable > 0;
 
   return (
     <ShopLayoutInternal product={product}>
+      
+      {/* 👈 2. מיקום הפירורים: מעבירים את אובייקט המוצר */}
+      <div className="px-2 md:px-0 mt-2 mb-4">
+        <AutoShopBreadcrumbs product={product} />
+      </div>
+
       <div className="grid md:grid-cols-2 gap-6">
 
         <ProductGallery
@@ -115,7 +116,6 @@ export default function ProductPageInner({ type, product, items }) {
             </div>
           )}
 
-          {/* לוגיקה מעודכנת לכפתורים */}
           {showAddToCart ? (
              <button
              onClick={addToCart}
@@ -127,7 +127,6 @@ export default function ProductPageInner({ type, product, items }) {
           ) : (
             <WhatsAppButton
               message={whatsappMessage}
-              // אם המלאי 0 אבל המוצר עדיין "AvailableForSale", נציג בירור מלאי. אחרת - נגמר המלאי.
               label={firstVariant?.availableForSale ? "הזמנה / בירור מלאי" : "נגמר המלאי – צור קשר"}
             />
           )}

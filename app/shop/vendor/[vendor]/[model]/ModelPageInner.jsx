@@ -5,12 +5,12 @@ import { useRef, useState, useEffect } from 'react';
 import ShopLayoutInternal from '@/components/ShopLayoutInternal';
 import ProductGrid from '@/components/ProductGrid';
 import ScrollSearchBar from '@/components/ScrollSearchBar';
+import AutoShopBreadcrumbs from '@/components/AutoShopBreadcrumbs'; // 👈 1. הוספת הייבוא
 
 export default function ModelPageInner({ items, vendor, model }) {
   const [visibleCount, setVisibleCount] = useState(12);
   const containerRef = useRef(null);
 
-  // התאמה מובייל
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setVisibleCount(window.innerWidth < 768 ? 6 : 12);
@@ -24,11 +24,21 @@ export default function ModelPageInner({ items, vendor, model }) {
     }
   };
 
+  // מפענחים את ה-URL params כדי שיוצגו יפה בעברית/אנגלית
+  const decodedVendor = decodeURIComponent(vendor);
+  const decodedModel = decodeURIComponent(model);
+
   return (
     <ShopLayoutInternal>
+      
+      {/* 👈 2. מיקום הפירורים: מעבירים יצרן ודגם */}
+      <div className="px-2 md:px-0 mt-2">
+         <AutoShopBreadcrumbs filters={{ vendor: decodedVendor, model: decodedModel }} />
+      </div>
+
       {/* חיפוש */}
       <ScrollSearchBar
-        placeholder={`חפש חלק בדגם ${vendor} ${model}`}
+        placeholder={`חפש חלק בדגם ${decodedVendor} ${decodedModel}`}
         containerRef={containerRef}
       />
 
