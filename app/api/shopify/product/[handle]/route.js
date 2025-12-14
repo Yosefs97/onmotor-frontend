@@ -1,3 +1,4 @@
+//app\api\shopify\product\[handle]\route.js
 export const runtime = "nodejs";
 
 const domain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
