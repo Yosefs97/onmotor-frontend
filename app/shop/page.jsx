@@ -20,10 +20,10 @@ export default async function ShopPage() {
     <ShopLayoutInternal>
       <div className="border-t border-gray-200 my-1 mx-6" />
       <div className="w-full px-2 md:px-4">
-        <h2 className="text-2xl font-bold mb-4 px-2">איתור חלפים לפי יצרן</h2>
+        <h2 className="text-2xl font-bold mb-4 px-2 text-gray-800">איתור חלפים לפי יצרן</h2>
         <ManufacturerGrid manufacturers={manufacturers} />
       </div>
-      <div className="w-full mt-6 mb-10 px-2 md:px-0">
+      <div className="w-full mt-1 mb-10 px-2 md:px-0">
         <MainCategoriesGrid categories={categories} />
       </div>
       
