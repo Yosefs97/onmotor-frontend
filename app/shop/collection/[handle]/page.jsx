@@ -2,13 +2,12 @@
 import ShopLayoutInternal from '@/components/ShopLayoutInternal';
 import ProductGrid from '@/components/ProductGrid';
 import { fetchCollection } from '@/lib/shop/fetchCollection';
-import AutoShopBreadcrumbs from '@/components/AutoShopBreadcrumbs'; // 👈 הייבוא של הרכיב שלך
+import AutoShopBreadcrumbs from '@/components/AutoShopBreadcrumbs';
 import Link from 'next/link';
 
 export const revalidate = 600;
 
 export default async function CollectionPage({ params, searchParams }) {
-  // תיקון ל-Next.js 15
   const resolvedParams = await params;
   const resolvedSearchParams = await searchParams;
 
@@ -19,7 +18,6 @@ export default async function CollectionPage({ params, searchParams }) {
     Object.entries(resolvedSearchParams || {}).map(([k, v]) => [k, String(v)])
   );
 
-  // 1. שליפת הנתונים מהשרת
   const collectionData = await fetchCollection({ handle, filters });
 
   if (!collectionData) {
@@ -30,10 +28,7 @@ export default async function CollectionPage({ params, searchParams }) {
     );
   }
 
-  // 2. יצירת רשימת יצרנים נקייה
   const allVendors = [...new Set(collectionData.products.map(p => p.vendor))].filter(Boolean).sort();
-
-  // 3. סינון המוצרים להצגה
   const displayedProducts = selectedVendor
     ? collectionData.products.filter(p => p.vendor === selectedVendor)
     : collectionData.products;
@@ -42,27 +37,26 @@ export default async function CollectionPage({ params, searchParams }) {
     <ShopLayoutInternal>
       <div className="px-2 md:px-4 mt-4 mb-6">
         
-        {/* 👇 שילוב פירורי הלחם */}
+        {/* 👇 הרכיב הזה כבר מציג את הכותרת בעברית (collectionData.title) */}
         <AutoShopBreadcrumbs 
           collection={{ 
-            title: collectionData.title, 
+            title: collectionData.title, // כאן נכנסת הכותרת בעברית ("קסדות")
             handle: handle 
           }} 
         />
+        
+        {/* ❌ מחקתי מכאן את ה-h1 שהיה יוצר כפילות */}
 
-        {/* תיאור הקטגוריה (אם קיים) */}
         {collectionData.description && (
           <div className="text-gray-600 mb-6 mt-2 text-sm md:text-base">
             {collectionData.description}
           </div>
         )}
 
-        {/* סרגל מותגים - רק אם יש מה לסנן */}
         {allVendors.length > 1 && (
           <div className="mb-8 mt-4">
             <h3 className="text-sm font-semibold text-gray-500 mb-2">סנן לפי יצרן:</h3>
             <div className="flex flex-wrap gap-2">
-              
               <Link
                 href={`/shop/collection/${handle}`}
                 className={`px-3 py-1 rounded-full text-xs md:text-sm font-medium transition-all border ${
@@ -73,7 +67,6 @@ export default async function CollectionPage({ params, searchParams }) {
               >
                 הכל
               </Link>
-
               {allVendors.map(vendor => (
                 <Link
                   key={vendor}
@@ -92,7 +85,6 @@ export default async function CollectionPage({ params, searchParams }) {
         )}
       </div>
 
-      {/* הגריד של המוצרים */}
       {displayedProducts.length > 0 ? (
         <ProductGrid products={displayedProducts} />
       ) : (
