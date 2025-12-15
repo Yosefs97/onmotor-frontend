@@ -1,3 +1,328 @@
+אני אשלח לך את הקבצים שציינת שאעדכן ואתה תחזיר אותם מעודכנים בהתאם
+
+// /lib/shop/fetchProduct.js
+export async function fetchProduct(handle) {
+  // אם ה-handle מגיע ריק, נחזיר null מיד
+  if (!handle) return null;
+
+  try {
+    // 🔥 תיקון קריטי: קידוד ה-handle
+    // אם ה-handle הוא בעברית (למשל "קסדה"), הוא חייב להיות מקודד כדי לעבור בכתובת ה-URL
+    const encodedHandle = encodeURIComponent(handle);
+
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_SITE_URL}/api/shopify/product/${encodedHandle}`,
+      { 
+        next: { revalidate: 600 },
+        // כדאי להוסיף כדי למנוע בעיות מטמון מיותרות בתוך ה-fetch עצמו
+        headers: { 'Content-Type': 'application/json' } 
+      }
+    );
+
+    // בדיקה שהשרת החזיר תשובה תקינה (200 OK)
+    if (!res.ok) {
+      console.error(`Failed to fetch product: ${handle}, Status: ${res.status}`);
+      return null;
+    }
+
+    const json = await res.json();
+    return json.item || null;
+
+  } catch (error) {
+    console.error('Error in fetchProduct:', error);
+    return null;
+  }
+}
+
+// /app/shop/[handle]/ProductPageInner.jsx
+'use client';
+
+import { useState } from 'react';
+import ShopLayoutInternal from '@/components/ShopLayoutInternal';
+import ProductGrid from '@/components/ProductGrid';
+import ProductGallery from '@/components/ProductGallery';
+import RelatedProducts from '@/components/RelatedProducts';
+import RelatedArticles from '@/components/RelatedArticles';
+import WhatsAppButton from '@/components/WhatsAppButton';
+import AutoShopBreadcrumbs from '@/components/AutoShopBreadcrumbs'; // 👈 1. הוספת הייבוא
+import { getProductYearRange, formatYearRange } from '@/lib/productYears';
+
+export default function ProductPageInner({ type, product, items }) {
+  const [adding, setAdding] = useState(false);
+
+  // -------- מצב: חיפוש --------
+  if (type === 'search') {
+    return (
+      <ShopLayoutInternal>
+         {/* אפשר להוסיף גם כאן אם תרצה בעתיד */}
+        <ProductGrid products={items} />
+      </ShopLayoutInternal>
+    );
+  }
+
+  // -------- מצב: מוצר יחיד --------
+  if (!product) {
+    return <ShopLayoutInternal><div dir="rtl">מוצר לא נמצא</div></ShopLayoutInternal>;
+  }
+
+  const firstVariant = product.variants?.edges?.[0]?.node;
+  const tags = product.tags || [];
+
+  const modelTag = tags.find((t) => t.toLowerCase().startsWith('model:'))
+    ?.replace('model:', '');
+
+  const yr = getProductYearRange(product);
+  const yrText = formatYearRange(yr);
+
+  const addToCart = async () => {
+    if (!firstVariant) return;
+    setAdding(true);
+    
+    try {
+      const res = await fetch('/api/shopify/cart/add', {
+        method: 'POST',
+        body: JSON.stringify({
+          variantId: firstVariant.id,
+          quantity: 1,
+        }),
+      });
+      
+      const json = await res.json();
+      
+      if (json.cart) {
+        window.dispatchEvent(new Event('cartUpdated')); 
+      } else {
+        alert('שגיאה בהוספת המוצר לעגלה');
+      }
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      alert('אירעה שגיאה, אנא נסה שנית');
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const whatsappMessage =
+    `שלום,\n` +
+    `אני מעוניין בחלק "${product.title}".\n` +
+    `דגם: ${modelTag || firstVariant?.title}\n` +
+    `מק״ט: ${firstVariant?.sku || 'N/A'}\n` +
+    (yrText ? `שנים: ${yrText}` : '');
+
+  const showAddToCart = firstVariant?.availableForSale && firstVariant?.quantityAvailable > 0;
+
+  return (
+    <ShopLayoutInternal product={product}>
+      
+      {/* 👈 2. מיקום הפירורים: מעבירים את אובייקט המוצר */}
+      <div className="px-2 md:px-0 mt-2 mb-4">
+        <AutoShopBreadcrumbs product={product} />
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+
+        <ProductGallery
+          images={product.images?.edges}
+          title={product.title}
+        />
+
+        <div className="space-y-3 text-gray-900">
+
+          <h1 className="text-2xl font-bold">{product.title}</h1>
+
+          <div
+            className="prose max-w-none"
+            dangerouslySetInnerHTML={{ __html: product.descriptionHtml }}
+          />
+
+          {firstVariant && (
+            <div className="text-sm space-y-1 border-t pt-2">
+
+              <div><strong>מחיר:</strong> {firstVariant.price.amount} {firstVariant.price.currencyCode}</div>
+              <div><strong>מק״ט:</strong> {firstVariant.sku || 'N/A'}</div>
+              <div><strong>מלאי:</strong> {firstVariant.quantityAvailable}</div>
+
+              <div>
+                <strong>דגם:</strong> {modelTag || '—'}
+              </div>
+
+              {yrText && (
+                <div><strong>שנים:</strong> {yrText}</div>
+              )}
+            </div>
+          )}
+
+          {showAddToCart ? (
+             <button
+             onClick={addToCart}
+             disabled={adding || !firstVariant}
+             className="w-full md:w-auto bg-red-600 text-white px-6 py-3 rounded-md hover:bg-red-700 transition disabled:opacity-50 font-bold flex items-center justify-center gap-2"
+           >
+             {adding ? 'מוסיף...' : 'הוסף לעגלה'}
+           </button>
+          ) : (
+            <WhatsAppButton
+              message={whatsappMessage}
+              label={firstVariant?.availableForSale ? "הזמנה / בירור מלאי" : "נגמר המלאי – צור קשר"}
+            />
+          )}
+
+        </div>
+      </div>
+
+      <RelatedProducts
+        vendor={product.vendor}
+        productType={product.productType}
+        model={modelTag}
+        excludeHandle={product.handle}
+      />
+
+      <RelatedArticles
+        tags={[product.vendor, modelTag].filter(Boolean)}
+      />
+
+    </ShopLayoutInternal>
+  );
+}
+
+
+//app\shop\[handle]\page.jsx
+import ProductPageInner from './ProductPageInner';
+import { fetchProduct } from '@/lib/shop/fetchProduct';
+import { fetchSearchResults } from '@/lib/shop/fetchSearch';
+
+export const revalidate = 600;
+
+export default async function ProductPage({ params, searchParams }) {
+  // 👇👇👇 תיקון קריטי ל-Next.js 15: חובה לעשות await למשתנים האלה
+  const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
+
+  const handle = resolvedParams.handle;
+
+  // 🔥 שימוש ב-resolvedSearchParams במקום searchParams הישן
+  const filters = Object.fromEntries(
+    Object.entries(resolvedSearchParams || {}).map(([k, v]) => [k, String(v)])
+  );
+
+  const isSearch = Object.keys(filters).length > 0;
+
+  if (isSearch) {
+    const items = await fetchSearchResults(filters);
+    return <ProductPageInner type="search" items={items} />;
+  }
+
+  // מוצר יחיד
+  const product = await fetchProduct(handle);
+
+  return <ProductPageInner type="product" product={product} />;
+}
+
+
+//app\api\shopify\product\[handle]\route.js
+export const runtime = "nodejs";
+
+const domain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
+const token = process.env.SHOPIFY_STOREFRONT_API_TOKEN;
+const apiVersion = process.env.SHOPIFY_API_VERSION || '2024-04';
+
+async function sfFetch(query, variables = {}) {
+  if (!domain || !token) {
+    console.error("Missing Shopify Credentials"); // הוספתי לוג לשגיאות שרת
+    return { error: 'Missing Shopify env vars', status: 500, data: null };
+  }
+  
+  try {
+    const res = await fetch(`https://${domain}/api/${apiVersion}/graphql.json`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Shopify-Storefront-Access-Token': token,
+      },
+      body: JSON.stringify({ query, variables }),
+      cache: 'no-store',
+    });
+
+    const json = await res.json();
+    
+    if (!res.ok || json.errors) {
+      console.error("Shopify GraphQL Error:", json.errors); // לוג קריטי לדיבוג
+      return { error: json.errors || 'Shopify error', status: res.status, data: json };
+    }
+    
+    return { error: null, status: 200, data: json };
+  } catch (e) {
+    console.error("Network Error in sfFetch:", e);
+    return { error: 'Network error', status: 500, data: null };
+  }
+}
+
+export { sfFetch };
+
+export async function GET(_req, { params }) {
+  // 🔥 תיקון 1: ב-Next.js 15 חובה לעשות await ל-params
+  const resolvedParams = await params;
+  
+  // 🔥 תיקון 2: פענוח ה-handle (חובה עבור עברית!)
+  // אם ה-URL הוא .../product/%D7%A7%D7%A1%D7%93%D7%94 -> זה יהפוך אותו ל-"קסדה"
+  const handle = decodeURIComponent(resolvedParams.handle);
+
+  // לוג זמני כדי שתראה בשרת מה בדיוק נשלח לשופיפיי (תמחק את זה אחרי שהכל עובד)
+  console.log(`Fetching Shopify Product handle: "${handle}"`);
+
+  const query = `#graphql
+    query One($handle: String!) {
+      product(handle: $handle) {
+        id
+        title
+        handle
+        descriptionHtml
+        vendor
+        productType
+        tags
+        images(first: 8) {
+          edges { node { url altText } }
+        }
+        variants(first: 25) {
+          edges {
+            node {
+              id
+              title
+              sku
+              availableForSale
+              quantityAvailable
+              price { amount currencyCode }
+            }
+          }
+        }
+        metafields(identifiers: [
+          { namespace: "compatibility", key: "year_from" },
+          { namespace: "compatibility", key: "year_to" }
+        ]) {
+          namespace
+          key
+          value
+          type
+        }
+      }
+    }
+  `;
+
+  const { error, status, data } = await sfFetch(query, { handle });
+
+  if (error) {
+    return Response.json({ error }, { status });
+  }
+
+  // אם שופיפיי החזיר תשובה תקינה אבל לא מצא את המוצר (product: null)
+  if (!data.data.product) {
+    console.warn(`Shopify returned NULL for handle: "${handle}"`);
+  }
+
+  return Response.json({ item: data.data.product });
+}
+
+
 // /components/ProductGrid.jsx
 'use client';
 import Link from 'next/link';

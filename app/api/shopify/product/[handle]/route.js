@@ -1,4 +1,4 @@
-//app\api\shopify\product\[handle]\route.js
+// /app/api/shopify/product/[handle]/route.js
 export const runtime = "nodejs";
 
 const domain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
@@ -7,7 +7,7 @@ const apiVersion = process.env.SHOPIFY_API_VERSION || '2024-04';
 
 async function sfFetch(query, variables = {}) {
   if (!domain || !token) {
-    console.error("Missing Shopify Credentials"); // הוספתי לוג לשגיאות שרת
+    console.error("Missing Shopify Credentials");
     return { error: 'Missing Shopify env vars', status: 500, data: null };
   }
   
@@ -25,7 +25,7 @@ async function sfFetch(query, variables = {}) {
     const json = await res.json();
     
     if (!res.ok || json.errors) {
-      console.error("Shopify GraphQL Error:", json.errors); // לוג קריטי לדיבוג
+      console.error("Shopify GraphQL Error:", json.errors);
       return { error: json.errors || 'Shopify error', status: res.status, data: json };
     }
     
@@ -36,18 +36,12 @@ async function sfFetch(query, variables = {}) {
   }
 }
 
-export { sfFetch };
-
 export async function GET(_req, { params }) {
-  // 🔥 תיקון 1: ב-Next.js 15 חובה לעשות await ל-params
+  // 🔥 תיקון ל-Next.js 15
   const resolvedParams = await params;
   
-  // 🔥 תיקון 2: פענוח ה-handle (חובה עבור עברית!)
-  // אם ה-URL הוא .../product/%D7%A7%D7%A1%D7%93%D7%94 -> זה יהפוך אותו ל-"קסדה"
+  // 🔥 פענוח ה-handle (חובה עבור עברית!)
   const handle = decodeURIComponent(resolvedParams.handle);
-
-  // לוג זמני כדי שתראה בשרת מה בדיוק נשלח לשופיפיי (תמחק את זה אחרי שהכל עובד)
-  console.log(`Fetching Shopify Product handle: "${handle}"`);
 
   const query = `#graphql
     query One($handle: String!) {
@@ -59,10 +53,20 @@ export async function GET(_req, { params }) {
         vendor
         productType
         tags
-        images(first: 8) {
+        
+        # 👇 הוספנו את האפשרויות (מידה, צבע וכו')
+        options {
+          id
+          name
+          values
+        }
+
+        images(first: 10) {
           edges { node { url altText } }
         }
-        variants(first: 25) {
+
+        # 👇 הרחבנו את הוריאציות כדי לכלול את הבחירות והתמונות שלהן
+        variants(first: 250) {
           edges {
             node {
               id
@@ -71,9 +75,16 @@ export async function GET(_req, { params }) {
               availableForSale
               quantityAvailable
               price { amount currencyCode }
+              
+              # תמונה ספציפית לוריאציה (למשל קסדה אדומה)
+              image { url altText }
+              
+              # הבחירות שמגדירות את הוריאציה (Color: Red, Size: L)
+              selectedOptions { name value }
             }
           }
         }
+
         metafields(identifiers: [
           { namespace: "compatibility", key: "year_from" },
           { namespace: "compatibility", key: "year_to" }
@@ -91,11 +102,6 @@ export async function GET(_req, { params }) {
 
   if (error) {
     return Response.json({ error }, { status });
-  }
-
-  // אם שופיפיי החזיר תשובה תקינה אבל לא מצא את המוצר (product: null)
-  if (!data.data.product) {
-    console.warn(`Shopify returned NULL for handle: "${handle}"`);
   }
 
   return Response.json({ item: data.data.product });

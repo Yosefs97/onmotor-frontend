@@ -8,7 +8,7 @@ import ProductGallery from '@/components/ProductGallery';
 import RelatedProducts from '@/components/RelatedProducts';
 import RelatedArticles from '@/components/RelatedArticles';
 import WhatsAppButton from '@/components/WhatsAppButton';
-import AutoShopBreadcrumbs from '@/components/AutoShopBreadcrumbs'; // 👈 1. הוספת הייבוא
+import AutoShopBreadcrumbs from '@/components/AutoShopBreadcrumbs'; // 👈 ייבוא הפירורים
 import { getProductYearRange, formatYearRange } from '@/lib/productYears';
 
 export default function ProductPageInner({ type, product, items }) {
@@ -18,7 +18,7 @@ export default function ProductPageInner({ type, product, items }) {
   if (type === 'search') {
     return (
       <ShopLayoutInternal>
-         {/* אפשר להוסיף גם כאן אם תרצה בעתיד */}
+         {/* אפשר להוסיף גם כאן פירורים בעתיד אם תרצה */}
         <ProductGrid products={items} />
       </ShopLayoutInternal>
     );
@@ -78,7 +78,7 @@ export default function ProductPageInner({ type, product, items }) {
   return (
     <ShopLayoutInternal product={product}>
       
-      {/* 👈 2. מיקום הפירורים: מעבירים את אובייקט המוצר */}
+      {/* 👈 מיקום הפירורים: מעל הגריד הראשי */}
       <div className="px-2 md:px-0 mt-2 mb-4">
         <AutoShopBreadcrumbs product={product} />
       </div>
