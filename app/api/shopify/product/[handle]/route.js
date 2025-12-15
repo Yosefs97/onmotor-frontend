@@ -1,46 +1,13 @@
-// /app/api/shopify/product/[handle]/route.js
+// קובץ קיים: /app/api/shopify/product/[handle]/route.js
+import { sfFetch } from '@/lib/shopify'; // 👈 זה השינוי הקריטי! אנחנו מייבאים מבחוץ
+
 export const runtime = "nodejs";
-
-const domain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
-const token = process.env.SHOPIFY_STOREFRONT_API_TOKEN;
-const apiVersion = process.env.SHOPIFY_API_VERSION || '2024-04';
-
-async function sfFetch(query, variables = {}) {
-  if (!domain || !token) {
-    console.error("Missing Shopify Credentials");
-    return { error: 'Missing Shopify env vars', status: 500, data: null };
-  }
-  
-  try {
-    const res = await fetch(`https://${domain}/api/${apiVersion}/graphql.json`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Shopify-Storefront-Access-Token': token,
-      },
-      body: JSON.stringify({ query, variables }),
-      cache: 'no-store',
-    });
-
-    const json = await res.json();
-    
-    if (!res.ok || json.errors) {
-      console.error("Shopify GraphQL Error:", json.errors);
-      return { error: json.errors || 'Shopify error', status: res.status, data: json };
-    }
-    
-    return { error: null, status: 200, data: json };
-  } catch (e) {
-    console.error("Network Error in sfFetch:", e);
-    return { error: 'Network error', status: 500, data: null };
-  }
-}
 
 export async function GET(_req, { params }) {
   // 🔥 תיקון ל-Next.js 15
   const resolvedParams = await params;
   
-  // 🔥 פענוח ה-handle (חובה עבור עברית!)
+  // 🔥 פענוח ה-handle
   const handle = decodeURIComponent(resolvedParams.handle);
 
   const query = `#graphql
@@ -53,19 +20,14 @@ export async function GET(_req, { params }) {
         vendor
         productType
         tags
-        
-        # 👇 הוספנו את האפשרויות (מידה, צבע וכו')
         options {
           id
           name
           values
         }
-
         images(first: 10) {
           edges { node { url altText } }
         }
-
-        # 👇 הרחבנו את הוריאציות כדי לכלול את הבחירות והתמונות שלהן
         variants(first: 250) {
           edges {
             node {
@@ -75,16 +37,11 @@ export async function GET(_req, { params }) {
               availableForSale
               quantityAvailable
               price { amount currencyCode }
-              
-              # תמונה ספציפית לוריאציה (למשל קסדה אדומה)
               image { url altText }
-              
-              # הבחירות שמגדירות את הוריאציה (Color: Red, Size: L)
               selectedOptions { name value }
             }
           }
         }
-
         metafields(identifiers: [
           { namespace: "compatibility", key: "year_from" },
           { namespace: "compatibility", key: "year_to" }
