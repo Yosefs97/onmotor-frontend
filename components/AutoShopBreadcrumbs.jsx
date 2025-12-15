@@ -1,156 +1,103 @@
-// /components/AutoShopBreadcrumbs.jsx
+// components/AutoShopBreadcrumbs.jsx
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { ChevronLeft, Home } from 'lucide-react';
 
-// 👇 הוספתי את prop ה-collection
-export default function AutoShopBreadcrumbs({ product = null, filters = null, collection = null }) {
+export default function AutoShopBreadcrumbs({ collection }) {
   const pathname = usePathname();
-  const [parts, setParts] = useState([]);
-  const [title, setTitle] = useState('');
+  const searchParams = useSearchParams();
 
-  useEffect(() => {
-    let crumbs = [{ href: '/shop', label: 'חנות' }];
+  // חילוץ פרמטרים מה-URL
+  const type = searchParams.get('type');
+  const tag = searchParams.get('tag');
+  const vendor = searchParams.get('vendor');
 
-    // 🟥 מצב 1: עמוד אוסף/קטגוריה (החדש!)
-    if (collection) {
-      crumbs.push({ 
-        href: `/shop/collection/${collection.handle}`, 
-        label: collection.title 
-      });
-      setTitle(collection.title);
-      setParts(crumbs);
-      return;
-    }
+  // בניית הנתיב הבסיסי של הקולקציה
+  const collectionBasePath = pathname.split('?')[0];
 
-    // 🟥 מצב 2: מוצר (עמוד מוצר מלא)
-    if (product) {
-      // אם המוצר שייך לאוסף ספציפי (למשל קסדות), אפשר להוסיף כאן לוגיקה בעתיד
-      
-      if (product.vendor) {
-        crumbs.push({ href: `/shop/vendor/${product.vendor}`, label: product.vendor });
-      }
-      const modelTag = product.tags?.find((t) => t.startsWith('model:'));
-      if (modelTag) {
-        const model = modelTag.replace('model:', '');
-        crumbs.push({ href: `/shop/vendor/${product.vendor}/${model}`, label: model });
-        setTitle(`חלקים ${product.vendor} ${model}`);
-      } else {
-        setTitle(`חלקים ${product.vendor}`);
-      }
-      crumbs.push({ href: `/shop/${product.handle}`, label: product.title });
-      setTitle(product.title);
-      setParts(crumbs);
-      return;
-    }
-
-    // 🟥 מצב 3: חנות עם פילטרים (חלפים)
-    if (filters && (filters.vendor || filters.model || filters.category)) {
-      if (filters.vendor) {
-        crumbs.push({ href: `/shop/vendor/${filters.vendor}`, label: filters.vendor });
-
-        if (filters.model) {
-          crumbs.push({ href: `/shop/vendor/${filters.vendor}/${filters.model}`, label: filters.model });
-          setTitle(`חלקים ${filters.vendor} ${filters.model}`);
-        } else {
-          setTitle(`דגמים ${filters.vendor}`);
-        }
-      } else {
-        setTitle('דגמים');
-      }
-
-      if (filters.category) {
-        crumbs.push({ href: '#', label: filters.category });
-        setTitle(filters.category);
-      }
-
-      setParts(crumbs);
-      return;
-    }
-
-    // 🟥 מצב 4: URL רגיל (ניתוח הנתיב)
-    const segments = pathname.split('/').filter(Boolean);
-
-    // דף חנות ראשי
-    if (segments[0] === 'shop' && segments.length === 1) {
-      setTitle('דגמים');
-      setParts(crumbs);
-      return;
-    }
-
-    // 👇 טיפול במקרה שמגיעים בלי Prop (למשל ריענון) לקטגוריה
-    if (segments[0] === 'shop' && segments[1] === 'collection' && segments.length === 3) {
-      // במקרה הזה הכותרת אולי תהיה באנגלית (ה-Handle) אם לא הועבר prop, 
-      // אבל זה גיבוי טוב.
-      const handle = segments[2];
-      crumbs.push({ href: pathname, label: handle }); 
-      // אם יש collection prop הוא ידרוס את זה למעלה, אז זה רק Fallback
-      setTitle(collection?.title || handle); 
-      setParts(crumbs);
-      return;
-    }
-
-    // דף יצרן
-    if (segments[0] === 'shop' && segments[1] === 'vendor' && segments.length === 3) {
-      const vendor = decodeURIComponent(segments[2]);
-      crumbs.push({ href: `/shop/vendor/${vendor}`, label: vendor });
-      setTitle(`דגמים ${vendor}`);
-      setParts(crumbs);
-      return;
-    }
-
-    // דף דגם
-    if (segments[0] === 'shop' && segments[1] === 'vendor' && segments.length === 4) {
-      const vendor = decodeURIComponent(segments[2]);
-      const model = decodeURIComponent(segments[3]);
-      crumbs.push({ href: `/shop/vendor/${vendor}`, label: vendor });
-      crumbs.push({ href: `/shop/vendor/${vendor}/${model}`, label: model });
-      setTitle(`חלקים ${vendor} ${model}`);
-      setParts(crumbs);
-      return;
-    }
-
-    // דף תגיות
-    if (segments[0] === 'tags' && segments.length === 2) {
-      const tag = decodeURIComponent(segments[1]);
-      crumbs.push({ href: `/tags/${tag}`, label: `תגית: ${tag}` });
-      setTitle(`תגית: ${tag}`);
-      setParts(crumbs);
-      return;
-    }
-
-    // fallback
-    // setTitle('חנות'); // אפשר להשאיר ריק אם רוצים
-    setParts(crumbs);
-  }, [pathname, product, filters, collection]); // הוספתי collection ל-dependency array
+  // כותרת דינמית לדף
+  let pageTitle = collection?.title || 'חנות';
+  if (type) pageTitle = type;
+  if (tag) pageTitle = `${type || collection?.title} - ${tag}`;
+  if (vendor && !tag && !type) pageTitle = `${collection?.title} - ${vendor}`;
 
   return (
-    <div className="mb-4 space-y-2 px-2 md:px-0">
-      <nav dir="rtl" className="text-sm md:text-base font-bold text-gray-600">
-        {parts.map((p, idx) => (
-          <span key={idx} className="inline-flex items-center">
-            {/* הלינק האחרון לא לחיץ (כי אנחנו בו) */}
-            {idx === parts.length - 1 ? (
-              <span className="text-gray-900">{p.label}</span>
+    <div className="mb-6 px-2 md:px-0">
+      
+      {/* 1. שורת הפירורים (ניווט) */}
+      <nav className="flex items-center text-sm text-gray-500 mb-4" dir="rtl">
+        <ul className="flex items-center gap-1 flex-wrap">
+          
+          <li>
+            <Link href="/" className="hover:text-red-600 flex items-center">
+              <Home className="w-4 h-4" />
+            </Link>
+          </li>
+          <ChevronLeft className="w-4 h-4 text-gray-400" />
+
+          <li>
+            <Link href="/shop" className="hover:text-red-600">
+              חנות
+            </Link>
+          </li>
+          <ChevronLeft className="w-4 h-4 text-gray-400" />
+
+          <li>
+            {type || tag || vendor ? (
+               <Link href={collectionBasePath} className="hover:text-red-600 font-medium">
+                 {collection?.title || 'קטגוריה'}
+               </Link>
             ) : (
-              <Link href={p.href} className="text-red-600 hover:underline" prefetch={false}>
-                {p.label}
-              </Link>
+               <span className="font-bold text-gray-900">{collection?.title || 'קטגוריה'}</span>
             )}
-            
-            {idx < parts.length - 1 && (
-              <span className="mx-2 text-gray-400">/</span>
-            )}
-          </span>
-        ))}
+          </li>
+
+          {type && (
+            <>
+              <ChevronLeft className="w-4 h-4 text-gray-400" />
+              <li>
+                {tag || vendor ? (
+                  <Link href={`${collectionBasePath}?type=${encodeURIComponent(type)}`} className="hover:text-red-600 font-medium">
+                    {type}
+                  </Link>
+                ) : (
+                  <span className="font-bold text-gray-900">{type}</span>
+                )}
+              </li>
+            </>
+          )}
+
+          {tag && (
+            <>
+              <ChevronLeft className="w-4 h-4 text-gray-400" />
+              <li>
+                <span className="font-bold text-gray-900">{tag}</span>
+              </li>
+            </>
+          )}
+
+          {vendor && !tag && (
+             <>
+              <ChevronLeft className="w-4 h-4 text-gray-400" />
+              <li>
+                <span className="font-bold text-gray-900">{vendor}</span>
+              </li>
+            </>
+          )}
+
+        </ul>
       </nav>
-      
+
+      {/* 2. קו מפריד */}
       <div className="w-full border-b border-gray-200"></div>
+
+      {/* 3. כותרת H1 ראשית */}
+      <h1 className="text-3xl font-bold text-gray-900 mt-4">
+        {pageTitle}
+      </h1>
       
-      {/* כותרת הדף מוצגת רק אם הוגדרה */}
-      {title && <h1 className="text-3xl font-bold text-gray-900 mt-2">{title}</h1>}
     </div>
   );
 }

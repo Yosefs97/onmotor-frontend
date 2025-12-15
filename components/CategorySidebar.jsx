@@ -2,68 +2,41 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import SmartFilter from './SmartFilter';
 
 export default function CategorySidebar({ filtersFromAPI = [], dynamicData = null, basePath = '' }) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   
-  // נתונים מהעץ הדינמי
   const productTypes = dynamicData?.types || [];
   const subTags = dynamicData?.tags || [];
   const vendors = dynamicData?.vendors || [];
   const selectedType = dynamicData?.selectedType;
 
-  // סטייט מקומי למחירים (כדי לאפשר הקלדה רציפה)
+  // סטייט למחיר
   const [minPrice, setMinPrice] = useState(searchParams.get('minPrice') || '');
   const [maxPrice, setMaxPrice] = useState(searchParams.get('maxPrice') || '');
 
-  // עדכון הסטייט כשה-URL משתנה חיצונית
+  // לוודא שהמחיר מסונכרן עם ה-URL
   useEffect(() => {
     setMinPrice(searchParams.get('minPrice') || '');
     setMaxPrice(searchParams.get('maxPrice') || '');
   }, [searchParams]);
 
-  // פונקציות עזר ל-URL
-  const createUrl = (key, value) => {
+  // פונקציות ליצירת לינקים בטוחים
+  const createLink = (newParams) => {
     const params = new URLSearchParams(searchParams.toString());
-    if (value) {
-        params.set(key, value);
-    } else {
-        params.delete(key);
-    }
-    // אם משנים פילטר ראשי, אולי נרצה לאפס עמודים, אבל נשאיר פשוט כרגע
+    
+    Object.keys(newParams).forEach(key => {
+        if (newParams[key] === null) {
+            params.delete(key);
+        } else {
+            params.set(key, newParams[key]);
+        }
+    });
+
     return `${basePath}?${params.toString()}`;
-  };
-
-  const createTypeUrl = (typeName) => {
-      // כשבוחרים קטגוריה חדשה, מנקים תגיות ישנות אבל משאירים יצרן/מחיר?
-      // בדרך כלל עדיף להתחיל נקי בקטגוריה
-      const params = new URLSearchParams(); 
-      params.set('type', typeName);
-      return `${basePath}?${params.toString()}`;
-  };
-
-  const createTagUrl = (tagName) => {
-      const params = new URLSearchParams(searchParams.toString());
-      const currentTag = params.get('tag');
-      if (currentTag === tagName) params.delete('tag');
-      else params.set('tag', tagName);
-      return `${basePath}?${params.toString()}`;
-  };
-
-  // הפעלת סינון מחיר
-  const applyPriceFilter = () => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (minPrice) params.set('minPrice', minPrice); else params.delete('minPrice');
-    if (maxPrice) params.set('maxPrice', maxPrice); else params.delete('maxPrice');
-    router.push(`${basePath}?${params.toString()}`, { scroll: false });
-  };
-
-  const handlePriceKeyDown = (e) => {
-    if (e.key === 'Enter') applyPriceFilter();
   };
 
   return (
@@ -74,16 +47,22 @@ export default function CategorySidebar({ filtersFromAPI = [], dynamicData = nul
           <div className="bg-gray-50 p-4 border-b border-gray-100 mb-2">
             <h2 className="font-bold text-lg text-gray-900">קטגוריות</h2>
             {selectedType && (
-                 <Link href={basePath} className="text-xs text-red-600 hover:underline">הצג הכל</Link>
+                 <Link href={basePath} className="text-xs text-red-600 hover:underline">נקה הכל</Link>
             )}
           </div>
           <ul className="px-4 space-y-1">
               {productTypes.map((type) => {
                   const isActive = selectedType === type.name;
+                  // בלחיצה על קטגוריה: מאפסים תגיות ויצרנים כדי להתחיל נקי, או שומרים?
+                  // לרוב עדיף לאפס תגיות כי תגית של "קסדות" לא מתאימה ל"מעילים"
+                  const href = isActive 
+                    ? basePath 
+                    : `${basePath}?type=${encodeURIComponent(type.name)}`; // משתמשים ב-URL נקי לקטגוריה
+
                   return (
                       <li key={type.name}>
                           <Link 
-                            href={isActive ? basePath : createTypeUrl(type.name)}
+                            href={href}
                             className={`flex justify-between text-sm py-1 ${isActive ? 'text-red-600 font-bold' : 'text-gray-600 hover:text-red-600'}`}
                           >
                               <span>{type.name}</span>
@@ -95,7 +74,7 @@ export default function CategorySidebar({ filtersFromAPI = [], dynamicData = nul
           </ul>
       </div>
 
-      {/* 2. תגיות/תכונות (חורף, קיץ...) */}
+      {/* 2. תגיות/תכונות (רק אם נבחרה קטגוריה) */}
       {selectedType && subTags.length > 0 && (
           <div className="border-b border-gray-200 pb-4">
               <div className="bg-gray-50 p-3 border-b border-gray-100 mb-2">
@@ -104,10 +83,13 @@ export default function CategorySidebar({ filtersFromAPI = [], dynamicData = nul
               <ul className="px-4 space-y-1 max-h-60 overflow-y-auto custom-scrollbar">
                   {subTags.map((tag) => {
                       const isActive = searchParams.get('tag') === tag.name;
+                      // בלחיצה על תגית: שומרים על ה-type הקיים
+                      const href = createLink({ tag: isActive ? null : tag.name });
+
                       return (
                           <li key={tag.name}>
                               <Link 
-                                href={createTagUrl(tag.name)}
+                                href={href}
                                 className={`flex justify-between text-sm py-1 ${isActive ? 'text-red-600 font-bold' : 'text-gray-600 hover:text-red-600'}`}
                               >
                                   <span>{tag.name}</span>
@@ -120,7 +102,7 @@ export default function CategorySidebar({ filtersFromAPI = [], dynamicData = nul
           </div>
       )}
 
-      {/* 3. יצרנים (עכשיו לחיצים!) */}
+      {/* 3. יצרנים */}
       {vendors.length > 0 && (
           <div className="border-b border-gray-200 pb-4">
               <div className="bg-gray-50 p-3 border-b border-gray-100 mb-2">
@@ -129,10 +111,12 @@ export default function CategorySidebar({ filtersFromAPI = [], dynamicData = nul
               <ul className="px-4 space-y-1 max-h-40 overflow-y-auto custom-scrollbar">
                   {vendors.map((v) => {
                       const isActive = searchParams.get('vendor') === v.name;
+                      const href = createLink({ vendor: isActive ? null : v.name });
+
                       return (
                           <li key={v.name}>
                              <Link 
-                                href={createUrl('vendor', isActive ? '' : v.name)}
+                                href={href}
                                 className={`flex justify-between text-sm py-1 ${isActive ? 'text-red-600 font-bold' : 'text-gray-600 hover:text-red-600'}`}
                              >
                                 <span>{v.name}</span>
@@ -145,7 +129,7 @@ export default function CategorySidebar({ filtersFromAPI = [], dynamicData = nul
           </div>
       )}
 
-      {/* 4. סינון מתקדם (מידות + מחיר) */}
+      {/* 4. סינון מחיר ומידות */}
       <div className="p-4 space-y-6 bg-gray-50/50">
           <h3 className="font-bold text-gray-900 text-md border-b pb-2">סינון מתקדם</h3>
           
@@ -154,31 +138,26 @@ export default function CategorySidebar({ filtersFromAPI = [], dynamicData = nul
                <h4 className="font-bold text-gray-700 mb-2 text-sm">מחיר (₪)</h4>
                <div className="flex gap-2 items-center text-sm">
                      <input 
-                        type="number" 
-                        placeholder="מ-" 
+                        type="number" placeholder="מ-" 
                         value={minPrice}
                         onChange={(e) => setMinPrice(e.target.value)}
-                        onBlur={applyPriceFilter}
-                        onKeyDown={handlePriceKeyDown}
+                        onBlur={() => window.location.href = createLink({ minPrice, maxPrice })} // ניווט מלא ביציאה מהשדה
                         className="w-1/2 p-2 border border-gray-300 rounded focus:border-red-500 outline-none" 
                      />
                      <span>-</span>
                      <input 
-                        type="number" 
-                        placeholder="עד" 
+                        type="number" placeholder="עד" 
                         value={maxPrice}
                         onChange={(e) => setMaxPrice(e.target.value)}
-                        onBlur={applyPriceFilter}
-                        onKeyDown={handlePriceKeyDown}
+                        onBlur={() => window.location.href = createLink({ minPrice, maxPrice })} // ניווט מלא ביציאה מהשדה
                         className="w-1/2 p-2 border border-gray-300 rounded focus:border-red-500 outline-none" 
                      />
                </div>
           </div>
 
-          {/* מידות ושאר פילטרים משופיפיי */}
+          {/* מידות (חובה להגדיר בשופיפיי!) */}
           {filtersFromAPI.map((filter) => {
-             // אנחנו מסננים החוצה את הפילטרים שכבר הצגנו ידנית (כמו יצרן ומחיר ומלאי)
-             // כדי להציג כאן רק את הוריאציות (מידה, צבע וכו')
+             // מציגים רק פילטרים שהם לא המחיר/יצרן (כי אותם כבר הצגנו למעלה)
              if (filter.type === 'LIST' && !filter.label.includes('Price') && !filter.label.includes('Vendor')) {
                  return (
                     <div key={filter.id} className="pt-2">
