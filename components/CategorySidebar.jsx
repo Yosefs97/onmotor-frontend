@@ -3,7 +3,8 @@
 
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { CATEGORY_FILTERS } from '@/lib/categoryFilters';
+// 👇 התיקון: הוספתי את /shop/ לנתיב הייבוא
+import { CATEGORY_FILTERS } from '@/lib/shop/categoryFilters';
 
 export default function CategorySidebar({ filtersFromAPI = [] }) {
   const router = useRouter();
