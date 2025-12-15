@@ -16,7 +16,7 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
 
   // 2. בניית המערך הבסיסי
   const crumbs = [
-    { label: <Home className="w-4 h-4" />, href: '/' },
+    { label: <Store className="w-4 h-4" />, href: '/' },
     { label: 'חנות', href: '/shop' }
   ];
 
