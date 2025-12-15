@@ -142,7 +142,7 @@ export default function CategorySidebar({ filtersFromAPI = [], dynamicData = nul
                         value={minPrice}
                         onChange={(e) => setMinPrice(e.target.value)}
                         onBlur={() => window.location.href = createLink({ minPrice, maxPrice })} // ניווט מלא ביציאה מהשדה
-                        className="w-1/2 p-2 border border-gray-300 rounded focus:border-red-500 outline-none" 
+                        className="w-1/2 p-2 border border-gray-300 rounded focus:border-red-500 outline-none placeholder-gray-900" 
                      />
                      <span>-</span>
                      <input 
@@ -150,7 +150,7 @@ export default function CategorySidebar({ filtersFromAPI = [], dynamicData = nul
                         value={maxPrice}
                         onChange={(e) => setMaxPrice(e.target.value)}
                         onBlur={() => window.location.href = createLink({ minPrice, maxPrice })} // ניווט מלא ביציאה מהשדה
-                        className="w-1/2 p-2 border border-gray-300 rounded focus:border-red-500 outline-none" 
+                        className="w-1/2 p-2 border border-gray-300 rounded focus:border-red-500 outline-none placeholder-gray-900" 
                      />
                </div>
           </div>
