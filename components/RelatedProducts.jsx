@@ -27,7 +27,7 @@ export default function RelatedProducts({ vendor, productType, model, excludeHan
   return (
     <div dir="rtl" className="space-y-3 mt-8">
       <h3 className="font-bold text-lg text-gray-900">מוצרים נוספים לדגם</h3>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-0.5">
         {items.map((p) => {
           const img = p.images?.edges?.[0]?.node?.url;
           const price = p.variants?.edges?.[0]?.node?.price;

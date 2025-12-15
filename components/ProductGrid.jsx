@@ -7,7 +7,7 @@ export default function ProductGrid({ products = [], loading = false, onLoadMore
   return (
     <div dir="rtl" className="space-y-4">
       {loading && <div>טוען...</div>}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-0.5">
         {products.map((p) => {
           const img = p.images?.edges?.[0]?.node?.url;
           const price = p.variants?.edges?.[0]?.node?.price;
