@@ -1,17 +1,19 @@
 // components/ShopLayoutInternal.jsx
 'use client';
 import { Suspense } from 'react';
-import ShopSidebar from '@/components/ShopSidebar';
+import ShopSidebar from '@/components/ShopSidebar'; // זה מנוע החיפוש הישן שלך
 import MobileShopFilterBar from '@/components/MobileShopFilterBar';
-// ❌ מחקתי את הייבוא של AutoShopBreadcrumbs מכאן
 import ShopInfoAccordion from '@/components/ShopInfoAccordion';
-import { useSearchParams, usePathname, useRouter } from 'next/navigation';
+import AutoShopBreadcrumbs from '@/components/AutoShopBreadcrumbs'; 
 import { buildUrlFromFilters } from '@/utils/buildUrlFromFilters';
+import { useSearchParams, usePathname, useRouter } from 'next/navigation';
 
-function ShopLayoutInternalContent({ children, product = null }) {
+// 👇 הוספתי את customSidebar לרשימת ה-props
+function ShopLayoutInternalContent({ children, product = null, hideBreadcrumbs = false, customSidebar = null }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
+  const filters = Object.fromEntries(searchParams.entries());
 
   const handleSearch = (newFilters) => {
     const url = buildUrlFromFilters(newFilters, pathname, product);
@@ -20,17 +22,31 @@ function ShopLayoutInternalContent({ children, product = null }) {
 
   return (
     <div className="flex flex-col md:grid md:grid-cols-4 gap-6" dir="rtl">
+      
+      {/* --- עמודת הסרגל הצדדי --- */}
       <div className="hidden md:block">
-        <ShopSidebar onFilterChange={handleSearch} product={product} />
+        {customSidebar ? (
+          // אם קיבלנו סרגל מותאם אישית (כמו בקטגוריות) - נציג אותו
+          customSidebar
+        ) : (
+          // אחרת - נציג את ברירת המחדל (מנוע חיפוש חלפים)
+          <ShopSidebar onFilterChange={handleSearch} product={product} />
+        )}
       </div>
 
+      {/* --- עמודת התוכן --- */}
       <div className="md:col-span-3 space-y-6">
         
-        {/* ❌ מחקתי מכאן את <AutoShopBreadcrumbs /> */}
-        {/* עכשיו האחריות להציג פירורים היא של הדף עצמו */}
+        {!hideBreadcrumbs && (
+            <AutoShopBreadcrumbs filters={filters} product={product} />
+        )}
 
         <div className="md:hidden">
-          <MobileShopFilterBar onFilterChange={handleSearch} product={product} />
+          {/* מציגים את הפילטר מובייל הישן רק אם אנחנו לא במצב "סרגל מותאם" */}
+          {/* בעתיד נרצה ליצור גם מובייל-פילטר מותאם לקטגוריות */}
+          {!customSidebar && (
+             <MobileShopFilterBar onFilterChange={handleSearch} product={product} />
+          )}
         </div>
 
         {children}
