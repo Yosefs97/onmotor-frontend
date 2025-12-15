@@ -3,7 +3,7 @@ import ShopLayoutInternal from '@/components/ShopLayoutInternal';
 import ProductGrid from '@/components/ProductGrid';
 import { fetchCollection } from '@/lib/shop/fetchCollection';
 import AutoShopBreadcrumbs from '@/components/AutoShopBreadcrumbs';
-import CategorySidebar from '@/components/CategorySidebar'; // 👇 הייבוא של הסרגל החדש
+import CategorySidebar from '@/components/CategorySidebar';
 import Link from 'next/link';
 
 export const revalidate = 600;
@@ -14,7 +14,7 @@ export default async function CollectionPage({ params, searchParams }) {
 
   const handle = resolvedParams.handle;
   
-  // שליפת הנתונים (כולל פילטרים משופיפיי)
+  // שליפת הנתונים (עכשיו זה מחזיר גם את dynamicSidebar בתוך collectionData)
   const collectionData = await fetchCollection({ 
     handle, 
     filters: resolvedSearchParams 
@@ -28,11 +28,16 @@ export default async function CollectionPage({ params, searchParams }) {
     );
   }
 
-  // 👇 יצירת הרכיב של הסרגל החדש להעברה ל-Layout
-  const sidebarComponent = <CategorySidebar filtersFromAPI={collectionData.filters} />;
+  // 👇 עדכון קריטי: העברת הנתונים הדינמיים והנתיב לסרגל החדש
+  const sidebarComponent = (
+    <CategorySidebar 
+      filtersFromAPI={collectionData.filters} 
+      dynamicData={collectionData.dynamicSidebar} // הנתונים החדשים מהעץ הדינמי
+      basePath={`/shop/collection/${handle}`}     // הנתיב הבסיסי לבניית הקישורים
+    />
+  );
 
   return (
-    // 👇 אנחנו מעבירים את customSidebar ל-Layout, ומסתירים את הפירורים האוטומטיים כדי לשים ידנית
     <ShopLayoutInternal hideBreadcrumbs={true} customSidebar={sidebarComponent}>
       
       <div className="px-2 md:px-0 mt-4 mb-6">
@@ -49,10 +54,6 @@ export default async function CollectionPage({ params, searchParams }) {
             {collectionData.description}
           </div>
         )}
-
-        {/* מחקתי מכאן את כל הבלוק של "סנן לפי יצרן" הידני שהיה לך בקוד הקודם.
-            עכשיו היצרנים יופיעו אוטומטית בתוך CategorySidebar בצד ימין (אם הגדרת Vendor בפילטרים בשופיפיי).
-        */}
 
         {/* גריד מוצרים */}
         {collectionData.products.length > 0 ? (
