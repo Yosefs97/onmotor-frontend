@@ -3,8 +3,9 @@
 
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-// 👇 התיקון: הוספתי את /shop/ לנתיב הייבוא
 import { CATEGORY_FILTERS } from '@/lib/shop/categoryFilters';
+// 👇 ייבוא הרכיב החדש
+import SmartFilter from './SmartFilter';
 
 export default function CategorySidebar({ filtersFromAPI = [] }) {
   const router = useRouter();
@@ -59,38 +60,21 @@ export default function CategorySidebar({ filtersFromAPI = [] }) {
         </div>
       )}
 
-      {/* --- חלק ב': סינון חכם (API) - מידה, צבע, מגדר --- */}
+      {/* --- חלק ב': סינון חכם (API) - מופרד לרכיב חיצוני --- */}
       {filtersFromAPI.length > 0 && (
         <div className="p-4 space-y-6 bg-gray-50/50">
           <h3 className="font-bold text-gray-900 text-md border-b pb-2">סינון מתקדם</h3>
           
           {filtersFromAPI.map((filter) => (
             <div key={filter.id}>
-              <h4 className="font-bold text-gray-700 mb-2 text-sm">{filter.label}</h4>
-              
-              {/* רשימת צ'קבוקסים */}
-              {(filter.type === 'LIST' || filter.type === 'BOOLEAN') && (
-                <ul className="space-y-1 pr-2 max-h-40 overflow-y-auto custom-scrollbar">
-                  {filter.values.map((val) => (
-                    <li key={val.id} className="flex items-center gap-2">
-                      <input 
-                        type="checkbox"
-                        id={val.id}
-                        className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
-                        onChange={() => alert("פונקציונליות סינון מלאה תתווסף בקרוב")} 
-                      />
-                      <label htmlFor={val.id} className="text-sm text-gray-600 cursor-pointer flex-grow flex justify-between">
-                        <span>{val.label}</span>
-                        <span className="text-xs text-gray-400">({val.count})</span>
-                      </label>
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              {filter.type === 'PRICE_RANGE' && (
+              {/* בדיקה אם זה פילטר מסוג רשימה (מידה, צבע, יצרן) */}
+              {(filter.type === 'LIST' || filter.type === 'BOOLEAN') ? (
+                // 👇 כאן השימוש ברכיב החדש
+                <SmartFilter filter={filter} />
+              ) : (
+                // טיפול במחיר (יישאר כאן או יופרט גם הוא בעתיד)
                 <div className="text-sm text-gray-500 italic">
-                  טווח מחיר
+                  {filter.label}: טווח מחיר
                 </div>
               )}
             </div>
