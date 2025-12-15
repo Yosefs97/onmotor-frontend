@@ -4,7 +4,6 @@
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { CATEGORY_FILTERS } from '@/lib/shop/categoryFilters';
-// 👇 ייבוא הרכיב החדש
 import SmartFilter from './SmartFilter';
 
 export default function CategorySidebar({ filtersFromAPI = [] }) {
@@ -60,23 +59,39 @@ export default function CategorySidebar({ filtersFromAPI = [] }) {
         </div>
       )}
 
-      {/* --- חלק ב': סינון חכם (API) - מופרד לרכיב חיצוני --- */}
+      {/* --- חלק ב': סינון חכם (API) --- */}
       {filtersFromAPI.length > 0 && (
         <div className="p-4 space-y-6 bg-gray-50/50">
           <h3 className="font-bold text-gray-900 text-md border-b pb-2">סינון מתקדם</h3>
           
           {filtersFromAPI.map((filter) => (
             <div key={filter.id}>
-              {/* בדיקה אם זה פילטר מסוג רשימה (מידה, צבע, יצרן) */}
+              {/* כותרת הפילטר */}
+              <h4 className="font-bold text-gray-700 mb-2 text-sm">{filter.label}</h4>
+
+              {/* בדיקה: רשימה או מחיר? */}
               {(filter.type === 'LIST' || filter.type === 'BOOLEAN') ? (
-                // 👇 כאן השימוש ברכיב החדש
+                // פילטר רגיל (מידה, צבע, יצרן)
                 <SmartFilter filter={filter} />
-              ) : (
-                // טיפול במחיר (יישאר כאן או יופרט גם הוא בעתיד)
-                <div className="text-sm text-gray-500 italic">
-                  {filter.label}: טווח מחיר
+              ) : filter.type === 'PRICE_RANGE' ? (
+                // 👇 כאן השינוי: אינפוטים למחיר
+                <div className="text-sm text-gray-600">
+                  <div className="flex gap-2 items-center">
+                     <input 
+                       type="number" 
+                       placeholder="מ-"
+                       className="w-1/2 p-2 border border-gray-300 rounded text-sm focus:border-red-500 focus:outline-none"
+                       onBlur={() => alert("סינון מחיר יחובר בשלב הבא")}
+                     />
+                     <span className="text-gray-400">-</span>
+                     <input 
+                       type="number" 
+                       placeholder="עד"
+                       className="w-1/2 p-2 border border-gray-300 rounded text-sm focus:border-red-500 focus:outline-none"
+                     />
+                  </div>
                 </div>
-              )}
+              ) : null}
             </div>
           ))}
         </div>
