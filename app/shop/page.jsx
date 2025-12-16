@@ -1,4 +1,8 @@
 // /app/shop/page.jsx
+
+// 👇 1. הוסף את השורה הזו ראשונה! זה פותר את השגיאה של DYNAMIC_SERVER_USAGE
+export const dynamic = 'force-dynamic';
+
 import ShopLayoutInternal from '@/components/ShopLayoutInternal';
 import ManufacturerGrid from '@/components/ManufacturerGrid';
 import MainCategoriesGrid from '@/components/MainCategoriesGrid'; 
@@ -7,18 +11,14 @@ import { fetchManufacturers } from '@/lib/shop/fetchManufacturers';
 import { fetchCategoryList } from '@/lib/shop/fetchCategoryList';
 import { fetchMenu } from '@/lib/shopify/fetchMenu'; 
 
-export const revalidate = 600;
+// אפשר למחוק את export const revalidate = 600; כי force-dynamic גובר עליו
 
 export default async function ShopPage() {
   const [manufacturers, categories, menuItems] = await Promise.all([
     fetchManufacturers(),
     fetchCategoryList(),
-    fetchMenu('mega-menu')
+    fetchMenu('mega-menu') 
   ]);
-
-  // 👇👇👇 הוסף את השורה הזו כאן 👇👇👇
-  console.log('DEBUG: Menu Items from Shopify:', JSON.stringify(menuItems, null, 2));
-  // 👆👆👆 --------------------------- 👆👆👆
 
   return (
     <ShopLayoutInternal menuItems={menuItems}>
