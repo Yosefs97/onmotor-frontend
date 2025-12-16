@@ -35,8 +35,8 @@ export default function MobileShopFilterBar({ onFilterChange = () => {}, product
         aria-label="פתח סינון"
       >
         {/* טקסט אנכי */}
-        <span className="text-[10px] leading-3 font-bold text-center block w-full px-1">
-          מנוע<br/>סינון<br/>חכם
+        <span className="text-[20px] leading-3 font-bold text-center block w-full px-1">
+         סינון מנוע<br/>חכם
         </span>
       </button>
 
