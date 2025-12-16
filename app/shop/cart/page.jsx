@@ -1,4 +1,5 @@
 // /app/shop/cart/page.jsx
+export const dynamic = 'force-dynamic';
 'use client';
 import Link from "next/link";
 import { useEffect, useState } from 'react';
