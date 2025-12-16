@@ -169,7 +169,7 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
                 {index > 0 && <ChevronLeft className="w-4 h-4 text-gray-400 mx-1" />}
                 
                 {isLast || !crumb.href ? (
-                  <span className={`font-bold ${isLast ? 'text-gray-900' : 'text-gray-600'}`}>
+                  <span className={`font-bold ${isLast ? 'text-red-600' : 'text-red-600'}`}>
                     {crumb.label}
                   </span>
                 ) : (
