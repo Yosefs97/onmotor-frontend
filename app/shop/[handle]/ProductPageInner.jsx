@@ -16,10 +16,11 @@ export default function ProductPageInner({ type, product, items, collectionStats
   const [adding, setAdding] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState({});
 
-  // זיהוי האם זה חלק חילוף
+  // 1. זיהוי האם זה חלק חילוף (לפי טווח שנים)
   const isSparePart = useMemo(() => {
     if (!product) return false;
     const range = getProductYearRange(product);
+    // אם יש טווח שנים, זה כנראה חלק חילוף לאופנוע ספציפי
     return range && (range.from || range.to);
   }, [product]);
 
@@ -64,7 +65,6 @@ export default function ProductPageInner({ type, product, items, collectionStats
   const yr = getProductYearRange(product);
   const yrText = formatYearRange(yr);
 
-  // פונקציית הוספה לעגלה
   const addToCart = async () => {
     if (!currentVariant) return;
     setAdding(true);
@@ -88,30 +88,47 @@ export default function ProductPageInner({ type, product, items, collectionStats
   const showAddToCart = currentVariant?.availableForSale && currentVariant?.quantityAvailable > 0;
   const handleOptionChange = (name, value) => setSelectedOptions(prev => ({ ...prev, [name]: value }));
 
-  // הסיידבר החדש
-  const accessorySidebar = !isSparePart && collectionStats ? (
-    <div className="hidden lg:block">
-        <div className="mb-2 font-bold text-gray-500 text-sm px-1">
-             עוד בקטגוריה:
+  // 👇👇👇 2. לוגיקה מתוקנת לסיידבר 👇👇👇
+  let sidebarContent;
+
+  if (isSparePart) {
+    // אם זה חלק חילוף: נשלח null כדי שה-ShopLayout יציג את ברירת המחדל (מנוע החיפוש)
+    sidebarContent = null;
+  } else {
+    // אם זה אביזר: אנחנו חייבים להציג סיידבר, או div ריק.
+    // אסור להחזיר null אחרת יופיע החיפוש של החלפים.
+    
+    if (collectionStats) {
+      sidebarContent = (
+        <div className="hidden lg:block">
+            <div className="mb-2 font-bold text-gray-500 text-sm px-1">
+                 עוד בקטגוריה:
+            </div>
+            <CategorySidebar 
+                filtersFromAPI={[]} 
+                dynamicData={{
+                    types: collectionStats.types || [],
+                    tags: collectionStats.tags || [],
+                    vendors: collectionStats.vendors || [],
+                    selectedType: product.productType
+                }}
+                basePath={`/shop/collection/${collectionStats.handle || 'all'}`} 
+            />
         </div>
-        <CategorySidebar 
-            filtersFromAPI={[]} 
-            dynamicData={{
-                types: collectionStats.types || [],
-                tags: collectionStats.tags || [],
-                vendors: collectionStats.vendors || [],
-                selectedType: product.productType
-            }}
-            basePath={`/shop/collection/${collectionStats.handle || 'all'}`} 
-        />
-    </div>
-  ) : null;
+      );
+    } else {
+      // אם אין סטטיסטיקות (אולי אין תגית קטגוריה), נציג שטח ריק כדי "לדרוס" את החיפוש
+      sidebarContent = <div className="hidden lg:block"></div>;
+    }
+  }
+  // 👆👆👆 סוף הלוגיקה המתוקנת
 
   return (
     <ShopLayoutInternal 
         product={product} 
         hideSidebar={false} 
-        customSidebar={isSparePart ? null : accessorySidebar}
+        // מעבירים את המשתנה שיצרנו למעלה
+        customSidebar={sidebarContent}
     >
       
       <div className="px-2 md:px-0 mt-2 mb-4">
@@ -164,7 +181,7 @@ export default function ProductPageInner({ type, product, items, collectionStats
             </div>
           )}
 
-          {/* מחיר והוספה לעגלה */}
+          {/* מחיר ופרטים */}
           {currentVariant && (
             <div className="text-sm space-y-2 border-t pt-4 mt-4">
               <div className="text-2xl font-bold text-red-600">
@@ -178,12 +195,8 @@ export default function ProductPageInner({ type, product, items, collectionStats
                       ? <span className="text-green-600 font-bold">זמין במלאי ({currentVariant.quantityAvailable})</span> 
                       : <span className="text-red-600 font-bold">אזל המלאי</span>}
                 </span>
-
-                {/* 👇👇👇 כאן החזרתי את השורות החסרות 👇👇👇 */}
                 {modelTag && <span><strong>דגם:</strong> {modelTag}</span>}
                 {yrText && <span><strong>שנים:</strong> {yrText}</span>}
-                {/* 👆👆👆 ----------------------------- 👆👆👆 */}
-
               </div>
             </div>
           )}
