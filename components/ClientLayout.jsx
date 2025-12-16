@@ -7,7 +7,7 @@ import Header from "./Header";
 import Footer from "./Footer";
 import NewsTicker from "./NewsTicker";
 import MobileMenu from "./MobileMenu";
-import MobileShopFilterBar from "./MobileShopFilterBar";
+
 import SidebarMiddleLayer from "./SidebarMiddleLayer";
 import SidebarLeftLayer from "./SidebarLeftLayer";
 import useIsMobile from "@/hooks/useIsMobile";
@@ -85,7 +85,7 @@ export default function ClientLayout({ children, tickerHeadlines = [], sidebarDa
         <NewsTicker headlines={tickerHeadlines} />
       </div>
 
-      {isShopPage && <MobileShopFilterBar />}
+      
 
       <div className="w-screen sm:w-full overflow-x-hidden sm:overflow-visible bg-[#f9f9f9]" dir="rtl">
         <main
