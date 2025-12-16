@@ -5,14 +5,25 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { ChevronLeft, Home } from 'lucide-react';
 
+// 🛠️ מיפוי שמות קטגוריות (Handle -> שם בעברית)
+// עדכן כאן את כל הקטגוריות שיש לך במערכת
+const CATEGORY_NAMES = {
+  'road': 'כביש',
+  'offroad': 'שטח',
+  'oem': 'חלקים מקוריים',
+  'tires': 'צמיגים',
+  'helmets': 'קסדות',
+  'accessories': 'אביזרים'
+};
+
 export default function AutoShopBreadcrumbs({ product = null, collection = null }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // 1. חילוץ פרמטרים מה-URL (עבור המערכת החדשה)
-  const type = searchParams.get('type');   // למשל: "כפפות"
-  const tag = searchParams.get('tag');     // למשל: "חורף"
-  const vendor = searchParams.get('vendor'); // למשל: "Alpinestars"
+  // 1. חילוץ פרמטרים מה-URL
+  const type = searchParams.get('type');
+  const tag = searchParams.get('tag');
+  const vendor = searchParams.get('vendor');
 
   // 2. בניית המערך הבסיסי
   const crumbs = [
@@ -23,30 +34,27 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
   let pageTitle = '';
 
   // ---------------------------------------------------------
-  // 🟥 מצב A: אנחנו בתוך דף קטגוריה (למשל: כביש/שטח)
+  // 🟥 מצב A: דף קולקציה/קטגוריה
   // ---------------------------------------------------------
   if (collection) {
-    // שלב 1: הוספת הקטגוריה הראשית (למשל: כביש)
     const collectionUrl = `/shop/collection/${collection.handle}`;
     crumbs.push({ label: collection.title, href: collectionUrl });
     pageTitle = collection.title;
 
-    // שלב 2: אם נבחר סוג מוצר (למשל: כפפות)
     if (type) {
+      // כאן הופכים את ה"סוג" ללחיץ רק אם יש אחריו עוד סינון (כמו תגית), אחרת הוא האחרון
+      const isLast = !tag && !vendor;
       crumbs.push({ 
         label: type, 
-        href: `${collectionUrl}?type=${encodeURIComponent(type)}` 
+        href: isLast ? null : `${collectionUrl}?type=${encodeURIComponent(type)}` 
       });
       pageTitle = type;
     }
 
-    // שלב 3: אם נבחרה תגית ספציפית (למשל: חורף)
     if (tag) {
-      // כאן אין לינק, כי זה המיקום הנוכחי
       crumbs.push({ label: tag, href: null });
       pageTitle = `${type || collection.title} - ${tag}`;
     } 
-    // שלב 4: אם נבחר יצרן (ולא תגית)
     else if (vendor) {
       crumbs.push({ label: vendor, href: null });
       pageTitle = `${pageTitle} - ${vendor}`;
@@ -54,38 +62,50 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
   }
 
   // ---------------------------------------------------------
-  // 🟥 מצב B: אנחנו בתוך דף מוצר בודד
+  // 🟥 מצב B: דף מוצר בודד (כאן היה התיקון העיקרי)
   // ---------------------------------------------------------
   else if (product) {
-    // ננסה להבין לאיזו קטגוריה ראשית המוצר שייך לפי התגיות (cat:road וכד')
+    // זיהוי קטגוריה לפי תגית cat:xxx
     const categoryTag = product.tags?.find(t => t.startsWith('cat:'));
-    
+    let currentCatHandle = null;
+
     if (categoryTag) {
-      const catHandle = categoryTag.replace('cat:', '').trim();
-      // אנחנו מניחים שהשם של האוסף הוא ה-Handle באנגלית (או שצריך מיפוי, כרגע נשתמש בזה)
-      // לשיפור: אפשר להעביר את שם הקולקציה כ-Prop אם יש אותו
-      crumbs.push({ label: 'קטגוריה', href: `/shop/collection/${catHandle}` });
+      currentCatHandle = categoryTag.replace('cat:', '').trim();
+      // ✅ תיקון 1: שימוש במילון כדי להציג שם בעברית במקום "קטגוריה"
+      const catLabel = CATEGORY_NAMES[currentCatHandle] || currentCatHandle; 
+      
+      crumbs.push({ 
+        label: catLabel, 
+        href: `/shop/collection/${currentCatHandle}` 
+      });
     }
 
-    // הוספת סוג המוצר אם קיים (Product Type)
+    // הוספת סוג המוצר (למשל: כפפות)
     if (product.productType) {
-        // אין לנו לינק מדויק חזרה לקולקציה כי חסר לנו ה-Handle של הקולקציה בדף מוצר,
-        // אז נוותר על הלינק או שנכוון לחיפוש כללי
-        crumbs.push({ label: product.productType, href: null });
+      // ✅ תיקון 2: יצירת לינק חזרה לקטגוריה עם הפילטר של הסוג
+      let typeHref = null;
+      if (currentCatHandle) {
+        typeHref = `/shop/collection/${currentCatHandle}?type=${encodeURIComponent(product.productType)}`;
+      }
+
+      crumbs.push({ 
+        label: product.productType, 
+        href: typeHref // כעת זה לחיץ ומוביל לסינון המוצרים
+      });
     }
 
-    // שם המוצר
+    // שם המוצר (תמיד אחרון ולכן ללא לינק)
     crumbs.push({ label: product.title, href: null });
     pageTitle = product.title;
   }
 
   // ---------------------------------------------------------
-  // 🟥 מצב C: חלפים (Fallback למערכת הישנה אם תרצה לשמור אותה)
+  // 🟥 מצב C: חלפים / URL ידני
   // ---------------------------------------------------------
   else {
-    // זיהוי לפי ה-URL (למשל /shop/vendor/ktm)
     const segments = pathname.split('/').filter(Boolean);
     
+    // זיהוי תבנית /shop/vendor/NAME/MODEL
     if (segments.includes('vendor')) {
        const vendorIndex = segments.indexOf('vendor');
        const vendorName = decodeURIComponent(segments[vendorIndex + 1] || '');
@@ -96,18 +116,18 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
          pageTitle = `חלקים ל-${vendorName}`;
        }
        if (modelName) {
-         crumbs.push({ label: modelName, href: null });
+         // ✅ תיקון 3: הוספת לינק לדגם, למקרה שנכנסים לדף חלק ספציפי בעתיד
+         // כרגע זה הדף האחרון, אבל אם בעתיד תהיה היררכיה נוספת, זה מוכן
+         crumbs.push({ label: modelName, href: null }); 
          pageTitle = `חלקים ל-${vendorName} ${modelName}`;
        }
     } else {
-        // ברירת מחדל
-        pageTitle = 'חנות';
+       pageTitle = 'חנות';
     }
   }
 
   return (
     <div className="mb-6 px-2 md:px-0">
-      {/* ניווט פירורים */}
       <nav className="flex items-center text-sm text-gray-500 mb-4" dir="rtl">
         <ul className="flex items-center gap-1 flex-wrap">
           {crumbs.map((crumb, index) => {
@@ -132,7 +152,6 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
         </ul>
       </nav>
 
-      {/* קו מפריד וכותרת */}
       <div className="w-full border-b border-gray-200"></div>
       
       {pageTitle && (
