@@ -3,7 +3,7 @@
 
 import { Suspense, useState } from 'react';
 import ShopSidebar from '@/components/ShopSidebar';
-import MobileShopFilterBar from '@/components/MobileShopFilterBar';
+
 import ShopInfoAccordion from '@/components/ShopInfoAccordion';
 import { buildUrlFromFilters } from '@/utils/buildUrlFromFilters';
 import { useSearchParams, usePathname, useRouter } from 'next/navigation';
@@ -79,12 +79,7 @@ function ShopLayoutInternalContent({ children, product = null, customSidebar = n
       {/* אם הסרגל מוסתר, התוכן תופס את כל הרוחב (col-span-4). אחרת, רק 3 עמודות */}
       <div className={`${hideSidebar ? 'md:col-span-4' : 'md:col-span-3'} space-y-6`}>
         
-        {/* במובייל: פילטר שורה קטן (רק אם לא מוסתר) */}
-        {!hideSidebar && !customSidebar && (
-          <div className="md:hidden">
-             <MobileShopFilterBar onFilterChange={handleSearch} product={product} />
-          </div>
-        )}
+        
 
         {children}
 
