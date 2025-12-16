@@ -168,7 +168,7 @@ export default function ProductPageInner({ type, product, items, collectionStats
               {product.options.map((opt) => (
                 <div key={opt.id}>
                   <label className="block text-sm font-bold mb-1.5 text-gray-800">{opt.name}:</label>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-0.2">
                     {opt.values.map((val) => {
                       const isSelected = selectedOptions[opt.name] === val;
                       // 👇 תיקון 2: בדיקת מלאי
