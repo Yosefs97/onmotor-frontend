@@ -1,6 +1,7 @@
 // /app/shop/cart/page.jsx
-export const dynamic = 'force-dynamic';
 'use client';
+export const dynamic = 'force-dynamic';
+
 import Link from "next/link";
 import { useEffect, useState } from 'react';
 import ShopSidebar from '@/components/ShopSidebar';
