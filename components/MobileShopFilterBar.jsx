@@ -27,7 +27,7 @@ export default function MobileShopFilterBar({ onFilterChange = () => {}, product
             md:hidden 
             flex items-center justify-center 
             bg-red-600 text-white 
-            h-[50px] w-[50px] 
+            h-[50px] w-[80px] 
             rounded-lg shadow-sm 
             border border-red-700
             active:bg-red-700
@@ -35,8 +35,8 @@ export default function MobileShopFilterBar({ onFilterChange = () => {}, product
         aria-label="פתח סינון"
       >
         {/* טקסט אנכי */}
-        <span className="text-[20px] leading-3 font-bold text-center block w-full px-1">
-         סינון מנוע<br/>חכם
+        <span className="text-[15px] leading-3 font-bold text-center block w-full px-1">
+         מנוע סינון<br/>חכם
         </span>
       </button>
 
