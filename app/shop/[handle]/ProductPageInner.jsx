@@ -9,11 +9,9 @@ import RelatedProducts from '@/components/RelatedProducts';
 import RelatedArticles from '@/components/RelatedArticles';
 import WhatsAppButton from '@/components/WhatsAppButton';
 import AutoShopBreadcrumbs from '@/components/AutoShopBreadcrumbs';
-// 👇 1. ייבוא הסיידבר החדש
 import CategorySidebar from '@/components/CategorySidebar';
 import { getProductYearRange, formatYearRange } from '@/lib/productYears';
 
-// 👇 2. קבלת נתונים סטטיסטיים (collectionStats) מה-Server Component
 export default function ProductPageInner({ type, product, items, collectionStats }) {
   const [adding, setAdding] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState({});
@@ -90,9 +88,9 @@ export default function ProductPageInner({ type, product, items, collectionStats
   const showAddToCart = currentVariant?.availableForSale && currentVariant?.quantityAvailable > 0;
   const handleOptionChange = (name, value) => setSelectedOptions(prev => ({ ...prev, [name]: value }));
 
-  // 👇 3. הכנת הסיידבר החדש (אם זה לא חלק חילוף)
+  // הסיידבר החדש
   const accessorySidebar = !isSparePart && collectionStats ? (
-    <div className="hidden lg:block"> {/* מסתירים במובייל, מציגים בדסקטופ */}
+    <div className="hidden lg:block">
         <div className="mb-2 font-bold text-gray-500 text-sm px-1">
              עוד בקטגוריה:
         </div>
@@ -104,24 +102,15 @@ export default function ProductPageInner({ type, product, items, collectionStats
                 vendors: collectionStats.vendors || [],
                 selectedType: product.productType
             }}
-            // מכוון את הלחיצות חזרה לקטגוריה
             basePath={`/shop/collection/${collectionStats.handle || 'all'}`} 
         />
     </div>
   ) : null;
 
   return (
-    // 👇 4. שינוי ב-ShopLayoutInternal:
-    // אנחנו מעבירים לו prop חדש (customSidebar) או משתמשים בלוגיקה קיימת.
-    // אני מניח שצריך לעדכן את ShopLayoutInternal שיתמוך בזה, 
-    // או שאם הוא תומך ב-children בלבד, נצטרך לעטוף כאן.
-    // כאן אני מניח שהוספת ל-ShopLayoutInternal תמיכה ב-customSidebar
-    
     <ShopLayoutInternal 
         product={product} 
-        // לא מסתירים סרגל יותר! תמיד מציגים משהו.
         hideSidebar={false} 
-        // אם זה אביזר, נעביר את הסיידבר המותאם שלנו. אחרת (חלק חילוף) נשלח null והוא יציג את הדיפולט שלו.
         customSidebar={isSparePart ? null : accessorySidebar}
     >
       
@@ -189,6 +178,12 @@ export default function ProductPageInner({ type, product, items, collectionStats
                       ? <span className="text-green-600 font-bold">זמין במלאי ({currentVariant.quantityAvailable})</span> 
                       : <span className="text-red-600 font-bold">אזל המלאי</span>}
                 </span>
+
+                {/* 👇👇👇 כאן החזרתי את השורות החסרות 👇👇👇 */}
+                {modelTag && <span><strong>דגם:</strong> {modelTag}</span>}
+                {yrText && <span><strong>שנים:</strong> {yrText}</span>}
+                {/* 👆👆👆 ----------------------------- 👆👆👆 */}
+
               </div>
             </div>
           )}
