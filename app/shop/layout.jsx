@@ -4,7 +4,7 @@ import { fetchMenu } from '@/lib/shopify/fetchMenu'; // 👈 1. ייבוא הפ�
 
 export default async function ShopLayout({ children }) {
   // 👈 2. שליפת התפריט (רץ על השרת)
-  const menuItems = await fetchMenu('mega-menu');
+  const menuItems = await fetchMenu('main-menu');
 
   return (
     <div className="w-full min-h-screen bg-white">

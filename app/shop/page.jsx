@@ -17,7 +17,7 @@ export default async function ShopPage() {
   const [manufacturers, categories, menuItems] = await Promise.all([
     fetchManufacturers(),
     fetchCategoryList(),
-    fetchMenu('mega-menu') 
+    fetchMenu('main-menu') 
   ]);
 
   return (
