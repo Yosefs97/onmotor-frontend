@@ -3,13 +3,20 @@
 
 import { Suspense, useState } from 'react';
 import ShopSidebar from '@/components/ShopSidebar';
-
 import ShopInfoAccordion from '@/components/ShopInfoAccordion';
 import { buildUrlFromFilters } from '@/utils/buildUrlFromFilters';
 import { useSearchParams, usePathname, useRouter } from 'next/navigation';
 import { Filter, X } from 'lucide-react';
+// 👇 1. ייבוא הקומפוננטה החדשה
+import MobileCategoryNav from '@/components/MobileCategoryNav';
 
-function ShopLayoutInternalContent({ children, product = null, customSidebar = null, hideSidebar = false }) {
+function ShopLayoutInternalContent({ 
+  children, 
+  product = null, 
+  customSidebar = null, 
+  hideSidebar = false,
+  menuItems = [] // 👇 2. קבלת הנתונים כ-Prop (ברירת מחדל מערך ריק)
+}) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
@@ -44,6 +51,11 @@ function ShopLayoutInternalContent({ children, product = null, customSidebar = n
         </div>
       )}
 
+      {/* 👇👇👇 3. המיקום החדש: מתחת לכפתור הסינון 👇👇👇 */}
+      {/* הקומפוננטה עצמה כבר דואגת להיות מוסתרת בדסקטופ (md:hidden) */}
+      <MobileCategoryNav menuItems={menuItems} />
+      {/* 👆👆👆 ------------------------------------- 👆👆👆 */}
+
       {/* --- מגירה למובייל --- */}
       {isMobileMenuOpen && !hideSidebar && (
         <div className="fixed inset-0 z-50 flex md:hidden" dir="rtl">
@@ -76,13 +88,8 @@ function ShopLayoutInternalContent({ children, product = null, customSidebar = n
       )}
 
       {/* --- אזור התוכן הראשי --- */}
-      {/* אם הסרגל מוסתר, התוכן תופס את כל הרוחב (col-span-4). אחרת, רק 3 עמודות */}
       <div className={`${hideSidebar ? 'md:col-span-4' : 'md:col-span-3'} space-y-6`}>
-        
-        
-
         {children}
-
         <ShopInfoAccordion />
       </div>
     </div>
