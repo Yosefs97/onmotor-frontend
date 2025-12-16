@@ -148,17 +148,17 @@ export default function ProductPageInner({ type, product, items, collectionStats
           <h1 className="text-3xl font-bold">{product.title}</h1>
           
           <div
-            className="prose max-w-none text-gray-600"
+            className="prose max-w-none text-gray-900"
             dangerouslySetInnerHTML={{ __html: product.descriptionHtml }}
           />
 
           {/* בורר אפשרויות */}
           {product.options && product.options.length > 0 && product.options[0].name !== 'Title' && (
-            <div className="bg-gray-50 p-4 rounded-lg border space-y-3 mt-4">
+            <div className=" p-2 rounded-lg border space-y-3 mt-4">
               {product.options.map((opt) => (
                 <div key={opt.id}>
-                  <label className="block text-sm font-bold mb-2 text-gray-800">{opt.name}:</label>
-                  <div className="flex flex-wrap gap-2">
+                  <label className="block text-sm font-bold mb-0.5 text-gray-800">{opt.name}:</label>
+                  <div className="flex flex-wrap gap-0.1">
                     {opt.values.map((val) => {
                       const isSelected = selectedOptions[opt.name] === val;
                       return (
