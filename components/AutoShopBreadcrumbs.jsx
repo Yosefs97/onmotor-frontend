@@ -5,8 +5,13 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { ChevronLeft, Home } from 'lucide-react';
 
-// 🛠️ מיפוי שמות קטגוריות (Handle -> שם בעברית)
-// עדכן כאן את כל הקטגוריות שיש לך במערכת
+// פונקציית עזר להפוך טקסט ל-Slug (למשל: "S 1000RR" -> "s-1000rr")
+const toSlug = (str) => {
+  if (!str) return '';
+  return str.trim().toLowerCase().replace(/\s+/g, '-');
+};
+
+// מיפוי שמות קטגוריות (לציוד/אביזרים)
 const CATEGORY_NAMES = {
   'road': 'כביש',
   'offroad': 'שטח',
@@ -20,12 +25,12 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // 1. חילוץ פרמטרים מה-URL
+  // 1. חילוץ פרמטרים
   const type = searchParams.get('type');
   const tag = searchParams.get('tag');
-  const vendor = searchParams.get('vendor');
+  const vendorParam = searchParams.get('vendor'); // vendor מה-URL
 
-  // 2. בניית המערך הבסיסי
+  // 2. בסיס
   const crumbs = [
     { label: <Home className="w-4 h-4" />, href: '/' },
     { label: 'חנות', href: '/shop' }
@@ -34,7 +39,7 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
   let pageTitle = '';
 
   // ---------------------------------------------------------
-  // 🟥 מצב A: דף קולקציה/קטגוריה
+  // 🟥 מצב A: אנחנו בתוך דף קולקציה/קטגוריה (לא דף מוצר)
   // ---------------------------------------------------------
   if (collection) {
     const collectionUrl = `/shop/collection/${collection.handle}`;
@@ -42,8 +47,7 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
     pageTitle = collection.title;
 
     if (type) {
-      // כאן הופכים את ה"סוג" ללחיץ רק אם יש אחריו עוד סינון (כמו תגית), אחרת הוא האחרון
-      const isLast = !tag && !vendor;
+      const isLast = !tag && !vendorParam;
       crumbs.push({ 
         label: type, 
         href: isLast ? null : `${collectionUrl}?type=${encodeURIComponent(type)}` 
@@ -55,70 +59,97 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
       crumbs.push({ label: tag, href: null });
       pageTitle = `${type || collection.title} - ${tag}`;
     } 
-    else if (vendor) {
-      crumbs.push({ label: vendor, href: null });
-      pageTitle = `${pageTitle} - ${vendor}`;
+    else if (vendorParam) {
+      crumbs.push({ label: vendorParam, href: null });
+      pageTitle = `${pageTitle} - ${vendorParam}`;
     }
   }
 
   // ---------------------------------------------------------
-  // 🟥 מצב B: דף מוצר בודד (כאן היה התיקון העיקרי)
+  // 🟥 מצב B: דף מוצר בודד (הלוגיקה החדשה והמשולבת)
   // ---------------------------------------------------------
   else if (product) {
-    // זיהוי קטגוריה לפי תגית cat:xxx
-    const categoryTag = product.tags?.find(t => t.startsWith('cat:'));
-    let currentCatHandle = null;
+    
+    // בדיקה 1: האם זה מוצר "חלק חילוף" (יש לו תגית דגם)?
+    const modelTag = product.tags?.find(t => t.startsWith('model:'));
 
-    if (categoryTag) {
-      currentCatHandle = categoryTag.replace('cat:', '').trim();
-      // ✅ תיקון 1: שימוש במילון כדי להציג שם בעברית במקום "קטגוריה"
-      const catLabel = CATEGORY_NAMES[currentCatHandle] || currentCatHandle; 
+    if (modelTag) {
+      // === לוגיקה לחלקי חילוף (BMW > S 1000RR) ===
       
-      crumbs.push({ 
-        label: catLabel, 
-        href: `/shop/collection/${currentCatHandle}` 
-      });
-    }
+      // 1. חילוץ היצרן (למשל BMW)
+      const vendorName = product.vendor; // BMW
+      const vendorSlug = toSlug(vendorName);
 
-    // הוספת סוג המוצר (למשל: כפפות)
-    if (product.productType) {
-      // ✅ תיקון 2: יצירת לינק חזרה לקטגוריה עם הפילטר של הסוג
-      let typeHref = null;
-      if (currentCatHandle) {
-        typeHref = `/shop/collection/${currentCatHandle}?type=${encodeURIComponent(product.productType)}`;
+      if (vendorName) {
+        crumbs.push({ 
+          label: vendorName, 
+          href: `/shop/vendor/${vendorSlug}` 
+        });
       }
 
-      crumbs.push({ 
-        label: product.productType, 
-        href: typeHref // כעת זה לחיץ ומוביל לסינון המוצרים
-      });
+      // 2. חילוץ הדגם (למשל S 1000RR)
+      const modelName = modelTag.replace('model:', '').trim(); // "s 1000rr"
+      const modelSlug = toSlug(modelName); // "s-1000rr"
+
+      if (modelName) {
+        crumbs.push({ 
+          label: modelName.toUpperCase(), // להציג יפה (S 1000RR)
+          href: `/shop/vendor/${vendorSlug}/${modelSlug}` 
+        });
+      }
+
+    } else {
+      // === לוגיקה לציוד (כפפות, קסדות וכו') ===
+      
+      const categoryTag = product.tags?.find(t => t.startsWith('cat:'));
+      let currentCatHandle = null;
+
+      if (categoryTag) {
+        currentCatHandle = categoryTag.replace('cat:', '').trim();
+        const catLabel = CATEGORY_NAMES[currentCatHandle] || currentCatHandle;
+        
+        crumbs.push({ 
+          label: catLabel, 
+          href: `/shop/collection/${currentCatHandle}` 
+        });
+      }
+
+      if (product.productType) {
+        let typeHref = null;
+        // אם ידועה הקטגוריה, הלינק יסנן לפי הסוג בתוכה
+        if (currentCatHandle) {
+          typeHref = `/shop/collection/${currentCatHandle}?type=${encodeURIComponent(product.productType)}`;
+        }
+        crumbs.push({ 
+          label: product.productType, 
+          href: typeHref 
+        });
+      }
     }
 
-    // שם המוצר (תמיד אחרון ולכן ללא לינק)
+    // בסוף: שם המוצר
     crumbs.push({ label: product.title, href: null });
     pageTitle = product.title;
   }
 
   // ---------------------------------------------------------
-  // 🟥 מצב C: חלפים / URL ידני
+  // 🟥 מצב C: דפדוף ידני ב-URL של חלפים (ללא דף מוצר)
   // ---------------------------------------------------------
   else {
     const segments = pathname.split('/').filter(Boolean);
     
-    // זיהוי תבנית /shop/vendor/NAME/MODEL
     if (segments.includes('vendor')) {
        const vendorIndex = segments.indexOf('vendor');
        const vendorName = decodeURIComponent(segments[vendorIndex + 1] || '');
        const modelName = decodeURIComponent(segments[vendorIndex + 2] || '');
 
        if (vendorName) {
-         crumbs.push({ label: vendorName, href: `/shop/vendor/${vendorName}` });
+         // כאן אנחנו מניחים שה-URL כבר בפורמט נכון, אז משתמשים בו
+         crumbs.push({ label: vendorName.toUpperCase(), href: `/shop/vendor/${vendorName}` });
          pageTitle = `חלקים ל-${vendorName}`;
        }
        if (modelName) {
-         // ✅ תיקון 3: הוספת לינק לדגם, למקרה שנכנסים לדף חלק ספציפי בעתיד
-         // כרגע זה הדף האחרון, אבל אם בעתיד תהיה היררכיה נוספת, זה מוכן
-         crumbs.push({ label: modelName, href: null }); 
+         crumbs.push({ label: modelName.toUpperCase(), href: null }); // דף נוכחי
          pageTitle = `חלקים ל-${vendorName} ${modelName}`;
        }
     } else {
@@ -142,7 +173,7 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
                     {crumb.label}
                   </span>
                 ) : (
-                  <Link href={crumb.href} className="hover:text-red-600 transition-colors">
+                  <Link href={crumb.href} className="hover:text-red-600 transition-colors capitalize">
                     {crumb.label}
                   </Link>
                 )}
@@ -155,7 +186,7 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
       <div className="w-full border-b border-gray-200"></div>
       
       {pageTitle && (
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mt-4">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mt-4 capitalize">
           {pageTitle}
         </h1>
       )}
