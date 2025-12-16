@@ -16,11 +16,10 @@ export default function ProductPageInner({ type, product, items, collectionStats
   const [adding, setAdding] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState({});
 
-  // 1. זיהוי האם זה חלק חילוף (לפי טווח שנים)
+  // 1. זיהוי האם זה חלק חילוף
   const isSparePart = useMemo(() => {
     if (!product) return false;
     const range = getProductYearRange(product);
-    // אם יש טווח שנים, זה כנראה חלק חילוף לאופנוע ספציפי
     return range && (range.from || range.to);
   }, [product]);
 
@@ -37,6 +36,24 @@ export default function ProductPageInner({ type, product, items, collectionStats
     }
   }, [product]);
 
+  // בדיקה האם וריאציה ספציפית זמינה (עבור כפתורי המידות)
+  const isValueAvailable = (optionName, value) => {
+    if (!product?.variants?.edges) return true;
+    
+    // מוצאים את הוריאציה שמתאימה לערך הנוכחי + שאר הבחירות הקיימות
+    const matchingVariant = product.variants.edges.find(({ node }) => {
+        return node.selectedOptions.every(opt => {
+            // עבור האופציה הנבדקת כרגע - בודקים את הערך מהלולאה
+            if (opt.name === optionName) return opt.value === value;
+            // עבור שאר האופציות - בודקים מה כבר מסומן ב-State
+            return selectedOptions[opt.name] === opt.value;
+        });
+    });
+
+    if (!matchingVariant) return false; // הוריאציה לא קיימת בכלל
+    return matchingVariant.node.availableForSale && matchingVariant.node.quantityAvailable > 0;
+  };
+
   // -------- מצב חיפוש --------
   if (type === 'search') {
     return (
@@ -50,7 +67,7 @@ export default function ProductPageInner({ type, product, items, collectionStats
     return <ShopLayoutInternal><div dir="rtl">מוצר לא נמצא</div></ShopLayoutInternal>;
   }
 
-  // חישוב הוריאציה
+  // חישוב הוריאציה הנוכחית
   const currentVariant = useMemo(() => {
     if (!product.variants?.edges?.length) return null;
     const found = product.variants.edges.find(({ node }) => {
@@ -88,16 +105,11 @@ export default function ProductPageInner({ type, product, items, collectionStats
   const showAddToCart = currentVariant?.availableForSale && currentVariant?.quantityAvailable > 0;
   const handleOptionChange = (name, value) => setSelectedOptions(prev => ({ ...prev, [name]: value }));
 
-  // 👇👇👇 2. לוגיקה מתוקנת לסיידבר 👇👇👇
+  // לוגיקה לסיידבר
   let sidebarContent;
-
   if (isSparePart) {
-    // אם זה חלק חילוף: נשלח null כדי שה-ShopLayout יציג את ברירת המחדל (מנוע החיפוש)
     sidebarContent = null;
   } else {
-    // אם זה אביזר: אנחנו חייבים להציג סיידבר, או div ריק.
-    // אסור להחזיר null אחרת יופיע החיפוש של החלפים.
-    
     if (collectionStats) {
       sidebarContent = (
         <div className="hidden lg:block">
@@ -117,17 +129,14 @@ export default function ProductPageInner({ type, product, items, collectionStats
         </div>
       );
     } else {
-      // אם אין סטטיסטיקות (אולי אין תגית קטגוריה), נציג שטח ריק כדי "לדרוס" את החיפוש
       sidebarContent = <div className="hidden lg:block"></div>;
     }
   }
-  // 👆👆👆 סוף הלוגיקה המתוקנת
 
   return (
     <ShopLayoutInternal 
         product={product} 
         hideSidebar={false} 
-        // מעבירים את המשתנה שיצרנו למעלה
         customSidebar={sidebarContent}
     >
       
@@ -154,22 +163,36 @@ export default function ProductPageInner({ type, product, items, collectionStats
 
           {/* בורר אפשרויות */}
           {product.options && product.options.length > 0 && product.options[0].name !== 'Title' && (
-            <div className=" p-2 rounded-lg border space-y-3 mt-4">
+            // 👇 תיקון 1: הסרת ה-bg, border, padding מהקונטיינר
+            <div className="mt-6 space-y-4"> 
               {product.options.map((opt) => (
                 <div key={opt.id}>
-                  <label className="block text-sm font-bold mb-0.5 text-gray-800">{opt.name}:</label>
-                  <div className="flex flex-wrap gap-0.1">
+                  <label className="block text-sm font-bold mb-1.5 text-gray-800">{opt.name}:</label>
+                  <div className="flex flex-wrap gap-2">
                     {opt.values.map((val) => {
                       const isSelected = selectedOptions[opt.name] === val;
+                      // 👇 תיקון 2: בדיקת מלאי
+                      const isAvailable = isValueAvailable(opt.name, val);
+
                       return (
                         <button
                           key={val}
-                          onClick={() => handleOptionChange(opt.name, val)}
-                          className={`px-4 py-2 border rounded-md text-sm font-medium transition-all ${
-                            isSelected 
-                              ? 'bg-red-600 text-white border-red-600 shadow-sm' 
-                              : 'bg-white text-gray-700 border-gray-300 hover:border-gray-500'
-                          }`}
+                          onClick={() => isAvailable && handleOptionChange(opt.name, val)}
+                          disabled={!isAvailable}
+                          // 👇 תיקון 3+4: הקטנת כפתורים + קו אלכסוני במצב לא זמין
+                          className={`
+                            px-2 py-1 min-w-[3rem] border rounded text-sm font-medium transition-all relative
+                            ${!isAvailable 
+                                ? 'text-gray-400 border-gray-200 bg-gray-50 cursor-not-allowed opacity-70' // עיצוב לא זמין
+                                : isSelected 
+                                    ? 'bg-red-600 text-white border-red-600 shadow-sm' // נבחר
+                                    : 'bg-white text-gray-700 border-gray-300 hover:border-gray-500' // רגיל
+                            }
+                          `}
+                          // שימוש ב-style עבור הקו האלכסוני כדי לא להסתבך עם Tailwind classes מורכבים
+                          style={!isAvailable ? {
+                            backgroundImage: 'linear-gradient(to top right, transparent 48%, #9ca3af 49%, #9ca3af 51%, transparent 52%)'
+                          } : {}}
                         >
                           {val}
                         </button>
