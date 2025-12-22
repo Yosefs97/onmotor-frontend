@@ -48,7 +48,7 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
 
     {
       title: 'בלוג', path: '/blog', links: [
-        { title: 'אחד על אחד (פודקאסט)', path: '/blog/podcast' },
+        { title: 'אחד על אחד (אנשים)', path: '/blog/podcast' },
         { title: 'בקסדה', path: '/blog/in-helmet' },
         { title: 'על הנייר', path: '/blog/paper' },
         { title: 'טיפים', path: '/blog/tips' },
