@@ -26,7 +26,27 @@ const PUBLIC_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || API_URL;
 const SITE_URL = "https://www.onmotormedia.com";
 const PLACEHOLDER_IMG = "/default-image.jpg";
 
-// ... פונקציות העזר ...
+// ===================================================================
+//              פונקציית עזר לתיקון תמונות לוואטסאפ (Cloudinary)
+// ===================================================================
+function optimizeCloudinaryUrl(url) {
+  if (!url || typeof url !== 'string') return url;
+
+  // אם התמונה לא מ-Cloudinary, נחזיר אותה כמו שהיא
+  if (!url.includes('res.cloudinary.com')) return url;
+
+  // אם כבר יש מניפולציות ב-URL, לא ניגע בו כדי לא לשבור
+  if (url.includes('/q_auto') || url.includes('/w_')) return url;
+
+  // הזרקת פרמטרים להקטנת משקל והמרה ל-JPG
+  // w_1200: רוחב סטנדרטי ל-OG
+  // c_limit: לא למתוח תמונה קטנה
+  // q_auto: דחיסה חכמה
+  // f_jpg: המרה ל-JPG (חשוב לתמונות PNG כבדות)
+  return url.replace('/upload/', '/upload/w_1200,c_limit,q_auto,f_jpg/');
+}
+
+// ... שאר פונקציות העזר ...
 
 function normalizeHref(href) {
   if (!href) return '#';
@@ -81,6 +101,9 @@ async function getSimilarArticles(currentSlugOrHref, category) {
   }
 }
 
+// ===================================================================
+//                          Generate Metadata
+// ===================================================================
 export async function generateMetadata({ params }) {
   try {
     // ✅ תיקון ל-Next.js 15: חייבים לעשות await ל-params
@@ -105,7 +128,11 @@ export async function generateMetadata({ params }) {
       article.subdescription ||
       "כתבה מתוך מגזין OnMotor Media";
 
-    const imageUrl = getArticleImage(article);
+    // שליפת התמונה המקורית
+    const rawImageUrl = getArticleImage(article);
+    
+    // ✅ אופטימיזציה ל-Cloudinary עבור וואטסאפ (הקטנת משקל)
+    const optimizedImageUrl = optimizeCloudinaryUrl(rawImageUrl);
 
     return {
       title: `${title} | OnMotor Media`,
@@ -118,13 +145,13 @@ export async function generateMetadata({ params }) {
         locale: "he_IL",
         url: `${SITE_URL}/articles/${resolvedParams.slug}`,
         siteName: "OnMotor Media",
-        images: [{ url: imageUrl, width: 1200, height: 630, alt: title }],
+        images: [{ url: optimizedImageUrl, width: 1200, height: 630, alt: title }],
       },
       twitter: {
         card: "summary_large_image",
         title,
         description,
-        images: [imageUrl],
+        images: [optimizedImageUrl],
       },
     };
   } catch (err) {
@@ -307,7 +334,7 @@ export default async function ArticlePage({ params }) {
         const urlMatch = cleanText.match(/https?:\/\/[^\s]+/);
         if (urlMatch) {
           let url = urlMatch[0].trim();
-           
+            
           if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
             return (
               <InlineImage
@@ -354,7 +381,7 @@ export default async function ArticlePage({ params }) {
         const urlMatch = html.match(/https?:\/\/[^\s"']+/);
         if (urlMatch) {
           let url = urlMatch[0];
-           
+            
           if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
             return (
               <InlineImage
@@ -471,7 +498,7 @@ export default async function ArticlePage({ params }) {
           {article.description && (
             <p className="font-bold text-2xl text-gray-600">{article.description}</p>
           )}
-           
+            
           <div className="article-content">
             {paragraphs.map(renderParagraph)}
           </div>
@@ -495,11 +522,11 @@ export default async function ArticlePage({ params }) {
           </div>
 
           <Tags tags={article.tags} />
-           
+            
           <div className="similar-articles-section">
             <SimilarArticles articles={similarArticlesData} />
           </div>
-           
+            
         </div>
       </PageContainer>
       <ScrollToTableButton />
