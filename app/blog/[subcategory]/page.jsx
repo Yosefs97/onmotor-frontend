@@ -4,7 +4,7 @@ import PageContainer from '@/components/PageContainer';
 import CategoryPage from '@/components/CategoryPage';
 
 const labelMap = {
-  podcast: 'אחד על אחד (פודקאסט)',
+  podcast: 'אחד על אחד (אנשים)',
   'in-helmet': 'בקסדה',
   paper: 'על הנייר',
   tips: 'טיפים',
