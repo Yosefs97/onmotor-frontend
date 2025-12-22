@@ -32,18 +32,19 @@ const PLACEHOLDER_IMG = "/default-image.jpg";
 function optimizeCloudinaryUrl(url) {
   if (!url || typeof url !== 'string') return url;
 
-  // אם התמונה לא מ-Cloudinary, נחזיר אותה כמו שהיא
+  // בדיקה שזו תמונה של Cloudinary
   if (!url.includes('res.cloudinary.com')) return url;
 
-  // אם כבר יש מניפולציות ב-URL, לא ניגע בו כדי לא לשבור
-  if (url.includes('/q_auto') || url.includes('/w_')) return url;
+  // אם ה-URL כבר מכיל הגדרות גובה/רוחב, לא נדרוס כדי לא לשבור
+  if (url.includes('/w_') && url.includes('/h_')) return url;
 
-  // הזרקת פרמטרים להקטנת משקל והמרה ל-JPG
-  // w_1200: רוחב סטנדרטי ל-OG
-  // c_limit: לא למתוח תמונה קטנה
-  // q_auto: דחיסה חכמה
-  // f_jpg: המרה ל-JPG (חשוב לתמונות PNG כבדות)
-  return url.replace('/upload/', '/upload/w_1200,c_limit,q_auto,f_jpg/');
+  // --- התיקון הקריטי לוואטסאפ ---
+  // w_1200,h_630: מכריח גודל מלבני מושלם (OG Standard)
+  // c_fill: חותך את התמונה כדי למלא את המלבן (מונע עיוותים או שטחים ריקים)
+  // g_auto: מוודא שהחיתוך מתמקד באובייקט המרכזי בתמונה
+  // f_jpg: מבטל שקיפות וממיר ל-JPG קל
+  // q_auto: דחיסה אופטימלית
+  return url.replace('/upload/', '/upload/w_1200,h_630,c_fill,g_auto,f_jpg,q_auto/');
 }
 
 // ... שאר פונקציות העזר ...
@@ -106,11 +107,9 @@ async function getSimilarArticles(currentSlugOrHref, category) {
 // ===================================================================
 export async function generateMetadata({ params }) {
   try {
-    // ✅ תיקון ל-Next.js 15: חייבים לעשות await ל-params
     const resolvedParams = await params;
     const decodedSlug = decodeURIComponent(resolvedParams.slug);
 
-    // ✅ חיפוש כפול: או href שווה לערך, או slug שווה לערך
     const res = await fetch(
       `${API_URL}/api/articles?filters[$or][0][href][$eq]=${encodeURIComponent(decodedSlug)}&filters[$or][1][slug][$eq]=${encodeURIComponent(decodedSlug)}&populate=*`,
       { next: { revalidate: 3600 } }
@@ -128,11 +127,43 @@ export async function generateMetadata({ params }) {
       article.subdescription ||
       "כתבה מתוך מגזין OnMotor Media";
 
-    // שליפת התמונה המקורית
-    const rawImageUrl = getArticleImage(article);
-    
-    // ✅ אופטימיזציה ל-Cloudinary עבור וואטסאפ (הקטנת משקל)
-    const optimizedImageUrl = optimizeCloudinaryUrl(rawImageUrl);
+    // --- לוגיקה חכמה לבחירת תמונה ---
+    let finalImageUrl = null;
+
+    // 1. ננסה לקחת תמונה ראשית מתוך Strapi Formats (עדיפות למדיום אם קיים)
+    const strapiImageAttributes = article.image?.data?.attributes;
+    if (strapiImageAttributes) {
+        // אם זה ב-Cloudinary, עדיף לקחת את המקור כי אנחנו חותכים אותו
+        if (strapiImageAttributes.url?.includes('cloudinary')) {
+            finalImageUrl = strapiImageAttributes.url;
+        } 
+        // אם זה מקומי, עדיף לקחת פורמטים קטנים
+        else if (strapiImageAttributes.formats?.medium?.url) {
+            finalImageUrl = strapiImageAttributes.formats.medium.url;
+        } else if (strapiImageAttributes.formats?.small?.url) {
+            finalImageUrl = strapiImageAttributes.formats.small.url;
+        } else {
+            finalImageUrl = strapiImageAttributes.url;
+        }
+    }
+
+    // 2. Fallback לפונקציית העזר הרגילה (גלריה/לינקים חיצוניים)
+    if (!finalImageUrl) {
+        finalImageUrl = getArticleImage(article);
+    }
+
+    // 3. וידוא כתובת אבסולוטית (למקרה של תמונות מקומיות)
+    if (finalImageUrl && !finalImageUrl.startsWith('http')) {
+        finalImageUrl = resolveImageUrl(finalImageUrl);
+    }
+
+    // 4. הפעלת התיקון של Cloudinary (חיתוך למלבן)
+    finalImageUrl = optimizeCloudinaryUrl(finalImageUrl);
+
+    // 5. ברירת מחדל אחרונה
+    if (!finalImageUrl) {
+        finalImageUrl = `${SITE_URL}${PLACEHOLDER_IMG}`;
+    }
 
     return {
       title: `${title} | OnMotor Media`,
@@ -145,13 +176,13 @@ export async function generateMetadata({ params }) {
         locale: "he_IL",
         url: `${SITE_URL}/articles/${resolvedParams.slug}`,
         siteName: "OnMotor Media",
-        images: [{ url: optimizedImageUrl, width: 1200, height: 630, alt: title }],
+        images: [{ url: finalImageUrl, width: 1200, height: 630, alt: title }],
       },
       twitter: {
         card: "summary_large_image",
         title,
         description,
-        images: [optimizedImageUrl],
+        images: [finalImageUrl],
       },
     };
   } catch (err) {
@@ -164,11 +195,9 @@ export async function generateMetadata({ params }) {
 //                        ArticlePage Component
 // ===================================================================
 export default async function ArticlePage({ params }) {
-  // ✅ תיקון ל-Next.js 15: חייבים לעשות await ל-params
   const resolvedParams = await params;
   const decodedSlug = decodeURIComponent(resolvedParams.slug);
 
-  // ✅ חיפוש חכם: תומך גם בלינקים ישנים (slug) וגם בחדשים (href)
   const res = await fetch(
     `${API_URL}/api/articles?filters[$or][0][href][$eq]=${encodeURIComponent(decodedSlug)}&filters[$or][1][slug][$eq]=${encodeURIComponent(decodedSlug)}&populate=*`,
     { next: { revalidate: 3600 } }
@@ -179,7 +208,6 @@ export default async function ArticlePage({ params }) {
   if (!rawArticle) return notFound();
   const data = rawArticle;
 
-  // שימוש ב-href האמיתי לסינון דומים (אם קיים), אחרת ב-slug
   const realIdentifier = data.href || data.slug;
   const similarArticlesData = await getSimilarArticles(realIdentifier, data.category);
 
@@ -203,7 +231,6 @@ export default async function ArticlePage({ params }) {
   let mainImage = PLACEHOLDER_IMG;
   let mainImageAlt = "תמונה ראשית";
 
-  // לוגיקת בחירת תמונה ראשית
   if (galleryItems?.length > 0 && galleryItems[0]?.url) {
     mainImage = resolveImageUrl(galleryItems[0].url);
     mainImageAlt = galleryItems[0].alternativeText || "תמונה ראשית";
@@ -239,7 +266,6 @@ export default async function ArticlePage({ params }) {
     tags: data.tags || [],
     content: data.content || "",
     tableData: data.tableData || {},
-    // כאן אנחנו יוצרים את הלינק הפנימי עם העברית אם אפשר
     href: `/articles/${data.href || resolvedParams.slug}`,
     category: data.category || "general",
     subcategory: Array.isArray(data.subcategory)
@@ -252,7 +278,7 @@ export default async function ArticlePage({ params }) {
       : [],
     headline: data.headline || data.title,
     subdescription: data.subdescription || "",
-    slug: resolvedParams.slug, // עדכון לשימוש ב-resolvedParams
+    slug: resolvedParams.slug,
     gallery,
     externalImageUrls,
     externalMediaUrl,
@@ -260,7 +286,6 @@ export default async function ArticlePage({ params }) {
     font_family: data.font_family || "Heebo, sans-serif",
   };
 
-  // Structured Data (JSON-LD)
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "NewsArticle",
@@ -313,7 +338,6 @@ export default async function ArticlePage({ params }) {
   }
   breadcrumbs.push({ label: article.title });
 
-  // פונקציית הרינדור
   const renderParagraph = (block, i) => {
       if (typeof block === "string") {
         const cleanText = fixRelativeImages(block.trim());
