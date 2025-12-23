@@ -1,6 +1,6 @@
 // components/Header.jsx
 'use client';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react'; // Added useState
 import { gsap } from 'gsap';
 import NavigationMenu from './NavigationMenu';
 import SearchBar from './SearchBar';
@@ -12,6 +12,23 @@ export default function Header() {
   const lettersRef = useRef([]);
   const containerRef = useRef(null);
   const isAnimating = useRef(false);
+
+  // 1. הוספת סטייט למעקב אחרי גלילה
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    // מאזין לגלילה
+    const handleScroll = () => {
+      if (window.scrollY > 50) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     const tl = gsap.timeline();
@@ -88,6 +105,23 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 bg-black text-[#C0C0C0] h-[80px] fixed w-full flex flex-row-reverse items-center justify-between px-2 md:px-6 py-2 shadow-md border-b border-gray-800">
+      
+      {/* 2. רכיב חיפוש למובייל שמופיע רק בגלילה */}
+      <div 
+        className={`
+          absolute left-2 top-1/2 transform -translate-y-1/2 z-40
+          transition-all duration-500 ease-in-out lg:hidden
+          ${isScrolled 
+            ? 'opacity-100 translate-x-0 pointer-events-auto' 
+            : 'opacity-0 -translate-x-4 pointer-events-none'}
+        `}
+      >
+        {/* הגדרת רוחב כדי שלא יעלה על הלוגו */}
+        <div className="w-[140px] md:w-[200px]">
+           <SearchBar />
+        </div>
+      </div>
+
       <div
         ref={containerRef}
         className="flex flex-row-reverse items-center gap-2 min-w-0 cursor-pointer"
@@ -121,6 +155,7 @@ export default function Header() {
               </span>
             ))}
           </h1>
+          {/* אפשר להוסיף כאן תנאי להעלים את הסלוגן בגלילה במובייל אם צפוף: {!isScrolled && ...} */}
           <p className="text-xs lg:text-sm font-bold text-right whitespace-nowrap truncate">
             איפה שמנוע וגלגלים פוגשים מדיה
           </p>
