@@ -24,9 +24,9 @@ export const metadata = {
     "מגזין אופנועים ישראלי מוביל – חדשות אופנועים, סקירות דגמים, סקירת ציוד ומבחני דרך. כל מה שרוכב בישראל צריך לדעת.",
   
   icons: {
-    icon: '/icon.png',
-    shortcut: '/icon.png',
-    apple: '/icon.png',
+    icon: '/icon_v2.png',
+    shortcut: '/icon_v2.png',
+    apple: '/icon_v2.png',
   },
 
   openGraph: {
@@ -37,7 +37,7 @@ export const metadata = {
     siteName: "OnMotor Media",
     images: [
       {
-        url: "https://www.onmotormedia.com/full_Logo.jpg",
+        url: "https://www.onmotormedia.com/full_Logo_v2.jpg",
         width: 1200,
         height: 630,
         alt: "OnMotor Media Logo",
@@ -51,7 +51,7 @@ export const metadata = {
     title: "OnMotor Media – מגזין אופנועים ישראלי",
     description:
       "חדשות אופנועים, סקירות דגמים לקהילת הרוכבים של ישראל.",
-    images: ["https://www.onmotormedia.com/full_Logo.jpg"],
+    images: ["https://www.onmotormedia.com/full_Logo_v2.jpg"],
   },
   
   // ❌ הוסר מכאן ה-facebook כדי למנוע התנגשויות. הוספנו אותו ידנית למטה ב-Head.
@@ -124,9 +124,9 @@ async function getSidebarData() {
     }
 
     const { mainImage } = getMainImage(a);
-    let finalImageUrl = '/default-image.jpg';
+    let finalImageUrl = '/full_Logo_v2.jpg';
     
-    if (mainImage && mainImage !== '/default-image.jpg') {
+    if (mainImage && mainImage !== '/full_Logo_v2.jpg') {
       if (mainImage.startsWith('http')) {
         finalImageUrl = mainImage;
       } else {
@@ -187,7 +187,7 @@ export default async function RootLayout({ children }) {
               "@type": "Organization",
               "name": "OnMotor Media",
               "url": "https://www.onmotormedia.com",
-              "logo": "https://www.onmotormedia.com/OnMotorLogonoback.png",
+              "logo": "https://www.onmotormedia.com/icon_v2.png",
             }),
           }}
         />
