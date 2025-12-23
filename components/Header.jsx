@@ -47,18 +47,12 @@ export default function Header() {
       },
     });
 
-    tl.to(containerRef.current, {
-      x: -4,
-      duration: 0.05,
-      repeat: 5,
-      yoyo: true,
-      ease: 'power1.inOut',
-    });
+    // --- הסרתי את קטע הרעידה (x: -4) מכאן ---
 
     tl.to(
       logoRef.current,
       { rotate: '+=720', duration: 1.2, ease: 'power3.out' },
-      '-=0.2'
+      'start' // מתחיל מייד
     );
 
     tl.to(
