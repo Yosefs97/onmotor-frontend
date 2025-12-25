@@ -6,7 +6,7 @@ import ShopSidebar from '@/components/ShopSidebar';
 import ShopInfoAccordion from '@/components/ShopInfoAccordion';
 import { buildUrlFromFilters } from '@/utils/buildUrlFromFilters';
 import { useSearchParams, usePathname, useRouter } from 'next/navigation';
-import { Filter } from 'lucide-react'; // הסרנו את X כי נשתמש ב-SVG ידני
+import { Filter } from 'lucide-react'; 
 import MobileCategoryNav from '@/components/MobileCategoryNav';
 
 function ShopLayoutInternalContent({ 
@@ -37,11 +37,11 @@ function ShopLayoutInternalContent({
   return (
     <div className="flex flex-col md:grid md:grid-cols-4 gap-6 relative" dir="rtl">
       
-      {/* --- כפתור מובייל: מציגים רק אם הסרגל לא מוסתר --- */}
+      {/* --- כפתור מובייל דביק (Sticky) --- */}
       {!hideSidebar && (
-        <div className="md:hidden mb-2">
+        <div className="md:hidden mb-2 sticky top-[80px] z-40 bg-white py-2 shadow-sm transition-all">
           <button 
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} // שיניתי ל-Toggle
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white py-3 rounded-lg font-bold shadow-md active:bg-gray-800"
           >
             <Filter className="w-5 h-5" />
@@ -53,17 +53,17 @@ function ShopLayoutInternalContent({
       {/* מיקום קטגוריות מובייל */}
       <MobileCategoryNav menuItems={menuItems} />
 
-      {/* --- מגירה למובייל (מותאמת לפתיחה מלמעלה) --- */}
+      {/* --- מגירה למובייל (מותאמת לפתיחה מלמעלה מתחת להדר) --- */}
       {isMobileMenuOpen && !hideSidebar && (
         <div className="fixed inset-0 z-50 flex md:hidden flex-col" dir="rtl">
           
-          {/* רקע כהה (אופציונלי - אם רוצים ללחוץ עליו כדי לסגור) */}
+          {/* רקע כהה (לחיצה עליו סוגרת את התפריט) */}
           <div 
             className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
             onClick={() => setIsMobileMenuOpen(false)}
           />
 
-          {/* הקונטיינר הראשי - נפתח מלמעלה מתחת להדר */}
+          {/* הקונטיינר הראשי - נפתח מלמעלה, מתחת להדר של 80px */}
           <div className="relative w-full bg-white shadow-2xl overflow-y-auto flex flex-col animate-in slide-in-from-top duration-300 top-[80px] h-[calc(100vh-80px)]">
             
             {/* כותרת וכפתור סגירה */}
@@ -74,7 +74,7 @@ function ShopLayoutInternalContent({
                 onClick={() => setIsMobileMenuOpen(false)}
                 className="text-gray-800 hover:text-gray-600 transition p-1"
               >
-                {/* אותו SVG דק מהתפריט הראשי */}
+                {/* SVG לאיקס דק */}
                 <svg 
                   xmlns="http://www.w3.org/2000/svg" 
                   fill="none" 
