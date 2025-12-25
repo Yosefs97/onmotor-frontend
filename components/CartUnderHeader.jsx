@@ -4,9 +4,9 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import CartButton from './CartButton';
-import { ChevronDown } from 'lucide-react'; // 👈 וודא שיש לך את זה
+import { ChevronDown } from 'lucide-react';
 
-export default function CartUnderHeader({ menuItems = [] }) { // 👈 מקבל את הנתונים
+export default function CartUnderHeader({ menuItems = [] }) {
   const [total, setTotal] = useState(0);
 
   const fetchCart = async () => {
@@ -27,8 +27,9 @@ export default function CartUnderHeader({ menuItems = [] }) { // 👈 מקבל �
   }, []);
 
   return (
-    // הוספתי z-40 כדי שהתפריט הנפתח יעלה מעל אלמנטים אחרים
-    <div className="w-full bg-gray-100 border-b relative z-40" dir="rtl">
+    // 👇 השינוי כאן: sticky במקום relative, ומיקום top-[80px]
+    // זה ידביק את העגלה בדיוק מתחת להדר הראשי
+    <div className="w-full bg-gray-100 border-b sticky top-[80px] z-40 transition-all" dir="rtl">
       <div className="container mx-auto px-4 py-2 flex items-center justify-between">
         
         {/* === צד ימין: סה"כ + תפריט === */}
