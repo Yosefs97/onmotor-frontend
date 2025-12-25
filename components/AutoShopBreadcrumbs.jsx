@@ -159,7 +159,7 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
 
   return (
     <div className="mb-2 px-2 md:px-0">
-      <nav className="flex items-center text-sm text-gray-500 mb-4" dir="rtl">
+      <nav className="flex items-center text-sm text-gray-500 mb-2" dir="rtl">
         <ul className="flex items-center gap-1 flex-wrap">
           {crumbs.map((crumb, index) => {
             const isLast = index === crumbs.length - 1;
@@ -186,7 +186,7 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
       <div className="w-full border-b border-gray-200"></div>
       
       {pageTitle && (
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mt-4 capitalize">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mt-2 capitalize">
           {pageTitle}
         </h1>
       )}
