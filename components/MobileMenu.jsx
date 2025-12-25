@@ -84,7 +84,7 @@ export default function MobileMenu() {
       {/* כפתור ההמבורגר - תמיד מוצג כעת */}
       <button
         onClick={toggleMenu}
-        className="h-[80px] w-[50px] flex flex-col items-center justify-center gap-2 bg-transparent z-[100000] relative"
+        className="h-[50px] w-[50px] flex flex-col items-center justify-center gap-2 bg-transparent z-[100000] relative"
       >
         {/* שינוי ויזואלי קטן: אם פתוח, אולי נרצה לשנות צבע או אנימציה, כרגע השארתי זהה */}
         {[1, 2, 3].map((i) => (
@@ -102,7 +102,7 @@ export default function MobileMenu() {
           {...handlers}
           ref={menuRef}
           // שינוי: top-[50px] כדי להתחיל מתחת להמבורגר, וחישוב גובה בהתאם
-          className="fixed top-[50px] left-0 right-0 h-[calc(100vh-50px)] w-[90vw] bg-black text-white flex flex-col z-[99999] text-right shadow-lg"
+          className="fixed top-[80px] left-0 right-0 h-[calc(100vh-80px)] w-[90vw] bg-black text-white flex flex-col z-[99999] text-right shadow-lg"
           style={{ touchAction: 'pan-y', overscrollBehavior: 'contain' }}
         >
           {/* 🔝 אזור עליון קבוע */}
