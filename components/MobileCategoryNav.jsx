@@ -1,31 +1,44 @@
+// components/MobileCategoryNav.jsx
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import { ChevronDown, ChevronUp } from 'lucide-react';
 
-export default function MobileCategoryNav({ menuItems }) {
-  console.log('MobileCategoryNav Rendered. Items:', menuItems); // 👈 לוג לבדיקה
+export default function MobileCategoryNav({ menuItems = [] }) {
+  // אם אין פריטים, לא מציגים כלום
+  if (!menuItems || menuItems.length === 0) {
+    return null;
+  }
 
-  // 👇👇👇 מבחן הצבע: קופסה אדומה שתופיע תמיד במובייל 👇👇👇
   return (
-    <div className="w-full md:hidden mb-4 border-4 border-red-600 bg-yellow-100 p-4">
-      <h3 className="text-red-600 font-bold text-lg text-center">
-        בדיקת רכיב!
-      </h3>
-      <p className="text-center text-gray-800 font-bold">
-        האם יש פריטים? {menuItems && menuItems.length > 0 ? '✅ כן' : '❌ לא'}
-      </p>
-      <p className="text-center text-sm">
-        מספר פריטים: {menuItems?.length || 0}
-      </p>
-
-      {/* --- שאר הקוד המקורי --- */}
-      {menuItems && menuItems.length > 0 && (
-         <div className="mt-4 p-2 bg-white">
-            כאן אמורים להיות הכפתורים...
-         </div>
-      )}
+    <div className="md:hidden w-full bg-white border-b border-gray-200 sticky top-[180px] z-20 shadow-sm">
+      {/* Container לגלילה אופקית:
+          overflow-x-auto: מאפשר גלילה לצדדים
+          whitespace-nowrap: מונע שבירת שורות
+          no-scrollbar: (אופציונלי) אם יש לך הגדרה כזו ב-tailwind להסתרת הפס גלילה
+      */}
+      <div 
+        className="flex items-center gap-3 px-4 py-3 overflow-x-auto whitespace-nowrap custom-scrollbar"
+        dir="rtl"
+      >
+        {menuItems.map((item, index) => (
+          <Link
+            key={item.id || index} // עדיף להשתמש ב-ID אם יש, אחרת אינדקס
+            href={item.url}
+            className="
+              px-4 py-2 
+              bg-gray-50 
+              border border-gray-200 
+              rounded-full 
+              text-sm font-bold text-gray-700 
+              hover:bg-red-50 hover:text-red-600 hover:border-red-200 
+              transition-colors
+              flex-shrink-0
+            "
+          >
+            {item.title}
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }
