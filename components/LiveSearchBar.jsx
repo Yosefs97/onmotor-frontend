@@ -65,24 +65,25 @@ export default function LiveSearchBar({ onSelect }) {
           className="
             w-full bg-white 
             border-2 border-red-600 
-            text-gray-900 text-lg placeholder:text-lg placeholder:text-gray-500
+            /* 👇 השינוי בגובה כאן: פונט קטן יותר וריפוד נמוך יותר */
+            text-gray-900 text-sm placeholder:text-sm placeholder:text-gray-500
             rounded-lg 
             focus:ring-2 focus:ring-red-600 focus:border-red-600 focus:outline-none
-            block p-2.5 pr-10 shadow-sm
+            block py-1.5 pr-10 pl-2 shadow-sm h-[38px]
           "
           onFocus={() => { if(results.length > 0) setIsOpen(true); }}
         />
         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-red-600">
-          <Search className="w-5 h-5" />
+          <Search className="w-4 h-4" /> {/* הקטנתי מעט גם את האייקון */}
         </div>
         
         {(query || loading) && (
           <div className="absolute inset-y-0 left-0 flex items-center pl-3">
              {loading ? (
-               <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+               <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
              ) : (
                <button type="button" onClick={() => { setQuery(''); setResults([]); }}>
-                 <X className="w-5 h-5 text-gray-400 hover:text-red-600" />
+                 <X className="w-4 h-4 text-gray-400 hover:text-red-600" />
                </button>
              )}
           </div>
@@ -95,13 +96,12 @@ export default function LiveSearchBar({ onSelect }) {
           <ul className="divide-y divide-gray-100">
             {results.map((product) => (
               <li key={product.id}>
-                {/* 👇 התיקון כאן: הוסר /product מהנתיב */}
                 <Link 
                   href={`/shop/${product.handle}`}
                   onClick={() => { setIsOpen(false); if (onSelect) onSelect(); }}
                   className="flex items-center gap-3 p-2 hover:bg-gray-50 transition duration-150"
                 >
-                  <div className="w-12 h-12 flex-shrink-0 bg-gray-100 rounded overflow-hidden border border-gray-200">
+                  <div className="w-10 h-10 flex-shrink-0 bg-gray-100 rounded overflow-hidden border border-gray-200">
                     {product.image ? (
                         <img src={product.image} alt={product.title} className="w-full h-full object-cover" />
                     ) : (
