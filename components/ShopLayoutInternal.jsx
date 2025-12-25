@@ -37,18 +37,31 @@ function ShopLayoutInternalContent({
   return (
     <div className="flex flex-col md:grid md:grid-cols-4 gap-6 relative" dir="rtl">
       
-      {/* --- כפתור מובייל דביק (Sticky) --- */}
+      {/* --- כפתור מובייל קבוע (Fixed) --- */}
       {!hideSidebar && (
-        <div className="md:hidden mb-2 sticky top-[80px] z-40 bg-white py-2 shadow-sm transition-all">
+        // שינוי משמעותי: fixed במקום sticky, הסרת מרווחים, והגדרת מיקום ורוחב
+        <div 
+          className="md:hidden fixed left-0 right-0 z-30 bg-gray-100 px-2 py-1 shadow-md border-b border-gray-200" 
+          // ⚠️ הערה חשובה: ייתכן שתצטרך לשנות את ה-130px בהתאם לגובה המדויק של פס העגלה שלך
+          style={{ top: '130px' }} 
+        >
           <button 
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white py-3 rounded-lg font-bold shadow-md active:bg-gray-800"
+            // הקטנתי מעט את ה-py-3 ל-py-2 כדי שיהיה צמוד יותר
+            className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white py-2 rounded-md font-bold text-sm shadow-sm active:bg-gray-800"
           >
-            <Filter className="w-5 h-5" />
+            <Filter className="w-4 h-4" /> {/* הקטנתי מעט את האייקון */}
             {customSidebar ? 'סינון וקטגוריות' : 'חיפוש חלפים מתקדם'}
           </button>
         </div>
       )}
+      
+      {/* מרווח מפצה (Spacer):
+          מכיוון שהכפתור עכשיו "מרחף" (fixed), התוכן שמתחתיו יעלה למעלה ויוסתר מאחוריו.
+          אנחנו מוסיפים כאן דיב ריק במובייל בלבד כדי "לדחוף" את התוכן למטה.
+          גובה הדיב צריך להיות זהה לגובה הכפתור + המיקום שלו.
+      */}
+      {!hideSidebar && <div className="md:hidden h-[60px]"></div>}
 
       {/* מיקום קטגוריות מובייל */}
       <MobileCategoryNav menuItems={menuItems} />
