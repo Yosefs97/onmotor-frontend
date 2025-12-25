@@ -24,7 +24,6 @@ export default function LiveSearchBar({ onSelect }) {
 
   useEffect(() => {
     const timer = setTimeout(async () => {
-      // ✅ שינוי: חיפוש החל מהאות הראשונה
       if (query.length >= 1) {
         setLoading(true);
         try {
@@ -96,13 +95,9 @@ export default function LiveSearchBar({ onSelect }) {
           <ul className="divide-y divide-gray-100">
             {results.map((product) => (
               <li key={product.id}>
-                {/* ✅ תיקון ה-404:
-                    יש לוודא שהנתיב תואם לקבצים שלך.
-                    אם הקובץ הוא: /app/shop/product/[handle]/page.jsx -> השאר כפי שזה.
-                    אם הקובץ הוא: /app/shop/[handle]/page.jsx -> מחק את /product
-                */}
+                {/* 👇 התיקון כאן: הוסר /product מהנתיב */}
                 <Link 
-                  href={`/shop/product/${product.handle}`}
+                  href={`/shop/${product.handle}`}
                   onClick={() => { setIsOpen(false); if (onSelect) onSelect(); }}
                   className="flex items-center gap-3 p-2 hover:bg-gray-50 transition duration-150"
                 >
