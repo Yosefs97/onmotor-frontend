@@ -107,7 +107,7 @@ export default function CartPage() {
         </aside>
 
         {/* 🛒 עגלה + מוצרים */}
-        <main className="md:col-span-3 space-y-6">
+        <main className="md:col-span-3 space-y-1">
           {/* 🔍 כפתור סינון צף – רק במובייל */}
           <div className="md:hidden">
             <MobileShopFilterBar onFilterChange={handleFilterChange} />

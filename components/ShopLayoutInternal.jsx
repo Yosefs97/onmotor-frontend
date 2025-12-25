@@ -7,7 +7,7 @@ import ShopInfoAccordion from '@/components/ShopInfoAccordion';
 import { buildUrlFromFilters } from '@/utils/buildUrlFromFilters';
 import { useSearchParams, usePathname, useRouter } from 'next/navigation';
 import { Filter } from 'lucide-react';
-
+import MobileCategoryNav from '@/components/MobileCategoryNav';
 
 function ShopLayoutInternalContent({ 
   children, 
@@ -63,7 +63,8 @@ function ShopLayoutInternalContent({
         </>
       )}
 
-      
+      {/* מיקום קטגוריות מובייל */}
+      <MobileCategoryNav menuItems={menuItems} />
 
       {/* --- מגירה למובייל --- */}
       {isMobileMenuOpen && !hideSidebar && (
