@@ -66,7 +66,7 @@ export default function ManufacturerGrid({ manufacturers }) {
   return (
     <div>
       {/* 👇 2. עיטוף שורת החיפוש והכפתור באותה שורה */}
-      <div className="flex gap-2 items-center mb-4 md:mb-6">
+      <div className="flex gap-2 items-center mb-4 md:mb-2">
          {/* החיפוש תופס את כל הרוחב שנשאר */}
          <div className="flex-grow">
             <ScrollSearchBar 
@@ -84,7 +84,7 @@ export default function ManufacturerGrid({ manufacturers }) {
 
       <div
         ref={containerRef}
-        className="scroll-container flex overflow-x-scroll space-x-1 pb-4 px-2 snap-x snap-mandatory"
+        className="scroll-container flex overflow-x-scroll space-x-1 pb-2 px-2 snap-x snap-mandatory"
       >
         {manufacturers.map((m) => (
           <Link

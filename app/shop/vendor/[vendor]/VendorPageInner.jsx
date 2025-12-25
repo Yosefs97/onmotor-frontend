@@ -68,7 +68,7 @@ export default function VendorPageInner({ vendor, models }) {
       {/* 📌 רשימת הדגמים */}
       <div
         ref={containerRef}
-        className="scroll-container flex overflow-x-scroll space-x-1 pb-4 px-2 snap-x snap-mandatory scroll-smooth"
+        className="scroll-container flex overflow-x-scroll space-x-1 pb-2 px-2 snap-x snap-mandatory scroll-smooth"
       >
         {models.map((m) => (
           <Link

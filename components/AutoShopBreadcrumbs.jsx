@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { ChevronLeft, Home } from 'lucide-react';
+import { ChevronLeft, Store } from 'lucide-react';
 
 // פונקציית עזר להפוך טקסט ל-Slug (למשל: "S 1000RR" -> "s-1000rr")
 const toSlug = (str) => {
@@ -32,7 +32,7 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
 
   // 2. בסיס
   const crumbs = [
-    { label: <Home className="w-4 h-4" />, href: '/' },
+    { label: <Store className="w-4 h-4" />, href: '/shop' },
     { label: 'חנות', href: '/shop' }
   ];
 
