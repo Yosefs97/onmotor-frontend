@@ -36,61 +36,78 @@ function normalize(str) {
   return { norm, noSpace };
 }
 
+// 👇👇👇 הפונקציה המתוקנת 👇👇👇
 function buildQueryString({ q, vendor, model, year, tag, sku, category, type }) {
   const parts = [];
 
+  // ✅ תיקון לחיפוש חופשי (q):
+  // הוספנו חיפוש ב-SKU והוספנו כוכביות (*) לחיפוש חלקי
   if (q) {
     const { norm, noSpace } = normalize(q);
-    parts.push(`${norm} OR title:${JSON.stringify(noSpace)} OR tag:${JSON.stringify(noSpace)}`);
+    parts.push(
+      `(` +
+      `title:${JSON.stringify(norm)}* OR ` +
+      `sku:${JSON.stringify(norm)}* OR ` +      // חיפוש במק"ט
+      `tag:${JSON.stringify(norm)}* OR ` +
+      `product_type:${JSON.stringify(norm)}* OR ` +
+      `title:${JSON.stringify(noSpace)}* OR ` +
+      `sku:${JSON.stringify(noSpace)}*` +       // חיפוש במק"ט ללא רווחים
+      `)`
+    );
   }
 
+  // שדה SKU ספציפי (אם נשלח בנפרד)
   if (sku) {
     const { norm, noSpace } = normalize(sku);
     parts.push(
-      `sku:${JSON.stringify(norm)} OR barcode:${JSON.stringify(
-        norm
-      )} OR title:${JSON.stringify(norm)} OR sku:${JSON.stringify(noSpace)} OR barcode:${JSON.stringify(noSpace)} OR title:${JSON.stringify(noSpace)}`
+      `(` +
+      `sku:${JSON.stringify(norm)}* OR ` +
+      `barcode:${JSON.stringify(norm)}* OR ` +
+      `sku:${JSON.stringify(noSpace)}* OR ` +
+      `barcode:${JSON.stringify(noSpace)}*` +
+      `)`
     );
   }
 
   if (vendor) {
     const { norm, noSpace } = normalize(vendor);
-    parts.push(`vendor:${JSON.stringify(norm)} OR tag:${JSON.stringify(noSpace)}`);
+    parts.push(`(vendor:${JSON.stringify(norm)} OR tag:${JSON.stringify(noSpace)})`);
   }
 
   if (model) {
     const { norm, noSpace } = normalize(model);
     parts.push(
-      `tag:${JSON.stringify('model:' + norm)} OR title:${JSON.stringify(norm)} OR tag:${JSON.stringify(norm)} OR tag:${JSON.stringify('model:' + noSpace)} OR title:${JSON.stringify(noSpace)} OR tag:${JSON.stringify(noSpace)}`
+      `(tag:${JSON.stringify('model:' + norm)} OR title:${JSON.stringify(norm)} OR tag:${JSON.stringify(norm)} OR tag:${JSON.stringify('model:' + noSpace)})`
     );
   }
 
   if (year) {
     const { norm, noSpace } = normalize(year);
     parts.push(
-      `tag:${JSON.stringify('year:' + norm)} OR title:${JSON.stringify(norm)} OR tag:${JSON.stringify(norm)} OR tag:${JSON.stringify('year:' + noSpace)} OR title:${JSON.stringify(noSpace)} OR tag:${JSON.stringify(noSpace)}`
+      `(tag:${JSON.stringify('year:' + norm)} OR tag:${JSON.stringify(norm)} OR tag:${JSON.stringify('year:' + noSpace)})`
     );
   }
 
   if (category) {
     const { norm, noSpace } = normalize(category);
     parts.push(
-      `tag:${JSON.stringify('cat:' + norm)} OR product_type:${JSON.stringify(norm)} OR tag:${JSON.stringify(norm)} OR product_type:${JSON.stringify(noSpace)} OR tag:${JSON.stringify(noSpace)}`
+      `(tag:${JSON.stringify('cat:' + norm)} OR product_type:${JSON.stringify(norm)} OR tag:${JSON.stringify(norm)})`
     );
   }
 
   if (type) {
     const { norm, noSpace } = normalize(type);
-    parts.push(`product_type:${JSON.stringify(norm)} OR product_type:${JSON.stringify(noSpace)}`);
+    parts.push(`(product_type:${JSON.stringify(norm)} OR product_type:${JSON.stringify(noSpace)})`);
   }
 
   if (tag) {
     const { norm, noSpace } = normalize(tag);
-    parts.push(`tag:${JSON.stringify(norm)} OR tag:${JSON.stringify(noSpace)}`);
+    parts.push(`(tag:${JSON.stringify(norm)} OR tag:${JSON.stringify(noSpace)})`);
   }
 
-  return parts.join(' ');
+  return parts.join(' AND ');
 }
+// 👆👆👆 סוף התיקון 👆👆👆
 
 export { sfFetch, buildQueryString };
 
