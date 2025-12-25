@@ -32,8 +32,7 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
 
   // 2. בסיס
   const crumbs = [
-    { label: <Store className="w-4 h-4" />, href: '/shop' },
-    { label: 'חנות', href: '/shop' }
+    { label: <Store className="w-4 h-4" />, href: '/shop' }
   ];
 
   let pageTitle = '';
