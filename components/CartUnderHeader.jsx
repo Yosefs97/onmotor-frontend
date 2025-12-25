@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import CartButton from './CartButton';
 import { ChevronDown } from 'lucide-react';
+import LiveSearchBar from './LiveSearchBar'; // 👈 1. ייבוא החיפוש החדש
 
 export default function CartUnderHeader({ menuItems = [] }) {
   const [total, setTotal] = useState(0);
@@ -37,15 +38,18 @@ export default function CartUnderHeader({ menuItems = [] }) {
         dir="rtl"
         style={{ height: '50px' }}
       >
-        <div className="container mx-auto px-4 h-full flex items-center justify-between">
+        <div className="container mx-auto px-4 h-full flex items-center justify-between gap-2">
           
-          {/* === צד ימין: סה"כ + תפריט === */}
-          <div className="flex items-center gap-8">
-              <div className="text-sm md:text-base font-bold text-gray-800 whitespace-nowrap">
-                  סה״כ: ₪{total}
+          {/* === צד ימין: חיפוש גאון + תפריט === */}
+          <div className="flex items-center gap-4 flex-1">
+              
+              {/* 👇 2. מנוע החיפוש ממוקם כאן */}
+              <div className="w-full max-w-[220px] md:max-w-[300px]">
+                  <LiveSearchBar />
               </div>
 
-              <nav className="hidden md:flex items-center gap-6">
+              {/* תפריט דסקטופ (נשאר במקומו, יופיע רק במחשב) */}
+              <nav className="hidden md:flex items-center gap-6 mr-2">
                   {menuItems.map((category) => (
                       <div key={category.title} className="group relative">
                           <Link 
@@ -83,11 +87,15 @@ export default function CartUnderHeader({ menuItems = [] }) {
               </nav>
           </div>
 
-          {/* === צד שמאל: כפתורים === */}
-          <div className="flex items-center gap-2 pl-1">
-             {/* כאן נכנס בהמשך כפתור החיפוש */}
+          {/* === צד שמאל: סה"כ + כפתור עגלה === */}
+          {/* shrink-0 מבטיח שהמחיר והכפתור לא יימעכו כשהמסך קטן */}
+          <div className="flex items-center gap-2 pl-1 shrink-0">
              
-             {/* רק האייקון נשאר */}
+             {/* 👇 3. הסה"כ עבר לכאן */}
+             <div className="text-sm md:text-base font-bold text-gray-800 whitespace-nowrap">
+                  ₪{total}
+             </div>
+
              <CartButton />
           </div>
 
