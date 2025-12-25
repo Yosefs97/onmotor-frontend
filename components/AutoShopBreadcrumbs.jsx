@@ -158,7 +158,7 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
   }
 
   return (
-    <div className="mb-6 px-2 md:px-0">
+    <div className="mb-2 px-2 md:px-0">
       <nav className="flex items-center text-sm text-gray-500 mb-4" dir="rtl">
         <ul className="flex items-center gap-1 flex-wrap">
           {crumbs.map((crumb, index) => {
