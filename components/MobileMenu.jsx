@@ -1,7 +1,7 @@
 // components/MobileMenu.jsx
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import { FaTimes, FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { FaChevronDown, FaChevronUp } from 'react-icons/fa'; // הסרתי את FaTimes כי יצרנו אייקון דק ידנית
 import NavigationMenu from './NavigationMenu';
 import SearchBar from './SearchBar';
 import MobileSocialMenu from './MobileSocialMenu';
@@ -15,7 +15,6 @@ export default function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [showAuthBox, setShowAuthBox] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [showPolicies, setShowPolicies] = useState(false);
   const authBoxRef = useRef(null);
   const menuRef = useRef(null);
 
@@ -40,7 +39,7 @@ export default function MobileMenu() {
     if (isOpen && menuRef.current) {
       gsap.fromTo(
         menuRef.current,
-        { y: -30, opacity: 0 },
+        { y: -20, opacity: 0 },
         { y: 0, opacity: 1, duration: 0.4, ease: 'power2.out' }
       );
     }
@@ -50,7 +49,7 @@ export default function MobileMenu() {
   const closeMenu = () => {
     if (menuRef.current) {
       gsap.to(menuRef.current, {
-        y: -30,
+        y: -20,
         opacity: 0,
         duration: 0.35,
         ease: 'power2.in',
@@ -58,6 +57,15 @@ export default function MobileMenu() {
       });
     } else {
       setIsOpen(false);
+    }
+  };
+
+  // ✅ פונקציית טוגל לכפתור ההמבורגר
+  const toggleMenu = () => {
+    if (isOpen) {
+      closeMenu();
+    } else {
+      setIsOpen(true);
     }
   };
 
@@ -73,36 +81,50 @@ export default function MobileMenu() {
 
   return (
     <>
-      {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="h-[50px] w-[50px] flex flex-col items-center justify-center gap-2 bg-transparent"
-        >
-          {[1, 2, 3].map((i) => (
-            <span
-              key={i}
-              className={`h-[5px] w-[45px] rounded-sm transition-all duration-300 ${
-                isLoggedIn ? 'bg-green-600' : 'bg-red-600'
-              }`}
-            />
-          ))}
-        </button>
-      )}
+      {/* כפתור ההמבורגר - תמיד מוצג כעת */}
+      <button
+        onClick={toggleMenu}
+        className="h-[50px] w-[50px] flex flex-col items-center justify-center gap-2 bg-transparent z-[100000] relative"
+      >
+        {/* שינוי ויזואלי קטן: אם פתוח, אולי נרצה לשנות צבע או אנימציה, כרגע השארתי זהה */}
+        {[1, 2, 3].map((i) => (
+          <span
+            key={i}
+            className={`h-[5px] w-[45px] rounded-sm transition-all duration-300 ${
+              isLoggedIn ? 'bg-green-600' : 'bg-red-600'
+            }`}
+          />
+        ))}
+      </button>
 
       {isOpen && (
         <div
           {...handlers}
           ref={menuRef}
-          className="fixed top-0 left-0 right-0 h-screen w-[90vw] bg-black text-white flex flex-col z-[99999] text-right shadow-lg"
+          // שינוי: top-[50px] כדי להתחיל מתחת להמבורגר, וחישוב גובה בהתאם
+          className="fixed top-[50px] left-0 right-0 h-[calc(100vh-50px)] w-[90vw] bg-black text-white flex flex-col z-[99999] text-right shadow-lg"
           style={{ touchAction: 'pan-y', overscrollBehavior: 'contain' }}
         >
           {/* 🔝 אזור עליון קבוע */}
           <div className="sticky top-0 bg-black z-[50] border-b border-neutral-800 pb-2">
-            <div dir="ltr" className="flex justify-between items-center px-2 pt-2 mb-1">
-              <button onClick={closeMenu} className="text-2xl">
-                <FaTimes />
+            
+            {/* שינוי: הוספת מרווחים (pt-3, mb-4) לאזור האיקס */}
+            <div dir="ltr" className="flex justify-between items-center px-2 pt-3 mb-4">
+              <button onClick={closeMenu} className="text-white hover:text-gray-300 transition p-1">
+                {/* שינוי: אייקון איקס דק (SVG ידני) במקום FaTimes */}
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  strokeWidth="1.5" 
+                  stroke="currentColor" 
+                  className="w-8 h-8" // גודל האיקס
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
+
             <div className="px-2">
               <SearchBar onSelect={closeMenu} />
             </div>
@@ -111,7 +133,7 @@ export default function MobileMenu() {
           {/* ⚙️ גוף התפריט */}
           <div
             className="flex-1 px-2 mt-3 space-y-4 overflow-y-auto"
-            style={{ maxHeight: 'calc(100vh - 110px)' }}
+            style={{ maxHeight: 'calc(100vh - 160px)' }} // התאמה קלה לגובה החדש
           >
             <div dir="rtl" className="relative z-[1]">
               <NavigationMenu mobile onClose={closeMenu} />

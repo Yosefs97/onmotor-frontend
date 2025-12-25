@@ -52,7 +52,7 @@ export default function ArticleHeader({
           prefetch={false} // חוסך משאבים: לא טוען ברקע, רק בלחיצה
           className="ml-auto text-xs text-blue-600 underline cursor-pointer hover:text-blue-800"
         >
-          אינדקס תגיות 🏷️
+          אינדקס תגיות
         </Link>
 
         <div className="ml-2">
