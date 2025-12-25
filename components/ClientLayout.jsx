@@ -12,7 +12,6 @@ import SidebarMiddleLayer from "./SidebarMiddleLayer";
 import SidebarLeftLayer from "./SidebarLeftLayer";
 import useIsMobile from "@/hooks/useIsMobile";
 
-// 👇 מקבלים גם sidebarData
 export default function ClientLayout({ children, tickerHeadlines = [], sidebarData = {} }) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
@@ -61,6 +60,7 @@ export default function ClientLayout({ children, tickerHeadlines = [], sidebarDa
     return () => window.removeEventListener("resize", updateHeight);
   }, []);
 
+  // בדיקה האם אנחנו בדף חנות
   const isShopPage = pathname.startsWith("/shop");
 
   return (
@@ -71,21 +71,26 @@ export default function ClientLayout({ children, tickerHeadlines = [], sidebarDa
 
       <Header />
 
-      <div
-        className={`
-          ${isMobile
-            ? (isAtTop ? `sticky z-20` : "relative")
-            : `sticky z-20`
-          }
-        `}
-        style={{
-          top: isMobile ? (isAtTop ? headerHeight : 0) : headerHeight,
-        }}
-      >
-        <NewsTicker headlines={tickerHeadlines} />
-      </div>
-
-      
+      {/* 👇 השינוי כאן: 
+          עטפנו את הדיב של הטיקר בתנאי !isShopPage.
+          זה אומר: אם אנחנו בחנות - אל תציג את הטיקר בכלל.
+          זה יבטל את הרווח המיותר ויצמיד את העגלה להדר.
+      */}
+      {!isShopPage && (
+        <div
+          className={`
+            ${isMobile
+              ? (isAtTop ? `sticky z-20` : "relative")
+              : `sticky z-20`
+            }
+          `}
+          style={{
+            top: isMobile ? (isAtTop ? headerHeight : 0) : headerHeight,
+          }}
+        >
+          <NewsTicker headlines={tickerHeadlines} />
+        </div>
+      )}
 
       <div className="w-screen sm:w-full overflow-x-hidden sm:overflow-visible bg-[#f9f9f9]" dir="rtl">
         <main
@@ -102,7 +107,6 @@ export default function ClientLayout({ children, tickerHeadlines = [], sidebarDa
               </div>
 
               <div className={`w-full lg:w-1/4 flex-shrink-0 px-0 sm:px-0 ${!isMobile ? 'border-r border-[#e60000]' : ''}`}>
-                {/* 👇 הנה השינוי: מעבירים את הנתונים לשכבה השמאלית */}
                 <SidebarLeftLayer sidebarData={sidebarData} />
               </div>
             </>
