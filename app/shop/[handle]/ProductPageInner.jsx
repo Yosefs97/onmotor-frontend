@@ -111,8 +111,9 @@ export default function ProductPageInner({ type, product, items, collectionStats
     sidebarContent = null;
   } else {
     if (collectionStats) {
+      // 👇 כאן היה התיקון: הסרתי את ה-div עם ה-hidden lg:block
       sidebarContent = (
-        <div className="hidden lg:block">
+        <div> 
             <div className="mb-2 font-bold text-gray-500 text-sm px-1">
                  עוד בקטגוריה:
             </div>
@@ -129,7 +130,7 @@ export default function ProductPageInner({ type, product, items, collectionStats
         </div>
       );
     } else {
-      sidebarContent = <div className="hidden lg:block"></div>;
+      sidebarContent = null; // שיניתי מ-div מוסתר ל-null נקי
     }
   }
 
@@ -163,7 +164,6 @@ export default function ProductPageInner({ type, product, items, collectionStats
 
           {/* בורר אפשרויות */}
           {product.options && product.options.length > 0 && product.options[0].name !== 'Title' && (
-            // 👇 תיקון 1: הסרת ה-bg, border, padding מהקונטיינר
             <div className="mt-6 space-y-4"> 
               {product.options.map((opt) => (
                 <div key={opt.id}>
@@ -171,7 +171,6 @@ export default function ProductPageInner({ type, product, items, collectionStats
                   <div className="flex flex-wrap gap-0.2">
                     {opt.values.map((val) => {
                       const isSelected = selectedOptions[opt.name] === val;
-                      // 👇 תיקון 2: בדיקת מלאי
                       const isAvailable = isValueAvailable(opt.name, val);
 
                       return (
@@ -179,17 +178,15 @@ export default function ProductPageInner({ type, product, items, collectionStats
                           key={val}
                           onClick={() => isAvailable && handleOptionChange(opt.name, val)}
                           disabled={!isAvailable}
-                          // 👇 תיקון 3+4: הקטנת כפתורים + קו אלכסוני במצב לא זמין
                           className={`
                             px-2 py-1 min-w-[3rem] border rounded text-sm font-medium transition-all relative
                             ${!isAvailable 
-                                ? 'text-gray-400 border-gray-200 bg-gray-50 cursor-not-allowed opacity-70' // עיצוב לא זמין
+                                ? 'text-gray-400 border-gray-200 bg-gray-50 cursor-not-allowed opacity-70' 
                                 : isSelected 
-                                    ? 'bg-red-600 text-white border-red-600 shadow-sm' // נבחר
-                                    : 'bg-white text-gray-700 border-gray-300 hover:border-gray-500' // רגיל
+                                    ? 'bg-red-600 text-white border-red-600 shadow-sm' 
+                                    : 'bg-white text-gray-700 border-gray-300 hover:border-gray-500' 
                             }
                           `}
-                          // שימוש ב-style עבור הקו האלכסוני כדי לא להסתבך עם Tailwind classes מורכבים
                           style={!isAvailable ? {
                             backgroundImage: 'linear-gradient(to top right, transparent 48%, #9ca3af 49%, #9ca3af 51%, transparent 52%)'
                           } : {}}
