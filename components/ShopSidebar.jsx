@@ -1,12 +1,13 @@
 // /components/ShopSidebar.jsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link'; // ✅ הוספתי לקישורים בתוצאות
 import DropdownSimple from './DropdownSimple';
 import { buildUrlFromFilters } from '@/utils/buildUrlFromFilters';
 import { motion } from 'framer-motion';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, Loader2 } from 'lucide-react'; // ✅ הוספתי אייקון טעינה
 
 export default function ShopSidebar({ onFilterChange = () => {}, product = null, scrollRef }) {
   const [facets, setFacets] = useState({
@@ -25,6 +26,12 @@ export default function ShopSidebar({ onFilterChange = () => {}, product = null,
     yearTo: '',
     category: '',
   });
+
+  // משתנים למנוע ההצעות החי (Live Search) בתוך הסיידבר
+  const [suggestions, setSuggestions] = useState([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const searchWrapperRef = useRef(null);
 
   // 🔥 שליטה בפתיחה אוטומטית של השורה הבאה
   const [autoOpenModel, setAutoOpenModel] = useState(false);
@@ -57,6 +64,41 @@ export default function ShopSidebar({ onFilterChange = () => {}, product = null,
     })();
   }, []);
 
+  // ✅ האזנה להקלדה בשדה החיפוש (Debounce)
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (filters.q && filters.q.length >= 1) { // חיפוש החל מאות ראשונה
+        setLoadingSuggestions(true);
+        try {
+          const res = await fetch(`/api/shopify/search-suggestions?q=${encodeURIComponent(filters.q)}`);
+          const data = await res.json();
+          setSuggestions(data.products || []);
+          setShowDropdown(true);
+        } catch (e) {
+          console.error(e);
+        } finally {
+          setLoadingSuggestions(false);
+        }
+      } else {
+        setSuggestions([]);
+        setShowDropdown(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [filters.q]);
+
+  // סגירת ההצעות בלחיצה בחוץ
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (searchWrapperRef.current && !searchWrapperRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   // update year range when model changes
   useEffect(() => {
     const list = facets.yearsByModel[filters.model?.toLowerCase?.() || ''] || [];
@@ -79,6 +121,8 @@ export default function ShopSidebar({ onFilterChange = () => {}, product = null,
 
     const url = buildUrlFromFilters(payload, pathname, product);
     router.push(url, { scroll: false });
+    // סוגר את הדרופדאון אם לוחצים "חפש"
+    setShowDropdown(false); 
   };
 
   // 🔥 בחירת יצרן → פותח דגם + גלילה
@@ -116,26 +160,68 @@ export default function ShopSidebar({ onFilterChange = () => {}, product = null,
         <span>לחלק ספציפי - צרו קשר בווטסאפ</span>
       </motion.a>
 
-      {/* חיפוש */}
-      <div className="space-y-1">
+      {/* 👇 אזור החיפוש המשודרג 👇 */}
+      <div className="space-y-1 relative" ref={searchWrapperRef}>
         <label className="text-lg font-bold">חיפוש לפי מק"ט/חופשי</label>
-        <input
-          type="text"
-          placeholder="לדוגמה: פילטר שמן או מק'ט"
-          value={filters.q}
-          onChange={(e) =>
-            setFilters((f) => ({
-              ...f,
-              q: e.target.value,
-              vendor: '',
-              model: '',
-              yearFrom: '',
-              yearTo: '',
-              category: '',
-            }))
-          }
-          className="w-full border border-red-600 bg-white text-red-600 rounded-md p-2 text-lg placeholder-red-400"
-        />
+        <div className="relative">
+            <input
+              type="text"
+              placeholder="לדוגמה: פילטר שמן או מק'ט"
+              value={filters.q}
+              onChange={(e) =>
+                setFilters((f) => ({
+                  ...f,
+                  q: e.target.value,
+                  // איפוס שדות אחרים כשמתחילים חיפוש חדש (אופציונלי, לפי ההעדפה שלך)
+                  vendor: '', 
+                  model: '',
+                  yearFrom: '',
+                  yearTo: '',
+                  category: '',
+                }))
+              }
+              onFocus={() => { if(suggestions.length > 0) setShowDropdown(true); }}
+              className="w-full border border-red-600 bg-white text-gray-900 rounded-md p-2 pl-8 text-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-600"
+            />
+            {/* אייקון טעינה בתוך השדה */}
+            {loadingSuggestions && (
+                <div className="absolute left-2 top-1/2 -translate-y-1/2">
+                    <Loader2 className="w-5 h-5 animate-spin text-red-600" />
+                </div>
+            )}
+        </div>
+
+        {/* 👇 רשימת ההצעות הנפתחת (Dropdown) 👇 */}
+        {showDropdown && suggestions.length > 0 && (
+            <div className="absolute top-full right-0 left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto">
+                <ul className="divide-y divide-gray-100">
+                    {suggestions.map((item) => (
+                        <li key={item.id}>
+                            <Link 
+                                href={`/shop/${item.handle}`}
+                                className="flex items-center gap-3 p-2 hover:bg-gray-50 transition duration-150"
+                                onClick={() => setShowDropdown(false)} // סגירה במעבר למוצר
+                            >
+                                <div className="w-10 h-10 flex-shrink-0 bg-gray-100 rounded overflow-hidden border border-gray-200">
+                                    {item.image ? (
+                                        <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">אין</div>
+                                    )}
+                                </div>
+                                <div className="flex-1 min-w-0 text-right">
+                                    <p className="text-sm font-bold text-gray-900 truncate">{item.title}</p>
+                                    <p className="text-xs text-gray-500 truncate">{item.type}</p>
+                                </div>
+                                <div className="text-sm font-bold text-red-600 whitespace-nowrap pl-1">
+                                    ₪{parseInt(item.price)}
+                                </div>
+                            </Link>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        )}
       </div>
 
       {/* יצרן */}
