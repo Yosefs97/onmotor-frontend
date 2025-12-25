@@ -2,7 +2,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Search, X, Loader2 } from 'lucide-react';
 
@@ -11,7 +10,6 @@ export default function LiveSearchBar({ onSelect }) {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const router = useRouter();
   const wrapperRef = useRef(null);
 
   useEffect(() => {
@@ -26,10 +24,10 @@ export default function LiveSearchBar({ onSelect }) {
 
   useEffect(() => {
     const timer = setTimeout(async () => {
-      if (query.length >= 2) {
+      // ✅ שינוי: חיפוש החל מהאות הראשונה
+      if (query.length >= 1) {
         setLoading(true);
         try {
-          // שולחים את השאילתה ל-API
           const res = await fetch(`/api/shopify/search-suggestions?q=${encodeURIComponent(query)}`);
           const data = await res.json();
           setResults(data.products || []);
@@ -53,9 +51,7 @@ export default function LiveSearchBar({ onSelect }) {
     if (!query) return;
     setIsOpen(false);
     if (onSelect) onSelect();
-    console.log("Full search submitted for:", query);
-    // כאן תוכל להוסיף ניווט לדף תוצאות מלא אם תרצה בעתיד
-    // router.push(`/shop/search?q=${encodeURIComponent(query)}`);
+    console.log("Searching for:", query);
   };
 
   return (
@@ -67,7 +63,6 @@ export default function LiveSearchBar({ onSelect }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="חפש מוצר..."
-          // 👇 השינויים בעיצוב כאן:
           className="
             w-full bg-white 
             border-2 border-red-600 
@@ -101,6 +96,11 @@ export default function LiveSearchBar({ onSelect }) {
           <ul className="divide-y divide-gray-100">
             {results.map((product) => (
               <li key={product.id}>
+                {/* ✅ תיקון ה-404:
+                    יש לוודא שהנתיב תואם לקבצים שלך.
+                    אם הקובץ הוא: /app/shop/product/[handle]/page.jsx -> השאר כפי שזה.
+                    אם הקובץ הוא: /app/shop/[handle]/page.jsx -> מחק את /product
+                */}
                 <Link 
                   href={`/shop/product/${product.handle}`}
                   onClick={() => { setIsOpen(false); if (onSelect) onSelect(); }}
@@ -133,7 +133,7 @@ export default function LiveSearchBar({ onSelect }) {
         </div>
       )}
       
-      {isOpen && query.length >= 2 && !loading && results.length === 0 && (
+      {isOpen && query.length >= 1 && !loading && results.length === 0 && (
          <div className="absolute top-full right-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-[60] p-4 text-center text-sm text-gray-500 font-medium">
             לא נמצאו מוצרים תואמים.
          </div>

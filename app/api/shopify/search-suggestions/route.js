@@ -1,13 +1,12 @@
 // /app/api/shopify/search-suggestions/route.js
 import { NextResponse } from 'next/server';
 
-export const runtime = "nodejs"; // חשוב לוודא
+export const runtime = "nodejs";
 
 const domain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
 const token = process.env.SHOPIFY_STOREFRONT_API_TOKEN;
 const apiVersion = process.env.SHOPIFY_API_VERSION || '2024-04';
 
-// 1. העתקנו את פונקציית ה-Fetch מהקובץ שעובד
 async function sfFetch(query, variables = {}) {
   if (!domain || !token) {
     return { error: 'Missing Shopify env vars', status: 500, data: null };
@@ -28,40 +27,37 @@ async function sfFetch(query, variables = {}) {
   return { error: null, status: 200, data: json };
 }
 
-// 2. פונקציות העזר לנרמול טקסט
-function normalize(str) {
-  if (!str) return '';
-  const norm = str.trim().toLowerCase().replace(/\s+/g, ' ');
-  const noSpace = norm.replace(/\s+/g, '');
-  return { norm, noSpace };
-}
-
-// 3. בניית השאילתה החכמה (גרסה מקוצרת רק עבור 'q')
-function buildSimpleQuery(q) {
+// ✅ פונקציה חכמה לבניית שאילתת חיפוש
+function buildSmartQuery(q) {
     if (!q) return '';
-    const { norm, noSpace } = normalize(q);
     
-    // שאילתה שמחפשת גם בכותרת, גם בתגיות, גם במק"ט וגם בברקוד
-    // הוספתי כוכביות (*) לחיפוש חלקי בסוף המילה
-    return `
-      title:${JSON.stringify(norm)}* OR 
-      tag:${JSON.stringify(norm)}* OR 
-      sku:${JSON.stringify(norm)}* OR 
-      title:${JSON.stringify(noSpace)}* OR 
-      sku:${JSON.stringify(noSpace)}*
-    `.replace(/\s+/g, ' ');
+    // 1. ניקוי רווחים כפולים והמרה לאותיות קטנות (חשוב לאנגלית)
+    const cleanQuery = q.trim().toLowerCase().replace(/\s+/g, ' ');
+    
+    // 2. פיצול למילים נפרדות
+    const terms = cleanQuery.split(' ');
+
+    // 3. בניית שאילתה לכל מילה בנפרד (וגם חיבור שלהן)
+    // לכל מילה נוסיף כוכבית (*) כדי לאפשר השלמה אוטומטית
+    const parts = terms.map(term => {
+        return `(title:${term}* OR tag:${term}* OR sku:${term}* OR product_type:${term}*)`;
+    });
+
+    // מחבר את כל החלקים ב-AND כדי שכל המילים יהיו חייבות להופיע
+    return parts.join(' AND ');
 }
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const queryText = searchParams.get('q');
 
-  if (!queryText || queryText.length < 2) {
+  // ✅ שינוי: מאפשר חיפוש החל מהאות הראשונה
+  if (!queryText || queryText.length < 1) {
     return NextResponse.json({ products: [] });
   }
 
-  // בניית השאילתה החכמה
-  const formattedQuery = buildSimpleQuery(queryText);
+  // בניית השאילתה החדשה
+  const formattedQuery = buildSmartQuery(queryText);
 
   const graphqlQuery = `
     query SearchSuggestions($query: String!) {
