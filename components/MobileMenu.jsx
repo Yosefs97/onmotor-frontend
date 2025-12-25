@@ -84,7 +84,7 @@ export default function MobileMenu() {
       {/* כפתור ההמבורגר - תמיד מוצג כעת */}
       <button
         onClick={toggleMenu}
-        className="h-[50px] w-[50px] flex flex-col items-center justify-center gap-2 bg-transparent z-[100000] relative"
+        className="h-[80px] w-[50px] flex flex-col items-center justify-center gap-2 bg-transparent z-[100000] relative"
       >
         {/* שינוי ויזואלי קטן: אם פתוח, אולי נרצה לשנות צבע או אנימציה, כרגע השארתי זהה */}
         {[1, 2, 3].map((i) => (
