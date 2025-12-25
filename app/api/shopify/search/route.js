@@ -36,35 +36,50 @@ function normalize(str) {
   return { norm, noSpace };
 }
 
+// ✅ פונקציית עזר לניקוי תווים מיוחדים עבור חיפוש שופיפיי (ללא מרכאות)
+function escapeSpecialChars(str) {
+  // בורח ממקפים ותווים מיוחדים אחרים שיכולים לשבור את השאילתה
+  return str.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+}
+
 // 👇👇👇 הפונקציה המתוקנת 👇👇👇
 function buildQueryString({ q, vendor, model, year, tag, sku, category, type }) {
   const parts = [];
 
-  // ✅ תיקון לחיפוש חופשי (q):
-  // הוספנו חיפוש ב-SKU והוספנו כוכביות (*) לחיפוש חלקי
   if (q) {
     const { norm, noSpace } = normalize(q);
+    const escapedNorm = escapeSpecialChars(norm);
+    const escapedNoSpace = escapeSpecialChars(noSpace);
+
     parts.push(
       `(` +
       `title:${JSON.stringify(norm)}* OR ` +
-      `sku:${JSON.stringify(norm)}* OR ` +      // חיפוש במק"ט
+      
+      // ✅ חיפוש SKU מתוקן:
+      `sku:${JSON.stringify(norm)} OR ` +       // 1. התאמה מדויקת (עם מרכאות)
+      `sku:${escapedNorm}* OR ` +               // 2. התאמה חלקית (ללא מרכאות, עם escape)
+      `sku:${escapedNoSpace}* OR ` +            // 3. התאמה חלקית ללא רווחים
+      
       `tag:${JSON.stringify(norm)}* OR ` +
       `product_type:${JSON.stringify(norm)}* OR ` +
-      `title:${JSON.stringify(noSpace)}* OR ` +
-      `sku:${JSON.stringify(noSpace)}*` +       // חיפוש במק"ט ללא רווחים
+      `title:${JSON.stringify(noSpace)}*` +
       `)`
     );
   }
 
-  // שדה SKU ספציפי (אם נשלח בנפרד)
+  // שדה SKU ספציפי (אם נשלח בנפרד ע"י הפילטר)
   if (sku) {
     const { norm, noSpace } = normalize(sku);
+    const escapedNorm = escapeSpecialChars(norm);
+    const escapedNoSpace = escapeSpecialChars(noSpace);
+    
     parts.push(
       `(` +
-      `sku:${JSON.stringify(norm)}* OR ` +
-      `barcode:${JSON.stringify(norm)}* OR ` +
-      `sku:${JSON.stringify(noSpace)}* OR ` +
-      `barcode:${JSON.stringify(noSpace)}*` +
+      `sku:${JSON.stringify(norm)} OR ` +        // התאמה מדויקת
+      `sku:${escapedNorm}* OR ` +                // התאמה חלקית
+      `barcode:${JSON.stringify(norm)} OR ` +
+      `sku:${escapedNoSpace}* OR ` +
+      `barcode:${escapedNoSpace}*` +
       `)`
     );
   }
