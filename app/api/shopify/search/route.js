@@ -7,11 +7,7 @@ const apiVersion = process.env.SHOPIFY_API_VERSION || '2024-04';
 
 async function sfFetch(query, variables = {}) {
   if (!domain || !token) {
-    return {
-      error: 'Missing Shopify env vars',
-      status: 500,
-      data: null,
-    };
+    return { error: 'Missing Shopify env vars', status: 500, data: null };
   }
   const res = await fetch(`https://${domain}/api/${apiVersion}/graphql.json`, {
     method: 'POST',
@@ -31,61 +27,51 @@ async function sfFetch(query, variables = {}) {
 
 function normalize(str) {
   if (!str) return '';
-  const norm = str.trim().toLowerCase().replace(/\s+/g, ' ');
+  // שומרים רק על רווחים בודדים, אותיות קטנות
+  const norm = str.trim().toLowerCase().replace(/\s+/g, ' '); 
   const noSpace = norm.replace(/\s+/g, '');
   return { norm, noSpace };
 }
 
-// ✅ פונקציה חדשה וקריטית: מנטרלת תווים מיוחדים של שופיפיי
-// זה הופך את "-" ל-"\-" כדי שלא יחשב כ-"NOT"
-function escapeShopifyQuery(str) {
-  if (!str) return '';
-  // בורח מתווים מיוחדים: + - = && || > < ! ( ) { } [ ] ^ " ~ * ? : \ /
-  return str.replace(/([+\-=&|!(){}[\]^"~*?:\\/])/g, '\\$1');
-}
-
-// 👇👇👇 הפונקציה המתוקנת 👇👇👇
 function buildQueryString({ q, vendor, model, year, tag, sku, category, type }) {
   const parts = [];
 
+  // ✅ תיקון לחיפוש חופשי ומק"טים
   if (q) {
-    const { norm, noSpace } = normalize(q);
+    const { norm } = normalize(q);
     
-    // הכנה לחיפוש עם תווים מיוחדים (כמו מקף במק"ט)
-    const escapedNorm = escapeShopifyQuery(norm);
-    const escapedNoSpace = escapeShopifyQuery(noSpace);
+    // בדיקה האם יש תווים מיוחדים (כמו מקף -) ששוברים את החיפוש
+    const hasSpecialChars = /[^a-z0-9\u0590-\u05FF\s]/i.test(norm);
 
-    parts.push(
-      `(` +
-      `title:${JSON.stringify(norm)}* OR ` +       // כותרת: חיפוש רגיל
-      
-      // ✅ חיפוש מק"ט מתוקן (ללא JSON.stringify כדי שה-escape יעבוד)
-      `sku:${escapedNorm}* OR ` +                  // מק"ט עם מקפים (מוגן)
-      `sku:${escapedNoSpace}* OR ` +               // מק"ט בלי רווחים
-      `barcode:${escapedNorm}* OR ` +              // ברקוד
-      
-      `tag:${escapedNorm}* OR ` +                  // תגיות עם תווים מיוחדים
-      `product_type:${JSON.stringify(norm)}* OR ` + 
-      `title:${JSON.stringify(noSpace)}*` +
-      `)`
-    );
+    if (hasSpecialChars) {
+      // 🔒 מצב "בטוח": אם יש מקפים, מחפשים התאמה מדוייקת (Phrase Match)
+      // זה פותר את הבעיה ש- "123-456" נחשב כ- "123 NOT 456"
+      parts.push(
+        `(` +
+        `title:${JSON.stringify(norm)} OR ` +       // חיפוש כותרת מדויק
+        `sku:${JSON.stringify(norm)} OR ` +         // חיפוש מק"ט מדויק
+        `tag:${JSON.stringify(norm)} OR ` +         // חיפוש תגית מדויק
+        `"${norm}"` +                               // חיפוש כללי כמחרוזת
+        `)`
+      );
+    } else {
+      // 🚀 מצב "מהיר": אם זה רק אותיות/מספרים, משתמשים בכוכבית (*) להשלמה
+      parts.push(
+        `(` +
+        `title:${JSON.stringify(norm)}* OR ` +
+        `sku:${JSON.stringify(norm)}* OR ` +
+        `tag:${JSON.stringify(norm)}* OR ` +
+        `product_type:${JSON.stringify(norm)}*` +
+        `)`
+      );
+    }
   }
 
-  // שדה SKU ספציפי (אם נשלח בנפרד ע"י הפילטר)
+  // שדה SKU ספציפי (אם הגיע מהפילטר)
   if (sku) {
-    const { norm, noSpace } = normalize(sku);
-    const escapedNorm = escapeShopifyQuery(norm);
-    const escapedNoSpace = escapeShopifyQuery(noSpace);
-    
-    parts.push(
-      `(` +
-      `sku:${JSON.stringify(norm)} OR ` +         // התאמה מדויקת (בתוך מרכאות)
-      `sku:${escapedNorm}* OR ` +                 // התאמה חלקית (עם escape לכוכבית)
-      `sku:${escapedNoSpace}* OR ` +              // התאמה חלקית ללא רווחים
-      `barcode:${escapedNorm}* OR ` +             // ברקוד
-      `barcode:${escapedNoSpace}*` +
-      `)`
-    );
+    const { norm } = normalize(sku);
+    // תמיד נחפש מק"ט ספציפי עם מרכאות ליתר ביטחון
+    parts.push(`(sku:${JSON.stringify(norm)} OR barcode:${JSON.stringify(norm)})`);
   }
 
   if (vendor) {
@@ -108,7 +94,7 @@ function buildQueryString({ q, vendor, model, year, tag, sku, category, type }) 
   }
 
   if (category) {
-    const { norm, noSpace } = normalize(category);
+    const { norm } = normalize(category);
     parts.push(
       `(tag:${JSON.stringify('cat:' + norm)} OR product_type:${JSON.stringify(norm)} OR tag:${JSON.stringify(norm)})`
     );
@@ -126,13 +112,13 @@ function buildQueryString({ q, vendor, model, year, tag, sku, category, type }) 
 
   return parts.join(' AND ');
 }
-// 👆👆👆 סוף התיקון 👆👆👆
 
 export { sfFetch, buildQueryString };
 
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const q = searchParams.get('q') || '';
+  // ... שאר הפרמטרים נשארים זהים
   const vendor = searchParams.get('vendor') || '';
   const model = searchParams.get('model') || '';
   const year = searchParams.get('year') || '';
