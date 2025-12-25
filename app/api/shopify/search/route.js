@@ -36,10 +36,12 @@ function normalize(str) {
   return { norm, noSpace };
 }
 
-// ✅ פונקציית עזר לניקוי תווים מיוחדים עבור חיפוש שופיפיי (ללא מרכאות)
-function escapeSpecialChars(str) {
-  // בורח ממקפים ותווים מיוחדים אחרים שיכולים לשבור את השאילתה
-  return str.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+// ✅ פונקציה חדשה וקריטית: מנטרלת תווים מיוחדים של שופיפיי
+// זה הופך את "-" ל-"\-" כדי שלא יחשב כ-"NOT"
+function escapeShopifyQuery(str) {
+  if (!str) return '';
+  // בורח מתווים מיוחדים: + - = && || > < ! ( ) { } [ ] ^ " ~ * ? : \ /
+  return str.replace(/([+\-=&|!(){}[\]^"~*?:\\/])/g, '\\$1');
 }
 
 // 👇👇👇 הפונקציה המתוקנת 👇👇👇
@@ -48,20 +50,22 @@ function buildQueryString({ q, vendor, model, year, tag, sku, category, type }) 
 
   if (q) {
     const { norm, noSpace } = normalize(q);
-    const escapedNorm = escapeSpecialChars(norm);
-    const escapedNoSpace = escapeSpecialChars(noSpace);
+    
+    // הכנה לחיפוש עם תווים מיוחדים (כמו מקף במק"ט)
+    const escapedNorm = escapeShopifyQuery(norm);
+    const escapedNoSpace = escapeShopifyQuery(noSpace);
 
     parts.push(
       `(` +
-      `title:${JSON.stringify(norm)}* OR ` +
+      `title:${JSON.stringify(norm)}* OR ` +       // כותרת: חיפוש רגיל
       
-      // ✅ חיפוש SKU מתוקן:
-      `sku:${JSON.stringify(norm)} OR ` +       // 1. התאמה מדויקת (עם מרכאות)
-      `sku:${escapedNorm}* OR ` +               // 2. התאמה חלקית (ללא מרכאות, עם escape)
-      `sku:${escapedNoSpace}* OR ` +            // 3. התאמה חלקית ללא רווחים
+      // ✅ חיפוש מק"ט מתוקן (ללא JSON.stringify כדי שה-escape יעבוד)
+      `sku:${escapedNorm}* OR ` +                  // מק"ט עם מקפים (מוגן)
+      `sku:${escapedNoSpace}* OR ` +               // מק"ט בלי רווחים
+      `barcode:${escapedNorm}* OR ` +              // ברקוד
       
-      `tag:${JSON.stringify(norm)}* OR ` +
-      `product_type:${JSON.stringify(norm)}* OR ` +
+      `tag:${escapedNorm}* OR ` +                  // תגיות עם תווים מיוחדים
+      `product_type:${JSON.stringify(norm)}* OR ` + 
       `title:${JSON.stringify(noSpace)}*` +
       `)`
     );
@@ -70,15 +74,15 @@ function buildQueryString({ q, vendor, model, year, tag, sku, category, type }) 
   // שדה SKU ספציפי (אם נשלח בנפרד ע"י הפילטר)
   if (sku) {
     const { norm, noSpace } = normalize(sku);
-    const escapedNorm = escapeSpecialChars(norm);
-    const escapedNoSpace = escapeSpecialChars(noSpace);
+    const escapedNorm = escapeShopifyQuery(norm);
+    const escapedNoSpace = escapeShopifyQuery(noSpace);
     
     parts.push(
       `(` +
-      `sku:${JSON.stringify(norm)} OR ` +        // התאמה מדויקת
-      `sku:${escapedNorm}* OR ` +                // התאמה חלקית
-      `barcode:${JSON.stringify(norm)} OR ` +
-      `sku:${escapedNoSpace}* OR ` +
+      `sku:${JSON.stringify(norm)} OR ` +         // התאמה מדויקת (בתוך מרכאות)
+      `sku:${escapedNorm}* OR ` +                 // התאמה חלקית (עם escape לכוכבית)
+      `sku:${escapedNoSpace}* OR ` +              // התאמה חלקית ללא רווחים
+      `barcode:${escapedNorm}* OR ` +             // ברקוד
       `barcode:${escapedNoSpace}*` +
       `)`
     );
@@ -200,7 +204,6 @@ export async function GET(req) {
 
   if (error) return Response.json({ error, items: [], pageInfo: {} }, { status });
 
-  // ✅ סינון לפי year_from / year_to מה־metafields
   const items = (data?.data?.products?.edges || [])
     .map((e) => ({ cursor: e.cursor, ...e.node }))
     .filter((prod) => {
