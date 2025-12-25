@@ -28,10 +28,6 @@ export default function CartUnderHeader({ menuItems = [] }) {
 
   return (
     <>
-      {/* 👇 שינוי קריטי: 
-         במובייל (עד md): זה fixed במיקום 80px (מתחת להדר).
-         בדסקטופ (md ומעלה): זה sticky רגיל.
-      */}
       <div 
         className="
             w-full bg-gray-100 border-b transition-all z-40
@@ -39,7 +35,7 @@ export default function CartUnderHeader({ menuItems = [] }) {
             md:sticky md:top-[80px] md:relative md:z-30
         " 
         dir="rtl"
-        style={{ height: '50px' }} // קיבוע גובה כדי שהחישובים יהיו מדויקים
+        style={{ height: '50px' }}
       >
         <div className="container mx-auto px-4 h-full flex items-center justify-between">
           
@@ -49,7 +45,6 @@ export default function CartUnderHeader({ menuItems = [] }) {
                   סה״כ: ₪{total}
               </div>
 
-              {/* תפריט דסקטופ (ללא שינוי) */}
               <nav className="hidden md:flex items-center gap-6">
                   {menuItems.map((category) => (
                       <div key={category.title} className="group relative">
@@ -62,7 +57,7 @@ export default function CartUnderHeader({ menuItems = [] }) {
                                   <ChevronDown className="w-3 h-3 transition-transform group-hover:rotate-180" />
                               )}
                           </Link>
-                          {/* Dropdown Menu Code... (Shortened for brevity as it's unchanged) */}
+                          
                           {category.items.length > 0 && (
                               <div className="absolute top-full right-0 w-[600px] bg-white shadow-xl border border-gray-200 rounded-b-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 mt-1 z-50">
                                   <div className="p-6 grid grid-cols-3 gap-6">
@@ -89,24 +84,17 @@ export default function CartUnderHeader({ menuItems = [] }) {
           </div>
 
           {/* === צד שמאל: כפתורים === */}
-          <div className="flex items-center gap-2">
-            <CartButton />
-            <Link
-              href="/shop/cart"
-              prefetch={false}
-              className="bg-[#e60000] text-white px-3 py-1.5 rounded text-sm font-bold hover:bg-red-700 transition"
-            >
-              לסל הקניות
-            </Link>
+          <div className="flex items-center gap-2 pl-1">
+             {/* כאן נכנס בהמשך כפתור החיפוש */}
+             
+             {/* רק האייקון נשאר */}
+             <CartButton />
           </div>
 
         </div>
       </div>
 
-      {/* 👇 ספייסר (Spacer) למובייל בלבד:
-          בגלל שהפכנו את העגלה ל-fixed, היא "יצאה" מהזרימה של הדף.
-          אנחנו חייבים לשים דיב ריק בגובה שלה כדי שהתוכן לא יקפוץ למעלה ויוסתר.
-      */}
+      {/* ספייסר למובייל */}
       <div className="h-[50px] w-full md:hidden"></div>
     </>
   );
