@@ -1,21 +1,71 @@
 // /app/api/shopify/search-suggestions/route.js
 import { NextResponse } from 'next/server';
 
-const SHOPIFY_DOMAIN = process.env.SHOPIFY_DOMAIN;
-const SHOPIFY_STOREFRONT_TOKEN = process.env.SHOPIFY_STOREFRONT_TOKEN;
+export const runtime = "nodejs"; // חשוב לוודא
+
+const domain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
+const token = process.env.SHOPIFY_STOREFRONT_API_TOKEN;
+const apiVersion = process.env.SHOPIFY_API_VERSION || '2024-04';
+
+// 1. העתקנו את פונקציית ה-Fetch מהקובץ שעובד
+async function sfFetch(query, variables = {}) {
+  if (!domain || !token) {
+    return { error: 'Missing Shopify env vars', status: 500, data: null };
+  }
+  const res = await fetch(`https://${domain}/api/${apiVersion}/graphql.json`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Shopify-Storefront-Access-Token': token,
+    },
+    body: JSON.stringify({ query, variables }),
+    cache: 'no-store',
+  });
+  const json = await res.json();
+  if (!res.ok || json.errors) {
+    return { error: json.errors || 'Shopify error', status: res.status, data: json };
+  }
+  return { error: null, status: 200, data: json };
+}
+
+// 2. פונקציות העזר לנרמול טקסט
+function normalize(str) {
+  if (!str) return '';
+  const norm = str.trim().toLowerCase().replace(/\s+/g, ' ');
+  const noSpace = norm.replace(/\s+/g, '');
+  return { norm, noSpace };
+}
+
+// 3. בניית השאילתה החכמה (גרסה מקוצרת רק עבור 'q')
+function buildSimpleQuery(q) {
+    if (!q) return '';
+    const { norm, noSpace } = normalize(q);
+    
+    // שאילתה שמחפשת גם בכותרת, גם בתגיות, גם במק"ט וגם בברקוד
+    // הוספתי כוכביות (*) לחיפוש חלקי בסוף המילה
+    return `
+      title:${JSON.stringify(norm)}* OR 
+      tag:${JSON.stringify(norm)}* OR 
+      sku:${JSON.stringify(norm)}* OR 
+      title:${JSON.stringify(noSpace)}* OR 
+      sku:${JSON.stringify(noSpace)}*
+    `.replace(/\s+/g, ' ');
+}
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
-  const query = searchParams.get('q');
+  const queryText = searchParams.get('q');
 
-  if (!query || query.length < 2) {
+  if (!queryText || queryText.length < 2) {
     return NextResponse.json({ products: [] });
   }
 
-  // שאילתת GraphQL לחיפוש מוצרים לפי כותרת או תגית
+  // בניית השאילתה החכמה
+  const formattedQuery = buildSimpleQuery(queryText);
+
   const graphqlQuery = `
     query SearchSuggestions($query: String!) {
-      products(first: 5, query: $query) {
+      products(first: 5, query: $query, sortKey: RELEVANCE) {
         edges {
           node {
             id
@@ -39,26 +89,14 @@ export async function GET(request) {
   `;
 
   try {
-    // הוספת * כדי לאפשר חיפוש חלקי (למשל "קסד" ימצא "קסדה")
-    const formattedQuery = `${query}*`;
+    const { error, data } = await sfFetch(graphqlQuery, { query: formattedQuery });
 
-    const res = await fetch(`https://${SHOPIFY_DOMAIN}/api/2024-01/graphql.json`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Shopify-Storefront-Access-Token': SHOPIFY_STOREFRONT_TOKEN,
-      },
-      body: JSON.stringify({
-        query: graphqlQuery,
-        variables: { query: formattedQuery },
-      }),
-      next: { revalidate: 0 } // לא לשמור במטמון כדי לקבל תוצאות בזמן אמת
-    });
-
-    const json = await res.json();
+    if (error) {
+        console.error("Search API Error:", error);
+        return NextResponse.json({ products: [] });
+    }
     
-    // נירמול הנתונים למערך פשוט יותר
-    const products = json.data?.products?.edges.map(edge => ({
+    const products = data?.data?.products?.edges.map(edge => ({
         id: edge.node.id,
         title: edge.node.title,
         handle: edge.node.handle,
@@ -71,7 +109,7 @@ export async function GET(request) {
     return NextResponse.json({ products });
 
   } catch (error) {
-    console.error('Search Error:', error);
+    console.error('Search Logic Error:', error);
     return NextResponse.json({ products: [] }, { status: 500 });
   }
 }
