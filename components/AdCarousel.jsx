@@ -45,7 +45,7 @@ export default function AdCarousel({ title, items }) {
   if (!items || items.length === 0) return null;
 
   return (
-    <div className="my-8 relative group/container dir-rtl">
+    <div className="my-3 relative group/container dir-rtl">
       {/* כותרת הסקשן */}
       <h3 className="text-2xl font-bold text-gray-900 mb-1 border-r-4 border-[#e60000] pr-3">
         {title}
