@@ -5,8 +5,9 @@ import PageContainer from '@/components/PageContainer';
 import AdCarousel from '@/components/AdCarousel';
 
 // כתובת ה-API
-const API_URL = process.env.STRAPI_API_URL || process.env.NEXT_PUBLIC_STRAPI_API_URL || 'http://localhost:1337';
 
+
+const API_URL = process.env.STRAPI_API_URL;
 // שם ה-Collection ב-API (בדרך כלל Strapi הופך ServiceAd ל-service-ads ברבים)
 // תבדוק ב-URL של ה-API אם זה 'service-ads' או 'serviceads'. ברירת המחדל היא עם מקף.
 const COLLECTION_NAME = 'service-ads'; 
