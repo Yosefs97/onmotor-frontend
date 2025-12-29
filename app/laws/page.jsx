@@ -5,40 +5,49 @@ import PageContainer from '@/components/PageContainer';
 import AdCarousel from '@/components/AdCarousel';
 
 // כתובת ה-API
-
-
-const API_URL = process.env.STRAPI_API_URL;
-// שם ה-Collection ב-API (בדרך כלל Strapi הופך ServiceAd ל-service-ads ברבים)
-// תבדוק ב-URL של ה-API אם זה 'service-ads' או 'serviceads'. ברירת המחדל היא עם מקף.
-const COLLECTION_NAME = 'service-ads'; 
+// שימוש בכתובת ישירה כ-Fallback למקרה שהמשתנה לא מוגדר ברנדר
+const API_URL = process.env.STRAPI_API_URL || 'https://onmotor-strapi.onrender.com';
+const COLLECTION_NAME = 'service-ads';
 
 async function getLawAds() {
   try {
-    // שליפת כל המודעות מהאוסף החדש שבנית
-    const res = await fetch(`${API_URL}/api/${COLLECTION_NAME}?populate=*`, { 
-      next: { revalidate: 600 } 
+    // שליפת הנתונים עם populate כדי לקבל גם את התמונות
+    const res = await fetch(`${API_URL}/api/${COLLECTION_NAME}?populate=*`, {
+      next: { revalidate: 600 }
     });
-    
-    if (!res.ok) return [];
+
+    if (!res.ok) {
+      console.error("API Error:", res.status, res.statusText);
+      return [];
+    }
+
     const json = await res.json();
     
+    // בדיקה שהתקבל מערך
+    if (!json.data || !Array.isArray(json.data)) return [];
+
     return json.data.map(item => {
-      const attrs = item.attributes;
+      // ✅ תיקון ל-Strapi v5: עבודה ישירה מול האובייקט (ללא attributes)
       
-      // טיפול בתמונה
+      // חילוץ ה-URL של התמונה
       let imageUrl = null;
-      if (attrs.image?.data?.attributes?.url) {
-        const url = attrs.image.data.attributes.url;
-        imageUrl = url.startsWith('http') ? url : `${API_URL}${url}`;
+      // ב-v5 התמונה יכולה להיות ישירות תחת item.image
+      if (item.image) {
+        // לפעמים זה מערך ולפעמים אובייקט בודד, תלוי בהגדרה בסטראפי
+        const imgData = Array.isArray(item.image) ? item.image[0] : item.image;
+        
+        if (imgData && imgData.url) {
+             const url = imgData.url;
+             imageUrl = url.startsWith('http') ? url : `${API_URL}${url}`;
+        }
       }
 
       return {
         id: item.id,
-        title: attrs.title,
-        description: attrs.description,
-        link: attrs.link,
-        // 👇 השינוי: שימוש בשדה category שבחרת במקום ad_type
-        category: attrs.category, 
+        title: item.title,
+        description: item.description,
+        link: item.link,
+        category: item.category, // השדה שהגדרת (lawyer, insurance...)
         image: { url: imageUrl }
       };
     });
@@ -56,7 +65,7 @@ export const metadata = {
 export default async function LawsPage() {
   const ads = await getLawAds();
 
-  // 👇 השינוי: סינון לפי השדה category
+  // סינון המודעות לקטגוריות השונות
   const lawyers = ads.filter(ad => ad.category === 'lawyer');
   const insurance = ads.filter(ad => ad.category === 'insurance');
   const proSchools = ads.filter(ad => ad.category === 'pro_riding');
