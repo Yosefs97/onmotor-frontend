@@ -44,7 +44,15 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
       ]
     },
 
-    { title: 'רלב"ד', path: '/law-book', links: [{ title: 'שאל את הרלב"ד', path: '/law-book/ask-question' }] },
+    {
+      title: 'חוקים',
+      path: '/laws',
+      links: [
+        { title: 'כתבות בנושא חוקיות', path: '/laws/legal-articles' },
+        { title: 'שאל את הרלב"ד', path: '/laws/ask-question' },
+        { title: 'ספר החוקים - רלב״ד', path: '/laws/book' },
+      ]
+    },
 
     {
       title: 'בלוג', path: '/blog', links: [
