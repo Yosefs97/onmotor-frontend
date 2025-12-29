@@ -1,9 +1,10 @@
 // app/laws/legal-articles/page.jsx
-export const revalidate = 180; // רענון כל 3 דקות (כמו בחדשות)
+export const revalidate = 180; 
 
 import React from 'react';
 import PageContainer from '@/components/PageContainer';
-import CategoryPage from '@/components/CategoryPage'; // ✅ שימוש ברכיב הקיים
+import CategoryPage from '@/components/CategoryPage'; 
+import ServiceProvidersSection from '@/components/ServiceProvidersSection'; // 👈 1. ייבוא הרכיב החדש
 
 export const metadata = {
   title: 'כתבות בנושא חוקיות | OnMotor Media',
@@ -11,7 +12,6 @@ export const metadata = {
 };
 
 export default function LegalArticlesPage() {
-  // אנחנו מגדירים ידנית את הקטגוריות כפי שהן ב-Strapi
   const categoryKey = 'laws';
   const subcategoryKey = 'legal-articles';
 
@@ -24,11 +24,15 @@ export default function LegalArticlesPage() {
         { label: 'כתבות בנושא חוקיות' },
       ]}
     >
-      {/* 👇 כאן הקסם: שימוש באותו רכיב בדיוק כמו בחדשות */}
+      {/* רשימת הכתבות */}
       <CategoryPage 
         categoryKey={categoryKey} 
         subcategoryKey={subcategoryKey} 
       />
+
+      {/* 👈 2. הוספת אזור נותני השירות כאן למטה */}
+      <ServiceProvidersSection />
+      
     </PageContainer>
   );
 }
