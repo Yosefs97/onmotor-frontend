@@ -22,7 +22,19 @@ async function getLawAds() {
 
     return json.data.map(item => {
       let imageUrl = null;
-      if (item.image) {
+
+      // 1. בדיקת קישור חיצוני (JSON) - עדיפות עליונה
+      // אנו בודקים אם המערך קיים ואם האיבר הראשון בו הוא מחרוזת תקינה
+      const links = item.external_media_links;
+      if (Array.isArray(links) && links.length > 0) {
+          const firstLink = links[0];
+          if (typeof firstLink === 'string' && firstLink.startsWith('http')) {
+              imageUrl = firstLink.trim();
+          }
+      }
+
+      // 2. אם לא נמצא קישור חיצוני, נסה למשוך תמונה מ-Strapi (Fallback)
+      if (!imageUrl && item.image) {
         const imgData = Array.isArray(item.image) ? item.image[0] : item.image;
         if (imgData && imgData.url) {
              const url = imgData.url;
@@ -75,7 +87,6 @@ export default async function LawsPage() {
           <Link 
             key={index} 
             href={cat.href}
-            // p-6 -> p-4 (פחות "נפוח")
             className="block p-4 border border-gray-200 rounded-xl transition-all group hover:border-[#e60000] hover:shadow-lg bg-white"
           >
             <h2 className="text-xl font-bold mb-2 text-[#e60000] md:text-gray-900 group-hover:text-[#e60000]">
