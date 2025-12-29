@@ -200,7 +200,7 @@ export default async function ArticlePage({ params }) {
 
   const res = await fetch(
     `${API_URL}/api/articles?filters[$or][0][href][$eq]=${encodeURIComponent(decodedSlug)}&filters[$or][1][slug][$eq]=${encodeURIComponent(decodedSlug)}&populate=*`,
-    { next: { revalidate: 3600 } }
+    { next: { revalidate: 360 } }
   );
 
   const json = await res.json();
