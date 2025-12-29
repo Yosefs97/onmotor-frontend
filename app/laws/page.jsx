@@ -4,25 +4,27 @@ import Link from 'next/link';
 import PageContainer from '@/components/PageContainer';
 import AdCarousel from '@/components/AdCarousel';
 
-// הגדרת ה-API URL
+// כתובת ה-API
 const API_URL = process.env.STRAPI_API_URL || process.env.NEXT_PUBLIC_STRAPI_API_URL || 'http://localhost:1337';
 
-// פונקציה לשליפת המודעות
+// שם ה-Collection ב-API (בדרך כלל Strapi הופך ServiceAd ל-service-ads ברבים)
+// תבדוק ב-URL של ה-API אם זה 'service-ads' או 'serviceads'. ברירת המחדל היא עם מקף.
+const COLLECTION_NAME = 'service-ads'; 
+
 async function getLawAds() {
   try {
-    // שולפים רק מודעות שקשורות לחוק (category=law) ומביאים את התמונות (populate)
-    const res = await fetch(`${API_URL}/api/ads?filters[category][$eq]=law&populate=*`, { 
+    // שליפת כל המודעות מהאוסף החדש שבנית
+    const res = await fetch(`${API_URL}/api/${COLLECTION_NAME}?populate=*`, { 
       next: { revalidate: 600 } 
     });
     
     if (!res.ok) return [];
     const json = await res.json();
     
-    // סידור הנתונים
     return json.data.map(item => {
       const attrs = item.attributes;
       
-      // טיפול ב-URL של התמונה (אם הוא יחסי או אבסולוטי)
+      // טיפול בתמונה
       let imageUrl = null;
       if (attrs.image?.data?.attributes?.url) {
         const url = attrs.image.data.attributes.url;
@@ -34,7 +36,8 @@ async function getLawAds() {
         title: attrs.title,
         description: attrs.description,
         link: attrs.link,
-        ad_type: attrs.ad_type, // השדה שיצרנו בסטראפי (lawyer, insurance...)
+        // 👇 השינוי: שימוש בשדה category שבחרת במקום ad_type
+        category: attrs.category, 
         image: { url: imageUrl }
       };
     });
@@ -52,11 +55,11 @@ export const metadata = {
 export default async function LawsPage() {
   const ads = await getLawAds();
 
-  // מיון המודעות לפי סוגים
-  const lawyers = ads.filter(ad => ad.ad_type === 'lawyer');
-  const insurance = ads.filter(ad => ad.ad_type === 'insurance');
-  const proSchools = ads.filter(ad => ad.ad_type === 'pro_riding');
-  const drivingSchools = ads.filter(ad => ad.ad_type === 'driving_school');
+  // 👇 השינוי: סינון לפי השדה category
+  const lawyers = ads.filter(ad => ad.category === 'lawyer');
+  const insurance = ads.filter(ad => ad.category === 'insurance');
+  const proSchools = ads.filter(ad => ad.category === 'pro_riding');
+  const drivingSchools = ads.filter(ad => ad.category === 'driving_school');
 
   const categories = [
     { title: 'כתבות בנושא חוקיות', href: '/laws/legal-articles', desc: 'מאמרים, עדכונים וחדשות בנושאי חוק ומשפט לרוכבים.' },
@@ -69,22 +72,14 @@ export default async function LawsPage() {
       title="חוקים ומשפט"
       breadcrumbs={[{ label: 'דף הבית', href: '/' }, { label: 'חוקים' }]}
     >
-      {/* --- אזור הקטגוריות העליון --- */}
-      {/* Grid של 3 עמודות במחשב, 1 במובייל */}
+      {/* אזור הקטגוריות העליון */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4 mb-12">
         {categories.map((cat, index) => (
           <Link 
             key={index} 
             href={cat.href}
-            className="
-              block p-6 border border-gray-200 rounded-xl transition-all group
-              hover:border-[#e60000] hover:shadow-lg bg-white
-            "
+            className="block p-6 border border-gray-200 rounded-xl transition-all group hover:border-[#e60000] hover:shadow-lg bg-white"
           >
-            {/* הגדרה חשובה לצבעים:
-               text-[#e60000] -> אדום במובייל (ברירת מחדל)
-               md:text-gray-900 -> שחור במסכים בינוניים ומעלה (מחשב)
-            */}
             <h2 className="text-xl font-bold mb-3 text-[#e60000] md:text-gray-900 group-hover:text-[#e60000]">
               {cat.title}
             </h2>
@@ -95,14 +90,13 @@ export default async function LawsPage() {
         ))}
       </div>
 
-      {/* --- אזור הפרסומות הדינמי (קרוסלות) --- */}
+      {/* אזור הפרסומות הדינמי */}
       {ads.length > 0 && (
         <div className="border-t border-gray-200 pt-8 pb-12">
           <h2 className="text-3xl font-bold text-center mb-10 text-gray-800">
             נותני שירות מומלצים
           </h2>
           
-          {/* מציגים קרוסלה רק אם יש מודעות באותו סוג */}
           {lawyers.length > 0 && <AdCarousel title="עורכי דין מהתחום" items={lawyers} />}
           {insurance.length > 0 && <AdCarousel title="סוכני ביטוח מהקהילה" items={insurance} />}
           {proSchools.length > 0 && <AdCarousel title="בתי ספר לרכיבה מקצועית" items={proSchools} />}
