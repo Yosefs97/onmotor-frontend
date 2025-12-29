@@ -47,7 +47,7 @@ export default function AdCarousel({ title, items }) {
   return (
     <div className="my-8 relative group/container dir-rtl">
       {/* כותרת הסקשן */}
-      <h3 className="text-2xl font-bold text-gray-900 mb-4 border-r-4 border-[#e60000] pr-3">
+      <h3 className="text-2xl font-bold text-gray-900 mb-1 border-r-4 border-[#e60000] pr-3">
         {title}
       </h3>
 
@@ -76,7 +76,7 @@ export default function AdCarousel({ title, items }) {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         className="
-          flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide py-4 px-1
+          flex gap-1 overflow-x-auto snap-x snap-mandatory scrollbar-hide py-4 px-1
           w-full
         "
         style={{ scrollBehavior: 'smooth' }}
@@ -116,7 +116,7 @@ export default function AdCarousel({ title, items }) {
               <p className="text-xs md:text-sm text-gray-500 line-clamp-2 leading-tight min-h-[2.5em]">
                 {ad.description}
               </p>
-              <div className="mt-3 text-xs md:text-sm font-bold text-[#e60000] flex items-center gap-1">
+              <div className="mt-1 text-xs md:text-sm font-bold text-[#e60000] flex items-center gap-1">
                 לפרטים נוספים <span>←</span>
               </div>
             </div>
