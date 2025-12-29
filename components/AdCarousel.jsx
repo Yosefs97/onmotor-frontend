@@ -45,7 +45,7 @@ export default function AdCarousel({ title, items }) {
   if (!items || items.length === 0) return null;
 
   return (
-    <div className="my-3 relative group/container dir-rtl">
+    <div className="my-2 relative group/container dir-rtl">
       {/* כותרת הסקשן */}
       <h3 className="text-2xl font-bold text-gray-900 mb-1 border-r-4 border-[#e60000] pr-3">
         {title}
@@ -76,7 +76,7 @@ export default function AdCarousel({ title, items }) {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         className="
-          flex gap-1 overflow-x-auto snap-x snap-mandatory scrollbar-hide py-4 px-1
+          flex gap-1 overflow-x-auto snap-x snap-mandatory scrollbar-hide py-2 px-1
           w-full
         "
         style={{ scrollBehavior: 'smooth' }}
