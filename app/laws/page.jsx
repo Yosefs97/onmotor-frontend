@@ -27,7 +27,7 @@ export default function LawsPage() {
           <Link 
             key={index} 
             href={cat.href}
-            className="block p-1 border border-gray-200 rounded-xl transition-all group hover:border-[#e60000] hover:shadow-lg bg-white"
+            className="block p-1 border border-[#e60000] rounded-xl transition-all group hover:border-[#e60000] hover:shadow-lg bg-white"
           >
             <h2 className="text-xl font-bold mb-1 text-[#e60000] md:text-gray-900 group-hover:text-[#e60000]">
               {cat.title}
