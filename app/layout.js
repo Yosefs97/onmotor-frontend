@@ -46,6 +46,7 @@ export const metadata = {
     locale: "he_IL",
     type: "website",
   },
+  
   twitter: {
     card: "summary_large_image",
     title: "OnMotor Media – מגזין אופנועים ישראלי",
@@ -53,8 +54,15 @@ export const metadata = {
       "חדשות אופנועים, סקירות דגמים לקהילת הרוכבים של ישראל.",
     images: ["https://www.onmotormedia.com/full_Logo_v2.jpg"],
   },
-  
-  // ❌ הוסר מכאן ה-facebook כדי למנוע התנגשויות. הוספנו אותו ידנית למטה ב-Head.
+
+  // ✅ תיקון: הגדרות פייסבוק בתוך ה-Metadata API
+  facebook: {
+    appId: '1702134291174147',
+  },
+  other: {
+    "fb:pages": "1671844356419083", 
+    "fb:app_id": "1702134291174147"
+  },
 };
 
 // --- פונקציה לשליפת טיקר ---
@@ -173,11 +181,7 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="he" dir="rtl" className={heebo.className}>
       <head>
-        {/* ✅ מזהה דף (Page ID) - ידני */}
-        <meta property="fb:pages" content="1671844356419083" />
-
-        {/* ✅ מזהה אפליקציה (App ID) - ידני */}
-        <meta property="fb:app_id" content="1702134291174147" />
+        {/* ✅ הוסרו מכאן תגיות המטא של פייסבוק שעברו ל-metadata למעלה */}
         
         <script
           type="application/ld+json"
