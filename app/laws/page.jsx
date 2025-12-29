@@ -20,12 +20,12 @@ export default function LawsPage() {
       title="חוקים ומשפט"
       breadcrumbs={[{ label: 'דף הבית', href: '/' }, { label: 'חוקים' }]}
     >
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+      <div className="text-gray-800 grid grid-cols-1 md:grid-cols-3 gap-3 mt-2 ">
         {categories.map((cat, index) => (
           <Link 
             key={index} 
             href={cat.href}
-            className="block p-6 border border-gray-200 rounded-lg hover:border-[#e60000] hover:shadow-md transition-all group"
+            className="text-gray-800 block p-6 border border-gray-200 rounded-lg hover:border-[#e60000] hover:shadow-md transition-all group"
           >
             <h2 className="text-xl font-bold mb-2 group-hover:text-[#e60000]">{cat.title}</h2>
             <p className="text-gray-600">{cat.desc}</p>
