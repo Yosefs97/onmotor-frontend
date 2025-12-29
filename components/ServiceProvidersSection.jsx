@@ -14,8 +14,8 @@ export default async function ServiceProvidersSection() {
   const drivingSchools = ads.filter(ad => ad.category === 'driving_school');
 
   return (
-    <div className="border-t border-gray-200 pt-1 pb-1 mt-1">
-      <h2 className="text-2xl font-bold text-center mb-1 text-gray-800">
+    <div className="border-t border-gray-200 pt-0 pb-0 mt-0">
+      <h2 className="text-2xl font-bold text-center mb-0 text-[#e60000]">
         נותני שירות מומלצים
       </h2>
       
