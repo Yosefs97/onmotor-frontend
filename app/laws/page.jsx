@@ -5,37 +5,25 @@ import PageContainer from '@/components/PageContainer';
 import AdCarousel from '@/components/AdCarousel';
 
 // כתובת ה-API
-// שימוש בכתובת ישירה כ-Fallback למקרה שהמשתנה לא מוגדר ברנדר
-const API_URL = process.env.STRAPI_API_URL || 'https://onmotor-strapi.onrender.com';
+const API_URL = process.env.STRAPI_API_URL || process.env.NEXT_PUBLIC_STRAPI_API_URL || 'http://localhost:1337';
 const COLLECTION_NAME = 'service-ads';
 
 async function getLawAds() {
   try {
-    // שליפת הנתונים עם populate כדי לקבל גם את התמונות
-    const res = await fetch(`${API_URL}/api/${COLLECTION_NAME}?populate=*`, {
-      next: { revalidate: 600 }
+    const res = await fetch(`${API_URL}/api/${COLLECTION_NAME}?populate=*`, { 
+      next: { revalidate: 600 } 
     });
-
-    if (!res.ok) {
-      console.error("API Error:", res.status, res.statusText);
-      return [];
-    }
-
+    
+    if (!res.ok) return [];
     const json = await res.json();
     
     // בדיקה שהתקבל מערך
     if (!json.data || !Array.isArray(json.data)) return [];
 
     return json.data.map(item => {
-      // ✅ תיקון ל-Strapi v5: עבודה ישירה מול האובייקט (ללא attributes)
-      
-      // חילוץ ה-URL של התמונה
       let imageUrl = null;
-      // ב-v5 התמונה יכולה להיות ישירות תחת item.image
       if (item.image) {
-        // לפעמים זה מערך ולפעמים אובייקט בודד, תלוי בהגדרה בסטראפי
         const imgData = Array.isArray(item.image) ? item.image[0] : item.image;
-        
         if (imgData && imgData.url) {
              const url = imgData.url;
              imageUrl = url.startsWith('http') ? url : `${API_URL}${url}`;
@@ -47,7 +35,7 @@ async function getLawAds() {
         title: item.title,
         description: item.description,
         link: item.link,
-        category: item.category, // השדה שהגדרת (lawyer, insurance...)
+        category: item.category, 
         image: { url: imageUrl }
       };
     });
@@ -65,7 +53,6 @@ export const metadata = {
 export default async function LawsPage() {
   const ads = await getLawAds();
 
-  // סינון המודעות לקטגוריות השונות
   const lawyers = ads.filter(ad => ad.category === 'lawyer');
   const insurance = ads.filter(ad => ad.category === 'insurance');
   const proSchools = ads.filter(ad => ad.category === 'pro_riding');
@@ -82,28 +69,29 @@ export default async function LawsPage() {
       title="חוקים ומשפט"
       breadcrumbs={[{ label: 'דף הבית', href: '/' }, { label: 'חוקים' }]}
     >
-      {/* אזור הקטגוריות העליון */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4 mb-12">
+      {/* אזור הקטגוריות העליון - צומצמו המרווחים */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-2 mb-6">
         {categories.map((cat, index) => (
           <Link 
             key={index} 
             href={cat.href}
-            className="block p-6 border border-gray-200 rounded-xl transition-all group hover:border-[#e60000] hover:shadow-lg bg-white"
+            // p-6 -> p-4 (פחות "נפוח")
+            className="block p-4 border border-gray-200 rounded-xl transition-all group hover:border-[#e60000] hover:shadow-lg bg-white"
           >
-            <h2 className="text-xl font-bold mb-3 text-[#e60000] md:text-gray-900 group-hover:text-[#e60000]">
+            <h2 className="text-xl font-bold mb-2 text-[#e60000] md:text-gray-900 group-hover:text-[#e60000]">
               {cat.title}
             </h2>
-            <p className="text-[#e60000] md:text-gray-600 leading-relaxed">
+            <p className="text-[#e60000] md:text-gray-600 leading-relaxed text-sm">
               {cat.desc}
             </p>
           </Link>
         ))}
       </div>
 
-      {/* אזור הפרסומות הדינמי */}
+      {/* אזור הפרסומות הדינמי - צומצמו המרווחים */}
       {ads.length > 0 && (
-        <div className="border-t border-gray-200 pt-8 pb-12">
-          <h2 className="text-3xl font-bold text-center mb-10 text-gray-800">
+        <div className="border-t border-gray-200 pt-4 pb-8">
+          <h2 className="text-2xl font-bold text-center mb-4 text-gray-800">
             נותני שירות מומלצים
           </h2>
           
