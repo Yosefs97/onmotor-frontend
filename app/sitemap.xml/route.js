@@ -3,9 +3,10 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   const SITE_URL = "https://www.onmotormedia.com";
-  const API_URL = process.env.STRAPI_URL;
+  // שימוש בשם המשתנה התואם ל-layout.js
+  const API_URL = process.env.STRAPI_API_URL || process.env.STRAPI_URL; 
 
-  // 1. רשימת הדפים הקבועים באתר (ללא הדומיין, רק הנתיב)
+  // 1. רשימת הדפים הקבועים באתר
   const staticPaths = [
     "", // דף הבית
     "/gear",
@@ -18,8 +19,13 @@ export async function GET() {
     "/reviews/gear",
     "/reviews/video",
     "/shop",
-    "/law-book",
-    "/law-book/ask-question",
+    
+    // ✅ עודכן: אזור "חוק ומשפט" החדש
+    "/laws",
+    "/laws/legal-articles",
+    "/laws/ask-question",
+    "/laws/book",
+
     "/blog",
     "/blog/podcast",
     "/blog/tips",
@@ -39,7 +45,6 @@ export async function GET() {
     "/data-deletion-instructions"
   ];
 
-  // המרה של הרשימה למבנה שמתאים למפת האתר
   const staticUrls = staticPaths.map(path => ({
     url: `${SITE_URL}${path}`,
     lastmod: new Date().toISOString()
@@ -49,23 +54,33 @@ export async function GET() {
 
   try {
     // 2. שליפת הכתבות מ-Strapi
+    // הוספתי את שדה href לשליפה למקרה שיש כתובות מותאמות אישית
     const res = await fetch(
-      `${API_URL}/api/articles?fields=slug,updatedAt&pagination[pageSize]=1000`, // הגדלתי ל-1000 ליתר ביטחון
+      `${API_URL}/api/articles?fields=slug,href,updatedAt&pagination[pageSize]=1000`, 
       { cache: "no-store" }
     );
 
     const json = await res.json();
 
-    articles = json.data?.map(item => ({
-      url: `${SITE_URL}/articles/${item.slug}`,
-      lastmod: item.updatedAt,
-    })) || [];
+    if (json.data && Array.isArray(json.data)) {
+      articles = json.data.map(item => {
+        const attrs = item.attributes || item;
+        
+        // לוגיקה חכמה: קדימות ל-href על פני slug
+        const slug = attrs.href || attrs.slug;
+
+        return {
+          url: `${SITE_URL}/articles/${slug}`,
+          lastmod: attrs.updatedAt || new Date().toISOString(),
+        };
+      });
+    }
 
   } catch (err) {
     console.error("Sitemap fetch error:", err);
   }
 
-  // 3. איחוד כל הכתובות (סטטיות + כתבות)
+  // 3. איחוד כל הכתובות
   const urls = [...staticUrls, ...articles];
 
   // 4. יצירת ה-XML
