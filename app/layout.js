@@ -69,7 +69,7 @@ export const metadata = {
 async function getTickerHeadlines() {
   const API_URL = process.env.STRAPI_API_URL;
   try {
-    const url = `${API_URL}/api/articles?filters[$or][0][tags_txt][$contains]=חדשנות&filters[$or][1][tags_txt][$contains]=2025&filters[$or][2][tags_txt][$contains]=חוק וסדר&sort=publishedAt:desc&populate=*`;
+    const url = `${API_URL}/api/articles?filters[$or][0][tags_txt][$contains]=חדשנות&filters[$or][1][tags_txt][$contains]=2026&filters[$or][2][tags_txt][$contains]=חוק וסדר&sort=publishedAt:desc&populate=*`;
     const res = await fetch(url, { next: { revalidate: 300 } });
     const data = await res.json();
     if (data?.data?.length > 0) {
