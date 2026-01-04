@@ -23,10 +23,16 @@ export const metadata = {
   description:
     "מגזין אופנועים ישראלי מוביל – חדשות אופנועים, סקירות דגמים, סקירת ציוד ומבחני דרך. כל מה שרוכב בישראל צריך לדעת.",
   
+  // ✅ עודכן: הגדרת האייקונים החדשה לפי דרישות גוגל
   icons: {
-    icon: '/icon_v2.png',
-    shortcut: '/icon_v2.png',
-    apple: '/icon_v2.png',
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' }, // ללשונית הדפדפן (Legacy)
+      { url: '/web-app-manifest-192x192.png', sizes: '192x192', type: 'image/png' }, // גוגל בתוצאות חיפוש
+      { url: '/web-app-manifest-512x512.png', sizes: '512x512', type: 'image/png' }, // רזולוציה גבוהה
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png' }, // אייפון ואייפד
+    ],
   },
 
   openGraph: {
@@ -55,7 +61,6 @@ export const metadata = {
     images: ["https://www.onmotormedia.com/full_Logo_v2.jpg"],
   },
 
-  // ✅ תיקון: הגדרות פייסבוק בתוך ה-Metadata API
   facebook: {
     appId: '1702134291174147',
   },
@@ -181,8 +186,6 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="he" dir="rtl" className={heebo.className}>
       <head>
-        {/* ✅ הוסרו מכאן תגיות המטא של פייסבוק שעברו ל-metadata למעלה */}
-        
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -191,7 +194,8 @@ export default async function RootLayout({ children }) {
               "@type": "Organization",
               "name": "OnMotor Media",
               "url": "https://www.onmotormedia.com",
-              "logo": "https://www.onmotormedia.com/icon_v2.png",
+              // ✅ עודכן: הצבעה ללוגו האיכותי החדש גם ב-Schema
+              "logo": "https://www.onmotormedia.com/web-app-manifest-512x512.png",
             }),
           }}
         />
