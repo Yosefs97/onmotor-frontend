@@ -9,7 +9,7 @@ export const metadata = {
   description: 'הכירו את הצוות שמאחורי מגזין האופנועים OnMotor Media.',
   openGraph: {
     title: 'אודות | OnMotor Media',
-    description: 'הכירו את הצוות שמאחורי מגזין האופנועים המוביל בישראל.',
+    description: 'הכירו את הצוות שמאחורי המגזין .',
     url: 'https://www.onmotormedia.com/about',
     siteName: 'OnMotor Media',
     images: [
