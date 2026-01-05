@@ -39,12 +39,13 @@ export default function ArticleHeader({
       {/* 🟤 שורת פרטים (מחבר, זמן, צלם, תגיות) */}
       <div className="flex flex-wrap gap-3 text-sm text-gray-500 items-center border-b border-gray-300 pb-2">
         
-        {/* ✅ השינוי כאן: שם המחבר הפך ללינק לדף אודות */}
+        {/* ✅ השינוי כאן: שם המחבר כחול ומודגש תמיד */}
         <span>
             🖊️ מחבר:{" "}
             <Link 
               href="/about" 
-              className="text-gray-800 font-semibold hover:text-blue-600 hover:underline transition-colors cursor-pointer"
+              // שיניתי כאן ל-text-blue-600 ו-underline קבועים
+              className="text-blue-600 underline font-semibold hover:text-blue-800 transition-colors cursor-pointer"
               title="קרא עוד עלינו בדף האודות"
             >
               {author}
