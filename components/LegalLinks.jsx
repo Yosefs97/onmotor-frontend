@@ -8,9 +8,10 @@ export default function LegalLinks({ layout = 'horizontal', isMobile = false, on
   const [isOpen, setIsOpen] = useState(false);
 
   const links = [
+    { href: '/about', label: 'אודות' }, // ✅ הוספתי את דף האודות כאן
     { href: '/PrivacyPolicy', label: 'מדיניות פרטיות' },
     { href: '/TermsOfService', label: 'תנאי שימוש' },
-    { href: '/accessibility', label: 'הצהרת נגישות' }, // ✅ הקישור החדש
+    { href: '/accessibility', label: 'הצהרת נגישות' },
     { href: '/data-deletion-instructions', label: 'מחיקת נתונים' },
   ];
 
@@ -24,7 +25,6 @@ export default function LegalLinks({ layout = 'horizontal', isMobile = false, on
             href={link.href}
             prefetch={false}
             onClick={onLinkClick}
-            // 👇 כאן הוספתי font-bold ו-border-2 להדגשה
             className="px-4 py-1.5 border-2 border-[#e60000] text-[#e60000] font-bold rounded-md hover:bg-[#e60000] hover:text-white transition text-sm shadow-sm"
           >
             {link.label}
@@ -41,13 +41,13 @@ export default function LegalLinks({ layout = 'horizontal', isMobile = false, on
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center justify-between w-full text-sm font-bold bg-white border border-gray-300 px-3 py-2.5 rounded-md shadow-sm hover:bg-gray-50 text-gray-800"
       >
-        מדיניות והצהרות
+        אודות ומדיניות
         {isOpen ? <FaChevronUp className="text-[#e60000]" /> : <FaChevronDown />}
       </button>
 
       <div
         className={`transition-all duration-500 ease-in-out overflow-hidden ${
-          isOpen ? 'max-h-60 mt-2 opacity-100' : 'max-h-0 opacity-0'
+          isOpen ? 'max-h-80 mt-2 opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
         {links.map((link) => (
