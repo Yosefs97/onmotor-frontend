@@ -23,16 +23,15 @@ export const metadata = {
   description:
     "מגזין אופנועים ישראלי מוביל – חדשות אופנועים, סקירות דגמים, סקירת ציוד ומבחני דרך. כל מה שרוכב בישראל צריך לדעת.",
   
-  // ✅ עודכן: הוספנו את ה-32x32 לרשימת האייקונים
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: 'any' }, // ללשונית הדפדפן (Legacy)
-      { url: '/favicon_32x32.png', sizes: '32x32', type: 'image/png' }, // ✅ התוספת החדשה: גודל סטנדרטי לדפדפנים
-      { url: '/web-app-manifest-192x192.png', sizes: '192x192', type: 'image/png' }, // גוגל בתוצאות חיפוש
-      { url: '/web-app-manifest-512x512.png', sizes: '512x512', type: 'image/png' }, // רזולוציה גבוהה
+      { url: '/favicon.ico', sizes: 'any' }, 
+      { url: '/favicon_32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/web-app-manifest-192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/web-app-manifest-512x512.png', sizes: '512x512', type: 'image/png' },
     ],
     apple: [
-      { url: '/apple-touch-icon.png' }, // אייפון ואייפד
+      { url: '/apple-touch-icon.png' },
     ],
   },
 
@@ -62,13 +61,12 @@ export const metadata = {
     images: ["https://www.onmotormedia.com/full_Logo_v2.jpg"],
   },
 
+  // ✅ זה נשאר - זה מייצר תגית fb:app_id תקינה
   facebook: {
     appId: '1702134291174147',
   },
-  other: {
-    "fb:pages": "1671844356419083", 
-    "fb:app_id": "1702134291174147"
-  },
+
+  // ❌ נמחק מכאן הבלוק 'other' שגרם לשגיאה ב-Debugger
 };
 
 // --- פונקציה לשליפת טיקר ---
@@ -187,6 +185,9 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="he" dir="rtl" className={heebo.className}>
       <head>
+        {/* ✅ הוספה ידנית קריטית: שימוש ב-property במקום name */}
+        <meta property="fb:pages" content="1671844356419083" />
+
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
