@@ -1,4 +1,3 @@
-// components/AboutTeam.jsx
 'use client';
 import React from 'react';
 import Image from 'next/image';
@@ -7,14 +6,14 @@ const teamMembers = [
   {
     name: 'יוסף סבג',
     role: 'מייסד ועורך ראשי',
-    bio: 'רוכב על דו-גלגלי על שלל סוגיו מגיל 14. הקים את המגזין מתוך תשוקה להנגיש מידע מקצועי ואיכותי לרוכב הישראלי ולפתח את תרבות הרכיבה בישראל.',
-    image: '/images/team/yosef.jpg', // 📸 דאג להחליף לנתיב תמונה אמיתי
+    bio: 'רוכב על דו-גלגלי על שלל סוגיו מגיל 14. במקצועו מהנדס מכונות. הקים את המגזין מתוך תשוקה להנגיש מידע מקצועי ואיכותי לרוכב הישראלי.',
+    image: 'https://res.cloudinary.com/ddhq0mwiz/image/upload/v1767615156/IMG_20260105_141220_u3f3vb.jpg',
   },
   {
     name: 'אסף אפריים',
     role: 'בוחן, רוכב ועורך תוכן',
-    bio: 'חי את עולם האופנועים מגיל 16. מביא איתו ידע טכני מעמיק כמכונאי מקצועי וניסיון עשיר בהדרכה כמדריך רכיבה מוסמך. אחראי על מבחני הדרכים והסקירות הטכניות במגזין.',
-    image: '/images/team/asaf.jpg', // 📸 דאג להחליף לנתיב תמונה אמיתי
+    bio: 'רוכב על דו גלגלי על שלל סוגיו מגיל 16, במקצועו מכונאי אופנועים. תפקידו באתר - רוכב בוחן , כותב ועורך כתבות במגזין.',
+    image: 'https://res.cloudinary.com/ddhq0mwiz/image/upload/v1767614731/IMG_20251218_22192370_em13qp.jpg',
   },
 ];
 
@@ -24,38 +23,33 @@ export default function AboutTeam() {
       {teamMembers.map((member, index) => (
         <div 
           key={index} 
-          className="bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden group"
+          className="bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden group flex flex-col h-full"
         >
-          <div className="flex flex-col sm:flex-row h-full">
-            {/* תמונת פרופיל */}
-            <div className="relative w-full sm:w-1/3 h-64 sm:h-auto bg-gray-200">
-              {/* החלף את ה-div הזה ב-Image כשיש לך תמונות */}
-               <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-100">
-                  <Image 
-                    src={member.image} 
-                    alt={member.name}
-                    width={300}
-                    height={300}
-                    className="object-cover w-full h-full opacity-90 group-hover:opacity-100 transition-opacity"
-                    // במקרה שאין תמונה עדיין, אפשר להשתמש בזה זמנית:
-                    onError={(e) => { e.target.style.display = 'none'; }} 
-                  />
-                  <span className="absolute">תמונה</span>
-               </div>
-            </div>
+          {/* 📸 התאמה לתמונות אופקיות:
+             השתמשנו ב-aspect-[4/3] כדי לשמור על פרופורציה רחבה.
+             object-top מבטיח שאם יש חיתוך, הוא לא יחתוך את הראש.
+          */}
+          <div className="relative w-full aspect-[4/3] bg-gray-100">
+             <Image 
+               src={member.image} 
+               alt={member.name}
+               fill
+               sizes="(max-width: 768px) 100vw, 50vw"
+               className="object-cover object-top transition-transform duration-700 group-hover:scale-105"
+             />
+          </div>
 
-            {/* טקסט */}
-            <div className="p-6 flex flex-col justify-center sm:w-2/3">
-              <h3 className="text-xl font-bold text-gray-900 mb-1">
-                {member.name}
-              </h3>
-              <span className="text-[#e60000] font-bold text-sm mb-3 block border-b border-gray-100 pb-2 w-fit">
-                {member.role}
-              </span>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                {member.bio}
-              </p>
-            </div>
+          {/* תוכן הטקסט */}
+          <div className="p-6 flex flex-col flex-grow">
+            <h3 className="text-xl font-bold text-gray-900 mb-1">
+              {member.name}
+            </h3>
+            <span className="text-[#e60000] font-bold text-sm mb-3 block border-b border-gray-100 pb-2 w-fit">
+              {member.role}
+            </span>
+            <p className="text-gray-600 text-sm leading-relaxed">
+              {member.bio}
+            </p>
           </div>
         </div>
       ))}
