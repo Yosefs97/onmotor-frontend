@@ -61,15 +61,7 @@ export const metadata = {
     images: ["https://www.onmotormedia.com/full_Logo_v2.jpg"],
   },
 
-  facebook: {
-    appId: '1702134291174147',
-  },
-
-  // ✅ הוספתי את זה בצורה תקינה - זה מחבר את הדומיין לדף הפייסבוק
-  other: {
-    "fb:pages": "1671844356419083", // המזהה של הדף
-    "article:publisher": "https://www.facebook.com/OnMotorMedia", // הלינק לדף (קריטי!)
-  },
+  // 🗑️ הסרתי מכאן את facebook ואת other כדי למנוע את השגיאה של name vs property
 };
 
 // --- פונקציה לשליפת טיקר ---
@@ -188,7 +180,10 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="he" dir="rtl" className={heebo.className}>
       <head>
-        {/* הורדתי מפה את ה-fb:pages הידני כי הוא נמצא עכשיו בתוך ה-metadata למעלה */}
+        {/* ✅ הוספה ידנית של תגיות פייסבוק עם 'property' כדי למנוע אזהרות בדיבאגר */}
+        <meta property="fb:app_id" content="1702134291174147" />
+        <meta property="fb:pages" content="1671844356419083" />
+        <meta property="article:publisher" content="https://www.facebook.com/OnMotorMedia" />
 
         <script
           type="application/ld+json"
