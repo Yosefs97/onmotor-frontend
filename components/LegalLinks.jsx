@@ -10,20 +10,22 @@ export default function LegalLinks({ layout = 'horizontal', isMobile = false, on
   const links = [
     { href: '/PrivacyPolicy', label: 'מדיניות פרטיות' },
     { href: '/TermsOfService', label: 'תנאי שימוש' },
+    { href: '/accessibility', label: 'הצהרת נגישות' }, // ✅ הקישור החדש
     { href: '/data-deletion-instructions', label: 'מחיקת נתונים' },
   ];
 
   // ✅ תצוגת מחשב (אופקית)
   if (!isMobile || layout === 'horizontal') {
     return (
-      <div className="flex justify-center gap-4 mt-4">
+      <div className="flex justify-center gap-4 mt-4 flex-wrap">
         {links.map((link) => (
           <Link
             key={link.href}
             href={link.href}
             prefetch={false}
             onClick={onLinkClick}
-            className="px-4 py-1 border border-[#e60000] text-[#e60000] rounded-md hover:bg-[#e60000] hover:text-white transition text-sm"
+            // 👇 כאן הוספתי font-bold ו-border-2 להדגשה
+            className="px-4 py-1.5 border-2 border-[#e60000] text-[#e60000] font-bold rounded-md hover:bg-[#e60000] hover:text-white transition text-sm shadow-sm"
           >
             {link.label}
           </Link>
@@ -34,18 +36,18 @@ export default function LegalLinks({ layout = 'horizontal', isMobile = false, on
 
   // ✅ תצוגת מובייל (נפתח מתחת להרשמה)
   return (
-    <div className="w-full mt-2 text-right">
+    <div className="w-full mt-4 text-right">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between w-full text-sm font-semibold bg-white border border-gray-300 px-3 py-2 rounded-md shadow hover:bg-gray-100"
+        className="flex items-center justify-between w-full text-sm font-bold bg-white border border-gray-300 px-3 py-2.5 rounded-md shadow-sm hover:bg-gray-50 text-gray-800"
       >
-        מדיניות האתר
-        {isOpen ? <FaChevronUp /> : <FaChevronDown />}
+        מדיניות והצהרות
+        {isOpen ? <FaChevronUp className="text-[#e60000]" /> : <FaChevronDown />}
       </button>
 
       <div
         className={`transition-all duration-500 ease-in-out overflow-hidden ${
-          isOpen ? 'max-h-40 mt-2' : 'max-h-0'
+          isOpen ? 'max-h-60 mt-2 opacity-100' : 'max-h-0 opacity-0'
         }`}
       >
         {links.map((link) => (
@@ -57,7 +59,7 @@ export default function LegalLinks({ layout = 'horizontal', isMobile = false, on
               setIsOpen(false);
               if (onLinkClick) onLinkClick();
             }}
-            className="block text-sm text-gray-700 bg-gray-50 border border-gray-200 rounded-md px-3 py-2 my-1 hover:bg-[#e60000] hover:text-white transition"
+            className="block text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-md px-3 py-2 my-1 hover:bg-[#e60000] hover:text-white hover:border-[#e60000] transition"
           >
             {link.label}
           </Link>
