@@ -2,6 +2,7 @@
 import React from 'react';
 import PageContainer from '@/components/PageContainer';
 import AboutTeam from '@/components/AboutTeam';
+import { FaWhatsapp } from 'react-icons/fa'; // ✅ הוספתי את האייקון
 
 export const metadata = {
   title: 'אודות | OnMotor Media',
@@ -37,7 +38,7 @@ export default function AboutPage() {
           </p>
         </div>
 
-        {/* טקסט אודות המגזין - חשוב לאישור כ"דף חדשות" בפייסבוק */}
+        {/* טקסט אודות המגזין */}
         <div className="bg-white p-8 rounded-2xl shadow-sm border-t-4 border-[#e60000] mb-12">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">על המגזין</h2>
           <div className="text-gray-700 leading-relaxed space-y-4 text-lg">
@@ -50,10 +51,28 @@ export default function AboutPage() {
               המטרה שלנו היא להביא לקורא הישראלי מבחני דרכים מעמיקים, חדשות מהארץ ומהעולם, סיקור טכנולוגי ומידע חיוני על בטיחות, ציוד ורכיבה נכונה.
             </p>
             
-            {/* כתובת פיזית/יצירת קשר - קריטי לאימות בפייסבוק */}
-            <div className="mt-6 pt-6 border-t border-gray-100 text-sm text-gray-500">
-              <strong>כתובת המערכת:</strong> [הוסף כאן כתובת או תא דואר אם יש]<br />
-              <strong>דוא"ל ליצירת קשר:</strong> onmotormedia@gmail.com
+            {/* פרטי יצירת קשר + וואטסאפ */}
+            <div className="mt-6 pt-6 border-t border-gray-100 text-base text-gray-600 flex flex-col gap-2">
+              <div>
+                 <strong>דוא"ל ליצירת קשר:</strong>{' '}
+                 <a href="mailto:onmotormedia@gmail.com" className="hover:text-[#e60000] transition-colors">
+                   onmotormedia@gmail.com
+                 </a>
+              </div>
+              
+              {/* ✅ כאן השינוי: הפניה לוואטסאפ */}
+              <div className="flex items-center gap-2">
+                 <strong>וואטסאפ למערכת:</strong>
+                 <a 
+                   href="https://wa.me/972522304604" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   className="flex items-center gap-1 text-[#25D366] font-bold hover:underline"
+                 >
+                   <FaWhatsapp size={20} />
+                   052-230-4604
+                 </a>
+              </div>
             </div>
           </div>
         </div>
