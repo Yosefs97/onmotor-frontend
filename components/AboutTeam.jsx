@@ -13,7 +13,7 @@ const teamMembers = [
     name: 'יוסף סבג',
     role: 'עורך ראשי',
     bio: 'רוכב על דו-גלגלי על שלל סוגיו מגיל 14. במקצועו מהנדס מכונות. הקים את המגזין מתוך תשוקה להנגיש מידע מקצועי ואיכותי לרוכב הישראלי.',
-    image: 'https://res.cloudinary.com/ddhq0mwiz/image/upload/v1767615156/IMG_20260105_141220_u3f3vb.jpg',
+    image: 'https://res.cloudinary.com/ddhq0mwiz/image/upload/v1767617105/IMG_20260105_144428_jmtnpu.jpg',
   },
 ];
 
