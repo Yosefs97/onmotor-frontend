@@ -23,10 +23,11 @@ export const metadata = {
   description:
     "מגזין אופנועים ישראלי מוביל – חדשות אופנועים, סקירות דגמים, סקירת ציוד ומבחני דרך. כל מה שרוכב בישראל צריך לדעת.",
   
-  // ✅ עודכן: הגדרת האייקונים החדשה לפי דרישות גוגל
+  // ✅ עודכן: הוספנו את ה-32x32 לרשימת האייקונים
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' }, // ללשונית הדפדפן (Legacy)
+      { url: '/favicon_32x32.png', sizes: '32x32', type: 'image/png' }, // ✅ התוספת החדשה: גודל סטנדרטי לדפדפנים
       { url: '/web-app-manifest-192x192.png', sizes: '192x192', type: 'image/png' }, // גוגל בתוצאות חיפוש
       { url: '/web-app-manifest-512x512.png', sizes: '512x512', type: 'image/png' }, // רזולוציה גבוהה
     ],
@@ -194,7 +195,6 @@ export default async function RootLayout({ children }) {
               "@type": "Organization",
               "name": "OnMotor Media",
               "url": "https://www.onmotormedia.com",
-              // ✅ עודכן: הצבעה ללוגו האיכותי החדש גם ב-Schema
               "logo": "https://www.onmotormedia.com/web-app-manifest-512x512.png",
             }),
           }}
