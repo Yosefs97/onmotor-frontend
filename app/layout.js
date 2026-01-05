@@ -61,12 +61,15 @@ export const metadata = {
     images: ["https://www.onmotormedia.com/full_Logo_v2.jpg"],
   },
 
-  // ✅ זה נשאר - זה מייצר תגית fb:app_id תקינה
   facebook: {
     appId: '1702134291174147',
   },
 
-  // ❌ נמחק מכאן הבלוק 'other' שגרם לשגיאה ב-Debugger
+  // ✅ הוספתי את זה בצורה תקינה - זה מחבר את הדומיין לדף הפייסבוק
+  other: {
+    "fb:pages": "1671844356419083", // המזהה של הדף
+    "article:publisher": "https://www.facebook.com/OnMotorMedia", // הלינק לדף (קריטי!)
+  },
 };
 
 // --- פונקציה לשליפת טיקר ---
@@ -185,8 +188,7 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="he" dir="rtl" className={heebo.className}>
       <head>
-        {/* ✅ הוספה ידנית קריטית: שימוש ב-property במקום name */}
-        <meta property="fb:pages" content="1671844356419083" />
+        {/* הורדתי מפה את ה-fb:pages הידני כי הוא נמצא עכשיו בתוך ה-metadata למעלה */}
 
         <script
           type="application/ld+json"
