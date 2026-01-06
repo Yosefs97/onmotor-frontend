@@ -95,7 +95,7 @@ export default function MainGridContentDesktop() {
   /* ===============================
      סדר קבוע של קטגוריות
   ================================*/
-  const desiredOrder = ['news', 'reviews', 'blog', 'gear'];
+  const desiredOrder = ['news', 'reviews', 'blog', 'gear', 'laws'];
 
   const categories = [...new Set(articles.map((a) => a.category))].sort(
     (a, b) => desiredOrder.indexOf(a) - desiredOrder.indexOf(b)
