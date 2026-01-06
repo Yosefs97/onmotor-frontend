@@ -67,7 +67,7 @@ export function buildEmailTemplate(email, title, contentHtml) {
       <hr style="margin: 30px 0;" />
       <p style="font-size:13px; color:#888888;">אם אינך מזהה את הפעולה הזו, פשוט התעלם מהמייל.</p>
       <div class="footer">
-        עקוב אחרינו ברשתות:
+        OnMotor Media גם ברשתות החברתיות:
         <div style="margin-top:10px;">
           ${socialIconsHtml}
         </div>

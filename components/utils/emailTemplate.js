@@ -75,7 +75,7 @@ export function buildEmailTemplate(email, title, contentHtml) {
       <p style="font-size:13px; color:#d32f2f;">נשלח מאתר OnMotor Media</p>
       <p style="font-size:13px; color:#888888;">אם אינך מזהה את הפעולה הזו, פשוט התעלם מהמייל.</p>
       <div class="footer">
-        עקוב אחרינו ברשתות:
+        OnMotor Media גם ברשתות החברתיות:
         <div style="margin-top:10px;">
           ${socialIconsHtml}
         </div>
