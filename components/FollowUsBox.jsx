@@ -18,7 +18,7 @@ export default function FollowUsBox() {
           <FaFacebook />
         </a>
         <a
-          href="https://chat.whatsapp.com/JjwmpUDyVQl0tKikbpDEJA"
+          href="https://whatsapp.com/channel/0029Vb6Oh5xL2ATxMU7Xbz2M"
           target="_blank"
           className="hover:scale-110 transition-transform text-[#25D366]"
         >
