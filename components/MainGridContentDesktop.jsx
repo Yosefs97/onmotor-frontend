@@ -1,6 +1,6 @@
 // components/MainGridContentDesktop.jsx
 'use client';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import ArticleCard from './ArticleCards/ArticleCard';
 import SectionWithHeader from './SectionWithHeader';
 
@@ -42,76 +42,58 @@ function getMainImage(attrs) {
   return { mainImage, mainImageAlt };
 }
 
-export default function MainGridContentDesktop() {
-  const [articles, setArticles] = useState([]);
-  const [loading, setLoading] = useState(true);
+// ✅ השינוי: מקבלים את הכתבות כ-Prop במקום לעשות Fetch נוסף
+export default function MainGridContentDesktop({ articles = [] }) {
+  
+  // עיבוד הנתונים כדי לוודא שתמונות ולינקים מסודרים (בדיוק כמו שהיה ב-fetch המקורי)
+  const processedArticles = articles.map((a) => {
+    const attrs = a.attributes || a;
+    const { mainImage, mainImageAlt } = getMainImage(attrs);
+    const correctSlug = attrs.href || attrs.slug;
 
-  /* ================
-     טעינת כתבות
-  ===================*/
-  useEffect(() => {
-    async function fetchArticles() {
-      try {
-        const res = await fetch('/api/main-grid', { cache: 'no-store' });
-        const json = await res.json();
-
-        const mapped = json.data?.map((a) => {
-          const attrs = a.attributes || a;
-          const { mainImage, mainImageAlt } = getMainImage(attrs);
-
-          // ✅ תיקון: בדיקה אם יש href בעברית
-          const correctSlug = attrs.href || attrs.slug;
-
-          return {
-            id: a.id,
-            title: attrs.title,
-            slug: correctSlug,
-            image: mainImage,
-            imageAlt: mainImageAlt,
-            category: attrs.category || 'general',
-            date: attrs.date,
-            subcategory: Array.isArray(attrs.subcategory)
-              ? attrs.subcategory
-              : [attrs.subcategory ?? 'general'],
-            description: attrs.description,
-            headline: attrs.headline || attrs.title,
-            subdescription: attrs.subdescription,
-            // ✅ יצירת הלינק הנכון
-            href: `/articles/${correctSlug}`,
-            tags: attrs.tags || [],
-          };
-        }) || [];
-
-        setArticles(mapped);
-      } catch (err) {
-        console.error('❌ שגיאה בטעינת כתבות:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchArticles();
-  }, []);
+    return {
+      id: a.id,
+      title: attrs.title,
+      slug: correctSlug,
+      image: mainImage,
+      imageAlt: mainImageAlt,
+      category: attrs.category || 'general',
+      date: attrs.date,
+      subcategory: Array.isArray(attrs.subcategory)
+        ? attrs.subcategory
+        : [attrs.subcategory ?? 'general'],
+      description: attrs.description,
+      headline: attrs.headline || attrs.title,
+      subdescription: attrs.subdescription,
+      href: `/articles/${correctSlug}`,
+      tags: attrs.tags || [],
+    };
+  });
 
   /* ===============================
      סדר קבוע של קטגוריות
   ================================*/
   const desiredOrder = ['news', 'reviews', 'blog', 'gear'];
 
-  const categories = [...new Set(articles.map((a) => a.category))].sort(
+  const categories = [...new Set(processedArticles.map((a) => a.category))].sort(
     (a, b) => desiredOrder.indexOf(a) - desiredOrder.indexOf(b)
   );
 
-  if (loading) return <p className="text-center text-gray-500">טוען כתבות...</p>;
+  // אם אין בכלל כתבות
+  if (!processedArticles || processedArticles.length === 0) {
+     // אפשר להחזיר null או loader, תלוי בעיצוב שלך
+     return null; 
+  }
 
   return (
     <div className="bg-white p-0 shadow space-y-0">
       {categories.map((category) => {
-        const articlesInCategory = articles
+        const articlesInCategory = processedArticles
           .filter((a) => a.category === category && a.slug)
           .sort((a, b) => new Date(b.date) - new Date(a.date)) // החדש ביותר ראשון
           .slice(0, 5);
 
+        // ✅ נשאר ללא שינוי כפי שביקשת: מסתיר קטגוריה אם יש בה פחות מ-5 כתבות
         if (articlesInCategory.length < 5) return null;
 
         const [first, second, third, fourth, fifth] = articlesInCategory;

@@ -1,3 +1,4 @@
+//app\api\main-grid\route.js
 export const revalidate = 60;
 
 export async function GET() {
