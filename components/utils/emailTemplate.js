@@ -66,7 +66,7 @@ export function buildEmailTemplate(email, title, contentHtml) {
   <body>
     <div class="container">
       <div class="logo">
-        <img src="https://onmotormedia.com/full_Logo.jpg" alt="OnMotor Media" />
+        <img src="https://onmotormedia.com/Header_Logo.jpg" alt="OnMotor Media" />
       </div>
       <h1>${title}</h1>
       <p>שלום ${email},</p>

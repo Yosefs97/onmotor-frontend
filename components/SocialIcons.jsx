@@ -7,7 +7,7 @@ export default function SocialIcons({ size}) {
   return (
     <div className="flex justify-center md:justify-end gap-4 text-3xl mb-1">
         <a href="https://facebook.com/OnMotorMedia" target="_blank" className="hover:scale-120 transition-transform text-[#1877F2]"><FaFacebook /></a>
-        <a href="https://chat.whatsapp.com/JjwmpUDyVQl0tKikbpDEJA" target="_blank" className="hover:scale-120 transition-transform text-[#25D366]"><FaWhatsapp /></a>
+        <a href="https://whatsapp.com/channel/0029Vb6Oh5xL2ATxMU7Xbz2M" target="_blank" className="hover:scale-120 transition-transform text-[#25D366]"><FaWhatsapp /></a>
         <a href="https://tiktok.com/@onmotor_media" target="_blank" className="hover:scale-120 transition-transform text-white"><FaTiktok /></a>
         <a href="https://youtube.com/@onmotormedia" target="_blank" className="hover:scale-120 transition-transform text-[#FF0000]"><FaYoutube /></a>
         <a href="https://t.me/Onmotormedia" target="_blank" className="hover:scale-120 transition-transform text-[#229ED9]"><FaTelegram /></a>
