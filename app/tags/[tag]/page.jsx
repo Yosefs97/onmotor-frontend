@@ -68,7 +68,6 @@ export default function TagPage() {
                 if (l.length) mainImage = l[l.length > 1 ? 1 : 0].trim();
             }
 
-            // ✅ תיקון: שימוש ב-href אם קיים
             const correctSlug = a.href || a.slug;
 
             return {
@@ -107,8 +106,10 @@ export default function TagPage() {
   const visibleArticles = articles.slice(0, visibleCount);
   const hasMore = visibleCount < articles.length;
 
+  // 👇 כאן השינוי: הוספת "אינדקס תגיות" באמצע 👇
   const breadcrumbs = [
     { label: 'דף הבית', href: '/' },
+    { label: 'אינדקס תגיות', href: '/tags' }, // <--- השורה החדשה
     { label: `תגית: ${displayTag}` },
   ];
 
