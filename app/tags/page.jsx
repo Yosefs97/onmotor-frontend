@@ -37,6 +37,7 @@ export default function TagsIndex() {
     (async () => {
       try {
         setLoading(true);
+        // טעינת כמות גדולה של כתבות כדי לייצר את האינדקס
         const res = await fetch(
           `${API_URL}/api/articles?populate=*&pagination[limit]=100&sort=createdAt:desc`, 
           { next: { revalidate: 3600 } }
@@ -58,7 +59,6 @@ export default function TagsIndex() {
                 if (l.length) mainImage = l[l.length > 1 ? 1 : 0].trim();
             }
 
-            // ✅ תיקון: שימוש ב-href אם קיים
             const correctSlug = a.href || a.slug;
 
             const articleData = {
@@ -119,7 +119,7 @@ export default function TagsIndex() {
 
   return (
     <PageContainer title="אינדקס תגיות" breadcrumbs={breadcrumbs}>
-      <div className="space-y-1 min-h-[50vh]">
+      <div className="space-y-8 min-h-[50vh]">
         {loading && (
           <div className="text-center py-10 text-gray-500">טוען תגיות...</div>
         )}
@@ -130,13 +130,41 @@ export default function TagsIndex() {
           </div>
         )}
 
+        {/* 👇👇 תוספת: רשימת תגיות מהירה בראש הדף 👇👇 */}
+        {!loading && sortedTags.length > 0 && (
+            <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-8">
+                <h3 className="text-sm font-bold text-gray-500 mb-3">ניווט מהיר לפי נושאים:</h3>
+                <div className="flex flex-wrap gap-2">
+                    {sortedTags.map(tagName => {
+                        const tagSlug = slugify(tagName);
+                        const count = groupedArticles[tagName]?.length || 0;
+                        
+                        return (
+                            <Link 
+                                key={tagName}
+                                href={`/tags/${tagSlug}`}
+                                prefetch={false}
+                                className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-white text-gray-700 border border-gray-200 hover:border-[#e60000] hover:text-[#e60000] transition-all shadow-sm"
+                            >
+                                {tagName}
+                                <span className="mr-1.5 bg-gray-100 text-gray-500 py-0.5 px-1.5 rounded-full text-[10px]">
+                                    {count}
+                                </span>
+                            </Link>
+                        );
+                    })}
+                </div>
+            </div>
+        )}
+        {/* 👆👆 סוף התוספת 👆👆 */}
+
         {sortedTags.map(tagName => {
           const articles = groupedArticles[tagName];
           const previewArticles = articles.slice(0, 4); 
           const tagSlug = slugify(tagName);
 
           return (
-            <div key={tagName} className="border-b border-gray-200 pb-2 last:border-0">
+            <div key={tagName} className="border-b border-gray-200 pb-8 last:border-0 last:pb-0">
               
               <div className="flex justify-between items-end mb-4 border-r-4 border-[#e60000] pr-3">
                 <h2 className="text-2xl font-bold text-gray-900">
