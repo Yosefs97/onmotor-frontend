@@ -9,6 +9,7 @@ import FollowUsBox from './FollowUsBox';
 import IroadsBox from './IroadsBox';
 import ProfessionalsBox from './ProfessionalsBox';
 import TabLeftSidebar from './TabLeftSidebar';
+import TagsBox from './TagsBox';
 
 // 👇 מקבל sidebarData
 export default function SidebarConstants({ sidebarData }) {
@@ -32,6 +33,7 @@ export default function SidebarConstants({ sidebarData }) {
       <hr className="border-t-2 border-red-600 my-1" />
       <ProfessionalsBox />
       <hr className="border-t-2 border-red-600 my-1" />
+      <TagsBox />
 
     </div>
   );
