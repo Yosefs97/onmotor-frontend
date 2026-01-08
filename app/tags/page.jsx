@@ -130,12 +130,17 @@ export default function TagsIndex() {
           </div>
         )}
 
-        {/* 👇👇 תוספת: רשימת תגיות מהירה בראש הדף 👇👇 */}
+        {/* 👇👇 תוספת: רשימת תגיות מהירה בראש הדף - עיצוב אדום 👇👇 */}
         {!loading && sortedTags.length > 0 && (
-            <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-8">
-                <h3 className="text-sm font-bold text-gray-500 mb-3">ניווט מהיר לפי נושאים:</h3>
-                <div className="flex flex-wrap gap-2">
-                    {sortedTags.map(tagName => {
+            // מיכל חיצוני אדום
+            <div className="bg-red-50 p-4 rounded-xl border border-red-200 mb-8 shadow-sm">
+                <h3 className="text-sm font-bold text-red-900 mb-3">ניווט מהיר לפי נושאים:</h3>
+                
+                {/* שימוש ב- divide-x-reverse divide-red-300 ליצירת קווים מפרידים
+                    divide-x-reverse חשוב מאוד כדי שהקו יופיע בצד הנכון במצב RTL (עברית)
+                */}
+                <div className="flex flex-wrap items-center text-sm text-red-900 divide-x divide-x-reverse divide-red-300 leading-loose">
+                    {sortedTags.map((tagName, index) => {
                         const tagSlug = slugify(tagName);
                         const count = groupedArticles[tagName]?.length || 0;
                         
@@ -144,12 +149,12 @@ export default function TagsIndex() {
                                 key={tagName}
                                 href={`/tags/${tagSlug}`}
                                 prefetch={false}
-                                className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-white text-gray-700 border border-gray-200 hover:border-[#e60000] hover:text-[#e60000] transition-all shadow-sm"
+                                // הסרנו את עיצוב הכפתור, השארנו רק ריווח והחלפת צבע בעכבר
+                                className="px-3 hover:text-[#e60000] hover:underline transition-all inline-block"
                             >
-                                {tagName}
-                                <span className="mr-1.5 bg-gray-100 text-gray-500 py-0.5 px-1.5 rounded-full text-[10px]">
-                                    {count}
-                                </span>
+                                {tagName} 
+                                {/* הצגת המספר בסוגריים בצבע מעט בהיר יותר */}
+                                <span className="mr-1 text-red-700/70 font-normal">({count})</span>
                             </Link>
                         );
                     })}
