@@ -14,12 +14,12 @@ function ShopLayoutInternalContent({
   product = null, 
   customSidebar = null, 
   hideSidebar = false,
-  menuItems = [] 
+  menuItems = [],
+  categories = [] // 👈 מקבלים את הקטגוריות
 }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
-  
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleSearch = (newFilters) => {
@@ -31,18 +31,16 @@ function ShopLayoutInternalContent({
   const sidebarContent = customSidebar ? (
     customSidebar
   ) : (
-    <ShopSidebar onFilterChange={handleSearch} product={product} />
+    // 👇 מעבירים אותן לסיידבר
+    <ShopSidebar onFilterChange={handleSearch} product={product} categories={categories} />
   );
 
   return (
     <div className="flex flex-col md:grid md:grid-cols-4 gap-6 relative" dir="rtl">
-      
       {!hideSidebar && (
         <>
-          {/* כפתור הסינון */}
           <div 
             className="md:hidden fixed left-0 right-0 z-20 bg-gray-100 border-b border-gray-200 shadow-sm" 
-            // 👇 Top 170px = 80px (Header) + 50px (Search) + 40px (Categories)
             style={{ top: '170px', height: '50px' }} 
           >
             <button 
@@ -53,26 +51,18 @@ function ShopLayoutInternalContent({
               {customSidebar ? 'סינון וקטגוריות' : 'חיפוש חלפים מתקדם'}
             </button>
           </div>
-
-          {/* 👇 ספייסר מוגדל ל-60px.
-             זה יוצר דחיפה מספיק חזקה כלפי מטה כדי שהתוכן (כמו המילה "חנות")
-             יתחיל מתחת לכפתור הכחול ולא יוסתר מאחוריו.
-          */}
           <div className="md:hidden h-[35px]"></div>
         </>
       )}
 
-      {/* מיקום קטגוריות מובייל נוסף (אם קיים) */}
       <MobileCategoryNav menuItems={menuItems} />
 
-      {/* --- מגירה למובייל --- */}
       {isMobileMenuOpen && !hideSidebar && (
         <div className="fixed inset-0 z-50 flex md:hidden flex-col" dir="rtl">
           <div 
             className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
             onClick={() => setIsMobileMenuOpen(false)}
           />
-          
           <div className="relative w-full bg-white shadow-2xl overflow-y-auto flex flex-col animate-in slide-in-from-top duration-300 top-[80px] h-[calc(100vh-80px)]">
             <div className="p-4 border-b flex justify-between items-center bg-gray-50 sticky top-0 z-10">
               <h3 className="font-bold text-lg text-gray-800">תפריט סינון</h3>
@@ -89,7 +79,6 @@ function ShopLayoutInternalContent({
         </div>
       )}
 
-      {/* --- דסקטופ --- */}
       {!hideSidebar && (
         <div className="hidden md:block">
           {sidebarContent}
