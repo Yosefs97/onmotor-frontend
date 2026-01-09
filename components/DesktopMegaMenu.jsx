@@ -19,7 +19,7 @@ export default function DesktopMegaMenu({ menuItems = [] }) {
   const handleMouseLeave = () => {
     timeoutRef.current = setTimeout(() => {
       setActiveIndex(null);
-    }, 200);
+    }, 200); // השהייה של 200ms
   };
 
   return (
@@ -52,9 +52,8 @@ export default function DesktopMegaMenu({ menuItems = [] }) {
 
             {hasSubItems && isOpen && (
               <div 
-                className="absolute top-full right-0 w-[600px] bg-white shadow-xl border border-gray-200 rounded-b-lg animate-in fade-in slide-in-from-top-1 duration-150 z-[100]" 
-                /* 👆 z-[100] מבטיח שזה יצוף מעל הכל */
-                style={{ marginTop: '-1px' }} /* סוגר רווח מיקרוסקופי אם קיים */
+                className="absolute top-full right-0 w-[600px] bg-white shadow-xl border border-gray-200 rounded-b-lg animate-in fade-in slide-in-from-top-1 duration-150 z-[100]"
+                style={{ marginTop: '-1px' }}
                 onMouseEnter={() => handleMouseEnter(index)}
                 onMouseLeave={handleMouseLeave}
               >

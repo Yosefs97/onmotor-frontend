@@ -2,11 +2,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import CartButton from './CartButton';
 import LiveSearchBar from './LiveSearchBar';
 import CategoriesNav from './CategoriesNav'; 
-import DesktopMegaMenu from './DesktopMegaMenu'; 
+import DesktopMegaMenu from './DesktopMegaMenu'; // 👈 חובה לייבא
 
 export default function CartUnderHeader({ menuItems = [], categories = [] }) {
   const [total, setTotal] = useState(0);
@@ -36,13 +35,12 @@ export default function CartUnderHeader({ menuItems = [], categories = [] }) {
             fixed top-[80px] left-0 right-0
             md:sticky md:top-[80px] md:relative 
             shadow-sm
-            z-[50] /* 👇 הרמנו את ה-Z-Index כדי שיהיה מעל הכל */
-            !overflow-visible /* 👇 חובה! מאפשר לתפריט לצאת מהגבולות */
+            z-[50] /* 👈 מרים את השכבה מעל הכל */
+            !overflow-visible /* 👈 קריטי! מאפשר לתפריט לצאת החוצה */
         " 
         dir="rtl"
         style={{ height: 'auto' }} 
       >
-        {/* גם לקונטיינר הפנימי אנחנו נותנים חופש לגלוש */}
         <div className="container mx-auto px-4 min-h-[50px] flex items-center justify-between gap-2 !overflow-visible">
           
           <div className="flex items-center gap-4 flex-1 !overflow-visible">
@@ -55,7 +53,7 @@ export default function CartUnderHeader({ menuItems = [], categories = [] }) {
                   <CategoriesNav categories={categories} />
               </div>
 
-              {/* התפריט החדש */}
+              {/* 👇 כאן מחקתי את כל הקוד הישן והכנסתי את החדש */}
               <DesktopMegaMenu menuItems={menuItems} />
 
           </div>
