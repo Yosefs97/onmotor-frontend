@@ -14,7 +14,7 @@ export default async function ShopLayout({ children }) {
       {/* 👈 3. העברת ה-categories לקומפוננטה */}
       <CartUnderHeader menuItems={menuItems} categories={categories} /> 
       
-      <main className="container mx-auto px-4 py-1">
+      <main className="container mx-auto px-4 py-0">
         {children}
       </main>
     </div>
