@@ -106,7 +106,7 @@ export default function CartUnderHeader({ menuItems = [], categories = [] }) {
       </div>
 
       {/* 👇 הגדלתי את הגובה ל-120px כדי לדחוף את התוכן למטה */}
-      <div className="h-[120px] w-full md:hidden"></div>
+      <div className="h-[160px] w-full md:hidden"></div>
     </>
   );
 }
