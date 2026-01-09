@@ -1,4 +1,3 @@
-//app/api/shopify/header-search/route.js
 import { NextResponse } from 'next/server';
 
 export const runtime = "nodejs";
@@ -8,9 +7,14 @@ const token = process.env.SHOPIFY_STOREFRONT_API_TOKEN;
 const apiVersion = process.env.SHOPIFY_API_VERSION || '2024-04';
 
 async function sfFetch(query, variables = {}) {
+  // בדיקה 1: האם יש משתני סביבה?
   if (!domain || !token) {
+    console.error("❌ Missing Env Vars: domain or token is empty");
     return { error: 'Missing Shopify env vars', status: 500, data: null };
   }
+
+  console.log(`📡 Sending request to: https://${domain}/api/${apiVersion}/graphql.json`);
+  
   const res = await fetch(`https://${domain}/api/${apiVersion}/graphql.json`, {
     method: 'POST',
     headers: {
@@ -20,36 +24,39 @@ async function sfFetch(query, variables = {}) {
     body: JSON.stringify({ query, variables }),
     cache: 'no-store',
   });
+
   const json = await res.json();
+  
   if (!res.ok || json.errors) {
+    console.error("❌ Shopify API Error Response:", JSON.stringify(json.errors, null, 2));
     return { error: json.errors || 'Shopify error', status: res.status, data: json };
   }
+
   return { error: null, status: 200, data: json };
 }
 
-// פונקציה לניקוי תווים מסוכנים ידנית (בלי להוסיף מרכאות!)
 function sanitize(str) {
   if (!str) return '';
-  // משאיר רק אותיות, מספרים, רווחים ומקפים
   return str.replace(/[^a-zA-Z0-9\s\-]/g, '');
 }
 
 function buildSimpleWildcardQuery(q) {
   if (!q) return '';
-  
-  // 1. מנקים את המילה מתווים מיוחדים
   const cleanTerm = sanitize(q.trim());
   if (!cleanTerm) return '';
 
-  // 2. בונים שאילתה נקייה. שים לב - אין כאן JSON.stringify
-  // אנחנו מחפשים ב-Title, SKU, Vendor ו-Tag
-  // הכוכבית * אומרת "כל מה שמתחיל בזה"
-  return `(title:${cleanTerm}* OR sku:${cleanTerm}* OR vendor:${cleanTerm}* OR tag:${cleanTerm}*)`;
+  // בדיקה 2: איך נראית השאילתה שנוצרה?
+  const finalQuery = `(title:${cleanTerm}* OR sku:${cleanTerm}* OR vendor:${cleanTerm}* OR tag:${cleanTerm}*)`;
+  console.log("🛠️ Generated Search Query String:", finalQuery);
+  return finalQuery;
 }
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const queryText = searchParams.get('q');
+
+  console.log("\n--- 🚀 New Header Search Request ---");
+  console.log("📥 Received Term:", queryText);
 
   if (!queryText || queryText.length < 1) {
     return NextResponse.json({ products: [] });
@@ -57,8 +64,8 @@ export async function GET(request) {
 
   const queryStr = buildSimpleWildcardQuery(queryText);
 
-  // אם אחרי הניקוי לא נשאר כלום, מחזירים ריק
   if (!queryStr) {
+      console.log("⚠️ Query string is empty after build");
       return NextResponse.json({ products: [] });
   }
 
@@ -92,23 +99,29 @@ export async function GET(request) {
     const { error, data } = await sfFetch(graphqlQuery, { query: queryStr });
 
     if (error) {
-        console.error("Header Search API Error:", error);
         return NextResponse.json({ products: [] });
     }
     
-    const products = data?.data?.products?.edges.map(edge => ({
+    // בדיקה 3: מה שופיפיי החזיר?
+    const edges = data?.data?.products?.edges || [];
+    console.log(`✅ Shopify returned ${edges.length} products`);
+    if (edges.length === 0) {
+        console.log("ℹ️ Zero results found. Verify Query syntax.");
+    }
+
+    const products = edges.map(edge => ({
         id: edge.node.id,
         title: edge.node.title,
         handle: edge.node.handle,
         image: edge.node.featuredImage?.url,
         price: edge.node.priceRange?.minVariantPrice?.amount,
         type: edge.node.productType
-    })) || [];
+    }));
 
     return NextResponse.json({ products });
 
   } catch (error) {
-    console.error('Header Search Logic Error:', error);
+    console.error('💥 Server Error:', error);
     return NextResponse.json({ products: [] }, { status: 500 });
   }
 }

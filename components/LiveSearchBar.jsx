@@ -1,4 +1,3 @@
-// /components/LiveSearchBar.jsx
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -12,7 +11,6 @@ export default function LiveSearchBar({ onSelect }) {
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef(null);
 
-  // סגירה בלחיצה בחוץ
   useEffect(() => {
     function handleClickOutside(event) {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
@@ -23,25 +21,26 @@ export default function LiveSearchBar({ onSelect }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // מנגנון חיפוש מול ה-API החדש
   useEffect(() => {
     const timer = setTimeout(async () => {
-      // נחפש החל מ-2 תווים כדי להיות יותר מדויקים, אבל אפשר גם 1
       if (query.length >= 2) { 
         setLoading(true);
         try {
-          // 👇👇👇 הקישור ל-API החדש והנקי שיצרנו כרגע 👇👇👇
+          console.log("🔵 Client: Fetching for term:", query); // לוג לקונסול בדפדפן
+          
           const res = await fetch(`/api/shopify/header-search?q=${encodeURIComponent(query)}`);
           
           if (res.ok) {
             const data = await res.json();
+            console.log("🟢 Client: Data received:", data); // לוג לקונסול בדפדפן
             setResults(data.products || []);
             setIsOpen(true);
           } else {
+            console.error("🔴 Client: Fetch failed", res.status);
             setResults([]);
           }
         } catch (error) {
-          console.error("Search fetch error:", error);
+          console.error("🔴 Client: Error:", error);
           setResults([]);
         } finally {
           setLoading(false);
@@ -64,7 +63,6 @@ export default function LiveSearchBar({ onSelect }) {
 
   return (
     <div ref={wrapperRef} className="relative w-full max-w-md mx-auto" dir="rtl">
-      
       <form onSubmit={handleSearchSubmit} className="relative flex items-center">
         <input
           type="text"
@@ -99,7 +97,6 @@ export default function LiveSearchBar({ onSelect }) {
         )}
       </form>
 
-      {/* תצוגת התוצאות */}
       {isOpen && (results.length > 0 || (!loading && query.length >= 2)) && (
         <div className="absolute top-full right-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-[9999] overflow-hidden max-h-80 overflow-y-auto">
           {results.length > 0 ? (
