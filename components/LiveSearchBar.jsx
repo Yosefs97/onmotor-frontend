@@ -1,4 +1,3 @@
-// /components/LiveSearchBar.jsx
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -24,16 +23,22 @@ export default function LiveSearchBar({ onSelect }) {
 
   useEffect(() => {
     const timer = setTimeout(async () => {
-      // ✅ חיפוש החל מהאות הראשונה
+      // חיפוש החל מהאות הראשונה
       if (query.length >= 1) {
         setLoading(true);
         try {
+          // הוספתי לוגים כדי שתוכל לראות בקונסול שהמידע אכן מגיע
+          console.log("Fetching for:", query);
           const res = await fetch(`/api/shopify/search-suggestions?q=${encodeURIComponent(query)}`);
           const data = await res.json();
+          
+          console.log("Results received:", data.products); // בדיקה בקונסול
+          
           setResults(data.products || []);
-          setIsOpen(true); // פותח את החלון גם אם אין תוצאות (להצגת הודעה)
+          setIsOpen(true); 
         } catch (error) {
-          console.error(error);
+          console.error("Search Error:", error);
+          setResults([]);
         } finally {
           setLoading(false);
         }
@@ -63,6 +68,7 @@ export default function LiveSearchBar({ onSelect }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="חפש מוצר..."
+          autoComplete="off" // 🔥 חשוב: מונע מהדפדפן להסתיר את התוצאות עם היסטוריה
           className="
             w-full bg-white 
             border-2 border-red-600 
@@ -82,7 +88,7 @@ export default function LiveSearchBar({ onSelect }) {
              {loading ? (
                <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
              ) : (
-               <button type="button" onClick={() => { setQuery(''); setResults([]); }}>
+               <button type="button" onClick={() => { setQuery(''); setResults([]); setIsOpen(false); }}>
                  <X className="w-4 h-4 text-gray-400 hover:text-red-600" />
                </button>
              )}
@@ -91,48 +97,53 @@ export default function LiveSearchBar({ onSelect }) {
       </form>
 
       {/* רשימת ההצעות */}
-      {isOpen && results.length > 0 && (
-        <div className="absolute top-full right-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-[60] overflow-hidden">
-          <ul className="divide-y divide-gray-100">
-            {results.map((product) => (
-              <li key={product.id}>
-                <Link 
-                  href={`/shop/${product.handle}`}
-                  onClick={() => { setIsOpen(false); if (onSelect) onSelect(); }}
-                  className="flex items-center gap-3 p-2 hover:bg-gray-50 transition duration-150"
-                >
-                  <div className="w-10 h-10 flex-shrink-0 bg-gray-100 rounded overflow-hidden border border-gray-200">
-                    {product.image ? (
+      {/* 👇 שינוי קריטי: Z-Index 9999 מבטיח שהתפריט יהיה מעל הכל */}
+      {isOpen && (results.length > 0 || (!loading && query.length >= 1)) && (
+        <div className="absolute top-full right-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-[9999] overflow-hidden max-h-80 overflow-y-auto">
+          
+          {results.length > 0 ? (
+            <ul className="divide-y divide-gray-100">
+              {results.map((product) => (
+                <li key={product.id}>
+                  <Link 
+                    href={`/shop/${product.handle}`}
+                    onClick={() => { setIsOpen(false); if (onSelect) onSelect(); }}
+                    className="flex items-center gap-3 p-2 hover:bg-gray-50 transition duration-150"
+                  >
+                    <div className="w-10 h-10 flex-shrink-0 bg-gray-100 rounded overflow-hidden border border-gray-200">
+                      {product.image ? (
                         <img src={product.image} alt={product.title} className="w-full h-full object-cover" />
-                    ) : (
+                      ) : (
                         <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">אין</div>
-                    )}
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-gray-900 truncate">
-                      {product.title}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">
-                      {product.type}
-                    </p>
-                  </div>
+                      )}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-gray-900 truncate">
+                        {product.title}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {product.type}
+                      </p>
+                    </div>
 
-                  <div className="text-sm font-bold text-red-600 whitespace-nowrap px-2">
-                    ₪{parseInt(product.price)}
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
+                    <div className="text-sm font-bold text-red-600 whitespace-nowrap px-2">
+                      {/* הוספתי הגנה למקרה שהמחיר לא מגיע תקין */}
+                      ₪{parseInt(product.price || 0)}
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            // ההודעה תוצג רק אם סיימנו לטעון, יש טקסט, ואין תוצאות
+            !loading && (
+              <div className="p-4 text-center text-sm text-gray-500 font-medium">
+                לא נמצאו מוצרים תואמים.
+              </div>
+            )
+          )}
         </div>
-      )}
-      
-      {/* 👇 הודעה כשהחיפוש לא מוצא כלום (אבל הוקלד משהו) */}
-      {isOpen && query.length >= 1 && !loading && results.length === 0 && (
-         <div className="absolute top-full right-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-[60] p-4 text-center text-sm text-gray-500 font-medium">
-            לא נמצאו מוצרים תואמים.
-         </div>
       )}
     </div>
   );
