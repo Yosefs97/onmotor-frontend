@@ -27,46 +27,49 @@ async function sfFetch(query, variables = {}) {
   return { error: null, status: 200, data: json };
 }
 
-// מנקה רווחים כפולים וממיר לאותיות קטנות
-function normalize(str) {
-  if (!str) return '';
-  const norm = str.trim().toLowerCase().replace(/\s+/g, ' ');
-  const noSpace = norm.replace(/\s+/g, '');
-  return { norm, noSpace };
-}
-
-// מנטרל תווים מיוחדים (כמו מקף) כדי שנוכל לחפש מק"ט בלי מרכאות
+// פונקציה לניקוי תווים מיוחדים
 function escapeShopifyQuery(str) {
   if (!str) return '';
   return str.replace(/([+\-=&|!(){}[\]^"~*?:\\/])/g, '\\$1');
+}
+
+function buildSmartQuery(q) {
+    if (!q) return '';
+    
+    const cleanQuery = q.trim(); // הוסר toLowerCase כדי לא לשבור מק"טים תלויי-רישיות אם יש
+    const escapedQuery = escapeShopifyQuery(cleanQuery);
+
+    // בונים שאילתה פשוטה ויעילה:
+    // (Title או SKU או Tag או Type) ומתחילים ב-escapedQuery
+    // הכוכבית * בסוף כל שדה מאפשרת השלמה אוטומטית (Autocomplete)
+    
+    // שימו לב: כאן אין JSON.stringify על המשתנה עצמו בתוך השאילתה, 
+    // כי אנחנו רוצים שהכוכבית תהיה צמודה לטקסט ולא מחוץ למרכאות.
+    // ה-escapeShopifyQuery כבר דואג שלא יהיו תווים מסוכנים.
+    
+    return `(` +
+        `title:${escapedQuery}* OR ` +
+        `sku:${escapedQuery}* OR ` +
+        `tag:${escapedQuery}* OR ` +
+        `product_type:${escapedQuery}*` +
+        `)`;
 }
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const queryText = searchParams.get('q');
 
-  // ✅ מאפשר חיפוש החל מהאות הראשונה
+  // מאפשר חיפוש החל מהאות הראשונה
   if (!queryText || queryText.length < 1) {
     return NextResponse.json({ products: [] });
   }
 
-  const { norm, noSpace } = normalize(queryText);
-  
-  // גרסה מוגנת לחיפוש מק"ט (כדי שמקף לא ישבור את החיפוש)
-  const escapedNorm = escapeShopifyQuery(norm);
-  const escapedNoSpace = escapeShopifyQuery(noSpace);
+  const formattedQuery = buildSmartQuery(queryText);
 
-  // 👇 השאילתה הפשוטה והמנצחת 👇
-  // טקסט: עטוף במרכאות + כוכבית (חיפוש מדוייק שמתחיל ב...)
-  // מק"ט: ללא מרכאות (עם escape) + כוכבית
-  const formattedQuery = `(` +
-      `title:${JSON.stringify(norm)}* OR ` +        // חיפוש כותרת
-      `product_type:${JSON.stringify(norm)}* OR ` + // חיפוש סוג
-      `sku:${escapedNorm}* OR ` +                   // מק"ט רגיל
-      `sku:${escapedNoSpace}* OR ` +                // מק"ט מחובר
-      `barcode:${escapedNorm}* OR ` +               // ברקוד
-      `tag:${escapedNorm}*` +                       // תגיות
-  `)`;
+  // בדיקה בסיסית - אם השאילתה יצאה ריקה (למשל רק רווחים)
+  if (!formattedQuery) {
+      return NextResponse.json({ products: [] });
+  }
 
   const graphqlQuery = `
     query SearchSuggestions($query: String!) {
@@ -85,15 +88,6 @@ export async function GET(request) {
               minVariantPrice {
                 amount
                 currencyCode
-              }
-            }
-            # אופציונלי: החזרת SKU כדי לוודא התאמה
-            variants(first: 1) {
-              edges {
-                node {
-                  sku
-                  barcode
-                }
               }
             }
           }
@@ -117,8 +111,7 @@ export async function GET(request) {
         image: edge.node.featuredImage?.url,
         price: edge.node.priceRange?.minVariantPrice?.amount,
         currency: edge.node.priceRange?.minVariantPrice?.currencyCode,
-        type: edge.node.productType,
-        sku: edge.node.variants?.edges[0]?.node?.sku
+        type: edge.node.productType
     })) || [];
 
     return NextResponse.json({ products });
