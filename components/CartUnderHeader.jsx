@@ -90,7 +90,7 @@ export default function CartUnderHeader({ menuItems = [], categories = [] }) {
              (50px שורה ראשונה + 45px שורה שניה)
              זה יסגור את הרווח הענק מהפירורי לחם.
       */}
-      <div className="h-[95px] w-full md:hidden"></div>
+      <div className="h-[90px] w-full md:hidden"></div>
     </>
   );
 }
