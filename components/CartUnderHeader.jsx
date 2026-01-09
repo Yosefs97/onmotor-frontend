@@ -5,9 +5,11 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import CartButton from './CartButton';
 import { ChevronDown } from 'lucide-react';
-import LiveSearchBar from './LiveSearchBar'; // 👈 1. ייבוא החיפוש החדש
+import LiveSearchBar from './LiveSearchBar';
+import CategoriesNav from './CategoriesNav'; // 👈 1. ייבוא הקומפוננטה החדשה
 
-export default function CartUnderHeader({ menuItems = [] }) {
+// 👇 2. הוספת categories ל-props
+export default function CartUnderHeader({ menuItems = [], categories = [] }) {
   const [total, setTotal] = useState(0);
 
   const fetchCart = async () => {
@@ -34,22 +36,29 @@ export default function CartUnderHeader({ menuItems = [] }) {
             w-full bg-gray-100 border-b transition-all z-40
             fixed top-[80px] left-0 right-0
             md:sticky md:top-[80px] md:relative md:z-30
+            shadow-sm
         " 
         dir="rtl"
-        style={{ height: '50px' }}
+        // 👇 3. שינינו ל-auto כדי לאפשר גובה דינמי במובייל (שתי שורות)
+        style={{ height: 'auto' }} 
       >
-        <div className="container mx-auto px-4 h-full flex items-center justify-between gap-2">
+        <div className="container mx-auto px-4 min-h-[50px] flex items-center justify-between gap-2">
           
-          {/* === צד ימין: חיפוש גאון + תפריט === */}
-          <div className="flex items-center gap-4 flex-1">
+          {/* === צד ימין: חיפוש + קטגוריות + תפריט === */}
+          <div className="flex items-center gap-4 flex-1 overflow-hidden">
               
-              {/* 👇 2. מנוע החיפוש ממוקם כאן */}
+              {/* מנוע החיפוש */}
               <div className="w-full max-w-[220px] md:max-w-[300px]">
                   <LiveSearchBar />
               </div>
 
-              {/* תפריט דסקטופ (נשאר במקומו, יופיע רק במחשב) */}
-              <nav className="hidden md:flex items-center gap-6 mr-2">
+              {/* 👇 4. תצוגת מחשב: הקטגוריות מופיעות ליד החיפוש */}
+              <div className="hidden md:block">
+                  <CategoriesNav categories={categories} />
+              </div>
+
+              {/* תפריט דסקטופ (Mega Menu) - מוסתר במובייל */}
+              <nav className="hidden lg:flex items-center gap-6 mr-2">
                   {menuItems.map((category) => (
                       <div key={category.title} className="group relative">
                           <Link 
@@ -88,22 +97,24 @@ export default function CartUnderHeader({ menuItems = [] }) {
           </div>
 
           {/* === צד שמאל: סה"כ + כפתור עגלה === */}
-          {/* shrink-0 מבטיח שהמחיר והכפתור לא יימעכו כשהמסך קטן */}
           <div className="flex items-center gap-2 pl-1 shrink-0">
-             
-             {/* 👇 3. הסה"כ עבר לכאן */}
-             <div className="text-sm md:text-base font-bold text-gray-800 whitespace-nowrap">
+              <div className="text-sm md:text-base font-bold text-gray-800 whitespace-nowrap">
                   ₪{total}
-             </div>
-
-             <CartButton />
+              </div>
+              <CartButton />
           </div>
 
         </div>
+
+        {/* 👇 5. תצוגת מובייל בלבד: שורה נפרדת למטה לקטגוריות */}
+        <div className="block md:hidden w-full">
+             <CategoriesNav categories={categories} />
+        </div>
+
       </div>
 
-      {/* ספייסר למובייל */}
-      <div className="h-[50px] w-full md:hidden"></div>
+      {/* 👇 6. הגדלת ה-Spacer למובייל כי ה-Header עכשיו גבוה יותר (כ-90px) */}
+      <div className="h-[95px] w-full md:hidden"></div>
     </>
   );
 }
