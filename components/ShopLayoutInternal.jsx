@@ -58,7 +58,7 @@ function ShopLayoutInternalContent({
              זה יוצר דחיפה מספיק חזקה כלפי מטה כדי שהתוכן (כמו המילה "חנות")
              יתחיל מתחת לכפתור הכחול ולא יוסתר מאחוריו.
           */}
-          <div className="md:hidden h-[50px]"></div>
+          <div className="md:hidden h-[40px]"></div>
         </>
       )}
 
