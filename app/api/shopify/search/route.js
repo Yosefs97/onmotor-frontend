@@ -36,15 +36,17 @@ function normalize(str) {
   return { norm, noSpace };
 }
 
-// ✅ משאירים את הטיפול בתווים מיוחדים כדי שמק"ט כמו 123-456 יעבוד
+// פונקציה שמנטרלת תווים מיוחדים כדי שנוכל לחפש ללא מרכאות
 function escapeShopifyQuery(str) {
   if (!str) return '';
+  // בורח מתווים מיוחדים של שופיפיי/Lucene
   return str.replace(/([+\-=&|!(){}[\]^"~*?:\\/])/g, '\\$1');
 }
 
 function buildQueryString({ q, vendor, model, year, tag, sku, category, type }) {
   const parts = [];
 
+  // 👇👇👇 התיקון כאן 👇👇👇
   if (q) {
     const { norm, noSpace } = normalize(q);
     const escapedNorm = escapeShopifyQuery(norm);
@@ -52,20 +54,22 @@ function buildQueryString({ q, vendor, model, year, tag, sku, category, type }) 
 
     parts.push(
       `(` +
-      `title:${JSON.stringify(norm)}* OR ` +
-      
-      // שימוש ב-Escape עבור מק"טים כדי שמקף לא ייחשב כ-NOT
+      // שינינו מ-JSON.stringify ל-escapedNorm.
+      // הסרת המרכאות מאפשרת לחיפוש ה-Wildcard (*) לעבוד החל מהאות הראשונה.
+      `title:${escapedNorm}* OR ` +
       `sku:${escapedNorm}* OR ` +
       `sku:${escapedNoSpace}* OR ` +
       `tag:${escapedNorm}* OR ` +
-      `product_type:${JSON.stringify(norm)}* OR ` +
-      `title:${JSON.stringify(noSpace)}*` +
+      `product_type:${escapedNorm}* OR ` +
+      `title:${escapedNoSpace}*` +
       `)`
     );
   }
+  // 👆👆👆 סוף התיקון 👆👆👆
 
   if (sku) {
     const { norm } = normalize(sku);
+    // כאן משאירים JSON.stringify כי זה חיפוש מדויק ולא Wildcard
     parts.push(`(sku:${JSON.stringify(norm)} OR barcode:${JSON.stringify(norm)})`);
   }
 

@@ -27,51 +27,36 @@ async function sfFetch(query, variables = {}) {
   return { error: null, status: 200, data: json };
 }
 
-function normalize(str) {
-  if (!str) return '';
-  const norm = str.trim().toLowerCase().replace(/\s+/g, ' ');
-  const noSpace = norm.replace(/\s+/g, '');
-  return { norm, noSpace };
-}
-
-// פונקציה שמנטרלת תווים מיוחדים רק עבור שדות רגישים כמו SKU
-function escapeShopifyQuery(str) {
-  if (!str) return '';
-  return str.replace(/([+\-=&|!(){}[\]^"~*?:\\/])/g, '\\$1');
-}
-
+// ✅ פונקציה חכמה לבניית שאילתת חיפוש
 function buildSmartQuery(q) {
     if (!q) return '';
     
-    // הכנת גרסאות שונות של מילת החיפוש
-    const { norm, noSpace } = normalize(q);
-    const escapedNorm = escapeShopifyQuery(norm);       // עבור מק"ט עם מקפים
-    const escapedNoSpace = escapeShopifyQuery(noSpace); // עבור מק"ט מחובר
-
-    // בניית השאילתה:
-    // 1. חיפוש בכותרת (Title) - עטוף במרכאות לטיפול בטוח בטקסט/עברית
-    // 2. חיפוש במק"ט (SKU) - משתמש בגרסה עם ה-Escape כדי שמקף לא יחשב כ-NOT
-    // 3. חיפוש בתגיות וסוג מוצר
+    // 1. ניקוי רווחים כפולים והמרה לאותיות קטנות (חשוב לאנגלית)
+    const cleanQuery = q.trim().toLowerCase().replace(/\s+/g, ' ');
     
-    return `(` +
-      `title:${JSON.stringify(norm)}* OR ` + 
-      `sku:${escapedNorm}* OR ` +             
-      `sku:${escapedNoSpace}* OR ` +          
-      `tag:${escapedNorm}* OR ` +             
-      `product_type:${JSON.stringify(norm)}* OR ` +
-      `title:${JSON.stringify(noSpace)}*` +   
-    `)`;
+    // 2. פיצול למילים נפרדות
+    const terms = cleanQuery.split(' ');
+
+    // 3. בניית שאילתה לכל מילה בנפרד (וגם חיבור שלהן)
+    // לכל מילה נוסיף כוכבית (*) כדי לאפשר השלמה אוטומטית
+    const parts = terms.map(term => {
+        return `(title:${term}* OR tag:${term}* OR sku:${term}* OR product_type:${term}*)`;
+    });
+
+    // מחבר את כל החלקים ב-AND כדי שכל המילים יהיו חייבות להופיע
+    return parts.join(' AND ');
 }
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const queryText = searchParams.get('q');
 
-  // מאפשר חיפוש החל מהאות הראשונה
+  // ✅ שינוי: מאפשר חיפוש החל מהאות הראשונה
   if (!queryText || queryText.length < 1) {
     return NextResponse.json({ products: [] });
   }
 
+  // בניית השאילתה החדשה
   const formattedQuery = buildSmartQuery(queryText);
 
   const graphqlQuery = `
