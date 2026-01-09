@@ -36,20 +36,14 @@ function normalize(str) {
   return { norm, noSpace };
 }
 
-// ✅ פונקציה לנטרול תווים מיוחדים (עבור חיפוש מק"ט בטוח)
+// ✅ משאירים את הטיפול בתווים מיוחדים כדי שמק"ט כמו 123-456 יעבוד
 function escapeShopifyQuery(str) {
   if (!str) return '';
-  // בורח מתווים כמו מקף, נקודותיים, סוגריים וכו'
   return str.replace(/([+\-=&|!(){}[\]^"~*?:\\/])/g, '\\$1');
 }
 
 function buildQueryString({ q, vendor, model, year, tag, sku, category, type }) {
   const parts = [];
-
-  // 🛡️ חסימת אביזרים: הוספת פילטרים שליליים
-  const excludedTypes = ["Accessory", "Helmet", "Apparel", "Clothing", "Gear"];
-  const exclusionQuery = excludedTypes.map(t => `-product_type:${JSON.stringify(t)}`).join(' AND ');
-  parts.push(`(${exclusionQuery})`);
 
   if (q) {
     const { norm, noSpace } = normalize(q);
@@ -59,6 +53,7 @@ function buildQueryString({ q, vendor, model, year, tag, sku, category, type }) 
     parts.push(
       `(` +
       `title:${JSON.stringify(norm)}* OR ` +
+      
       // שימוש ב-Escape עבור מק"טים כדי שמקף לא ייחשב כ-NOT
       `sku:${escapedNorm}* OR ` +
       `sku:${escapedNoSpace}* OR ` +

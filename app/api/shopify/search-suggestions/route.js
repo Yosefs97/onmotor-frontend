@@ -27,32 +27,23 @@ async function sfFetch(query, variables = {}) {
   return { error: null, status: 200, data: json };
 }
 
-// ✅ פונקציה לנטרול תווים מיוחדים
 function escapeShopifyQuery(str) {
   if (!str) return '';
   return str.replace(/([+\-=&|!(){}[\]^"~*?:\\/])/g, '\\$1');
 }
 
-// ✅ פונקציה חכמה לבניית שאילתת חיפוש
 function buildSmartQuery(q) {
     if (!q) return '';
     
     const cleanQuery = q.trim().toLowerCase().replace(/\s+/g, ' ');
     const terms = cleanQuery.split(' ');
 
-    // 🛡️ חסימת אביזרים:
-    const excludedTypes = ["Accessory", "Helmet", "Apparel", "Clothing", "Gear"];
-    const exclusionString = excludedTypes.map(t => `-product_type:${JSON.stringify(t)}`).join(' AND ');
-
-    // בניית שאילתה לכל מילה בנפרד עם הגנה מתווים מיוחדים
     const parts = terms.map(term => {
         const escapedTerm = escapeShopifyQuery(term);
-        // שימוש ב-escapedTerm מבטיח שמק"ט כמו 123-456 יחופש כטקסט אחד ולא כ-NOT
         return `(title:${JSON.stringify(term)}* OR tag:${escapedTerm}* OR sku:${escapedTerm}* OR product_type:${JSON.stringify(term)}*)`;
     });
 
-    // מחבר את הכל: (מילה1) וגם (מילה2) ... וגם (לא אביזרים)
-    return `(${parts.join(' AND ')}) AND (${exclusionString})`;
+    return parts.join(' AND ');
 }
 
 export async function GET(request) {

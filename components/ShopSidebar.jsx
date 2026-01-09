@@ -45,23 +45,25 @@ export default function ShopSidebar({
         const res = await fetch('/api/shopify/facets');
         const json = await res.json();
         
-        // 👇👇👇 התיקון הקריטי כאן 👇👇👇
-        // אנחנו מסננים את רשימת היצרנים (vendors).
-        // נציג רק יצרן שיש לו רשימת דגמים (models) לא ריקה.
-        // זה יעיף אוטומטית את יצרני האביזרים שלא משויכים לאופנועים.
+        // 👇👇👇 הסינון החכם ליצרנים 👇👇👇
+        // אנחנו בודקים: האם ליצרן הזה יש רשימת דגמים (models)?
+        // אם כן -> הוא יצרן אופנועים (KTM, Honda).
+        // אם לא -> הוא כנראה יצרן אביזרים (Alpinestars) ואנחנו מעיפים אותו מהרשימה.
         const onlyPartsVendors = (json.vendors || []).filter(vendor => 
             json.models && json.models[vendor] && json.models[vendor].length > 0
         );
 
         setFacets({
             ...json,
-            vendors: onlyPartsVendors // דורס את הרשימה המקורית ברשימה המסוננת
+            vendors: onlyPartsVendors // מעדכנים רק את רשימת היצרנים
         } || {});
-        // 👆👆👆 סוף התיקון 👆👆👆
+        // 👆👆👆 סוף הסינון 👆👆👆
 
       } catch (err) { console.error(err); }
     })();
   }, []);
+
+  // --- שאר הקוד נשאר בדיוק אותו דבר ---
 
   useEffect(() => {
     const timer = setTimeout(async () => {
@@ -80,8 +82,6 @@ export default function ShopSidebar({
     return () => clearTimeout(timer);
   }, [filters.q]);
 
-  // ... שאר הקוד (useEffect ו-handlers) נשאר ללא שינוי, העתקתי אותו למטה ...
-  
   useEffect(() => {
     function handleClickOutside(event) {
       if (searchWrapperRef.current && !searchWrapperRef.current.contains(event.target)) {
