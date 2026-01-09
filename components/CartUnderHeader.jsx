@@ -2,10 +2,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import CartButton from './CartButton';
 import LiveSearchBar from './LiveSearchBar';
 import CategoriesNav from './CategoriesNav'; 
-import DesktopMegaMenu from './DesktopMegaMenu'; // 👈 חובה לייבא
+import DesktopMegaMenu from './DesktopMegaMenu'; // 👈 1. ייבוא
 
 export default function CartUnderHeader({ menuItems = [], categories = [] }) {
   const [total, setTotal] = useState(0);
@@ -31,19 +32,18 @@ export default function CartUnderHeader({ menuItems = [], categories = [] }) {
     <>
       <div 
         className="
-            w-full bg-gray-100 border-b transition-all 
+            w-full bg-gray-100 border-b transition-all z-30
             fixed top-[80px] left-0 right-0
-            md:sticky md:top-[80px] md:relative 
+            md:sticky md:top-[80px] md:relative md:z-30
             shadow-sm
-            z-[50] /* 👈 מרים את השכבה מעל הכל */
-            !overflow-visible /* 👈 קריטי! מאפשר לתפריט לצאת החוצה */
         " 
         dir="rtl"
         style={{ height: 'auto' }} 
       >
-        <div className="container mx-auto px-4 min-h-[50px] flex items-center justify-between gap-2 !overflow-visible">
+        <div className="container mx-auto px-4 min-h-[50px] flex items-center justify-between gap-2">
           
-          <div className="flex items-center gap-4 flex-1 !overflow-visible">
+          {/* 👇 2. overflow-visible חובה כאן! */}
+          <div className="flex items-center gap-4 flex-1 overflow-visible">
               
               <div className="w-full max-w-[220px] md:max-w-[300px]">
                   <LiveSearchBar />
@@ -53,7 +53,7 @@ export default function CartUnderHeader({ menuItems = [], categories = [] }) {
                   <CategoriesNav categories={categories} />
               </div>
 
-              {/* 👇 כאן מחקתי את כל הקוד הישן והכנסתי את החדש */}
+              {/* 👇 3. שימוש בקומפוננטה החדשה */}
               <DesktopMegaMenu menuItems={menuItems} />
 
           </div>
@@ -67,7 +67,6 @@ export default function CartUnderHeader({ menuItems = [], categories = [] }) {
 
         </div>
 
-        {/* שורת קטגוריות למובייל */}
         <div className="block md:hidden w-full">
              <CategoriesNav categories={categories} />
         </div>
