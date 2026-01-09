@@ -40,14 +40,15 @@ function ShopLayoutInternalContent({
       {/* --- כפתור מובייל קבוע (Fixed) --- */}
       {!hideSidebar && (
         <>
-          {/* החישוב החדש:
+          {/* חישוב גבהים מתוקן:
              Top 0-80px: הדר ראשי
-             Top 80px-130px: עגלה (CartUnderHeader)
-             Top 130px+: כפתור הסינון הזה
+             Top 80px-175px: חיפוש + קטגוריות (CartUnderHeader גדל)
+             Top ~175px: הכפתור הזה
           */}
           <div 
-            className="md:hidden fixed left-0 right-0 z-30 bg-gray-100 border-b border-gray-200 shadow-sm" 
-            style={{ top: '130px', height: '50px' }} 
+            className="md:hidden fixed left-0 right-0 z-20 bg-gray-100 border-b border-gray-200 shadow-sm" 
+            // 👇 שינוי קריטי: הזזנו מ-130px ל-175px כדי לפנות מקום לקטגוריות
+            style={{ top: '175px', height: '50px' }} 
           >
             <button 
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -58,12 +59,12 @@ function ShopLayoutInternalContent({
             </button>
           </div>
 
-          {/* ספייסר עבור הכפתור הזה כדי שלא יסתיר את המוצרים */}
+          {/* ספייסר עבור הכפתור הזה */}
           <div className="md:hidden h-[50px]"></div>
         </>
       )}
 
-      {/* מיקום קטגוריות מובייל */}
+      {/* מיקום קטגוריות מובייל (אם קיים) */}
       <MobileCategoryNav menuItems={menuItems} />
 
       {/* --- מגירה למובייל --- */}
@@ -74,7 +75,6 @@ function ShopLayoutInternalContent({
             onClick={() => setIsMobileMenuOpen(false)}
           />
           
-          {/* המגירה נפתחת מתחת להדר (80px) */}
           <div className="relative w-full bg-white shadow-2xl overflow-y-auto flex flex-col animate-in slide-in-from-top duration-300 top-[80px] h-[calc(100vh-80px)]">
             <div className="p-4 border-b flex justify-between items-center bg-gray-50 sticky top-0 z-10">
               <h3 className="font-bold text-lg text-gray-800">תפריט סינון</h3>
