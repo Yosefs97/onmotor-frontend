@@ -26,21 +26,21 @@ export default function LiveSearchBar({ onSelect }) {
       if (query.length >= 2) { 
         setLoading(true);
         try {
-          console.log("🔵 Client: Fetching for term:", query); // לוג לקונסול בדפדפן
-          
           const res = await fetch(`/api/shopify/header-search?q=${encodeURIComponent(query)}`);
-          
           if (res.ok) {
             const data = await res.json();
-            console.log("🟢 Client: Data received:", data); // לוג לקונסול בדפדפן
-            setResults(data.products || []);
+            const items = data.products || [];
+            
+            // 👇👇👇 שים לב לשורה הזו בקונסול שלך 👇👇👇
+            console.log(`🟢 Search for "${query}": Found ${items.length} products`);
+            
+            setResults(items);
             setIsOpen(true);
           } else {
-            console.error("🔴 Client: Fetch failed", res.status);
             setResults([]);
           }
         } catch (error) {
-          console.error("🔴 Client: Error:", error);
+          console.error(error);
           setResults([]);
         } finally {
           setLoading(false);
@@ -63,6 +63,7 @@ export default function LiveSearchBar({ onSelect }) {
 
   return (
     <div ref={wrapperRef} className="relative w-full max-w-md mx-auto" dir="rtl">
+      
       <form onSubmit={handleSearchSubmit} className="relative flex items-center">
         <input
           type="text"
@@ -97,6 +98,7 @@ export default function LiveSearchBar({ onSelect }) {
         )}
       </form>
 
+      {/* אזור התוצאות - z-index גבוה מאוד */}
       {isOpen && (results.length > 0 || (!loading && query.length >= 2)) && (
         <div className="absolute top-full right-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-[9999] overflow-hidden max-h-80 overflow-y-auto">
           {results.length > 0 ? (
