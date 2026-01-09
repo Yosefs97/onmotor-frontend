@@ -7,7 +7,11 @@ const apiVersion = process.env.SHOPIFY_API_VERSION || '2024-04';
 
 async function sfFetch(query, variables = {}) {
   if (!domain || !token) {
-    return { error: 'Missing Shopify env vars', status: 500, data: null };
+    return {
+      error: 'Missing Shopify env vars',
+      status: 500,
+      data: null,
+    };
   }
   const res = await fetch(`https://${domain}/api/${apiVersion}/graphql.json`, {
     method: 'POST',
@@ -27,8 +31,7 @@ async function sfFetch(query, variables = {}) {
 
 function normalize(str) {
   if (!str) return '';
-  // שומרים רק על רווחים בודדים, אותיות קטנות
-  const norm = str.trim().toLowerCase().replace(/\s+/g, ' '); 
+  const norm = str.trim().toLowerCase().replace(/\s+/g, ' ');
   const noSpace = norm.replace(/\s+/g, '');
   return { norm, noSpace };
 }
@@ -36,81 +39,57 @@ function normalize(str) {
 function buildQueryString({ q, vendor, model, year, tag, sku, category, type }) {
   const parts = [];
 
-  // ✅ תיקון לחיפוש חופשי ומק"טים
   if (q) {
-    const { norm } = normalize(q);
-    
-    // בדיקה האם יש תווים מיוחדים (כמו מקף -) ששוברים את החיפוש
-    const hasSpecialChars = /[^a-z0-9\u0590-\u05FF\s]/i.test(norm);
-
-    if (hasSpecialChars) {
-      // 🔒 מצב "בטוח": אם יש מקפים, מחפשים התאמה מדוייקת (Phrase Match)
-      // זה פותר את הבעיה ש- "123-456" נחשב כ- "123 NOT 456"
-      parts.push(
-        `(` +
-        `title:${JSON.stringify(norm)} OR ` +       // חיפוש כותרת מדויק
-        `sku:${JSON.stringify(norm)} OR ` +         // חיפוש מק"ט מדויק
-        `tag:${JSON.stringify(norm)} OR ` +         // חיפוש תגית מדויק
-        `"${norm}"` +                               // חיפוש כללי כמחרוזת
-        `)`
-      );
-    } else {
-      // 🚀 מצב "מהיר": אם זה רק אותיות/מספרים, משתמשים בכוכבית (*) להשלמה
-      parts.push(
-        `(` +
-        `title:${JSON.stringify(norm)}* OR ` +
-        `sku:${JSON.stringify(norm)}* OR ` +
-        `tag:${JSON.stringify(norm)}* OR ` +
-        `product_type:${JSON.stringify(norm)}*` +
-        `)`
-      );
-    }
+    const { norm, noSpace } = normalize(q);
+    parts.push(`${norm} OR title:${JSON.stringify(noSpace)} OR tag:${JSON.stringify(noSpace)}`);
   }
 
-  // שדה SKU ספציפי (אם הגיע מהפילטר)
   if (sku) {
-    const { norm } = normalize(sku);
-    // תמיד נחפש מק"ט ספציפי עם מרכאות ליתר ביטחון
-    parts.push(`(sku:${JSON.stringify(norm)} OR barcode:${JSON.stringify(norm)})`);
+    const { norm, noSpace } = normalize(sku);
+    parts.push(
+      `sku:${JSON.stringify(norm)} OR barcode:${JSON.stringify(
+        norm
+      )} OR title:${JSON.stringify(norm)} OR sku:${JSON.stringify(noSpace)} OR barcode:${JSON.stringify(noSpace)} OR title:${JSON.stringify(noSpace)}`
+    );
   }
 
   if (vendor) {
     const { norm, noSpace } = normalize(vendor);
-    parts.push(`(vendor:${JSON.stringify(norm)} OR tag:${JSON.stringify(noSpace)})`);
+    parts.push(`vendor:${JSON.stringify(norm)} OR tag:${JSON.stringify(noSpace)}`);
   }
 
   if (model) {
     const { norm, noSpace } = normalize(model);
     parts.push(
-      `(tag:${JSON.stringify('model:' + norm)} OR title:${JSON.stringify(norm)} OR tag:${JSON.stringify(norm)} OR tag:${JSON.stringify('model:' + noSpace)})`
+      `tag:${JSON.stringify('model:' + norm)} OR title:${JSON.stringify(norm)} OR tag:${JSON.stringify(norm)} OR tag:${JSON.stringify('model:' + noSpace)} OR title:${JSON.stringify(noSpace)} OR tag:${JSON.stringify(noSpace)}`
     );
   }
 
   if (year) {
     const { norm, noSpace } = normalize(year);
     parts.push(
-      `(tag:${JSON.stringify('year:' + norm)} OR tag:${JSON.stringify(norm)} OR tag:${JSON.stringify('year:' + noSpace)})`
+      `tag:${JSON.stringify('year:' + norm)} OR title:${JSON.stringify(norm)} OR tag:${JSON.stringify(norm)} OR tag:${JSON.stringify('year:' + noSpace)} OR title:${JSON.stringify(noSpace)} OR tag:${JSON.stringify(noSpace)}`
     );
   }
 
   if (category) {
-    const { norm } = normalize(category);
+    const { norm, noSpace } = normalize(category);
     parts.push(
-      `(tag:${JSON.stringify('cat:' + norm)} OR product_type:${JSON.stringify(norm)} OR tag:${JSON.stringify(norm)})`
+      `tag:${JSON.stringify('cat:' + norm)} OR product_type:${JSON.stringify(norm)} OR tag:${JSON.stringify(norm)} OR product_type:${JSON.stringify(noSpace)} OR tag:${JSON.stringify(noSpace)}`
     );
   }
 
   if (type) {
     const { norm, noSpace } = normalize(type);
-    parts.push(`(product_type:${JSON.stringify(norm)} OR product_type:${JSON.stringify(noSpace)})`);
+    parts.push(`product_type:${JSON.stringify(norm)} OR product_type:${JSON.stringify(noSpace)}`);
   }
 
   if (tag) {
     const { norm, noSpace } = normalize(tag);
-    parts.push(`(tag:${JSON.stringify(norm)} OR tag:${JSON.stringify(noSpace)})`);
+    parts.push(`tag:${JSON.stringify(norm)} OR tag:${JSON.stringify(noSpace)}`);
   }
 
-  return parts.join(' AND ');
+  return parts.join(' ');
 }
 
 export { sfFetch, buildQueryString };
@@ -118,7 +97,6 @@ export { sfFetch, buildQueryString };
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const q = searchParams.get('q') || '';
-  // ... שאר הפרמטרים נשארים זהים
   const vendor = searchParams.get('vendor') || '';
   const model = searchParams.get('model') || '';
   const year = searchParams.get('year') || '';
@@ -190,6 +168,7 @@ export async function GET(req) {
 
   if (error) return Response.json({ error, items: [], pageInfo: {} }, { status });
 
+  // ✅ סינון לפי year_from / year_to מה־metafields
   const items = (data?.data?.products?.edges || [])
     .map((e) => ({ cursor: e.cursor, ...e.node }))
     .filter((prod) => {
