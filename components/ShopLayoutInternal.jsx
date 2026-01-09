@@ -42,7 +42,7 @@ function ShopLayoutInternalContent({
           {/* כפתור הסינון */}
           <div 
             className="md:hidden fixed left-0 right-0 z-20 bg-gray-100 border-b border-gray-200 shadow-sm" 
-            // 👇 Top 170px = 80px (Header) + 90px (CartUnderHeader)
+            // 👇 Top 170px = 80px (Header) + 50px (Search) + 40px (Categories)
             style={{ top: '170px', height: '50px' }} 
           >
             <button 
@@ -54,11 +54,11 @@ function ShopLayoutInternalContent({
             </button>
           </div>
 
-          {/* 👇 ספייסר קטן (26px). 
-             בגלל ה-gap-6 של ההורה, הספייסר הזה ידחוף את התוכן ב-50px סה"כ (26+24)
-             וזה בדיוק הגובה של הכפתור, ללא רווחים מיותרים. 
+          {/* 👇 ספייסר מוגדל ל-60px.
+             זה יוצר דחיפה מספיק חזקה כלפי מטה כדי שהתוכן (כמו המילה "חנות")
+             יתחיל מתחת לכפתור הכחול ולא יוסתר מאחוריו.
           */}
-          <div className="md:hidden h-[26px]"></div>
+          <div className="md:hidden h-[60px]"></div>
         </>
       )}
 
