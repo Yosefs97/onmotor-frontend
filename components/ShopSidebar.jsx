@@ -63,7 +63,7 @@ export default function ShopSidebar({
       if (filters.q && filters.q.length >= 1) { 
         setLoadingSuggestions(true);
         try {
-          const res = await fetch(`/api/shopify/search-suggestions?q=${encodeURIComponent(filters.q)}`);
+          const res = await fetch(`/api/shopify/search?q=${encodeURIComponent(filters.q)}`);
           const data = await res.json();
           setSuggestions(data.products || []);
           setShowDropdown(true); // פותח את הדרופדאון גם אם אין תוצאות (כדי להציג הודעה)
