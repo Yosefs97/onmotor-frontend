@@ -33,7 +33,7 @@ export default function MainCategoriesGrid({ categories = [], isSidebar = false 
       )}
       
       {/* הגריד: בסיידבר הוא יהיה 2 טורים (גדולים), בראשי הוא יהיה 4-6 טורים */}
-      <div className={`grid gap-2 ${
+      <div className={`grid gap-0.5 ${
           isSidebar 
             ? 'grid-cols-2' 
             : 'grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-0.5'
