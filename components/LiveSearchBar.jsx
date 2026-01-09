@@ -11,6 +11,7 @@ export default function LiveSearchBar({ onSelect }) {
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef(null);
 
+  // סגירה בלחיצה בחוץ
   useEffect(() => {
     function handleClickOutside(event) {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
@@ -21,20 +22,18 @@ export default function LiveSearchBar({ onSelect }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // חיפוש
   useEffect(() => {
     const timer = setTimeout(async () => {
       if (query.length >= 2) { 
         setLoading(true);
         try {
+          console.log("🔵 Fetching:", query);
           const res = await fetch(`/api/shopify/header-search?q=${encodeURIComponent(query)}`);
           if (res.ok) {
             const data = await res.json();
-            const items = data.products || [];
-            
-            // 👇👇👇 שים לב לשורה הזו בקונסול שלך 👇👇👇
-            console.log(`🟢 Search for "${query}": Found ${items.length} products`);
-            
-            setResults(items);
+            console.log(`🟢 Found ${data.products?.length} products`);
+            setResults(data.products || []);
             setIsOpen(true);
           } else {
             setResults([]);
@@ -98,9 +97,13 @@ export default function LiveSearchBar({ onSelect }) {
         )}
       </form>
 
-      {/* אזור התוצאות - z-index גבוה מאוד */}
+      {/* 👇 השינוי כאן: החלפנו absolute ב-fixed כדי לעקוף את ה-Header */}
+      {/* שמתי לו top-20 כדי שירד קצת מתחת לחיפוש, אבל הוא יצוף מעל הכל */}
       {isOpen && (results.length > 0 || (!loading && query.length >= 2)) && (
-        <div className="absolute top-full right-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-[9999] overflow-hidden max-h-80 overflow-y-auto">
+        <div 
+          className="fixed top-24 left-0 right-0 mx-auto w-full max-w-md bg-white border border-red-600 rounded-lg shadow-2xl z-[99999] overflow-hidden max-h-80 overflow-y-auto"
+          style={{ width: wrapperRef.current ? wrapperRef.current.offsetWidth : '100%' }} // מנסה להתאים את הרוחב לחיפוש
+        >
           {results.length > 0 ? (
             <ul className="divide-y divide-gray-100">
               {results.map((product) => (
@@ -118,7 +121,7 @@ export default function LiveSearchBar({ onSelect }) {
                       )}
                     </div>
                     
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 text-right">
                       <p className="text-sm font-bold text-gray-900 truncate">{product.title}</p>
                       <p className="text-xs text-gray-500 truncate">{product.type}</p>
                     </div>
