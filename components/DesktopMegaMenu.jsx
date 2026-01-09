@@ -19,11 +19,11 @@ export default function DesktopMegaMenu({ menuItems = [] }) {
   const handleMouseLeave = () => {
     timeoutRef.current = setTimeout(() => {
       setActiveIndex(null);
-    }, 200); // 200ms השהייה
+    }, 200);
   };
 
   return (
-    <nav className="hidden lg:flex items-center gap-6 mr-4 h-full">
+    <nav className="hidden lg:flex items-center gap-6 mr-4 h-full relative z-[60]">
       {menuItems.map((category, index) => {
         const isOpen = activeIndex === index;
         const hasSubItems = category.items && category.items.length > 0;
@@ -38,7 +38,7 @@ export default function DesktopMegaMenu({ menuItems = [] }) {
             <Link
               href={category.url}
               className={`
-                flex items-center gap-1 text-sm font-bold transition-colors py-4
+                flex items-center gap-1 text-sm font-bold transition-colors py-4 px-2
                 ${isOpen ? 'text-red-600' : 'text-gray-700 hover:text-red-600'}
               `}
             >
@@ -52,11 +52,14 @@ export default function DesktopMegaMenu({ menuItems = [] }) {
 
             {hasSubItems && isOpen && (
               <div 
-                className="absolute top-full right-0 w-[600px] bg-white shadow-xl border border-gray-200 rounded-b-lg z-50 animate-in fade-in slide-in-from-top-1 duration-150"
+                className="absolute top-full right-0 w-[600px] bg-white shadow-xl border border-gray-200 rounded-b-lg animate-in fade-in slide-in-from-top-1 duration-150 z-[100]" 
+                /* 👆 z-[100] מבטיח שזה יצוף מעל הכל */
+                style={{ marginTop: '-1px' }} /* סוגר רווח מיקרוסקופי אם קיים */
                 onMouseEnter={() => handleMouseEnter(index)}
                 onMouseLeave={handleMouseLeave}
               >
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-red-600" />
+
                 <div className="p-6 grid grid-cols-3 gap-6">
                   {category.items.map((group, idx) => (
                     <div key={idx} className="space-y-3">
