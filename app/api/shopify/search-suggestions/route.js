@@ -27,36 +27,42 @@ async function sfFetch(query, variables = {}) {
   return { error: null, status: 200, data: json };
 }
 
+// ✅ פונקציה לנטרול תווים מיוחדים
+function escapeShopifyQuery(str) {
+  if (!str) return '';
+  return str.replace(/([+\-=&|!(){}[\]^"~*?:\\/])/g, '\\$1');
+}
+
 // ✅ פונקציה חכמה לבניית שאילתת חיפוש
 function buildSmartQuery(q) {
     if (!q) return '';
     
-    // 1. ניקוי רווחים כפולים והמרה לאותיות קטנות (חשוב לאנגלית)
     const cleanQuery = q.trim().toLowerCase().replace(/\s+/g, ' ');
-    
-    // 2. פיצול למילים נפרדות
     const terms = cleanQuery.split(' ');
 
-    // 3. בניית שאילתה לכל מילה בנפרד (וגם חיבור שלהן)
-    // לכל מילה נוסיף כוכבית (*) כדי לאפשר השלמה אוטומטית
+    // 🛡️ חסימת אביזרים:
+    const excludedTypes = ["Accessory", "Helmet", "Apparel", "Clothing", "Gear"];
+    const exclusionString = excludedTypes.map(t => `-product_type:${JSON.stringify(t)}`).join(' AND ');
+
+    // בניית שאילתה לכל מילה בנפרד עם הגנה מתווים מיוחדים
     const parts = terms.map(term => {
-        return `(title:${term}* OR tag:${term}* OR sku:${term}* OR product_type:${term}*)`;
+        const escapedTerm = escapeShopifyQuery(term);
+        // שימוש ב-escapedTerm מבטיח שמק"ט כמו 123-456 יחופש כטקסט אחד ולא כ-NOT
+        return `(title:${JSON.stringify(term)}* OR tag:${escapedTerm}* OR sku:${escapedTerm}* OR product_type:${JSON.stringify(term)}*)`;
     });
 
-    // מחבר את כל החלקים ב-AND כדי שכל המילים יהיו חייבות להופיע
-    return parts.join(' AND ');
+    // מחבר את הכל: (מילה1) וגם (מילה2) ... וגם (לא אביזרים)
+    return `(${parts.join(' AND ')}) AND (${exclusionString})`;
 }
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const queryText = searchParams.get('q');
 
-  // ✅ שינוי: מאפשר חיפוש החל מהאות הראשונה
   if (!queryText || queryText.length < 1) {
     return NextResponse.json({ products: [] });
   }
 
-  // בניית השאילתה החדשה
   const formattedQuery = buildSmartQuery(queryText);
 
   const graphqlQuery = `

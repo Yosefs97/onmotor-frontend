@@ -32,7 +32,6 @@ export default function ShopSidebar({
 
   const scrollToElement = (id) => {
     if (typeof window === "undefined") return;
-    // אם יש גלילה פנימית, אולי נרצה לגלול בתוך האלמנט עצמו, אבל כרגע נשאיר את זה ככה
     if (!scrollRef?.current) return;
     if (window.innerWidth < 1024) {
       const el = document.getElementById(id);
@@ -45,7 +44,21 @@ export default function ShopSidebar({
       try {
         const res = await fetch('/api/shopify/facets');
         const json = await res.json();
-        setFacets(json || {});
+        
+        // 👇👇👇 התיקון הקריטי כאן 👇👇👇
+        // אנחנו מסננים את רשימת היצרנים (vendors).
+        // נציג רק יצרן שיש לו רשימת דגמים (models) לא ריקה.
+        // זה יעיף אוטומטית את יצרני האביזרים שלא משויכים לאופנועים.
+        const onlyPartsVendors = (json.vendors || []).filter(vendor => 
+            json.models && json.models[vendor] && json.models[vendor].length > 0
+        );
+
+        setFacets({
+            ...json,
+            vendors: onlyPartsVendors // דורס את הרשימה המקורית ברשימה המסוננת
+        } || {});
+        // 👆👆👆 סוף התיקון 👆👆👆
+
       } catch (err) { console.error(err); }
     })();
   }, []);
@@ -67,6 +80,8 @@ export default function ShopSidebar({
     return () => clearTimeout(timer);
   }, [filters.q]);
 
+  // ... שאר הקוד (useEffect ו-handlers) נשאר ללא שינוי, העתקתי אותו למטה ...
+  
   useEffect(() => {
     function handleClickOutside(event) {
       if (searchWrapperRef.current && !searchWrapperRef.current.contains(event.target)) {
@@ -104,7 +119,6 @@ export default function ShopSidebar({
   return (
     <aside 
       dir="rtl" 
-      // 👇 השינוי כאן: הוספתי max-h ו-overflow-y-auto כדי לאפשר גלילה כשהתוכן ארוך
       className="space-y-2 sticky top-24 p-4 bg-white text-red-600 border border-red-600 rounded-md max-h-[calc(100vh-120px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
     >
       <h3 className="font-extrabold text-2xl border-b border-red-600 pb-2">סינון מוצרים</h3>
@@ -164,7 +178,6 @@ export default function ShopSidebar({
 
       <button id="filter-submit-btn" onClick={applyFilters} className="w-full mt-4 bg-red-600 text-white font-bold py-2 px-4 rounded-md">חפש</button>
 
-      {/* הגריד */}
       <div className="hidden md:block mt-2 pt-2 border-t border-gray-100">
          <MainCategoriesGrid categories={categories} isSidebar={true} />
       </div>

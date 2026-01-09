@@ -36,60 +36,81 @@ function normalize(str) {
   return { norm, noSpace };
 }
 
+// ✅ פונקציה לנטרול תווים מיוחדים (עבור חיפוש מק"ט בטוח)
+function escapeShopifyQuery(str) {
+  if (!str) return '';
+  // בורח מתווים כמו מקף, נקודותיים, סוגריים וכו'
+  return str.replace(/([+\-=&|!(){}[\]^"~*?:\\/])/g, '\\$1');
+}
+
 function buildQueryString({ q, vendor, model, year, tag, sku, category, type }) {
   const parts = [];
 
+  // 🛡️ חסימת אביזרים: הוספת פילטרים שליליים
+  const excludedTypes = ["Accessory", "Helmet", "Apparel", "Clothing", "Gear"];
+  const exclusionQuery = excludedTypes.map(t => `-product_type:${JSON.stringify(t)}`).join(' AND ');
+  parts.push(`(${exclusionQuery})`);
+
   if (q) {
     const { norm, noSpace } = normalize(q);
-    parts.push(`${norm} OR title:${JSON.stringify(noSpace)} OR tag:${JSON.stringify(noSpace)}`);
+    const escapedNorm = escapeShopifyQuery(norm);
+    const escapedNoSpace = escapeShopifyQuery(noSpace);
+
+    parts.push(
+      `(` +
+      `title:${JSON.stringify(norm)}* OR ` +
+      // שימוש ב-Escape עבור מק"טים כדי שמקף לא ייחשב כ-NOT
+      `sku:${escapedNorm}* OR ` +
+      `sku:${escapedNoSpace}* OR ` +
+      `tag:${escapedNorm}* OR ` +
+      `product_type:${JSON.stringify(norm)}* OR ` +
+      `title:${JSON.stringify(noSpace)}*` +
+      `)`
+    );
   }
 
   if (sku) {
-    const { norm, noSpace } = normalize(sku);
-    parts.push(
-      `sku:${JSON.stringify(norm)} OR barcode:${JSON.stringify(
-        norm
-      )} OR title:${JSON.stringify(norm)} OR sku:${JSON.stringify(noSpace)} OR barcode:${JSON.stringify(noSpace)} OR title:${JSON.stringify(noSpace)}`
-    );
+    const { norm } = normalize(sku);
+    parts.push(`(sku:${JSON.stringify(norm)} OR barcode:${JSON.stringify(norm)})`);
   }
 
   if (vendor) {
     const { norm, noSpace } = normalize(vendor);
-    parts.push(`vendor:${JSON.stringify(norm)} OR tag:${JSON.stringify(noSpace)}`);
+    parts.push(`(vendor:${JSON.stringify(norm)} OR tag:${JSON.stringify(noSpace)})`);
   }
 
   if (model) {
     const { norm, noSpace } = normalize(model);
     parts.push(
-      `tag:${JSON.stringify('model:' + norm)} OR title:${JSON.stringify(norm)} OR tag:${JSON.stringify(norm)} OR tag:${JSON.stringify('model:' + noSpace)} OR title:${JSON.stringify(noSpace)} OR tag:${JSON.stringify(noSpace)}`
+      `(tag:${JSON.stringify('model:' + norm)} OR title:${JSON.stringify(norm)} OR tag:${JSON.stringify(norm)} OR tag:${JSON.stringify('model:' + noSpace)})`
     );
   }
 
   if (year) {
     const { norm, noSpace } = normalize(year);
     parts.push(
-      `tag:${JSON.stringify('year:' + norm)} OR title:${JSON.stringify(norm)} OR tag:${JSON.stringify(norm)} OR tag:${JSON.stringify('year:' + noSpace)} OR title:${JSON.stringify(noSpace)} OR tag:${JSON.stringify(noSpace)}`
+      `(tag:${JSON.stringify('year:' + norm)} OR tag:${JSON.stringify(norm)} OR tag:${JSON.stringify('year:' + noSpace)})`
     );
   }
 
   if (category) {
-    const { norm, noSpace } = normalize(category);
+    const { norm } = normalize(category);
     parts.push(
-      `tag:${JSON.stringify('cat:' + norm)} OR product_type:${JSON.stringify(norm)} OR tag:${JSON.stringify(norm)} OR product_type:${JSON.stringify(noSpace)} OR tag:${JSON.stringify(noSpace)}`
+      `(tag:${JSON.stringify('cat:' + norm)} OR product_type:${JSON.stringify(norm)} OR tag:${JSON.stringify(norm)})`
     );
   }
 
   if (type) {
     const { norm, noSpace } = normalize(type);
-    parts.push(`product_type:${JSON.stringify(norm)} OR product_type:${JSON.stringify(noSpace)}`);
+    parts.push(`(product_type:${JSON.stringify(norm)} OR product_type:${JSON.stringify(noSpace)})`);
   }
 
   if (tag) {
     const { norm, noSpace } = normalize(tag);
-    parts.push(`tag:${JSON.stringify(norm)} OR tag:${JSON.stringify(noSpace)}`);
+    parts.push(`(tag:${JSON.stringify(norm)} OR tag:${JSON.stringify(noSpace)})`);
   }
 
-  return parts.join(' ');
+  return parts.join(' AND ');
 }
 
 export { sfFetch, buildQueryString };
@@ -168,7 +189,6 @@ export async function GET(req) {
 
   if (error) return Response.json({ error, items: [], pageInfo: {} }, { status });
 
-  // ✅ סינון לפי year_from / year_to מה־metafields
   const items = (data?.data?.products?.edges || [])
     .map((e) => ({ cursor: e.cursor, ...e.node }))
     .filter((prod) => {
