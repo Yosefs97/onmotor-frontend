@@ -55,7 +55,7 @@ function ShopLayoutInternalContent({
             </button>
           </div>
 
-          <div className="md:hidden h-[35px]"></div>
+          <div className="md:hidden h-[px]"></div>
         </>
       )}
 
