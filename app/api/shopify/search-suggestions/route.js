@@ -38,8 +38,10 @@ function buildSmartQuery(q) {
     const cleanQuery = q.trim().toLowerCase().replace(/\s+/g, ' ');
     const terms = cleanQuery.split(' ');
 
+    // בונים שאילתה שמחפשת גם בכותרת, גם בתגיות וגם במק"ט (כולל מקפים)
     const parts = terms.map(term => {
         const escapedTerm = escapeShopifyQuery(term);
+        // שימוש ב-Wildcard (*) כדי למצוא תוצאות כבר מהאות הראשונה
         return `(title:${JSON.stringify(term)}* OR tag:${escapedTerm}* OR sku:${escapedTerm}* OR product_type:${JSON.stringify(term)}*)`;
     });
 
@@ -50,6 +52,7 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const queryText = searchParams.get('q');
 
+  // ✅ תיקון: מאפשר חיפוש החל מתו אחד בלבד
   if (!queryText || queryText.length < 1) {
     return NextResponse.json({ products: [] });
   }
