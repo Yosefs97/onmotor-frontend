@@ -105,7 +105,7 @@ export default function CartUnderHeader({ menuItems = [], categories = [] }) {
       </div>
 
       {/* 👇 תיקון גובה הספייסר ל-90px מדויק */}
-      <div className="h-[80px] w-full md:hidden"></div>
+      <div className="h-[90px] w-full md:hidden"></div>
     </>
   );
 }
