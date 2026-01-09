@@ -165,7 +165,7 @@ export default function ShopSidebar({
       <button id="filter-submit-btn" onClick={applyFilters} className="w-full mt-4 bg-red-600 text-white font-bold py-2 px-4 rounded-md">חפש</button>
 
       {/* הגריד */}
-      <div className="hidden md:block mt-6 pt-4 border-t border-gray-100">
+      <div className="hidden md:block mt-2 pt-2 border-t border-gray-100">
          <MainCategoriesGrid categories={categories} isSidebar={true} />
       </div>
 
