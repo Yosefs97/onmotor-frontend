@@ -27,40 +27,33 @@ async function sfFetch(query, variables = {}) {
   return { error: null, status: 200, data: json };
 }
 
-// --- לוגיקת חיפוש זהה לחלוטין למנוע החלפים ---
-
-function normalize(str) {
-  if (!str) return '';
-  const norm = str.trim().toLowerCase().replace(/\s+/g, ' ');
-  const noSpace = norm.replace(/\s+/g, '');
-  return { norm, noSpace };
-}
-
+// פונקציה לניקוי תווים מיוחדים
 function escapeShopifyQuery(str) {
   if (!str) return '';
-  // בורח מתווים מיוחדים כדי שמקף לא ייחשב כ-NOT
   return str.replace(/([+\-=&|!(){}[\]^"~*?:\\/])/g, '\\$1');
 }
 
 function buildSmartQuery(q) {
     if (!q) return '';
     
-    const { norm, noSpace } = normalize(q);
-    const escapedNorm = escapeShopifyQuery(norm);
-    const escapedNoSpace = escapeShopifyQuery(noSpace);
+    const cleanQuery = q.trim(); // הוסר toLowerCase כדי לא לשבור מק"טים תלויי-רישיות אם יש
+    const escapedQuery = escapeShopifyQuery(cleanQuery);
 
-    // השאילתה המדויקת שעובדת במנוע החלפים:
+    // בונים שאילתה פשוטה ויעילה:
+    // (Title או SKU או Tag או Type) ומתחילים ב-escapedQuery
+    // הכוכבית * בסוף כל שדה מאפשרת השלמה אוטומטית (Autocomplete)
+    
+    // שימו לב: כאן אין JSON.stringify על המשתנה עצמו בתוך השאילתה, 
+    // כי אנחנו רוצים שהכוכבית תהיה צמודה לטקסט ולא מחוץ למרכאות.
+    // ה-escapeShopifyQuery כבר דואג שלא יהיו תווים מסוכנים.
+    
     return `(` +
-      `title:${JSON.stringify(norm)}* OR ` +       // חיפוש טקסט רגיל (עברית/אנגלית)
-      `sku:${escapedNorm}* OR ` +                  // מק"ט עם מקפים (מוגן עם escape)
-      `sku:${escapedNoSpace}* OR ` +               // מק"ט מחובר
-      `tag:${escapedNorm}* OR ` +                  // תגיות
-      `product_type:${JSON.stringify(norm)}* OR ` + 
-      `title:${JSON.stringify(noSpace)}*` +        // כותרת ללא רווחים
-    `)`;
+        `title:${escapedQuery}* OR ` +
+        `sku:${escapedQuery}* OR ` +
+        `tag:${escapedQuery}* OR ` +
+        `product_type:${escapedQuery}*` +
+        `)`;
 }
-
-// --- ה-Endpoint ---
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -72,6 +65,11 @@ export async function GET(request) {
   }
 
   const formattedQuery = buildSmartQuery(queryText);
+
+  // בדיקה בסיסית - אם השאילתה יצאה ריקה (למשל רק רווחים)
+  if (!formattedQuery) {
+      return NextResponse.json({ products: [] });
+  }
 
   const graphqlQuery = `
     query SearchSuggestions($query: String!) {

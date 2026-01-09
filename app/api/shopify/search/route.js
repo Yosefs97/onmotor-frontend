@@ -1,6 +1,4 @@
 // /app/api/shopify/search/route.js
-export const runtime = "nodejs";
-
 const domain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
 const token = process.env.SHOPIFY_STOREFRONT_API_TOKEN;
 const apiVersion = process.env.SHOPIFY_API_VERSION || '2024-04';
@@ -36,80 +34,60 @@ function normalize(str) {
   return { norm, noSpace };
 }
 
-// פונקציה שמנטרלת תווים מיוחדים כדי שנוכל לחפש ללא מרכאות
-function escapeShopifyQuery(str) {
-  if (!str) return '';
-  // בורח מתווים מיוחדים של שופיפיי/Lucene
-  return str.replace(/([+\-=&|!(){}[\]^"~*?:\\/])/g, '\\$1');
-}
-
 function buildQueryString({ q, vendor, model, year, tag, sku, category, type }) {
   const parts = [];
 
-  // 👇👇👇 התיקון כאן 👇👇👇
   if (q) {
     const { norm, noSpace } = normalize(q);
-    const escapedNorm = escapeShopifyQuery(norm);
-    const escapedNoSpace = escapeShopifyQuery(noSpace);
-
-    parts.push(
-      `(` +
-      // שינינו מ-JSON.stringify ל-escapedNorm.
-      // הסרת המרכאות מאפשרת לחיפוש ה-Wildcard (*) לעבוד החל מהאות הראשונה.
-      `title:${escapedNorm}* OR ` +
-      `sku:${escapedNorm}* OR ` +
-      `sku:${escapedNoSpace}* OR ` +
-      `tag:${escapedNorm}* OR ` +
-      `product_type:${escapedNorm}* OR ` +
-      `title:${escapedNoSpace}*` +
-      `)`
-    );
+    parts.push(`${norm} OR title:${JSON.stringify(noSpace)} OR tag:${JSON.stringify(noSpace)}`);
   }
-  // 👆👆👆 סוף התיקון 👆👆👆
 
   if (sku) {
-    const { norm } = normalize(sku);
-    // כאן משאירים JSON.stringify כי זה חיפוש מדויק ולא Wildcard
-    parts.push(`(sku:${JSON.stringify(norm)} OR barcode:${JSON.stringify(norm)})`);
+    const { norm, noSpace } = normalize(sku);
+    parts.push(
+      `sku:${JSON.stringify(norm)} OR barcode:${JSON.stringify(
+        norm
+      )} OR title:${JSON.stringify(norm)} OR sku:${JSON.stringify(noSpace)} OR barcode:${JSON.stringify(noSpace)} OR title:${JSON.stringify(noSpace)}`
+    );
   }
 
   if (vendor) {
     const { norm, noSpace } = normalize(vendor);
-    parts.push(`(vendor:${JSON.stringify(norm)} OR tag:${JSON.stringify(noSpace)})`);
+    parts.push(`vendor:${JSON.stringify(norm)} OR tag:${JSON.stringify(noSpace)}`);
   }
 
   if (model) {
     const { norm, noSpace } = normalize(model);
     parts.push(
-      `(tag:${JSON.stringify('model:' + norm)} OR title:${JSON.stringify(norm)} OR tag:${JSON.stringify(norm)} OR tag:${JSON.stringify('model:' + noSpace)})`
+      `tag:${JSON.stringify('model:' + norm)} OR title:${JSON.stringify(norm)} OR tag:${JSON.stringify(norm)} OR tag:${JSON.stringify('model:' + noSpace)} OR title:${JSON.stringify(noSpace)} OR tag:${JSON.stringify(noSpace)}`
     );
   }
 
   if (year) {
     const { norm, noSpace } = normalize(year);
     parts.push(
-      `(tag:${JSON.stringify('year:' + norm)} OR tag:${JSON.stringify(norm)} OR tag:${JSON.stringify('year:' + noSpace)})`
+      `tag:${JSON.stringify('year:' + norm)} OR title:${JSON.stringify(norm)} OR tag:${JSON.stringify(norm)} OR tag:${JSON.stringify('year:' + noSpace)} OR title:${JSON.stringify(noSpace)} OR tag:${JSON.stringify(noSpace)}`
     );
   }
 
   if (category) {
-    const { norm } = normalize(category);
+    const { norm, noSpace } = normalize(category);
     parts.push(
-      `(tag:${JSON.stringify('cat:' + norm)} OR product_type:${JSON.stringify(norm)} OR tag:${JSON.stringify(norm)})`
+      `tag:${JSON.stringify('cat:' + norm)} OR product_type:${JSON.stringify(norm)} OR tag:${JSON.stringify(norm)} OR product_type:${JSON.stringify(noSpace)} OR tag:${JSON.stringify(noSpace)}`
     );
   }
 
   if (type) {
     const { norm, noSpace } = normalize(type);
-    parts.push(`(product_type:${JSON.stringify(norm)} OR product_type:${JSON.stringify(noSpace)})`);
+    parts.push(`product_type:${JSON.stringify(norm)} OR product_type:${JSON.stringify(noSpace)}`);
   }
 
   if (tag) {
     const { norm, noSpace } = normalize(tag);
-    parts.push(`(tag:${JSON.stringify(norm)} OR tag:${JSON.stringify(noSpace)})`);
+    parts.push(`tag:${JSON.stringify(norm)} OR tag:${JSON.stringify(noSpace)}`);
   }
 
-  return parts.join(' AND ');
+  return parts.join(' ');
 }
 
 export { sfFetch, buildQueryString };
@@ -161,7 +139,7 @@ export async function GET(req) {
               key
               value
             }
-            variants(first: 1) {
+            variants(first: 5) {
               edges {
                 node {
                   id
@@ -188,6 +166,7 @@ export async function GET(req) {
 
   if (error) return Response.json({ error, items: [], pageInfo: {} }, { status });
 
+  // ✅ סינון לפי year_from / year_to מה־metafields
   const items = (data?.data?.products?.edges || [])
     .map((e) => ({ cursor: e.cursor, ...e.node }))
     .filter((prod) => {
