@@ -7,7 +7,7 @@ import { Search, X, Loader2 } from 'lucide-react';
 
 export default function LiveSearchBar({ onSelect }) {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState([]); // קראתי לזה results כמו בקוד המקורי שלך
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef(null);
@@ -27,12 +27,14 @@ export default function LiveSearchBar({ onSelect }) {
       if (query.length >= 1) {
         setLoading(true);
         try {
-          const res = await fetch(`/api/shopify/search-suggestions?q=${encodeURIComponent(query)}`);
+          // 👇👇👇 כאן השינוי - פונים ל-API החדש והנפרד 👇👇👇
+          const res = await fetch(`/api/shopify/live-search?q=${encodeURIComponent(query)}`);
           const data = await res.json();
           setResults(data.products || []);
           setIsOpen(true);
         } catch (error) {
           console.error(error);
+          setResults([]);
         } finally {
           setLoading(false);
         }
@@ -50,7 +52,6 @@ export default function LiveSearchBar({ onSelect }) {
     if (!query) return;
     setIsOpen(false);
     if (onSelect) onSelect();
-    console.log("Searching for:", query);
   };
 
   return (
@@ -62,19 +63,19 @@ export default function LiveSearchBar({ onSelect }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="חפש מוצר..."
+          autoComplete="off"
           className="
             w-full bg-white 
             border-2 border-red-600 
-            /* 👇 השינוי בגובה כאן: פונט קטן יותר וריפוד נמוך יותר */
             text-gray-900 text-sm placeholder:text-sm placeholder:text-gray-500
             rounded-lg 
             focus:ring-2 focus:ring-red-600 focus:border-red-600 focus:outline-none
             block py-1.5 pr-10 pl-2 shadow-sm h-[38px]
           "
-          onFocus={() => { if(results.length > 0) setIsOpen(true); }}
+          onFocus={() => { if(query.length >= 1) setIsOpen(true); }}
         />
         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-red-600">
-          <Search className="w-4 h-4" /> {/* הקטנתי מעט גם את האייקון */}
+          <Search className="w-4 h-4" />
         </div>
         
         {(query || loading) && (
@@ -82,7 +83,7 @@ export default function LiveSearchBar({ onSelect }) {
              {loading ? (
                <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
              ) : (
-               <button type="button" onClick={() => { setQuery(''); setResults([]); }}>
+               <button type="button" onClick={() => { setQuery(''); setResults([]); setIsOpen(false); }}>
                  <X className="w-4 h-4 text-gray-400 hover:text-red-600" />
                </button>
              )}
@@ -90,48 +91,52 @@ export default function LiveSearchBar({ onSelect }) {
         )}
       </form>
 
-      {/* רשימת ההצעות */}
-      {isOpen && results.length > 0 && (
-        <div className="absolute top-full right-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-[60] overflow-hidden">
-          <ul className="divide-y divide-gray-100">
-            {results.map((product) => (
-              <li key={product.id}>
-                <Link 
-                  href={`/shop/${product.handle}`}
-                  onClick={() => { setIsOpen(false); if (onSelect) onSelect(); }}
-                  className="flex items-center gap-3 p-2 hover:bg-gray-50 transition duration-150"
-                >
-                  <div className="w-10 h-10 flex-shrink-0 bg-gray-100 rounded overflow-hidden border border-gray-200">
-                    {product.image ? (
+      {/* --- אזור התוצאות --- */}
+      {/* z-[9999] חשוב כדי שזה יופיע מעל הכל */}
+      {isOpen && (results.length > 0 || (!loading && query.length >= 1)) && (
+        <div className="absolute top-full right-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-[9999] overflow-hidden max-h-80 overflow-y-auto">
+          
+          {results.length > 0 ? (
+            <ul className="divide-y divide-gray-100">
+              {results.map((product) => (
+                <li key={product.id}>
+                  <Link 
+                    href={`/shop/${product.handle}`}
+                    onClick={() => { setIsOpen(false); if (onSelect) onSelect(); }}
+                    className="flex items-center gap-3 p-2 hover:bg-gray-50 transition duration-150"
+                  >
+                    <div className="w-10 h-10 flex-shrink-0 bg-gray-100 rounded overflow-hidden border border-gray-200">
+                      {product.image ? (
                         <img src={product.image} alt={product.title} className="w-full h-full object-cover" />
-                    ) : (
+                      ) : (
                         <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">אין</div>
-                    )}
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-gray-900 truncate">
-                      {product.title}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">
-                      {product.type}
-                    </p>
-                  </div>
+                      )}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-gray-900 truncate">
+                        {product.title}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {product.type}
+                      </p>
+                    </div>
 
-                  <div className="text-sm font-bold text-red-600 whitespace-nowrap px-2">
-                    ₪{parseInt(product.price)}
-                  </div>
-                </Link>
-              </li>
-            ))}
-          </ul>
+                    <div className="text-sm font-bold text-red-600 whitespace-nowrap px-2">
+                      ₪{parseInt(product.price || 0)}
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            !loading && (
+              <div className="p-4 text-center text-sm text-gray-500 font-medium">
+                לא נמצאו מוצרים תואמים.
+              </div>
+            )
+          )}
         </div>
-      )}
-      
-      {isOpen && query.length >= 1 && !loading && results.length === 0 && (
-         <div className="absolute top-full right-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-[60] p-4 text-center text-sm text-gray-500 font-medium">
-            לא נמצאו מוצרים תואמים.
-         </div>
       )}
     </div>
   );
