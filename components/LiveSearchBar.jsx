@@ -9,7 +9,37 @@ export default function LiveSearchBar({ onSelect }) {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  
+  // משתנה למיקום התפריט
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+  
   const wrapperRef = useRef(null);
+  const inputRef = useRef(null);
+
+  // פונקציה לעדכון מיקום התפריט שיידבק לשורת החיפוש
+  const updatePosition = () => {
+    if (inputRef.current) {
+      const rect = inputRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + 5, // 5 פיקסלים רווח מלמטה
+        left: rect.left,
+        width: rect.width
+      });
+    }
+  };
+
+  // האזנה לשינויי גודל מסך או גלילה כדי שהתפריט יישאר דבוק
+  useEffect(() => {
+    if (isOpen) {
+      updatePosition();
+      window.addEventListener('scroll', updatePosition);
+      window.addEventListener('resize', updatePosition);
+    }
+    return () => {
+      window.removeEventListener('scroll', updatePosition);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [isOpen]);
 
   // סגירה בלחיצה בחוץ
   useEffect(() => {
@@ -22,12 +52,13 @@ export default function LiveSearchBar({ onSelect }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // מנגנון חיפוש
+  // מנגנון חיפוש מול ה-API (header-search)
   useEffect(() => {
     const timer = setTimeout(async () => {
-      // ✅ שינוי 1: חיפוש החל מהאות הראשונה
-      if (query.length >= 1) { 
+      if (query.length >= 1) { // חיפוש החל מהאות הראשונה
         setLoading(true);
+        // עדכון מיקום לפני פתיחה
+        updatePosition();
         try {
           const res = await fetch(`/api/shopify/header-search?q=${encodeURIComponent(query)}`);
           if (res.ok) {
@@ -64,13 +95,13 @@ export default function LiveSearchBar({ onSelect }) {
       
       <form onSubmit={handleSearchSubmit} className="relative flex items-center">
         <input
+          ref={inputRef} // הוספנו Ref כדי לעקוב אחרי המיקום
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="חפש מוצר..."
           autoComplete="off"
-          // פותח את החלון כבר מהאות הראשונה אם יש תוצאות או טקסט
-          onFocus={() => { if(query.length >= 1) setIsOpen(true); }}
+          onFocus={() => { if(query.length >= 1) { updatePosition(); setIsOpen(true); } }}
           className="
             w-full bg-white 
             border-2 border-red-600 
@@ -97,9 +128,16 @@ export default function LiveSearchBar({ onSelect }) {
         )}
       </form>
 
-      {/* ✅ שינוי 2: חזרנו ל-absolute עם top-full כדי שיישב בדיוק מתחת לשורה */}
+      {/* תפריט התוצאות - Fixed עם מיקום מחושב דינמית */}
       {isOpen && (results.length > 0 || (!loading && query.length >= 1)) && (
-        <div className="absolute top-full right-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-[9999] overflow-hidden max-h-80 overflow-y-auto">
+        <div 
+          className="fixed bg-white border border-gray-200 rounded-lg shadow-2xl z-[99999] overflow-hidden max-h-80 overflow-y-auto"
+          style={{
+            top: `${dropdownPosition.top}px`,
+            left: `${dropdownPosition.left}px`,
+            width: `${dropdownPosition.width}px`
+          }}
+        >
           {results.length > 0 ? (
             <ul className="divide-y divide-gray-100">
               {results.map((product) => (
