@@ -14,8 +14,7 @@ function ShopLayoutInternalContent({
   product = null, 
   customSidebar = null, 
   hideSidebar = false,
-  menuItems = [],
-  categories = [] // 👈 קליטת הקטגוריות
+  menuItems = [] 
 }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -32,8 +31,7 @@ function ShopLayoutInternalContent({
   const sidebarContent = customSidebar ? (
     customSidebar
   ) : (
-    // 👇 העברת הקטגוריות לסיידבר
-    <ShopSidebar onFilterChange={handleSearch} product={product} categories={categories} />
+    <ShopSidebar onFilterChange={handleSearch} product={product} />
   );
 
   return (
@@ -44,6 +42,7 @@ function ShopLayoutInternalContent({
           {/* כפתור הסינון */}
           <div 
             className="md:hidden fixed left-0 right-0 z-20 bg-gray-100 border-b border-gray-200 shadow-sm" 
+            // 👇 Top 170px = 80px (Header) + 50px (Search) + 40px (Categories)
             style={{ top: '170px', height: '50px' }} 
           >
             <button 
@@ -55,7 +54,11 @@ function ShopLayoutInternalContent({
             </button>
           </div>
 
-          <div className="md:hidden h-[px]"></div>
+          {/* 👇 ספייסר מוגדל ל-60px.
+             זה יוצר דחיפה מספיק חזקה כלפי מטה כדי שהתוכן (כמו המילה "חנות")
+             יתחיל מתחת לכפתור הכחול ולא יוסתר מאחוריו.
+          */}
+          <div className="md:hidden h-[35px]"></div>
         </>
       )}
 
