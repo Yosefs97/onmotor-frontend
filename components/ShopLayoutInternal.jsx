@@ -37,18 +37,13 @@ function ShopLayoutInternalContent({
   return (
     <div className="flex flex-col md:grid md:grid-cols-4 gap-6 relative" dir="rtl">
       
-      {/* --- כפתור מובייל קבוע (Fixed) --- */}
       {!hideSidebar && (
         <>
-          {/* חישוב גבהים מתוקן:
-             Top 0-80px: הדר ראשי
-             Top 80px-175px: חיפוש + קטגוריות (CartUnderHeader גדל)
-             Top ~175px: הכפתור הזה
-          */}
+          {/* כפתור הסינון */}
           <div 
             className="md:hidden fixed left-0 right-0 z-20 bg-gray-100 border-b border-gray-200 shadow-sm" 
-            // 👇 שינוי קריטי: הזזנו מ-130px ל-175px כדי לפנות מקום לקטגוריות
-            style={{ top: '175px', height: '50px' }} 
+            // 👇 Top 170px = 80px (Header) + 90px (CartUnderHeader)
+            style={{ top: '170px', height: '50px' }} 
           >
             <button 
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -59,12 +54,15 @@ function ShopLayoutInternalContent({
             </button>
           </div>
 
-          {/* ספייסר עבור הכפתור הזה */}
-          <div className="md:hidden h-[50px]"></div>
+          {/* 👇 ספייסר קטן (26px). 
+             בגלל ה-gap-6 של ההורה, הספייסר הזה ידחוף את התוכן ב-50px סה"כ (26+24)
+             וזה בדיוק הגובה של הכפתור, ללא רווחים מיותרים. 
+          */}
+          <div className="md:hidden h-[26px]"></div>
         </>
       )}
 
-      {/* מיקום קטגוריות מובייל (אם קיים) */}
+      {/* מיקום קטגוריות מובייל נוסף (אם קיים) */}
       <MobileCategoryNav menuItems={menuItems} />
 
       {/* --- מגירה למובייל --- */}
