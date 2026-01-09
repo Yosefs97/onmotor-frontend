@@ -23,21 +23,15 @@ export default function LiveSearchBar({ onSelect }) {
 
   useEffect(() => {
     const timer = setTimeout(async () => {
-      // חיפוש החל מהאות הראשונה
       if (query.length >= 1) {
         setLoading(true);
         try {
-          // הוספתי לוגים כדי שתוכל לראות בקונסול שהמידע אכן מגיע
-          console.log("Fetching for:", query);
           const res = await fetch(`/api/shopify/search-suggestions?q=${encodeURIComponent(query)}`);
           const data = await res.json();
-          
-          console.log("Results received:", data.products); // בדיקה בקונסול
-          
           setResults(data.products || []);
-          setIsOpen(true); 
+          setIsOpen(true);
         } catch (error) {
-          console.error("Search Error:", error);
+          console.error(error);
           setResults([]);
         } finally {
           setLoading(false);
@@ -56,7 +50,6 @@ export default function LiveSearchBar({ onSelect }) {
     if (!query) return;
     setIsOpen(false);
     if (onSelect) onSelect();
-    console.log("Searching for:", query);
   };
 
   return (
@@ -68,7 +61,7 @@ export default function LiveSearchBar({ onSelect }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="חפש מוצר..."
-          autoComplete="off" // 🔥 חשוב: מונע מהדפדפן להסתיר את התוצאות עם היסטוריה
+          autoComplete="off"
           className="
             w-full bg-white 
             border-2 border-red-600 
@@ -96,11 +89,8 @@ export default function LiveSearchBar({ onSelect }) {
         )}
       </form>
 
-      {/* רשימת ההצעות */}
-      {/* 👇 שינוי קריטי: Z-Index 9999 מבטיח שהתפריט יהיה מעל הכל */}
       {isOpen && (results.length > 0 || (!loading && query.length >= 1)) && (
-        <div className="absolute top-full right-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-[9999] overflow-hidden max-h-80 overflow-y-auto">
-          
+        <div className="absolute top-full right-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-2xl z-[9999] overflow-hidden max-h-80 overflow-y-auto">
           {results.length > 0 ? (
             <ul className="divide-y divide-gray-100">
               {results.map((product) => (
@@ -117,18 +107,11 @@ export default function LiveSearchBar({ onSelect }) {
                         <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">אין</div>
                       )}
                     </div>
-                    
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-gray-900 truncate">
-                        {product.title}
-                      </p>
-                      <p className="text-xs text-gray-500 truncate">
-                        {product.type}
-                      </p>
+                      <p className="text-sm font-bold text-gray-900 truncate">{product.title}</p>
+                      <p className="text-xs text-gray-500 truncate">{product.type}</p>
                     </div>
-
                     <div className="text-sm font-bold text-red-600 whitespace-nowrap px-2">
-                      {/* הוספתי הגנה למקרה שהמחיר לא מגיע תקין */}
                       ₪{parseInt(product.price || 0)}
                     </div>
                   </Link>
@@ -136,12 +119,7 @@ export default function LiveSearchBar({ onSelect }) {
               ))}
             </ul>
           ) : (
-            // ההודעה תוצג רק אם סיימנו לטעון, יש טקסט, ואין תוצאות
-            !loading && (
-              <div className="p-4 text-center text-sm text-gray-500 font-medium">
-                לא נמצאו מוצרים תואמים.
-              </div>
-            )
+            !loading && <div className="p-4 text-center text-sm text-gray-500 font-medium">לא נמצאו מוצרים תואמים.</div>
           )}
         </div>
       )}

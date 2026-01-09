@@ -1,4 +1,3 @@
-// /app/api/shopify/search-suggestions/route.js
 import { NextResponse } from 'next/server';
 
 export const runtime = "nodejs";
@@ -7,6 +6,7 @@ const domain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
 const token = process.env.SHOPIFY_STOREFRONT_API_TOKEN;
 const apiVersion = process.env.SHOPIFY_API_VERSION || '2024-04';
 
+// --- אותה פונקציית Fetch מהקובץ שעובד לך ---
 async function sfFetch(query, variables = {}) {
   if (!domain || !token) {
     return { error: 'Missing Shopify env vars', status: 500, data: null };
@@ -27,59 +27,47 @@ async function sfFetch(query, variables = {}) {
   return { error: null, status: 200, data: json };
 }
 
-// פונקציה לניקוי תווים מיוחדים
-function escapeShopifyQuery(str) {
+// --- אותה פונקציית normalize מהקובץ שעובד לך ---
+function normalize(str) {
   if (!str) return '';
-  return str.replace(/([+\-=&|!(){}[\]^"~*?:\\/])/g, '\\$1');
+  const norm = str.trim().toLowerCase().replace(/\s+/g, ' ');
+  const noSpace = norm.replace(/\s+/g, '');
+  return { norm, noSpace };
 }
 
-function buildSmartQuery(q) {
-    if (!q) return '';
-    
-    const cleanQuery = q.trim(); // הוסר toLowerCase כדי לא לשבור מק"טים תלויי-רישיות אם יש
-    const escapedQuery = escapeShopifyQuery(cleanQuery);
-
-    // בונים שאילתה פשוטה ויעילה:
-    // (Title או SKU או Tag או Type) ומתחילים ב-escapedQuery
-    // הכוכבית * בסוף כל שדה מאפשרת השלמה אוטומטית (Autocomplete)
-    
-    // שימו לב: כאן אין JSON.stringify על המשתנה עצמו בתוך השאילתה, 
-    // כי אנחנו רוצים שהכוכבית תהיה צמודה לטקסט ולא מחוץ למרכאות.
-    // ה-escapeShopifyQuery כבר דואג שלא יהיו תווים מסוכנים.
-    
-    return `(` +
-        `title:${escapedQuery}* OR ` +
-        `sku:${escapedQuery}* OR ` +
-        `tag:${escapedQuery}* OR ` +
-        `product_type:${escapedQuery}*` +
-        `)`;
+// --- אותה פונקציית buildQueryString מהקובץ שעובד לך ---
+function buildQueryString({ q }) {
+  const parts = [];
+  if (q) {
+    const { norm, noSpace } = normalize(q);
+    // הוספתי כאן כוכבית (*) קטנה בסוף רק כדי לאפשר השלמה תוך כדי הקלדה, 
+    // אבל שמרתי על המבנה המדויק שלך (OR title: OR tag:)
+    parts.push(`${norm}* OR title:${JSON.stringify(noSpace)}* OR tag:${JSON.stringify(noSpace)}*`);
+  }
+  return parts.join(' ');
 }
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const queryText = searchParams.get('q');
 
-  // מאפשר חיפוש החל מהאות הראשונה
   if (!queryText || queryText.length < 1) {
     return NextResponse.json({ products: [] });
   }
 
-  const formattedQuery = buildSmartQuery(queryText);
-
-  // בדיקה בסיסית - אם השאילתה יצאה ריקה (למשל רק רווחים)
-  if (!formattedQuery) {
-      return NextResponse.json({ products: [] });
-  }
+  // שימוש בלוגיקה המדויקת שלך לבניית השאילתה
+  const queryStr = buildQueryString({ q: queryText });
 
   const graphqlQuery = `
     query SearchSuggestions($query: String!) {
-      products(first: 5, query: $query, sortKey: RELEVANCE) {
+      products(first: 6, query: $query, sortKey: RELEVANCE) {
         edges {
           node {
             id
             title
             handle
             productType
+            vendor
             featuredImage {
               url
               altText
@@ -97,27 +85,27 @@ export async function GET(request) {
   `;
 
   try {
-    const { error, data } = await sfFetch(graphqlQuery, { query: formattedQuery });
+    const { error, data } = await sfFetch(graphqlQuery, { query: queryStr });
 
     if (error) {
-        console.error("Search API Error:", error);
+        console.error("API Error:", error);
         return NextResponse.json({ products: [] });
     }
     
+    // מיפוי התוצאות למבנה פשוט שהחיפוש החי צריך
     const products = data?.data?.products?.edges.map(edge => ({
         id: edge.node.id,
         title: edge.node.title,
         handle: edge.node.handle,
         image: edge.node.featuredImage?.url,
         price: edge.node.priceRange?.minVariantPrice?.amount,
-        currency: edge.node.priceRange?.minVariantPrice?.currencyCode,
         type: edge.node.productType
     })) || [];
 
     return NextResponse.json({ products });
 
   } catch (error) {
-    console.error('Search Logic Error:', error);
+    console.error('Logic Error:', error);
     return NextResponse.json({ products: [] }, { status: 500 });
   }
 }
