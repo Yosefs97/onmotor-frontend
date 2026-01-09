@@ -27,7 +27,7 @@ export default function LiveSearchBar({ onSelect }) {
       if (query.length >= 1) {
         setLoading(true);
         try {
-          const res = await fetch(`/api/shopify/search-suggestions?q=${encodeURIComponent(query)}`);
+          const res = await fetch(`/api/shopify/search?q=${encodeURIComponent(query)}`);
           const data = await res.json();
           setResults(data.products || []);
           setIsOpen(true);
