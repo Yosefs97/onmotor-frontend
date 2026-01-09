@@ -45,25 +45,18 @@ export default function ShopSidebar({
         const res = await fetch('/api/shopify/facets');
         const json = await res.json();
         
-        // 👇👇👇 הסינון החכם ליצרנים 👇👇👇
-        // אנחנו בודקים: האם ליצרן הזה יש רשימת דגמים (models)?
-        // אם כן -> הוא יצרן אופנועים (KTM, Honda).
-        // אם לא -> הוא כנראה יצרן אביזרים (Alpinestars) ואנחנו מעיפים אותו מהרשימה.
+        // סינון יצרני אביזרים (מציגים רק יצרנים עם דגמים)
         const onlyPartsVendors = (json.vendors || []).filter(vendor => 
             json.models && json.models[vendor] && json.models[vendor].length > 0
         );
 
         setFacets({
             ...json,
-            vendors: onlyPartsVendors // מעדכנים רק את רשימת היצרנים
+            vendors: onlyPartsVendors 
         } || {});
-        // 👆👆👆 סוף הסינון 👆👆👆
-
       } catch (err) { console.error(err); }
     })();
   }, []);
-
-  // --- שאר הקוד נשאר בדיוק אותו דבר ---
 
   useEffect(() => {
     const timer = setTimeout(async () => {
@@ -73,10 +66,15 @@ export default function ShopSidebar({
           const res = await fetch(`/api/shopify/search-suggestions?q=${encodeURIComponent(filters.q)}`);
           const data = await res.json();
           setSuggestions(data.products || []);
-          setShowDropdown(true);
-        } catch (e) { console.error(e); } finally { setLoadingSuggestions(false); }
+          setShowDropdown(true); // פותח את הדרופדאון גם אם אין תוצאות (כדי להציג הודעה)
+        } catch (e) { 
+            console.error(e); 
+        } finally { 
+            setLoadingSuggestions(false); 
+        }
       } else {
-        setSuggestions([]); setShowDropdown(false);
+        setSuggestions([]); 
+        setShowDropdown(false);
       }
     }, 300);
     return () => clearTimeout(timer);
@@ -142,6 +140,8 @@ export default function ShopSidebar({
             />
             {loadingSuggestions && ( <div className="absolute left-2 top-1/2 -translate-y-1/2"><Loader2 className="w-5 h-5 animate-spin text-red-600" /></div> )}
         </div>
+        
+        {/* תוצאות חיפוש */}
         {showDropdown && suggestions.length > 0 && (
             <div className="absolute top-full right-0 left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto">
                 <ul className="divide-y divide-gray-100">
@@ -162,6 +162,14 @@ export default function ShopSidebar({
                 </ul>
             </div>
         )}
+
+        {/* 👇 תוספת: הודעת 'לא נמצאו מוצרים' כשאין תוצאות (אבל הוקלד משהו) 👇 */}
+        {showDropdown && filters.q.length >= 1 && !loadingSuggestions && suggestions.length === 0 && (
+            <div className="absolute top-full right-0 left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-4 text-center text-sm text-gray-500 font-medium">
+            לא נמצאו מוצרים תואמים.
+            </div>
+        )}
+
       </div>
 
       <DropdownSimple id="filter-vendor" label="יצרן" value={filters.vendor} options={facets.vendors || []} onChange={handleVendorChange} forceOpen={false} />
