@@ -9,13 +9,13 @@ export default function MainCategoriesGrid({ categories = [], isSidebar = false 
 
   return (
     <section 
-      className={`py-4 px-1 ${isSidebar ? 'w-full mt-4' : 'max-w-7xl mx-auto'}`} 
+      className={`py-1 px-1 ${isSidebar ? 'w-full mt-1' : 'max-w-7xl mx-auto'}`} 
       dir="rtl"
     >
       
       {/* כותרת ראשית - מוצגת רק כשהקומפוננטה בגוף הדף (לא בסיידבר) */}
       {!isSidebar && (
-        <div className="flex items-center gap-2 mb-4 px-2">
+        <div className="flex items-center gap-0.5 mb-4 px-2">
           <div className="w-1.5 h-8 bg-red-600 rounded-full" />
           <h2 className="text-2xl font-bold text-gray-900">
             החנות לרוכב
