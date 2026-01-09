@@ -27,6 +27,14 @@ async function sfFetch(query, variables = {}) {
   return { error: null, status: 200, data: json };
 }
 
+function normalize(str) {
+  if (!str) return '';
+  const norm = str.trim().toLowerCase().replace(/\s+/g, ' ');
+  const noSpace = norm.replace(/\s+/g, '');
+  return { norm, noSpace };
+}
+
+// פונקציה שמנטרלת תווים מיוחדים רק עבור שדות רגישים כמו SKU
 function escapeShopifyQuery(str) {
   if (!str) return '';
   return str.replace(/([+\-=&|!(){}[\]^"~*?:\\/])/g, '\\$1');
@@ -35,24 +43,31 @@ function escapeShopifyQuery(str) {
 function buildSmartQuery(q) {
     if (!q) return '';
     
-    const cleanQuery = q.trim().toLowerCase().replace(/\s+/g, ' ');
-    const terms = cleanQuery.split(' ');
+    // הכנת גרסאות שונות של מילת החיפוש
+    const { norm, noSpace } = normalize(q);
+    const escapedNorm = escapeShopifyQuery(norm);       // עבור מק"ט עם מקפים
+    const escapedNoSpace = escapeShopifyQuery(noSpace); // עבור מק"ט מחובר
 
-    // בונים שאילתה שמחפשת גם בכותרת, גם בתגיות וגם במק"ט (כולל מקפים)
-    const parts = terms.map(term => {
-        const escapedTerm = escapeShopifyQuery(term);
-        // שימוש ב-Wildcard (*) כדי למצוא תוצאות כבר מהאות הראשונה
-        return `(title:${JSON.stringify(term)}* OR tag:${escapedTerm}* OR sku:${escapedTerm}* OR product_type:${JSON.stringify(term)}*)`;
-    });
-
-    return parts.join(' AND ');
+    // בניית השאילתה:
+    // 1. חיפוש בכותרת (Title) - עטוף במרכאות לטיפול בטוח בטקסט/עברית
+    // 2. חיפוש במק"ט (SKU) - משתמש בגרסה עם ה-Escape כדי שמקף לא יחשב כ-NOT
+    // 3. חיפוש בתגיות וסוג מוצר
+    
+    return `(` +
+      `title:${JSON.stringify(norm)}* OR ` + 
+      `sku:${escapedNorm}* OR ` +             
+      `sku:${escapedNoSpace}* OR ` +          
+      `tag:${escapedNorm}* OR ` +             
+      `product_type:${JSON.stringify(norm)}* OR ` +
+      `title:${JSON.stringify(noSpace)}*` +   
+    `)`;
 }
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const queryText = searchParams.get('q');
 
-  // ✅ תיקון: מאפשר חיפוש החל מתו אחד בלבד
+  // מאפשר חיפוש החל מהאות הראשונה
   if (!queryText || queryText.length < 1) {
     return NextResponse.json({ products: [] });
   }
