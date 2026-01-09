@@ -27,33 +27,22 @@ async function sfFetch(query, variables = {}) {
   return { error: null, status: 200, data: json };
 }
 
-// פונקציה לניקוי תווים מיוחדים
+// --- פונקציות עזר (זהות למנוע החלפים) ---
+
+function normalize(str) {
+  if (!str) return '';
+  const norm = str.trim().toLowerCase().replace(/\s+/g, ' ');
+  const noSpace = norm.replace(/\s+/g, '');
+  return { norm, noSpace };
+}
+
 function escapeShopifyQuery(str) {
   if (!str) return '';
+  // בורח מתווים מיוחדים כדי שמקף לא ייחשב כ-NOT
   return str.replace(/([+\-=&|!(){}[\]^"~*?:\\/])/g, '\\$1');
 }
 
-function buildSmartQuery(q) {
-    if (!q) return '';
-    
-    const cleanQuery = q.trim(); // הוסר toLowerCase כדי לא לשבור מק"טים תלויי-רישיות אם יש
-    const escapedQuery = escapeShopifyQuery(cleanQuery);
-
-    // בונים שאילתה פשוטה ויעילה:
-    // (Title או SKU או Tag או Type) ומתחילים ב-escapedQuery
-    // הכוכבית * בסוף כל שדה מאפשרת השלמה אוטומטית (Autocomplete)
-    
-    // שימו לב: כאן אין JSON.stringify על המשתנה עצמו בתוך השאילתה, 
-    // כי אנחנו רוצים שהכוכבית תהיה צמודה לטקסט ולא מחוץ למרכאות.
-    // ה-escapeShopifyQuery כבר דואג שלא יהיו תווים מסוכנים.
-    
-    return `(` +
-        `title:${escapedQuery}* OR ` +
-        `sku:${escapedQuery}* OR ` +
-        `tag:${escapedQuery}* OR ` +
-        `product_type:${escapedQuery}*` +
-        `)`;
-}
+// --- המנוע הראשי ---
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -64,12 +53,19 @@ export async function GET(request) {
     return NextResponse.json({ products: [] });
   }
 
-  const formattedQuery = buildSmartQuery(queryText);
+  // 👇 בניית השאילתה בדיוק כמו במנוע החלפים 👇
+  const { norm, noSpace } = normalize(queryText);
+  const escapedNorm = escapeShopifyQuery(norm);
+  const escapedNoSpace = escapeShopifyQuery(noSpace);
 
-  // בדיקה בסיסית - אם השאילתה יצאה ריקה (למשל רק רווחים)
-  if (!formattedQuery) {
-      return NextResponse.json({ products: [] });
-  }
+  const formattedQuery = `(` +
+      `title:${JSON.stringify(norm)}* OR ` +       // טקסט רגיל (עברית/אנגלית)
+      `sku:${escapedNorm}* OR ` +                  // מק"ט עם מקפים (מוגן)
+      `sku:${escapedNoSpace}* OR ` +               // מק"ט מחובר
+      `tag:${escapedNorm}* OR ` +                  // תגיות
+      `product_type:${JSON.stringify(norm)}* OR ` + 
+      `title:${JSON.stringify(noSpace)}*` +        // כותרת ללא רווחים
+  `)`;
 
   const graphqlQuery = `
     query SearchSuggestions($query: String!) {
