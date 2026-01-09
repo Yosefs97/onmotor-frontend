@@ -24,13 +24,14 @@ export default function LiveSearchBar({ onSelect }) {
 
   useEffect(() => {
     const timer = setTimeout(async () => {
+      // ✅ חיפוש החל מהאות הראשונה
       if (query.length >= 1) {
         setLoading(true);
         try {
-          const res = await fetch(`/api/shopify/search?q=${encodeURIComponent(query)}`);
+          const res = await fetch(`/api/shopify/search-suggestions?q=${encodeURIComponent(query)}`);
           const data = await res.json();
           setResults(data.products || []);
-          setIsOpen(true);
+          setIsOpen(true); // פותח את החלון גם אם אין תוצאות (להצגת הודעה)
         } catch (error) {
           console.error(error);
         } finally {
@@ -65,16 +66,15 @@ export default function LiveSearchBar({ onSelect }) {
           className="
             w-full bg-white 
             border-2 border-red-600 
-            /* 👇 השינוי בגובה כאן: פונט קטן יותר וריפוד נמוך יותר */
             text-gray-900 text-sm placeholder:text-sm placeholder:text-gray-500
             rounded-lg 
             focus:ring-2 focus:ring-red-600 focus:border-red-600 focus:outline-none
             block py-1.5 pr-10 pl-2 shadow-sm h-[38px]
           "
-          onFocus={() => { if(results.length > 0) setIsOpen(true); }}
+          onFocus={() => { if(query.length >= 1) setIsOpen(true); }}
         />
         <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-red-600">
-          <Search className="w-4 h-4" /> {/* הקטנתי מעט גם את האייקון */}
+          <Search className="w-4 h-4" />
         </div>
         
         {(query || loading) && (
@@ -128,6 +128,7 @@ export default function LiveSearchBar({ onSelect }) {
         </div>
       )}
       
+      {/* 👇 הודעה כשהחיפוש לא מוצא כלום (אבל הוקלד משהו) */}
       {isOpen && query.length >= 1 && !loading && results.length === 0 && (
          <div className="absolute top-full right-0 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-[60] p-4 text-center text-sm text-gray-500 font-medium">
             לא נמצאו מוצרים תואמים.
