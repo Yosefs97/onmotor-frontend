@@ -10,7 +10,6 @@ export default function DesktopMegaMenu({ menuItems = [] }) {
   const timeoutRef = useRef(null);
 
   const handleMouseEnter = (index) => {
-    // אם היה טיימר לסגירה - מבטלים אותו כי חזרנו לתפריט או עברנו לשכן
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
@@ -18,14 +17,13 @@ export default function DesktopMegaMenu({ menuItems = [] }) {
   };
 
   const handleMouseLeave = () => {
-    // השהייה של 200ms לפני סגירה - נותן תחושה יציבה
     timeoutRef.current = setTimeout(() => {
       setActiveIndex(null);
-    }, 200);
+    }, 200); // 200ms השהייה
   };
 
   return (
-    <nav className="hidden lg:flex items-center gap-6 mr-2 h-full">
+    <nav className="hidden lg:flex items-center gap-6 mr-4 h-full">
       {menuItems.map((category, index) => {
         const isOpen = activeIndex === index;
         const hasSubItems = category.items && category.items.length > 0;
@@ -37,7 +35,6 @@ export default function DesktopMegaMenu({ menuItems = [] }) {
             onMouseEnter={() => handleMouseEnter(index)}
             onMouseLeave={handleMouseLeave}
           >
-            {/* הקישור הראשי */}
             <Link
               href={category.url}
               className={`
@@ -53,17 +50,13 @@ export default function DesktopMegaMenu({ menuItems = [] }) {
               )}
             </Link>
 
-            {/* התפריט הנפתח */}
             {hasSubItems && isOpen && (
               <div 
                 className="absolute top-full right-0 w-[600px] bg-white shadow-xl border border-gray-200 rounded-b-lg z-50 animate-in fade-in slide-in-from-top-1 duration-150"
-                // חשוב: גם כשנמצאים בתוך התפריט עצמו, שלא ייסגר
                 onMouseEnter={() => handleMouseEnter(index)}
                 onMouseLeave={handleMouseLeave}
               >
-                {/* פס קישוט עליון */}
                 <div className="absolute top-0 left-0 right-0 h-[2px] bg-red-600" />
-
                 <div className="p-6 grid grid-cols-3 gap-6">
                   {category.items.map((group, idx) => (
                     <div key={idx} className="space-y-3">

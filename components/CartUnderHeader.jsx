@@ -4,10 +4,9 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import CartButton from './CartButton';
-// import { ChevronDown } from 'lucide-react'; // 👈 כבר לא צריך כאן
 import LiveSearchBar from './LiveSearchBar';
 import CategoriesNav from './CategoriesNav'; 
-import DesktopMegaMenu from './DesktopMegaMenu'; // 👈 1. ייבוא הקומפוננטה החדשה
+import DesktopMegaMenu from './DesktopMegaMenu'; // 👈 1. ייבוא
 
 export default function CartUnderHeader({ menuItems = [], categories = [] }) {
   const [total, setTotal] = useState(0);
@@ -43,7 +42,7 @@ export default function CartUnderHeader({ menuItems = [], categories = [] }) {
       >
         <div className="container mx-auto px-4 min-h-[50px] flex items-center justify-between gap-2">
           
-          {/* 👇 2. שינוי קריטי: overflow-visible כדי שהתפריט יוכל לצאת החוצה */}
+          {/* 👇 2. overflow-visible חובה כאן! */}
           <div className="flex items-center gap-4 flex-1 overflow-visible">
               
               <div className="w-full max-w-[220px] md:max-w-[300px]">
@@ -54,7 +53,7 @@ export default function CartUnderHeader({ menuItems = [], categories = [] }) {
                   <CategoriesNav categories={categories} />
               </div>
 
-              {/* 👇 3. שימוש בקומפוננטה החדשה במקום ה-nav הישן */}
+              {/* 👇 3. שימוש בקומפוננטה החדשה */}
               <DesktopMegaMenu menuItems={menuItems} />
 
           </div>
@@ -68,7 +67,6 @@ export default function CartUnderHeader({ menuItems = [], categories = [] }) {
 
         </div>
 
-        {/* שורת קטגוריות למובייל */}
         <div className="block md:hidden w-full">
              <CategoriesNav categories={categories} />
         </div>
