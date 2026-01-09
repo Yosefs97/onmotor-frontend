@@ -1,3 +1,4 @@
+//app\api\shopify\search-suggestions\route.js
 import { NextResponse } from 'next/server';
 
 export const runtime = "nodejs";
