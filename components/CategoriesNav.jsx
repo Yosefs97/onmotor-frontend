@@ -8,32 +8,39 @@ export default function CategoriesNav({ categories = [] }) {
 
   return (
     <>
-      {/* === תצוגת מובייל: כפתורים נגללים === */}
-      {/* no-scrollbar מסתיר את פס הגלילה, overflow-x-auto מאפשר גלילה אופקית */}
-      <div className="md:hidden w-full overflow-x-auto bg-white border-t border-gray-100 pb-1">
-        <div className="flex items-center gap-2 px-4 py-2">
-          {categories.map((cat) => (
-            <Link
-              key={cat.handle || cat.title}
-              href={cat.href || `/collections/${cat.handle}`}
-              className="shrink-0 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 text-xs font-bold px-3 py-1.5 rounded-full transition-colors whitespace-nowrap"
-            >
-              {cat.title}
-            </Link>
+      {/* === תצוגת מובייל: טקסט בלבד + קו מפריד אדום === */}
+      <div className="md:hidden w-full overflow-x-auto bg-white border-t border-gray-100 pb-2 pt-2">
+        <div className="flex items-center px-4">
+          {categories.map((cat, index) => (
+            <div key={cat.handle || cat.title} className="flex items-center shrink-0">
+              
+              {/* קו מפריד אדום (מופיע לפני כל איבר חוץ מהראשון) */}
+              {index > 0 && <div className="w-px h-4 bg-red-600 mx-3" />}
+
+              <Link
+                href={cat.href || `/collections/${cat.handle}`}
+                // 👇 פונט גדול יותר (text-sm/base), ללא רקע או גבולות
+                className="text-gray-800 hover:text-red-600 text-sm font-bold whitespace-nowrap transition-colors"
+              >
+                {cat.title}
+              </Link>
+            </div>
           ))}
         </div>
       </div>
 
-      {/* === תצוגת מחשב: שורה עם מפרידים === */}
-      <div className="hidden md:flex items-center gap-3 px-2">
+      {/* === תצוגת מחשב: שורה עם מפרידים אדומים === */}
+      <div className="hidden md:flex items-center px-2">
         {categories.map((cat, index) => (
-          <div key={cat.handle || cat.title} className="flex items-center gap-3">
-            {/* קו מפריד (מופיע רק החל מהפריט השני) */}
-            {index > 0 && <div className="w-px h-3 bg-gray-300" />}
+          <div key={cat.handle || cat.title} className="flex items-center">
+            
+            {/* 👇 קו מפריד אדום */}
+            {index > 0 && <div className="w-px h-4 bg-red-600 mx-3" />}
             
             <Link
               href={cat.href || `/collections/${cat.handle}`}
-              className="text-sm font-bold text-gray-600 hover:text-red-600 transition-colors whitespace-nowrap"
+              // 👇 פונט גדול יותר (text-base)
+              className="text-base font-bold text-gray-700 hover:text-red-600 transition-colors whitespace-nowrap"
             >
               {cat.title}
             </Link>

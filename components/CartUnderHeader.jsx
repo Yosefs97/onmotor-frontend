@@ -6,9 +6,8 @@ import Link from 'next/link';
 import CartButton from './CartButton';
 import { ChevronDown } from 'lucide-react';
 import LiveSearchBar from './LiveSearchBar';
-import CategoriesNav from './CategoriesNav'; // 👈 1. ייבוא הקומפוננטה החדשה
+import CategoriesNav from './CategoriesNav'; 
 
-// 👇 2. הוספת categories ל-props
 export default function CartUnderHeader({ menuItems = [], categories = [] }) {
   const [total, setTotal] = useState(0);
 
@@ -39,25 +38,19 @@ export default function CartUnderHeader({ menuItems = [], categories = [] }) {
             shadow-sm
         " 
         dir="rtl"
-        // 👇 3. שינינו ל-auto כדי לאפשר גובה דינמי במובייל (שתי שורות)
         style={{ height: 'auto' }} 
       >
         <div className="container mx-auto px-4 min-h-[50px] flex items-center justify-between gap-2">
           
-          {/* === צד ימין: חיפוש + קטגוריות + תפריט === */}
           <div className="flex items-center gap-4 flex-1 overflow-hidden">
-              
-              {/* מנוע החיפוש */}
               <div className="w-full max-w-[220px] md:max-w-[300px]">
                   <LiveSearchBar />
               </div>
 
-              {/* 👇 4. תצוגת מחשב: הקטגוריות מופיעות ליד החיפוש */}
               <div className="hidden md:block">
                   <CategoriesNav categories={categories} />
               </div>
 
-              {/* תפריט דסקטופ (Mega Menu) - מוסתר במובייל */}
               <nav className="hidden lg:flex items-center gap-6 mr-2">
                   {menuItems.map((category) => (
                       <div key={category.title} className="group relative">
@@ -96,7 +89,6 @@ export default function CartUnderHeader({ menuItems = [], categories = [] }) {
               </nav>
           </div>
 
-          {/* === צד שמאל: סה"כ + כפתור עגלה === */}
           <div className="flex items-center gap-2 pl-1 shrink-0">
               <div className="text-sm md:text-base font-bold text-gray-800 whitespace-nowrap">
                   ₪{total}
@@ -106,15 +98,15 @@ export default function CartUnderHeader({ menuItems = [], categories = [] }) {
 
         </div>
 
-        {/* 👇 5. תצוגת מובייל בלבד: שורה נפרדת למטה לקטגוריות */}
+        {/* שורת קטגוריות למובייל */}
         <div className="block md:hidden w-full">
              <CategoriesNav categories={categories} />
         </div>
 
       </div>
 
-      {/* 👇 6. הגדלת ה-Spacer למובייל כי ה-Header עכשיו גבוה יותר (כ-90px) */}
-      <div className="h-[95px] w-full md:hidden"></div>
+      {/* 👇 הגדלתי את הגובה ל-120px כדי לדחוף את התוכן למטה */}
+      <div className="h-[120px] w-full md:hidden"></div>
     </>
   );
 }
