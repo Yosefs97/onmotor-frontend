@@ -27,37 +27,49 @@ async function sfFetch(query, variables = {}) {
   return { error: null, status: 200, data: json };
 }
 
-// ✅ פונקציה חכמה לבניית שאילתת חיפוש
+// פונקציה לניקוי תווים מיוחדים
+function escapeShopifyQuery(str) {
+  if (!str) return '';
+  return str.replace(/([+\-=&|!(){}[\]^"~*?:\\/])/g, '\\$1');
+}
+
 function buildSmartQuery(q) {
     if (!q) return '';
     
-    // 1. ניקוי רווחים כפולים והמרה לאותיות קטנות (חשוב לאנגלית)
-    const cleanQuery = q.trim().toLowerCase().replace(/\s+/g, ' ');
+    const cleanQuery = q.trim(); // הוסר toLowerCase כדי לא לשבור מק"טים תלויי-רישיות אם יש
+    const escapedQuery = escapeShopifyQuery(cleanQuery);
+
+    // בונים שאילתה פשוטה ויעילה:
+    // (Title או SKU או Tag או Type) ומתחילים ב-escapedQuery
+    // הכוכבית * בסוף כל שדה מאפשרת השלמה אוטומטית (Autocomplete)
     
-    // 2. פיצול למילים נפרדות
-    const terms = cleanQuery.split(' ');
-
-    // 3. בניית שאילתה לכל מילה בנפרד (וגם חיבור שלהן)
-    // לכל מילה נוסיף כוכבית (*) כדי לאפשר השלמה אוטומטית
-    const parts = terms.map(term => {
-        return `(title:${term}* OR tag:${term}* OR sku:${term}* OR product_type:${term}*)`;
-    });
-
-    // מחבר את כל החלקים ב-AND כדי שכל המילים יהיו חייבות להופיע
-    return parts.join(' AND ');
+    // שימו לב: כאן אין JSON.stringify על המשתנה עצמו בתוך השאילתה, 
+    // כי אנחנו רוצים שהכוכבית תהיה צמודה לטקסט ולא מחוץ למרכאות.
+    // ה-escapeShopifyQuery כבר דואג שלא יהיו תווים מסוכנים.
+    
+    return `(` +
+        `title:${escapedQuery}* OR ` +
+        `sku:${escapedQuery}* OR ` +
+        `tag:${escapedQuery}* OR ` +
+        `product_type:${escapedQuery}*` +
+        `)`;
 }
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const queryText = searchParams.get('q');
 
-  // ✅ שינוי: מאפשר חיפוש החל מהאות הראשונה
+  // מאפשר חיפוש החל מהאות הראשונה
   if (!queryText || queryText.length < 1) {
     return NextResponse.json({ products: [] });
   }
 
-  // בניית השאילתה החדשה
   const formattedQuery = buildSmartQuery(queryText);
+
+  // בדיקה בסיסית - אם השאילתה יצאה ריקה (למשל רק רווחים)
+  if (!formattedQuery) {
+      return NextResponse.json({ products: [] });
+  }
 
   const graphqlQuery = `
     query SearchSuggestions($query: String!) {
