@@ -171,7 +171,7 @@ export default function TagsIndex() {
           return (
             <div key={tagName} className="border-b border-gray-200 pb-0 last:border-0 last:pb-0">
               
-              <div className="flex justify-between items-end mb-4 border-r-4 border-[#e60000] pr-3">
+              <div className="flex justify-between items-end mb-1 border-r-4 border-[#e60000] pr-3">
                 <h2 className="text-2xl font-bold text-gray-900">
                   <Link href={`/tags/${tagSlug}`} prefetch={false} className="hover:text-[#e60000] transition-colors">
                     {tagName}
