@@ -3,7 +3,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
+// 👇 הוספתי את FaArrowLeft לאייקונים
+import { FaChevronDown, FaChevronUp, FaArrowLeft } from 'react-icons/fa';
 
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || process.env.STRAPI_API_URL;
 
@@ -64,9 +65,7 @@ export default function TagsBox() {
 
   // 👇 2. לוגיקה לגלילה אוטומטית לתחתית בכל פתיחה
   useEffect(() => {
-    // מבצע גלילה רק אם המשתמש כבר טען עוד תגיות (לא בטעינה ראשונית)
     if (visibleCount > 20) {
-      // Timeout קטן כדי לוודא שה-DOM התעדכן והגובה החדש נתפס
       setTimeout(() => {
         window.scrollTo({
           top: document.body.scrollHeight,
@@ -77,12 +76,11 @@ export default function TagsBox() {
   }, [visibleCount]);
 
   const handleShowMore = () => {
-    // 👇 הוספת 15 תגיות בכל לחיצה
     setVisibleCount(prev => prev + 15);
   };
 
   const handleCollapse = () => {
-    setVisibleCount(20); // חזרה ל-4 שורות (20 תגיות)
+    setVisibleCount(20); 
   };
 
   if (!loading && tags.length === 0) return null;
@@ -96,15 +94,31 @@ export default function TagsBox() {
       {/* כותרת */}
       <div className="bg-red-600 text-white font-bold text-lg px-3 py-2 flex justify-between items-center">
         <span>אינדקס תגיות</span>
-        {isExpanded && (
-          <button 
-            onClick={handleCollapse}
-            className="text-white hover:bg-red-700 rounded-full p-1 text-xs transition-colors"
-            title="סגור תגיות"
-          >
-            <FaChevronUp />
-          </button>
-        )}
+        
+        {/* 👇 אזור כפתורים בצד שמאל */}
+        <div className="flex items-center gap-2">
+            
+            {/* כפתור סגירה (מופיע רק כשיש הרחבה) */}
+            {isExpanded && (
+                <button 
+                onClick={handleCollapse}
+                className="text-white hover:bg-red-700 rounded-full p-1.5 text-xs transition-colors"
+                title="סגור תצוגה"
+                >
+                <FaChevronUp />
+                </button>
+            )}
+
+            {/* 👇 הכפתור החדש למעבר לאינדקס המלא */}
+            <Link 
+                href="/tags" 
+                prefetch={false}
+                className="text-white hover:bg-red-700 rounded-full p-1.5 text-sm transition-colors"
+                title="לכל התגיות"
+            >
+                <FaArrowLeft />
+            </Link>
+        </div>
       </div>
 
       <div className="p-3">
@@ -119,12 +133,10 @@ export default function TagsBox() {
                   <Link
                     href={`/tags/${slugify(tag)}`}
                     prefetch={false}
-                    // טקסט רגיל, בריחוף הופך לאדום
                     className="hover:text-red-600 transition-colors px-2"
                   >
                     {tag}
                   </Link>
-                  {/* קו מפריד אדום (מופיע אחרי כל תג חוץ מהאחרון ברשימה הנוכחית) */}
                   {index < visibleTags.length - 1 && (
                     <span className="text-red-600 select-none h-3 border-l border-red-600"></span>
                   )}
