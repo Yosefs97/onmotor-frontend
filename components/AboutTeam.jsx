@@ -9,7 +9,7 @@ const teamMembers = [
     age: 29,
     role: 'בוחן, רוכב ועורך תוכן',
     bio: 'רוכב על דו גלגלי על שלל סוגיו ובעצימות גבוהה כבר 13 שנים, במקצועו מנהל מוסך אופנועים. תפקידו באתר - רוכב בוחן , כותב ועורך כתבות במגזין.',
-    image: 'https://res.cloudinary.com/ddhq0mwiz/image/upload/v1768072241/IMG_20260110_210911_ycbclu.jpg',
+    image: 'https://res.cloudinary.com/ddhq0mwiz/image/upload/v1768075370/IMG_20260110_220226_jfkqsz.jpg',
     social: {
       facebook: 'https://www.facebook.com/asaf.efraim.2025',
       instagram: 'https://www.instagram.com/asaf_efraim/',
