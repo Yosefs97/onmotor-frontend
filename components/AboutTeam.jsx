@@ -1,7 +1,6 @@
 'use client';
 import React from 'react';
 import Image from 'next/image';
-// ייבוא האייקונים (יש לוודא שהתקנת את react-icons)
 import { FaFacebook, FaInstagram } from 'react-icons/fa';
 
 const teamMembers = [
@@ -51,15 +50,10 @@ export default function AboutTeam() {
           {/* תוכן הטקסט */}
           <div className="p-6 flex flex-col flex-grow relative">
             
-            {/* שם + גיל */}
-            <div className="flex justify-between items-start mb-1">
-                <h3 className="text-xl font-bold text-gray-900">
-                {member.name}
-                </h3>
-                <span className="text-gray-400 text-sm font-medium bg-gray-50 px-2 py-1 rounded-md">
-                    בן {member.age}
-                </span>
-            </div>
+            {/* שם + גיל בסוגריים */}
+            <h3 className="text-xl font-bold text-gray-900 mb-1">
+                {member.name} <span className="font-medium text-gray-500 text-lg">({member.age})</span>
+            </h3>
 
             {/* תפקיד */}
             <span className="text-[#e60000] font-bold text-sm mb-3 block border-b border-gray-100 pb-2 w-fit">
