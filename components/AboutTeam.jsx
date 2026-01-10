@@ -8,8 +8,8 @@ const teamMembers = [
     name: 'אסף אפרים',
     age: 29,
     role: 'בוחן, רוכב ועורך תוכן',
-    bio: 'רוכב על דו גלגלי על שלל סוגיו מגיל 16, במקצועו מכונאי אופנועים. תפקידו באתר - רוכב בוחן , כותב ועורך כתבות במגזין.',
-    image: 'https://res.cloudinary.com/ddhq0mwiz/image/upload/v1767614731/IMG_20251218_22192370_em13qp.jpg',
+    bio: 'רוכב על דו גלגלי על שלל סוגיו ובעצימות גבוהה כבר 13 שנים, במקצועו מנהל מוסך אופנועים. תפקידו באתר - רוכב בוחן , כותב ועורך כתבות במגזין.',
+    image: 'https://res.cloudinary.com/ddhq0mwiz/image/upload/v1768072241/IMG_20260110_210911_ycbclu.jpg',
     social: {
       facebook: 'https://www.facebook.com/asaf.efraim.2025',
       instagram: 'https://www.instagram.com/asaf_efraim/',
@@ -19,7 +19,7 @@ const teamMembers = [
     name: 'יוסף סבג',
     age: 28,
     role: 'עורך ראשי',
-    bio: 'רוכב על דו-גלגלי על שלל סוגיו מגיל 14. במקצועו מהנדס מכונות. הקים את המגזין מתוך תשוקה להנגיש מידע מקצועי ואיכותי לרוכב הישראלי.',
+    bio: 'רוכב על דו-גלגלי בשלל סוגיו וצורותיו מזה 15 שנים (ללא רגע אחד של "חסד"). במקצועו מהנדס מכונות. הקים את המגזין מתוך אהבה לדו גלגלי, רצון להנגיש מידע , טיפים ושאר תכנים מעולם הדו גלגלי לרוכב הישראלי.',
     image: 'https://res.cloudinary.com/ddhq0mwiz/image/upload/v1767617105/IMG_20260105_144428_jmtnpu.jpg',
     social: {
       facebook: 'https://www.facebook.com/yosef.sabag.552533/',
