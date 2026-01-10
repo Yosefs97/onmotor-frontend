@@ -238,7 +238,7 @@ export default function TagsIndex() {
 
         {/* 👇 תוספת: כפתור טעינת עוד */}
         {!loading && visibleCount < sortedTags.length && (
-          <div className="flex justify-center pt-8">
+          <div className="flex justify-center pt-0.5">
             <button
               onClick={handleLoadMore}
               className="px-8 py-3 bg-[#e60000] text-white font-bold rounded-full shadow-md hover:bg-red-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
