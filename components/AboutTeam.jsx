@@ -4,7 +4,7 @@ import Image from 'next/image';
 
 const teamMembers = [
   {
-    name: 'אסף אפריים',
+    name: 'אסף אפרים',
     role: 'בוחן, רוכב ועורך תוכן',
     bio: 'רוכב על דו גלגלי על שלל סוגיו מגיל 16, במקצועו מכונאי אופנועים. תפקידו באתר - רוכב בוחן , כותב ועורך כתבות במגזין.',
     image: 'https://res.cloudinary.com/ddhq0mwiz/image/upload/v1767614731/IMG_20251218_22192370_em13qp.jpg',
