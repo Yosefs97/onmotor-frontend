@@ -36,8 +36,8 @@ export default function AboutTeam() {
           key={index} 
           className="bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden group flex flex-col h-full"
         >
-          {/* תמונה */}
-          <div className="relative w-full aspect-[4/3] bg-gray-100">
+          {/* תמונה - שיניתי כאן ל aspect-[3/4] */}
+          <div className="relative w-full aspect-[3/4] bg-gray-100">
              <Image 
                src={member.image} 
                alt={member.name}
