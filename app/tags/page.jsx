@@ -10,6 +10,9 @@ import ArticleCard from '@/components/ArticleCards/ArticleCard';
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || process.env.STRAPI_API_URL;
 const PLACEHOLDER_IMG = '/default-image.jpg';
 
+// הגדרת כמות תגיות להוספה בכל לחיצה
+const TAGS_PER_PAGE = 4;
+
 function resolveImageUrl(rawUrl) {
   if (!rawUrl) return PLACEHOLDER_IMG;
   if (rawUrl.startsWith('http')) return rawUrl;
@@ -30,6 +33,9 @@ function slugify(text) {
 export default function TagsIndex() {
   const [groupedArticles, setGroupedArticles] = useState({});
   const [loading, setLoading] = useState(true);
+  
+  // 👇 תוספת: סטייט לניהול כמות התגיות המוצגות
+  const [visibleCount, setVisibleCount] = useState(TAGS_PER_PAGE);
 
   useEffect(() => {
     let isMounted = true;
@@ -37,7 +43,6 @@ export default function TagsIndex() {
     (async () => {
       try {
         setLoading(true);
-        // טעינת כמות גדולה של כתבות כדי לייצר את האינדקס
         const res = await fetch(
           `${API_URL}/api/articles?populate=*&pagination[limit]=100&sort=createdAt:desc`, 
           { next: { revalidate: 3600 } }
@@ -117,9 +122,17 @@ export default function TagsIndex() {
     return dateB - dateA;
   });
 
+  // 👇 תוספת: יצירת המערך החלקי להצגה לפי ה-state
+  const visibleTags = sortedTags.slice(0, visibleCount);
+
+  // פונקציה לטעינת עוד תגיות
+  const handleLoadMore = () => {
+    setVisibleCount(prev => prev + TAGS_PER_PAGE);
+  };
+
   return (
     <PageContainer title="אינדקס תגיות" breadcrumbs={breadcrumbs}>
-      <div className="space-y-8 min-h-[50vh]">
+      <div className="space-y-8 min-h-[50vh] pb-10">
         {loading && (
           <div className="text-center py-10 text-gray-500">טוען תגיות...</div>
         )}
@@ -130,30 +143,23 @@ export default function TagsIndex() {
           </div>
         )}
 
-        {/* 👇👇 תוספת: רשימת תגיות מהירה בראש הדף - עיצוב אדום 👇👇 */}
+        {/* רשימת תגיות מהירה בראש הדף (מציג את כולם כרגיל, או שתרצה להגביל גם כאן?) */}
+        {/* כרגע השארתי את זה שיציג את כולם לניווט מהיר */}
         {!loading && sortedTags.length > 0 && (
-            // מיכל חיצוני אדום
             <div className="bg-red-50 p-4 rounded-xl border border-red-200 mb-8 shadow-sm">
                 <h3 className="text-sm font-bold text-red-900 mb-3">ניווט מהיר לפי נושאים:</h3>
-                
-                {/* שימוש ב- divide-x-reverse divide-red-300 ליצירת קווים מפרידים
-                    divide-x-reverse חשוב מאוד כדי שהקו יופיע בצד הנכון במצב RTL (עברית)
-                */}
                 <div className="flex flex-wrap items-center text-sm text-red-900 divide-x divide-x-reverse divide-red-300 leading-loose">
-                    {sortedTags.map((tagName, index) => {
+                    {sortedTags.map((tagName) => {
                         const tagSlug = slugify(tagName);
                         const count = groupedArticles[tagName]?.length || 0;
-                        
                         return (
                             <Link 
                                 key={tagName}
                                 href={`/tags/${tagSlug}`}
                                 prefetch={false}
-                                // הסרנו את עיצוב הכפתור, השארנו רק ריווח והחלפת צבע בעכבר
                                 className="px-3 hover:text-[#e60000] hover:underline transition-all inline-block"
                             >
                                 {tagName} 
-                                {/* הצגת המספר בסוגריים בצבע מעט בהיר יותר */}
                                 <span className="mr-1 text-red-700/70 font-normal">({count})</span>
                             </Link>
                         );
@@ -161,9 +167,9 @@ export default function TagsIndex() {
                 </div>
             </div>
         )}
-        {/* 👆👆 סוף התוספת 👆👆 */}
 
-        {sortedTags.map(tagName => {
+        {/* 👇 שינוי: רצים על visibleTags במקום sortedTags */}
+        {visibleTags.map(tagName => {
           const articles = groupedArticles[tagName];
           const previewArticles = articles.slice(0, 4); 
           const tagSlug = slugify(tagName);
@@ -229,6 +235,19 @@ export default function TagsIndex() {
             </div>
           );
         })}
+
+        {/* 👇 תוספת: כפתור טעינת עוד */}
+        {!loading && visibleCount < sortedTags.length && (
+          <div className="flex justify-center pt-8">
+            <button
+              onClick={handleLoadMore}
+              className="px-8 py-3 bg-[#e60000] text-white font-bold rounded-full shadow-md hover:bg-red-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+            >
+              הצג עוד נושאים ({sortedTags.length - visibleCount} נותרו)
+            </button>
+          </div>
+        )}
+
       </div>
     </PageContainer>
   );
