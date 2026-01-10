@@ -75,9 +75,9 @@ export default function AboutPage() {
         </div>
 
         {/* הצגת הצוות */}
-        <div className="mb-8">
+        <div className="mb-2">
           <h2 className="text-2xl font-bold text-gray-900 border-r-4 border-[#e60000] pr-3">
-            הצוות שלנו
+           האנשים מאחורי המגזין
           </h2>
           <AboutTeam />
         </div>
