@@ -169,7 +169,7 @@ export default function TagsIndex() {
           const tagSlug = slugify(tagName);
 
           return (
-            <div key={tagName} className="border-b border-gray-200 pb-8 last:border-0 last:pb-0">
+            <div key={tagName} className="border-b border-gray-200 pb-0 last:border-0 last:pb-0">
               
               <div className="flex justify-between items-end mb-4 border-r-4 border-[#e60000] pr-3">
                 <h2 className="text-2xl font-bold text-gray-900">
