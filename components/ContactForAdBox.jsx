@@ -48,7 +48,7 @@ export default function ContactForAdBox() {
       className="mt-0.8 mb-2 border-[3px] border-[#e60000] rounded-xl bg-gray-900 text-white p-4 text-center shadow-md relative overflow-hidden transition-all duration-300"
     >
       <h3 className="text-xl font-bold mb-2 text-[#e60000]">
-        רוצה לפרסם באתר?
+        רוצה לפרסם באתר? <span className="text-gray-300">(ללא עלות)</span>
       </h3>
       <p className="text-base text-gray-300 mb-3">
         השאירו פרטים ונציג יחזור אליכם בהקדם.
