@@ -16,14 +16,13 @@ export default function TabLeftSidebar({ initialData = null }) {
   const [activeTab, setActiveTab] = useState('אחרונים');
   const [isPaused, setIsPaused] = useState(false);
 
-  // הנתונים מגיעים כבר מעובדים מהשרת
   const data = initialData || { latest: [], onRoad: [], popular: [] };
   
   const latestArticles = data.latest || [];
   const onRoadArticles = data.onRoad || [];
   const popularContent = data.popular || [];
 
-  // --- גלילה אוטומטית ---
+  // --- לוגיקה לגלילה (ללא שינוי) ---
   useEffect(() => {
     if (isMobile) return;
     const container = scrollContainerRef.current;
@@ -44,7 +43,6 @@ export default function TabLeftSidebar({ initialData = null }) {
     return () => cancelAnimationFrame(frame);
   }, [activeTab, isPaused, isMobile]);
 
-  // --- גלילה במובייל למיקום ---
   useEffect(() => {
     if (!isMobile || !sidebarRef.current || !hasInteracted) return;
     setTimeout(() => {
@@ -53,10 +51,16 @@ export default function TabLeftSidebar({ initialData = null }) {
     }, 0);
   }, [activeTab, isMobile, hasInteracted]);
 
-  /* ⭐️ רכיב תוכן */
+  /* ⭐️ רכיב התוכן המעודכן */
   function CardContent({ item, even }) {
+    
+    // בדיקה: האם ה-source הוא קישור לתמונה?
+    const sourceText = item.source || '';
+    const isSourceLink = sourceText.startsWith('http') || sourceText.startsWith('/');
+
     return (
       <>
+        {/* תמונת הכתבה */}
         <div className="w-20 h-14 relative rounded overflow-hidden flex-shrink-0 bg-gray-200">
           <Image
             src={item.image || '/default-image.jpg'}
@@ -64,7 +68,7 @@ export default function TabLeftSidebar({ initialData = null }) {
             fill
             style={{ objectFit: 'cover' }}
             className="rounded"
-            unoptimized // ליתר ביטחון
+            unoptimized
           />
         </div>
 
@@ -74,18 +78,35 @@ export default function TabLeftSidebar({ initialData = null }) {
             {item.description}
           </p>
           
-          <div className="flex items-center gap-1 mt-1 flex-wrap">
+          <div className="flex items-center gap-2 mt-1 h-5 overflow-hidden">
              {item.date && (
               <span className={`text-[10px] ${even ? 'text-gray-500' : 'text-gray-400'}`}>
                 {item.date}
               </span>
             )}
-             {(item.views || item.source) && (
-              <span className={`text-[10px] ${even ? 'text-gray-400' : 'text-gray-500'}`}>
-                 {item.views && `${item.views} צפיות`}
-                 {item.views && item.source && ' · '}
-                 {item.source}
-              </span>
+            
+            {(item.views || sourceText) && (
+               <div className={`flex items-center gap-1 text-[10px] ${even ? 'text-gray-400' : 'text-gray-500'}`}>
+                  {item.views && <span>{item.views} צפיות</span>}
+                  {item.views && sourceText && <span>·</span>}
+
+                  {/* 🟢 כאן הלוגיקה החדשה: תמונה או טקסט */}
+                  {isSourceLink ? (
+                    // אם זה לינק - הצג תמונה
+                    <div className="relative w-12 h-4">
+                      <Image 
+                        src={sourceText} 
+                        alt="Source Logo"
+                        fill
+                        className="object-contain object-left" // מיישר לשמאל
+                        unoptimized
+                      />
+                    </div>
+                  ) : (
+                    // אם זה לא לינק - הצג טקסט רגיל (כמו בעבר)
+                    <span>{sourceText}</span>
+                  )}
+               </div>
             )}
           </div>
         </div>
@@ -93,6 +114,7 @@ export default function TabLeftSidebar({ initialData = null }) {
     );
   }
 
+  // --- יתר הקוד (getStyledContent וכו') ללא שינוי ---
   const getStyledContent = (items) => {
     if (!items || items.length === 0) {
       return <div className="p-4 text-center text-gray-500 text-xs">אין כתבות להצגה בקטגוריה זו</div>;
@@ -102,7 +124,6 @@ export default function TabLeftSidebar({ initialData = null }) {
       const even = i % 2 === 0;
       const bg = even ? 'bg-red-50 text-black' : 'bg-neutral-900 text-white';
       
-      // המידע מגיע כבר מעובד מהשרת (url, source, slug וכו')
       const isExternal = !!item.url && item.url.startsWith('http');
       const internalHref = !isExternal && item.slug ? `/articles/${item.slug}` : '#';
       const targetUrl = isExternal ? item.url : internalHref;
