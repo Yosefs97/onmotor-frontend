@@ -16,13 +16,14 @@ export default function TabLeftSidebar({ initialData = null }) {
   const [activeTab, setActiveTab] = useState('אחרונים');
   const [isPaused, setIsPaused] = useState(false);
 
+  // הנתונים מגיעים כבר מעובדים מהשרת
   const data = initialData || { latest: [], onRoad: [], popular: [] };
   
   const latestArticles = data.latest || [];
   const onRoadArticles = data.onRoad || [];
   const popularContent = data.popular || [];
 
-  // גלילה אוטומטית
+  // --- גלילה אוטומטית ---
   useEffect(() => {
     if (isMobile) return;
     const container = scrollContainerRef.current;
@@ -43,7 +44,7 @@ export default function TabLeftSidebar({ initialData = null }) {
     return () => cancelAnimationFrame(frame);
   }, [activeTab, isPaused, isMobile]);
 
-  // מיקוד במובייל
+  // --- גלילה במובייל למיקום ---
   useEffect(() => {
     if (!isMobile || !sidebarRef.current || !hasInteracted) return;
     setTimeout(() => {
@@ -52,20 +53,18 @@ export default function TabLeftSidebar({ initialData = null }) {
     }, 0);
   }, [activeTab, isMobile, hasInteracted]);
 
-  /* ⭐️ רכיב תוכן נקי - מקבל תמונה מוכנה מהשרת */
+  /* ⭐️ רכיב תוכן */
   function CardContent({ item, even }) {
     return (
       <>
         <div className="w-20 h-14 relative rounded overflow-hidden flex-shrink-0 bg-gray-200">
           <Image
-            // השרת כבר דאג ש-item.image יהיה או התמונה מסטראפי או הקישור משדה source
             src={item.image || '/default-image.jpg'}
             alt={item.title || ''}
             fill
             style={{ objectFit: 'cover' }}
             className="rounded"
-            // חובה unoptimized כדי לאפשר משיכת תמונות מקישורים חיצוניים (כמו Cloudinary)
-            unoptimized 
+            unoptimized // ליתר ביטחון
           />
         </div>
 
@@ -81,11 +80,10 @@ export default function TabLeftSidebar({ initialData = null }) {
                 {item.date}
               </span>
             )}
-            {(item.views || item.source) && (
+             {(item.views || item.source) && (
               <span className={`text-[10px] ${even ? 'text-gray-400' : 'text-gray-500'}`}>
                  {item.views && `${item.views} צפיות`}
                  {item.views && item.source && ' · '}
-                 {/* כאן יופיע שם המקור (טקסט), ה-URL הארוך סונן בשרת */}
                  {item.source}
               </span>
             )}
@@ -104,6 +102,7 @@ export default function TabLeftSidebar({ initialData = null }) {
       const even = i % 2 === 0;
       const bg = even ? 'bg-red-50 text-black' : 'bg-neutral-900 text-white';
       
+      // המידע מגיע כבר מעובד מהשרת (url, source, slug וכו')
       const isExternal = !!item.url && item.url.startsWith('http');
       const internalHref = !isExternal && item.slug ? `/articles/${item.slug}` : '#';
       const targetUrl = isExternal ? item.url : internalHref;
