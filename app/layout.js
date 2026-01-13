@@ -209,7 +209,8 @@ export default async function RootLayout({ children }) {
 
         </AuthModalProvider>
 
-        <Script src="https://cdn.enable.co.il/licenses/enable-L491236ornf8p4x2-1025-75004/init.js" />
+        <Script src="https://cdn.enable.co.il/licenses/enable-L491236ornf8p4x2-1025-75004/init.js"
+                strategy="lazyOnload" />
         <Script
           src="https://connect.facebook.net/he_IL/sdk.js#xfbml=1&version=v23.0"
           strategy="lazyOnload"
