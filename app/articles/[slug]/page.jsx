@@ -192,7 +192,7 @@ export async function generateMetadata({ params }) {
 }
 
 // ===================================================================
-//                        ArticlePage Component
+//                          ArticlePage Component
 // ===================================================================
 export default async function ArticlePage({ params }) {
   const resolvedParams = await params;
@@ -338,9 +338,24 @@ export default async function ArticlePage({ params }) {
   }
   breadcrumbs.push({ label: article.title });
 
+  // ===================================================================
+  //           הפונקציה המעודכנת לטיפול בטקסט + תמונות + כיתוב
+  // ===================================================================
   const renderParagraph = (block, i) => {
+    // ---------------------------------------------------------
+    // 1. טיפול בבלוק מסוג טקסט רגיל (String)
+    // ---------------------------------------------------------
       if (typeof block === "string") {
-        const cleanText = fixRelativeImages(block.trim());
+        let cleanText = fixRelativeImages(block.trim());
+        
+        // --- לוגיקה לזיהוי caption באמצעות | ---
+        let caption = "";
+        if (cleanText.includes("|")) {
+            const parts = cleanText.split("|");
+            cleanText = parts[0].trim();
+            caption = parts.slice(1).join("|").trim();
+        }
+
         const hasHTMLTags = /<\/?[a-z][\s\S]*>/i.test(cleanText);
    
         if (hasHTMLTags) {
@@ -365,7 +380,7 @@ export default async function ArticlePage({ params }) {
                 key={i}
                 src={url}
                 alt="תמונה מתוך הכתבה"
-                caption=""
+                caption={caption} // הזרקת הכיתוב אם קיים
               />
             );
           }
@@ -398,21 +413,36 @@ export default async function ArticlePage({ params }) {
         );
       }
    
+      // ---------------------------------------------------------
+      // 2. טיפול בבלוק מסוג פסקה (Paragraph Object)
+      // ---------------------------------------------------------
       if (block.type === "paragraph" && block.children) {
         let html = toHtmlFromStrapiChildren(block.children);
         html = fixRelativeImages(html);
+        
+        // --- לוגיקה לזיהוי caption בתוך HTML ---
+        let caption = "";
+        // מזהים אם יש הפרדה | והאם יש לינק בתחילת המחרוזת
+        if (html.includes("|") && html.match(/https?:\/\/[^\s"']+/)) {
+             const parts = html.split("|");
+             html = parts[0].trim();
+             caption = parts.slice(1).join("|").trim();
+        }
    
         const urlMatch = html.match(/https?:\/\/[^\s"']+/);
         if (urlMatch) {
           let url = urlMatch[0];
-            
+          
+          // ניקוי תגיות HTML אם נדבקו ללינק
+          url = url.replace(/<[^>]*>/g, '');
+
           if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
             return (
               <InlineImage
                 key={i}
                 src={url}
                 alt="תמונה מתוך הכתבה"
-                caption=""
+                caption={caption} // הזרקת הכיתוב
               />
             );
           }
