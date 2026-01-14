@@ -25,7 +25,7 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
 
   // 🟨 מבנה תפריט ללא פורום וללא קריאות API
   const menus = [
-    //{ title: 'OnMotor Parts', path: '/shop', links: [] },
+    { title: 'OnMotor Parts', path: '/', links: [] },
 
     {
       title: 'סקירות', path: '/reviews', links: [
