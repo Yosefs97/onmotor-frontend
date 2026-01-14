@@ -2,10 +2,15 @@
 'use client';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link'; // <--- הוספתי את הקישור
 
 export default function ContactForAdBox() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: '', phone: '', email: '', notes: '' });
+  
+  // <--- סטייט חדש לאישור המדיניות
+  const [agreedToPolicy, setAgreedToPolicy] = useState(false);
+  
   const [status, setStatus] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -15,6 +20,14 @@ export default function ContactForAdBox() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // <--- בדיקה האם המשתמש אישר את המדיניות
+    if (!agreedToPolicy) {
+      setStatus('error'); // נציג את השגיאה באדום למטה
+      setErrorMsg('חובה לאשר את מדיניות הפרסום כדי להמשיך.');
+      return;
+    }
+
     setStatus('loading');
     setErrorMsg('');
 
@@ -32,7 +45,9 @@ export default function ContactForAdBox() {
       }
 
       setStatus('success');
+      // איפוס הטופס
       setForm({ name: '', phone: '', email: '', notes: '' });
+      setAgreedToPolicy(false); // <--- איפוס הצ'קבוקס
 
       setTimeout(() => setOpen(false), 2000);
     } catch (err) {
@@ -78,7 +93,7 @@ export default function ContactForAdBox() {
                 onChange={handleChange}
                 placeholder="שם / שם העסק"
                 required
-                className="p-2 rounded bg-gray-700 text-white w-full placeholder-gray-400"
+                className="p-2 rounded bg-gray-700 text-white w-full placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#e60000]"
               />
               <input
                 type="tel"
@@ -87,7 +102,7 @@ export default function ContactForAdBox() {
                 onChange={handleChange}
                 placeholder="מספר נייד"
                 required
-                className="p-2 rounded bg-gray-700 text-white w-full placeholder-gray-400"
+                className="p-2 rounded bg-gray-700 text-white w-full placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#e60000]"
               />
               <input
                 type="email"
@@ -96,22 +111,35 @@ export default function ContactForAdBox() {
                 onChange={handleChange}
                 placeholder="אימייל"
                 required
-                className="p-2 rounded bg-gray-700 text-white w-full placeholder-gray-400"
+                className="p-2 rounded bg-gray-700 text-white w-full placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-[#e60000]"
               />
 
-              {/* 🟢 שדה הערות אופציונלי בלבד */}
               <textarea
                 name="notes"
                 value={form.notes}
                 onChange={handleChange}
                 placeholder="פירוט נוסף (לא חובה)"
                 rows={3}
-                className="p-2 rounded bg-gray-700 text-white w-full placeholder-gray-400 resize-none"
+                className="p-2 rounded bg-gray-700 text-white w-full placeholder-gray-400 resize-none focus:outline-none focus:ring-1 focus:ring-[#e60000]"
               />
+
+              {/* <--- הוספת הצ'קבוקס למדיניות ---> */}
+              <div className="flex items-start gap-2 mt-1">
+                <input
+                  type="checkbox"
+                  id="adPolicyAgree"
+                  checked={agreedToPolicy}
+                  onChange={(e) => setAgreedToPolicy(e.target.checked)}
+                  className="mt-1 w-4 h-4 text-[#e60000] bg-gray-700 border-gray-600 rounded focus:ring-[#e60000] focus:ring-offset-gray-800 cursor-pointer"
+                />
+                <label htmlFor="adPolicyAgree" className="text-xs text-gray-300 leading-tight select-none cursor-pointer">
+                  אני מאשר/ת שקראתי את <Link href="/AdvertisingPolicy" target="_blank" className="text-[#e60000] hover:underline font-bold">מדיניות הפרסום</Link> ומסכים/ה לתנאים.
+                </label>
+              </div>
 
               <button
                 type="submit"
-                className="bg-[#e60000] hover:bg-[#b50000] px-4 py-2 rounded-md mt-2 font-bold"
+                className="bg-[#e60000] hover:bg-[#b50000] px-4 py-2 rounded-md mt-2 font-bold transition-colors"
               >
                 הגש
               </button>
@@ -126,8 +154,8 @@ export default function ContactForAdBox() {
               </p>
             )}
             {status === 'error' && (
-              <p className="text-red-400 mt-2 text-sm">
-                ⚠️ אירעה שגיאה בשליחה: {errorMsg}
+              <p className="text-red-400 mt-2 text-sm font-bold">
+                ⚠️ {errorMsg}
               </p>
             )}
           </motion.div>
