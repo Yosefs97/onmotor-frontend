@@ -16,6 +16,7 @@ export default function TabLeftSidebar({ initialData = null }) {
   const [activeTab, setActiveTab] = useState('אחרונים');
   const [isPaused, setIsPaused] = useState(false);
 
+  // הנתונים מגיעים כבר מעובדים מהשרת
   const data = initialData || { latest: [], onRoad: [], popular: [] };
   
   const latestArticles = data.latest || [];
@@ -63,7 +64,7 @@ export default function TabLeftSidebar({ initialData = null }) {
             fill
             style={{ objectFit: 'cover' }}
             className="rounded"
-            unoptimized
+            unoptimized // ליתר ביטחון
           />
         </div>
 
@@ -101,6 +102,7 @@ export default function TabLeftSidebar({ initialData = null }) {
       const even = i % 2 === 0;
       const bg = even ? 'bg-red-50 text-black' : 'bg-neutral-900 text-white';
       
+      // המידע מגיע כבר מעובד מהשרת (url, source, slug וכו')
       const isExternal = !!item.url && item.url.startsWith('http');
       const internalHref = !isExternal && item.slug ? `/articles/${item.slug}` : '#';
       const targetUrl = isExternal ? item.url : internalHref;
@@ -142,7 +144,7 @@ export default function TabLeftSidebar({ initialData = null }) {
         isMobile ? 'w-screen rounded-none' : ''
       }`}
     >
-      <div className="flex w-full border-b text-sm font-semibold bg-white sticky top-0 z-10 shadow-sm" dir="rtl">
+      <div className="flex border-b text-sm font-semibold bg-white sticky top-0 z-10 shadow-sm" dir="rtl">
         {tabs.map((tab) => (
           <button
             key={tab}
@@ -150,12 +152,10 @@ export default function TabLeftSidebar({ initialData = null }) {
               setActiveTab(tab);
               setHasInteracted(true);
             }}
-            // 👇 כאן התיקון הקריטי: flex-1 במקום w-1/3, ונוסף whitespace-nowrap
-            className={`flex-1 min-w-0 whitespace-nowrap text-center py-2 transition-colors border-b-2 ${
+            className={`w-1/3 text-center py-2 transition-colors ${
               activeTab === tab
-                ? 'text-black border-red-500 bg-white'
-                : 'text-gray-500 border-transparent bg-gray-50 hover:bg-gray-100' 
-                // 👆 הוספתי border-transparent כדי למנוע קפיצות גובה
+                ? 'text-black border-b-2 border-red-500 bg-white'
+                : 'text-gray-500 bg-gray-50 hover:bg-gray-100'
             }`}
           >
             {tab}
