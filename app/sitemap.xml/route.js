@@ -45,7 +45,7 @@ export async function GET() {
     "/news/machine",
     "/news/local",
     "/news/global",
-    "/news/sport",
+    "/news/racing",
     "/contact",
     "/PrivacyPolicy",
     "/TermsOfService",

@@ -77,7 +77,7 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
         { title: 'חדשות מקומיות', path: '/news/local' },
         { title: 'חדשות מהעולם', path: '/news/global' },
         { title: 'מכונות חדשות', path: '/news/machine' },
-        { title: 'חדשות ספורט', path: '/news/sport' },
+        { title: 'חדשות מרוצים', path: '/news/racing' },
       ]
     },
 

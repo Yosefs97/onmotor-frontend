@@ -10,7 +10,7 @@ const labelMap = {
   local: 'חדשות מקומיות',
   global: 'חדשות מהעולם',
   machine: 'מכונות חדשות',
-  sport: 'חדשות ספורט',
+  racing: 'חדשות מרוצים',
   podcast: 'אחד על אחד (אנשים)',
   'in-helmet': 'בקסדה',
   paper: 'על הנייר',
