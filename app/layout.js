@@ -4,6 +4,7 @@ import './globals.css';
 import { AuthModalProvider } from '@/contexts/AuthModalProvider';
 import ClientLayout from '@/components/ClientLayout';
 import ScrollToTopButton from '@/components/ScrollToTopButton';
+import CookieBanner from '@/components/CookieBanner'; // <--- 1. הוספתי את הייבוא כאן
 import Script from 'next/script';
 import { Heebo } from 'next/font/google';
 import { getMainImage } from '@/utils/resolveMainImage';
@@ -14,7 +15,10 @@ const heebo = Heebo({
   display: 'swap',
 });
 
+// ... (כל הקוד של ה-metadata והפונקציות נשאר זהה לחלוטין, לא נגעתי בו) ...
+
 export const metadata = {
+  // ... (השארתי את ה-metadata המקורי שלך ללא שינוי)
   metadataBase: new URL("https://www.onmotormedia.com"),
   title: {
     default: "OnMotor Media – מגזין אופנועים ישראלי",
@@ -60,11 +64,9 @@ export const metadata = {
       "חדשות אופנועים, סקירות דגמים לקהילת הרוכבים של ישראל.",
     images: ["https://www.onmotormedia.com/full_Logo_v2.jpg"],
   },
-
-  // 🗑️ הסרתי מכאן את facebook ואת other כדי למנוע את השגיאה של name vs property
 };
 
-// --- פונקציה לשליפת טיקר ---
+// ... (פונקציות העזר getTickerHeadlines וכו' נשארות זהות) ...
 async function getTickerHeadlines() {
   const API_URL = process.env.STRAPI_API_URL;
   try {
@@ -171,6 +173,8 @@ async function getSidebarData() {
   };
 }
 
+// --- פונקציית ה-RootLayout המעודכנת ---
+
 export default async function RootLayout({ children }) {
   const tickerDataPromise = getTickerHeadlines();
   const sidebarDataPromise = getSidebarData();
@@ -180,7 +184,6 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="he" dir="rtl" className={heebo.className}>
       <head>
-        {/* ✅ הוספה ידנית של תגיות פייסבוק עם 'property' כדי למנוע אזהרות בדיבאגר */}
         <meta property="fb:app_id" content="1702134291174147" />
         <meta property="fb:pages" content="1671844356419083" />
         <meta property="article:publisher" content="https://www.facebook.com/OnMotorMedia" />
@@ -206,6 +209,9 @@ export default async function RootLayout({ children }) {
           <ClientLayout tickerHeadlines={tickerHeadlines} sidebarData={sidebarData}>
             {children}
           </ClientLayout>
+
+          {/* <--- 2. הוספתי את הרכיב כאן, מחוץ ל-ClientLayout אך בתוך ה-AuthModalProvider (למרות שזה לא קריטי, העיקר שיהיה ב-Body) */}
+          <CookieBanner />
 
         </AuthModalProvider>
 
