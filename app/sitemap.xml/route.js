@@ -16,10 +16,16 @@ export async function GET() {
     "/gear/custom",
     "/reviews",
     "/reviews/motorcycles",
+    "/reviews/motorcyclestests",
     "/reviews/gear",
     "/reviews/video",
     "/shop",
-    
+    "/shop/vendor",
+    "/shop/collection/offroad",
+    "/shop/collection/road",
+    "/shop/collection/adventure",
+    "/shop/collection/custom",
+
     // ✅ עודכן: אזור "חוק ומשפט" החדש
     "/laws",
     "/laws/legal-articles",
@@ -39,10 +45,15 @@ export async function GET() {
     "/news/machine",
     "/news/local",
     "/news/global",
+    "/news/sport",
     "/contact",
     "/PrivacyPolicy",
     "/TermsOfService",
-    "/data-deletion-instructions"
+    "/data-deletion-instructions",
+    "/accessibility",
+    "/AdvertisingPolicy",
+    "/about",
+    "/tags"
   ];
 
   const staticUrls = staticPaths.map(path => ({
