@@ -8,6 +8,7 @@ import CookieBanner from '@/components/CookieBanner'; // <--- 1. הוספתי א
 import Script from 'next/script';
 import { Heebo } from 'next/font/google';
 import { getMainImage } from '@/utils/resolveMainImage';
+import AdvertisingPopup from '@/components/AdvertisingPopup';
 
 const heebo = Heebo({
   subsets: ['hebrew', 'latin'],
@@ -221,6 +222,7 @@ export default async function RootLayout({ children }) {
           src="https://connect.facebook.net/he_IL/sdk.js#xfbml=1&version=v23.0"
           strategy="lazyOnload"
         />
+        <AdvertisingPopup />
       </body>
     </html>
   );
