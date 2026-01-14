@@ -1,13 +1,28 @@
 // components/PrivacyPolicy.jsx
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function PrivacyPolicy({ onClose, onAgree }) {
   // ניהול המצב של ה-Checkbox
   const [isChecked, setIsChecked] = useState(false);
+  const [hasSavedConsent, setHasSavedConsent] = useState(false); // האם כבר נשמר בעבר?
+
+  // בדיקה בטעינה אם המשתמש כבר אישר בעבר
+  useEffect(() => {
+    const saved = localStorage.getItem('privacyPolicyAccepted');
+    if (saved === 'true') {
+      setIsChecked(true);
+      setHasSavedConsent(true);
+    }
+  }, []);
 
   const handleAgree = () => {
     if (!isChecked) return;
+    
+    // שמירת האישור בזיכרון הדפדפן
+    localStorage.setItem('privacyPolicyAccepted', 'true');
+    setHasSavedConsent(true);
+
     if (onAgree) onAgree();
     if (onClose) onClose();
   };
@@ -86,29 +101,38 @@ export default function PrivacyPolicy({ onClose, onAgree }) {
 
       {/* אזור האישור התחתון - קבוע בתחתית */}
       <div className="pt-4 border-t border-gray-200 mt-auto bg-gray-50 -mx-4 -mb-4 p-4 rounded-b-lg">
-        <label className="flex items-center gap-2 mb-3 cursor-pointer select-none">
-          <input 
-            type="checkbox" 
-            className="w-4 h-4 text-[#e60000] rounded border-gray-300 focus:ring-[#e60000]"
-            checked={isChecked}
-            onChange={(e) => setIsChecked(e.target.checked)}
-          />
-          <span className="text-sm font-medium text-gray-700">
-            קראתי והבנתי את מדיניות הפרטיות
-          </span>
-        </label>
+        
+        {hasSavedConsent ? (
+           <div className="text-center text-green-600 font-bold py-2 bg-green-50 rounded border border-green-200">
+             ✓ אישרת את מדיניות הפרטיות
+           </div>
+        ) : (
+          <>
+            <label className="flex items-center gap-2 mb-3 cursor-pointer select-none">
+              <input 
+                type="checkbox" 
+                className="w-4 h-4 text-[#e60000] rounded border-gray-300 focus:ring-[#e60000]"
+                checked={isChecked}
+                onChange={(e) => setIsChecked(e.target.checked)}
+              />
+              <span className="text-sm font-medium text-gray-700">
+                קראתי והבנתי את מדיניות הפרטיות
+              </span>
+            </label>
 
-        <button
-          onClick={handleAgree}
-          disabled={!isChecked}
-          className={`w-full py-2 rounded font-bold transition-all duration-200
-            ${isChecked 
-              ? 'bg-[#e60000] text-white hover:bg-red-700 shadow-md' 
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
-        >
-          אני מאשר את מדיניות הפרטיות
-        </button>
+            <button
+              onClick={handleAgree}
+              disabled={!isChecked}
+              className={`w-full py-2 rounded font-bold transition-all duration-200
+                ${isChecked 
+                  ? 'bg-[#e60000] text-white hover:bg-red-700 shadow-md' 
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+            >
+              אני מאשר את מדיניות הפרטיות
+            </button>
+          </>
+        )}
       </div>
 
     </div>
