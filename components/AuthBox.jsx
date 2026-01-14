@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { FaChevronUp } from 'react-icons/fa';
 import useIsMobile from '@/hooks/useIsMobile';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link'; // <--- 1. הוספת Link
 import { useAuthModal } from '@/contexts/AuthModalProvider';
 import { loginUser, logoutUser, getCurrentUser } from '@/utils/auth';
 import PasswordField from '@/components/PasswordField';
@@ -19,8 +20,11 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
   const [loginError, setLoginError] = useState('');
   const [statusMsg, setStatusMsg] = useState('');
 
-  const [activeForm, setActiveForm] = useState(null); // "register" | "reset" | "change" | null
+  const [activeForm, setActiveForm] = useState(null); 
   const refs = { register: useRef(null), reset: useRef(null), change: useRef(null) };
+
+  // <--- 2. הוספת State לניהול אישור התקנון
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const [formData, setFormData] = useState({
     registerEmail: '',
@@ -41,6 +45,13 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
   useEffect(() => {
     if (user) setActiveForm(null);
   }, [user]);
+  
+  // איפוס התיבה כשפותחים מחדש את הטופס
+  useEffect(() => {
+    if (activeForm === 'register') {
+        setTermsAccepted(false);
+    }
+  }, [activeForm]);
 
   useEffect(() => {
     if (isMobile && boxRef?.current) {
@@ -71,7 +82,6 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
   };
 
   const handleLogout = async () => {
-    // 1. קריאה לשרת למחיקת ה-Cookie JWT
     try {
       await fetch('/api/user/logout', {
         method: 'POST',
@@ -79,10 +89,8 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
       });
     } catch (error) {
       console.error("שגיאה במחיקת Cookie השרת:", error);
-      // ממשיכים להתנתקות מקומית גם אם מחיקת הקוקי נכשלה
     }
 
-    // 2. מחיקה מקומית (localStorage ו-Context)
     await logoutUser();
     localStorage.clear();
     setUser(null);
@@ -96,18 +104,26 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
     setStatusMsg('');
     const body = {};
     let url = '';
+    
     if (type === 'register') {
       const { registerEmail, registerPassword, registerConfirm } = formData;
+      
       if (registerPassword !== registerConfirm)
         return setStatusMsg('הסיסמאות אינן תואמות');
+        
+      // <--- 3. בדיקה שהמשתמש אישר את התקנון לפני שליחה
+      if (!termsAccepted) {
+          return setStatusMsg('חובה לאשר את תנאי השימוש ומדיניות הפרטיות כדי להירשם');
+      }
+
       body.email = registerEmail;
       body.password = registerPassword;
       url = '/api/user/register';
+      
     } else if (type === 'reset') {
       body.email = formData.resetEmail;
       url = '/api/user/forgot-password';
     } else if (type === 'change') {
-      // השרת מזהה את המשתמש באמצעות ה-JWT, לכן שולחים רק סיסמאות
       body.currentPassword = formData.currentPassword;
       body.newPassword = formData.newPassword;
       url = '/api/user/change-password';
@@ -255,8 +271,30 @@ export default function AuthBox({ mode = 'inline', boxRef }) {
               onEnter={() => handleAction('register')}
               className="mb-2"
             />
-            <SubmitButton text="הרשמה" color="green" onClick={() => handleAction('register')} />
-            {statusMsg && <p className="text-green-600 mt-2 text-xs">{statusMsg}</p>}
+            
+            {/* <--- 4. הוספת הצ'קבוקס לתנאי שימוש בממשק */}
+            <div className="flex items-start gap-2 mb-3 mt-2 text-xs text-right pr-1">
+                <input
+                    type="checkbox"
+                    id="accept-terms"
+                    checked={termsAccepted}
+                    onChange={(e) => setTermsAccepted(e.target.checked)}
+                    className="mt-1 w-3 h-3 text-[#e60000] border-gray-300 rounded focus:ring-[#e60000] cursor-pointer"
+                />
+                <label htmlFor="accept-terms" className="text-gray-600 leading-tight select-none cursor-pointer">
+                    אני מאשר/ת שקראתי והסכמתי ל<Link href="/TermsOfService" target="_blank" className="text-blue-600 hover:underline">תנאי השימוש</Link> ול<Link href="/PrivacyPolicy" target="_blank" className="text-blue-600 hover:underline">מדיניות הפרטיות</Link>
+                </label>
+            </div>
+
+            <SubmitButton 
+                text="הרשמה" 
+                color="green" 
+                // אפשר להפוך את הכפתור ל-disabled ויזואלית אם לא סימנו, אבל ביקשת שזה יהיה תנאי
+                // אז נשאיר אותו פעיל כדי שיוכלו לקבל את הודעת השגיאה אם שכחו
+                onClick={() => handleAction('register')} 
+            />
+            
+            {statusMsg && <p className={`${statusMsg.includes('חובה') || statusMsg.includes('אינן') ? 'text-red-600' : 'text-green-600'} mt-2 text-xs`}>{statusMsg}</p>}
           </FormBox>
         )}
 
@@ -352,7 +390,7 @@ function SubmitButton({ text, color, onClick, type = 'button' }) {
     <button
       type={type}
       onClick={onClick}
-      className={`${colors[color]} text-white px-3 py-2 rounded text-sm w-full`}
+      className={`${colors[color]} text-white px-3 py-2 rounded text-sm w-full transition-colors duration-200`}
     >
       {text}
     </button>
