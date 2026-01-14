@@ -1,4 +1,4 @@
-//components\utils\emailTemplate.js
+// components/utils/emailTemplate.js
 import fs from 'fs';
 import path from 'path';
 
@@ -65,9 +65,13 @@ export function buildEmailTemplate(email, title, contentHtml) {
   </head>
   <body>
     <div class="container">
+      
       <div class="logo">
-        <img src="https://onmotormedia.com/Header_Logo.jpg" alt="OnMotor Media" />
+        <a href="https://www.onmotormedia.com" target="_blank" style="text-decoration:none;">
+          <img src="https://onmotormedia.com/Header_Logo.jpg" alt="OnMotor Media" style="border:0;" />
+        </a>
       </div>
+
       <h1>${title}</h1>
       <p>שלום ${email},</p>
       ${contentHtml}
