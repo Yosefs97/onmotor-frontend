@@ -29,7 +29,8 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
 
     {
       title: 'סקירות', path: '/reviews', links: [
-        { title: 'מבחני דרכים', path: '/reviews/motorcycles' },
+        { title: 'מבחני דרכים', path: '/reviews/motorcyclestests' },
+        { title: 'אופנועי מערכת', path: '/reviews/motorcycles' },
         { title: 'סקירות ציוד', path: '/reviews/gear' },
         { title: 'סקירות וידאו', path: '/reviews/video' },
       ]
@@ -76,6 +77,7 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
         { title: 'חדשות מקומיות', path: '/news/local' },
         { title: 'חדשות מהעולם', path: '/news/global' },
         { title: 'מכונות חדשות', path: '/news/machine' },
+        { title: 'חדשות ספורט', path: '/news/sport' },
       ]
     },
 

@@ -7,6 +7,7 @@ const labelMap = {
   local: 'חדשות מקומיות',
   global: 'חדשות מהעולם',
   machine: 'מכונות חדשות',
+  sport: 'חדשות ספורט',
 };
 
 export default async function NewsSubcategoryPage({ params }) {

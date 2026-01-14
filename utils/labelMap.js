@@ -10,6 +10,7 @@ const labelMap = {
   local: 'חדשות מקומיות',
   global: 'חדשות מהעולם',
   machine: 'מכונות חדשות',
+  sport: 'חדשות ספורט',
   podcast: 'אחד על אחד (אנשים)',
   'in-helmet': 'בקסדה',
   paper: 'על הנייר',
@@ -26,7 +27,10 @@ const labelMap = {
   adventure: 'אדוונצ׳ר',
   custom: 'קסטום',
   video: 'סקירות וידאו',
-  motorcycles: 'סקירות אופנועים',
+  motorcycles: 'אופנועי מערכת',
+  motorcyclestests: 'מבחני דרכים',
+
+
 
   // 🔽 חדשים - מדריכים
   guides: 'מדריכים',

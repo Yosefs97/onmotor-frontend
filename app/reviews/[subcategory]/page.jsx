@@ -5,8 +5,10 @@ import CategoryPage from '@/components/CategoryPage';
 
 const labelMap = {
   gear: 'ציוד',
-  motorcycles: 'אופנועים',
+  motorcycles: 'אופנועי מערכת',
   video: 'סקירות וידאו',
+  motorcyclestests : 'מבחני דרכים',
+
 };
 
 export default async function ReviewsSubcategoryPage({ params }) {
