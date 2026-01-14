@@ -9,6 +9,7 @@ import Script from 'next/script';
 import { Heebo } from 'next/font/google';
 import { getMainImage } from '@/utils/resolveMainImage';
 import AdvertisingPopup from '@/components/AdvertisingPopup';
+import WhatsAppSlideIn from '@/components/WhatsAppSlideIn';
 
 const heebo = Heebo({
   subsets: ['hebrew', 'latin'],
@@ -223,6 +224,7 @@ export default async function RootLayout({ children }) {
           strategy="lazyOnload"
         />
         <AdvertisingPopup />
+        <WhatsAppSlideIn />
       </body>
     </html>
   );
