@@ -1,4 +1,3 @@
-//components\WhatsAppSlideIn.jsx
 'use client';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,21 +8,19 @@ export default function WhatsAppSlideIn() {
   const [dontShowAgain, setDontShowAgain] = useState(false);
 
   useEffect(() => {
-    // בדיקה האם המשתמש כבר הסתיר את החלון בעבר
     const isHidden = localStorage.getItem('hideWhatsAppSlide');
     
     if (!isHidden) {
-      // אם לא הוסתר - נפעיל טיימר של 35 שניות
+      // טיימר של 35 שניות
       const timer = setTimeout(() => {
         setIsVisible(true);
-      }, 35000); // 35000 מילישניות = 35 שניות
+      }, 35000); 
 
       return () => clearTimeout(timer);
     }
   }, []);
 
   const handleClose = () => {
-    // אם סומן הצ'קבוקס - נשמור בזיכרון
     if (dontShowAgain) {
       localStorage.setItem('hideWhatsAppSlide', 'true');
     }
@@ -31,11 +28,8 @@ export default function WhatsAppSlideIn() {
   };
 
   const handleJoin = () => {
-    // אם המשתמש בחר להצטרף, נניח שהוא לא צריך לראות את ההודעה שוב
     localStorage.setItem('hideWhatsAppSlide', 'true');
     setIsVisible(false);
-    
-    // פתיחת הקישור בלשונית חדשה
     window.open('https://whatsapp.com/channel/0029Vb6Oh5xL2ATxMU7Xbz2M', '_blank');
   };
 
@@ -43,49 +37,52 @@ export default function WhatsAppSlideIn() {
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          // אנימציית כניסה מצד ימין
-          initial={{ x: 300, opacity: 0 }} 
+          // מתחיל מחוץ למסך (מימין) ומחליק ל-0 (קצה המסך)
+          initial={{ x: '100%', opacity: 0 }} 
           animate={{ x: 0, opacity: 1 }}
-          exit={{ x: 300, opacity: 0 }}
-          transition={{ type: 'spring', stiffness: 100, damping: 20 }}
+          exit={{ x: '100%', opacity: 0 }}
+          transition={{ type: 'spring', stiffness: 80, damping: 20 }}
           
-          // מיקום: צד ימין למטה, מעל הכל
-          className="fixed bottom-20 right-4 z-[90] max-w-sm w-full bg-white border-r-4 border-[#25D366] rounded-lg shadow-2xl p-4 flex flex-col gap-3"
+          // עיצוב ומיקום:
+          // top-[35%] -> ממוקם בחליש העליון של המסך
+          // right-0 -> דבוק לימין
+          // rounded-l-xl -> פינות עגולות רק בצד שמאל
+          className="fixed top-[35%] right-0 z-[90] w-[300px] max-w-[90vw] bg-white border-l-4 border-[#25D366] rounded-l-xl rounded-r-none shadow-[0_5px_20px_rgba(0,0,0,0.15)] p-5 flex flex-col gap-3"
           dir="rtl"
         >
-          {/* כפתור סגירה */}
+          {/* כפתור סגירה - ממוקם בצד שמאל למעלה עם רווח */}
           <button 
             onClick={handleClose}
-            className="absolute top-2 left-2 text-gray-400 hover:text-gray-600 transition"
+            className="absolute top-2 left-2 text-gray-400 hover:text-red-500 transition p-1"
           >
-            <FaTimes />
+            <FaTimes size={16} />
           </button>
 
-          <div className="flex items-center gap-3 pr-2">
-            {/* אייקון וואטסאפ ירוק וגדול */}
-            <div className="bg-[#25D366] text-white p-2 rounded-full shadow-md">
-              <FaWhatsapp size={24} />
+          <div className="flex items-start gap-3 mt-1">
+            {/* אייקון וואטסאפ */}
+            <div className="bg-[#25D366] text-white p-2 rounded-full shadow-sm shrink-0">
+              <FaWhatsapp size={28} />
             </div>
             
-            <div>
-              <h4 className="font-bold text-gray-800 text-sm">עדכונים שוטפים ב-WhatsApp</h4>
-              <p className="text-xs text-gray-600 mt-1 leading-snug">
-                הצטרפו לערוץ הווטאצאפ לקבלת עדכונים שוטפים
+            <div className="pl-4"> {/* ריווח כדי שהטקסט לא יעלה על ה-X */}
+              <h4 className="font-bold text-gray-900 text-base leading-tight">
+                הצטרפו לערוץ ה-וואטסאפ!
+              </h4>
+              <p className="text-sm text-gray-600 mt-1 leading-snug">
+                לקבלת עדכונים שוטפים ישירות לנייד.
               </p>
             </div>
           </div>
 
-          <div className="flex flex-col gap-2 mt-1">
-            {/* כפתור הצטרפות */}
+          <div className="flex flex-col gap-2 mt-2">
             <button
               onClick={handleJoin}
-              className="bg-[#25D366] hover:bg-[#128C7E] text-white text-sm font-bold py-2 px-4 rounded transition-colors shadow-sm w-full"
+              className="bg-[#25D366] hover:bg-[#128C7E] text-white font-bold py-2 px-4 rounded shadow-md transition-transform transform active:scale-95 text-center w-full"
             >
               הצטרפות לערוץ
             </button>
 
-            {/* צ'קבוקס הסתרה */}
-            <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer select-none">
+            <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer select-none justify-center">
               <input 
                 type="checkbox" 
                 checked={dontShowAgain}
