@@ -50,7 +50,7 @@ export default function TabLeftSidebar({ initialData = null }) {
     setTimeout(() => {
       const y = sidebarRef.current.getBoundingClientRect().top + window.scrollY - 100;
       window.scrollTo({ top: y, behavior: 'smooth' });
-    }, 0);
+        }, 0);
   }, [activeTab, isMobile, hasInteracted]);
 
   /* ⭐️ רכיב תוכן */
@@ -102,7 +102,6 @@ export default function TabLeftSidebar({ initialData = null }) {
       const even = i % 2 === 0;
       const bg = even ? 'bg-red-50 text-black' : 'bg-neutral-900 text-white';
       
-      // המידע מגיע כבר מעובד מהשרת (url, source, slug וכו')
       const isExternal = !!item.url && item.url.startsWith('http');
       const internalHref = !isExternal && item.slug ? `/articles/${item.slug}` : '#';
       const targetUrl = isExternal ? item.url : internalHref;
@@ -144,7 +143,8 @@ export default function TabLeftSidebar({ initialData = null }) {
         isMobile ? 'w-screen rounded-none' : ''
       }`}
     >
-      <div className="flex border-b text-sm font-semibold bg-white sticky top-0 z-10 shadow-sm" dir="rtl">
+      {/* 👇 התיקון בוצע כאן: w-full במיכל, ו-flex-1 בכפתורים */}
+      <div className="flex w-full border-b text-sm font-semibold bg-white sticky top-0 z-10 shadow-sm" dir="rtl">
         {tabs.map((tab) => (
           <button
             key={tab}
@@ -152,7 +152,8 @@ export default function TabLeftSidebar({ initialData = null }) {
               setActiveTab(tab);
               setHasInteracted(true);
             }}
-            className={`w-1/3 text-center py-2 transition-colors ${
+            // שיניתי מ-w-1/3 ל-flex-1 min-w-0 ונוסף whitespace-nowrap
+            className={`flex-1 min-w-0 whitespace-nowrap text-center py-2 transition-colors ${
               activeTab === tab
                 ? 'text-black border-b-2 border-red-500 bg-white'
                 : 'text-gray-500 bg-gray-50 hover:bg-gray-100'
