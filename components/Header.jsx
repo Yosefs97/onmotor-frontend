@@ -47,12 +47,10 @@ export default function Header() {
       },
     });
 
-    // --- הסרתי את קטע הרעידה (x: -4) מכאן ---
-
     tl.to(
       logoRef.current,
       { rotate: '+=720', duration: 1.2, ease: 'power3.out' },
-      'start' // מתחיל מייד
+      'start'
     );
 
     tl.to(
@@ -81,13 +79,14 @@ export default function Header() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-black text-[#C0C0C0] h-[80px] fixed w-full flex flex-row-reverse items-center justify-between px-2 md:px-6 py-2 shadow-md border-b border-gray-800">
+    <header className="sticky top-0 z-50 bg-black text-[#C0C0C0] h-[80px] w-full flex flex-row-reverse items-center justify-between px-2 md:px-6 py-2 shadow-md border-b border-gray-800">
+      
+      {/* --- אזור הלוגו --- */}
       <div
         ref={containerRef}
-        className="flex flex-row-reverse items-center gap-2 min-w-0 cursor-pointer"
+        className="flex flex-row-reverse items-center gap-2 min-w-0 cursor-pointer shrink-0" // הוספתי shrink-0 כדי שהלוגו לא יתכווץ
         onClick={handleClick}
       >
-        {/* ✅ כפתור התחברות/התנתקות הופרד לרכיב נפרד */}
         <div className="hidden lg:block z-50" dir="rtl">
           <AuthStatusButton />
         </div>
@@ -121,9 +120,16 @@ export default function Header() {
         </div>
       </div>
 
-      <div className="hidden mobileMenu:hidden lg:flex items-end flex-shrink-0 z-50 suppressHydrationWarning">
+      {/* --- אזור החיפוש והתפריט ---
+          שינוי קריטי: החלפתי את lg:flex ב-xl:flex
+          זה אומר: "תציג את התפריט הרגיל רק אם המסך רחב יותר מ-1280 פיקסלים".
+          אחרת - הוא מוסתר (כמו במובייל).
+       */}
+      <div className="hidden mobileMenu:hidden xl:flex items-end flex-shrink-0 z-50 suppressHydrationWarning">
         <div dir="ltr" className="flex items-center">
-          <div className="w-0 h-15 gap-2">
+          
+          {/* תיקון: w-0 הוחלף ב-w-auto כדי לאפשר לחיפוש לתפוס מקום */}
+          <div className="w-auto h-15 gap-2">
             <SearchBar />
           </div>
 
@@ -137,6 +143,9 @@ export default function Header() {
           </div>
         </div>
       </div>
+      
+      {/* הערה: כאן בדרך כלל אמור להיות כפתור המבורגר למובייל שיוצג כאשר ה-div העליון מוסתר (hidden) */}
+      
     </header>
   );
 }
