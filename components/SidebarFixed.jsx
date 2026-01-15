@@ -11,23 +11,19 @@ const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 /* ✅ פונקציה מאוחדת לזיהוי כתובת מדיה (Cloudinary / Strapi / חיצוני) */
 function resolveMediaUrl(rawUrl) {
   if (!rawUrl) return null;
-  if (rawUrl.startsWith('http')) return rawUrl;
+  // אם זה קישור מלא (כמו Cloudinary), נחזיר אותו כמו שהוא
+  if (rawUrl.startsWith('http') || rawUrl.startsWith('https')) return rawUrl;
   return `${API_URL}${rawUrl.startsWith('/') ? rawUrl : `/uploads/${rawUrl}`}`;
 }
-
-
 
 export default function SidebarFixed() {
   const [ads, setAds] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const hasFetched = useRef(false);
 
-  /* ✅ טעינת מודעות מ-Strapi – פעם אחת בלבד בקליינט */
+  /* ✅ טעינת מודעות מ-Strapi */
   useEffect(() => {
-    if (!API_URL) {
-      console.error('❌ NEXT_PUBLIC_STRAPI_API_URL לא מוגדר');
-      return;
-    }
+    if (!API_URL) return;
     if (hasFetched.current) return;
     hasFetched.current = true;
 
@@ -36,30 +32,21 @@ export default function SidebarFixed() {
         const res = await fetch(
           `${API_URL}/api/sidebar-middles?populate=image&populate=video`
         );
-
-        if (!res.ok) {
-          console.error('❌ שגיאה בטעינת sidebar-middle:', res.status);
-          return;
-        }
-
+        if (!res.ok) return;
         const json = await res.json();
-
-        const items =
-          json.data?.map((item) => ({
+        const items = json.data?.map((item) => ({
             id: item.id,
             ...item.attributes,
           })) || [];
-
         setAds(items);
       } catch (err) {
-        console.error('❌ שגיאה בטעינת sidebar-middle:', err);
+        console.error(err);
       }
     }
-
     fetchAds();
   }, []);
 
-  /* ✅ קרוסלה מתחלפת כל 5 שניות */
+  /* ✅ קרוסלה */
   useEffect(() => {
     if (ads.length > 2) {
       const interval = setInterval(() => {
@@ -69,37 +56,39 @@ export default function SidebarFixed() {
     }
   }, [ads]);
 
-  /* ✅ החזרת מודעה לפי אינדקס */
   const getAdAt = (index) => {
     if (!ads.length) return null;
     return ads[index % ads.length];
   };
 
-  /* ✅ כרטיס מודעה עם לוגיקת תמונה חדשה */
+  /* ✅ כרטיס מודעה המעודכן */
   const AdCard = ({ ad }) => {
     if (!ad) return null;
 
-    const attrs = ad; // כבר שטוח (id + attributes)
+    const attrs = ad;
 
-    // נורמליזציה של כל הנתיבים
-   
+    // 1. שליפת שדה mediaUrl ישיר (למשל מ-Cloudinary)
+    const directMediaUrl = resolveMediaUrl(attrs.mediaUrl);
 
-    // תמונה מ-Strapi (Cloudinary או יחסית)
+    // 2. תמונה מ-Strapi
     const imageUrl = Array.isArray(attrs.image) && attrs.image.length > 0
       ? resolveMediaUrl(attrs.image[0].url)
       : resolveMediaUrl(attrs.image?.url);
 
-    // וידאו מ-Strapi
+    // 3. וידאו מ-Strapi
     const videoUrl = Array.isArray(attrs.video) && attrs.video.length > 0
       ? resolveMediaUrl(attrs.video[0].url)
       : resolveMediaUrl(attrs.video?.url);
 
-    // ✅ סדר עדיפויות: mediaUrl (דרייב/חיצוני) > video > image
-    let finalUrl =  videoUrl || imageUrl;
+    // ✅ סדר עדיפויות מעודכן: mediaUrl > video > image
+    let finalUrl = directMediaUrl || videoUrl || imageUrl;
+
+    // זיהוי אם זה וידאו (כולל בדיקה ל-Cloudinary שמסתיים ב-mp4/webm/mov)
     let isVideo =
-      (finalUrl && finalUrl.endsWith('.mp4')) ||
+      (finalUrl && (finalUrl.endsWith('.mp4') || finalUrl.endsWith('.webm') || finalUrl.endsWith('.mov'))) ||
       finalUrl?.includes('youtube') ||
-      finalUrl?.includes('vimeo');
+      finalUrl?.includes('vimeo') ||
+      (finalUrl?.includes('cloudinary') && finalUrl?.includes('/video/')); // זיהוי ספציפי ל-Cloudinary Video
 
     let content = null;
 
@@ -134,8 +123,6 @@ export default function SidebarFixed() {
     return (
       <div className="border-[3px] border-[#e60000] rounded-xl overflow-hidden shadow-xl bg-black transition-all hover:shadow-[#e60000]/50">
         <div className="w-full aspect-[16/8]">{content}</div>
-
-        {/* כפתורים */}
         <div className="flex justify-center gap-2 p-3">
           {attrs.link && (
             <a
