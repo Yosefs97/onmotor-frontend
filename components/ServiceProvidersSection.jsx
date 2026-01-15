@@ -19,7 +19,7 @@ export default async function ServiceProvidersSection() {
         נותני שירות שבחרנו לפרסם (ללא עלות)
       </h2>
       {/* טקסט ההבהרה */}
-      <p className="text-xs text-gray-500 text-center max-w-2xl mx-auto px-2 leading-tight">
+      <p className="text-s text-gray-500 text-center max-w-2xl mx-auto px-2 leading-tight">
         הבהרה: העסקים המופיעים כאן נבחרו על ידינו וללא תמורה כספית. 
         אין בפרסום זה משום המלצה, והאתר אינו נושא באחריות לטיב השירות או לתוצאותיו.
       </p>
