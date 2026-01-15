@@ -1,11 +1,10 @@
-//components\MarketingPopup.jsx
+// components/MarketingPopup.jsx
 'use client';
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
 
-// משתמשים רק במשתנה הסביבה. אם הוא לא קיים - זה יהיה undefined.
 const API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 const PLACEHOLDER_IMG = '/default-image.jpg';
 
@@ -16,7 +15,6 @@ export default function MarketingPopup() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   const fetchPopupData = async () => {
-    // הגנה: אם אין כתובת API מוגדרת, אל תנסה אפילו לגשת
     if (!API_URL) return;
 
     try {
@@ -25,7 +23,7 @@ export default function MarketingPopup() {
         { method: 'GET' }
       );
       
-      if (!res.ok) return; // אם השרת מחזיר שגיאה (למשל 404 או 500)
+      if (!res.ok) return;
 
       const json = await res.json();
       if (json.data && json.data.length > 0) {
@@ -48,11 +46,9 @@ export default function MarketingPopup() {
     const attrs = data.attributes || data;
     const { CampaignID, DelaySeconds } = attrs;
 
-    // בדיקת LocalStorage
     const storageKey = CampaignID ? `popup_blocked_${CampaignID}` : 'popup_blocked_general';
     if (localStorage.getItem(storageKey)) return;
 
-    // הפעלת הטיימר - ברירת מחדל 25 שניות אם לא הוגדר אחרת
     const delayTime = (DelaySeconds || 25) * 1000;
     
     const timer = setTimeout(() => {
@@ -66,7 +62,6 @@ export default function MarketingPopup() {
     setIsVisible(false);
     const attrs = data?.attributes || data;
     
-    // שמירה ב-LocalStorage רק אם המשתמש ביקש
     if (dontShowAgain && attrs?.CampaignID) {
       localStorage.setItem(`popup_blocked_${attrs.CampaignID}`, 'true');
     }
@@ -77,11 +72,9 @@ export default function MarketingPopup() {
   const attrs = data.attributes || data;
   const { Title, Link: targetLink, ButtonText, external_media_links } = attrs;
 
-  // לוגיקת תמונה (לפי SimilarArticles)
   const getPopupImage = () => {
     if (Array.isArray(external_media_links) && external_media_links.length > 0) {
       const validLinks = external_media_links.filter(l => typeof l === 'string' && l.startsWith('http'));
-      // לוקח את הלינק השני אם יש, אחרת את הראשון
       if (validLinks.length > 1) return validLinks[1].trim();
       if (validLinks.length > 0) return validLinks[0].trim();
     }
@@ -94,11 +87,17 @@ export default function MarketingPopup() {
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          initial={{ x: '100%', opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: '100%', opacity: 0 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="fixed top-[35%] right-0 z-[9999] w-[90%] max-w-sm bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden"
+          // 👇 שינוי 1: אנימציית גדילה (Scale) במקום החלקה
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+          
+          // 👇 שינוי 2: מיקום במרכז המסך
+          // top-1/2 left-1/2 שם את הפינה השמאלית עליונה באמצע
+          // -translate-x/y-1/2 מתקן את המיקום שיהיה ממוכז בדיוק
+          className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[9999] w-[90%] max-w-sm bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden"
+          
           style={{ direction: 'rtl' }}
         >
           {/* כפתור סגירה */}
@@ -139,7 +138,7 @@ export default function MarketingPopup() {
               </Link>
             )}
 
-            {/* צ'ק בוקס - אל תציג שוב */}
+            {/* צ'ק בוקס */}
             <div className="flex items-center gap-2 mt-4 pt-3 border-t border-gray-100">
               <input 
                 id="dont-show-again" 
