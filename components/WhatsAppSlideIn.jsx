@@ -14,7 +14,7 @@ export default function WhatsAppSlideIn() {
       // טיימר של 35 שניות
       const timer = setTimeout(() => {
         setIsVisible(true);
-      }, 35000); 
+      }, 15000); 
 
       return () => clearTimeout(timer);
     }

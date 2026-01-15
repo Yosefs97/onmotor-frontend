@@ -15,9 +15,14 @@ export default async function ServiceProvidersSection() {
 
   return (
     <div className="border-t border-gray-200 pt-0 pb-0 mt-0">
-      <h2 className="text-2xl font-bold text-center mb-0 text-[#e60000]">
-        נותני שירות מומלצים
+      <h2 className="text-2xl font-bold text-center mb-2 text-[#e60000]">
+        נותני שירות שבחרנו לפרסם (ללא עלות)
       </h2>
+      {/* טקסט ההבהרה */}
+      <p className="text-xs text-gray-500 text-center max-w-2xl mx-auto px-2 leading-tight">
+        הבהרה: העסקים המופיעים כאן נבחרו על ידינו וללא תמורה כספית. 
+        אין בפרסום זה משום המלצה, והאתר אינו נושא באחריות לטיב השירות או לתוצאותיו.
+      </p>
       
       {lawyers.length > 0 && <AdCarousel title="עורכי דין מהתחום" items={lawyers} />}
       {insurance.length > 0 && <AdCarousel title="סוכני ביטוח מהקהילה" items={insurance} />}
