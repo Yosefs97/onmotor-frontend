@@ -98,7 +98,7 @@ export default function MarketingPopup() {
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: '100%', opacity: 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="fixed bottom-10 right-4 z-[9999] w-[90%] max-w-sm bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden"
+          className="fixed top-[35%] right-0 z-[9999] w-[90%] max-w-sm bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden"
           style={{ direction: 'rtl' }}
         >
           {/* כפתור סגירה */}
