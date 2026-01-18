@@ -1,6 +1,6 @@
 // components/Header.jsx
 'use client';
-import React, { useEffect, useRef } from 'react';
+import React, { useLayoutEffect, useRef } from 'react'; // שינוי ל-useLayoutEffect
 import { gsap } from 'gsap';
 import NavigationMenu from './NavigationMenu';
 import SearchBar from './SearchBar';
@@ -13,28 +13,33 @@ export default function Header() {
   const containerRef = useRef(null);
   const isAnimating = useRef(false);
 
-  useEffect(() => {
-    const tl = gsap.timeline();
+  // שימוש ב-useLayoutEffect מונע את ה"קפיצה" הראשונית כי הוא רץ לפני הציור על המסך
+  useLayoutEffect(() => {
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline();
 
-    tl.fromTo(
-      logoRef.current,
-      { rotate: -90, scale: 0.8 },
-      { rotate: 0, scale: 1, duration: 1.2, ease: 'elastic.out(1, 0.5)' }
-    );
+      tl.fromTo(
+        logoRef.current,
+        { rotate: -90, scale: 0.8 },
+        { rotate: 0, scale: 1, duration: 1.2, ease: 'elastic.out(1, 0.5)' }
+      );
 
-    tl.fromTo(
-      lettersRef.current,
-      { y: 15, opacity: 0, rotate: -10 },
-      {
-        y: 0,
-        opacity: 1,
-        rotate: 0,
-        duration: 0.6,
-        stagger: 0.05,
-        ease: 'back.out(1.7)',
-      },
-      '-=0.9'
-    );
+      tl.fromTo(
+        lettersRef.current,
+        { y: 15, opacity: 0, rotate: -10 },
+        {
+          y: 0,
+          opacity: 1,
+          rotate: 0,
+          duration: 0.6,
+          stagger: 0.05,
+          ease: 'back.out(1.7)',
+        },
+        '-=0.9'
+      );
+    }, containerRef); // Scope ל-GSAP לניקוי זיכרון יעיל
+
+    return () => ctx.revert(); // ניקוי האנימציה כשהקומפוננטה יוצאת
   }, []);
 
   const handleClick = () => {
@@ -47,12 +52,10 @@ export default function Header() {
       },
     });
 
-    // --- הסרתי את קטע הרעידה (x: -4) מכאן ---
-
     tl.to(
       logoRef.current,
       { rotate: '+=720', duration: 1.2, ease: 'power3.out' },
-      'start' // מתחיל מייד
+      'start'
     );
 
     tl.to(
@@ -81,13 +84,14 @@ export default function Header() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-black text-[#C0C0C0] h-[80px] fixed w-full flex flex-row-reverse items-center justify-between px-2 md:px-6 py-2 shadow-md border-b border-gray-800">
+    // שינוי קריטי כאן: הסרתי את 'fixed' והשארתי רק 'sticky'
+    // זה מונע מהתוכן מתחת לקפוץ בטעינה
+    <header className="sticky top-0 z-50 bg-black text-[#C0C0C0] h-[80px] w-full flex flex-row-reverse items-center justify-between px-2 md:px-6 py-2 shadow-md border-b border-gray-800">
       <div
         ref={containerRef}
         className="flex flex-row-reverse items-center gap-2 min-w-0 cursor-pointer"
         onClick={handleClick}
       >
-        {/* ✅ כפתור התחברות/התנתקות הופרד לרכיב נפרד */}
         <div className="hidden lg:block z-50" dir="rtl">
           <AuthStatusButton />
         </div>
@@ -109,7 +113,8 @@ export default function Header() {
               <span
                 key={i}
                 ref={(el) => (lettersRef.current[i] = el)}
-                className={`inline-block ${part.red ? 'text-[#e60000]' : ''}`}
+                // הוספתי opacity-0 כדי להסתיר אותם עד שהאנימציה תתחיל (מונע הבהוב)
+                className={`inline-block opacity-0 ${part.red ? 'text-[#e60000]' : ''}`}
               >
                 {part.char}
               </span>
