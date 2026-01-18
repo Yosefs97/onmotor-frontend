@@ -110,7 +110,7 @@ export default function ArticleShareBottom() {
         <div
           ref={dropRef}
           className={`absolute left-0 w-52 bg-white text-black rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden
-            ${menuDirection === 'up' ? 'bottom-full mb-3' : 'top-full mt-3'}
+            ${menuDirection === 'up' ? 'bottom-full mb-1' : 'top-full mt-1'}
           `}
         >
           <div className="flex justify-between items-center p-2 border-b border-gray-100 bg-gray-50">
@@ -157,7 +157,7 @@ export default function ArticleShareBottom() {
           ${open ? 'ring-2 ring-offset-2 ring-red-500' : ''}
           ${collapsed 
               ? 'w-12 h-12 justify-center rounded-full p-0' // עיצוב למצב מכווץ (עגול)
-              : 'w-auto px-6 py-2 rounded-full gap-2'      // עיצוב למצב פתוח (אליפסה)
+              : 'w-auto px-6 py-2 rounded-full gap-1'      // עיצוב למצב פתוח (אליפסה)
            }
         `}
       >
