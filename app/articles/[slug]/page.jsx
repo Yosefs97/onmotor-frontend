@@ -535,7 +535,7 @@ export default async function ArticlePage({ params }) {
 
       <PageContainer title={article.title} breadcrumbs={breadcrumbs}>
         <div
-          className="mx-auto max-w-[740px] space-y-2 text-right leading-relaxed text-base text-gray-800 px-2"
+          className="mx-auto max-w-[740px] space-y-0.5 text-right leading-relaxed text-base text-gray-800 px-2"
           style={{ fontFamily: article.font_family }}
         >
           <ArticleHeader
@@ -570,7 +570,7 @@ export default async function ArticlePage({ params }) {
               external_media_links={article.external_media_links}
             />
           </div>
-          <div className="w-full flex justify-end relative my-6">
+          <div className="w-full flex justify-end relative my-1">
               <ArticleShareBottom />
           </div>
           <div className="comments-section">
