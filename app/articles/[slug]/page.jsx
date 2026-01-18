@@ -570,9 +570,7 @@ export default async function ArticlePage({ params }) {
               external_media_links={article.external_media_links}
             />
           </div>
-         <div className="w-full flex justify-end relative z-0 my-4">
-             <ArticleShareBottom />
-          </div>
+          <ArticleShareBottom />
           <div className="comments-section">
             <CommentsSection articleUrl={`${SITE_URL}${article.href}`} />
           </div>
