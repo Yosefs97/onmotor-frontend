@@ -23,7 +23,7 @@ export default function FacebookComments({ url }) {
   }, [pageUrl]);
 
   return (
-    <div className="mt-8">
+    <div className="mt-2">
       <div
         className="fb-comments"
         data-href={pageUrl || url}
