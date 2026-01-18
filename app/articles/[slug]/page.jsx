@@ -570,12 +570,8 @@ export default async function ArticlePage({ params }) {
               external_media_links={article.external_media_links}
             />
           </div>
-          {/* === התיקון: שימוש ב-w-fit כדי לבטל מתיחה לרוחב מלא === */}
-          <div className="w-full flex justify-end relative z-0 my-6">
-             {/* העטיפה הפנימית הזו מכריחה את הכפתור לא לתפוס 100% רוחב */}
-             <div className="w-fit min-w-0 [&>*]:!mr-auto [&>*]:!ml-0">
-                <ArticleShareBottom />
-             </div>
+          <div className="w-full flex justify-end relative my-6">
+              <ArticleShareBottom />
           </div>
           <div className="comments-section">
             <CommentsSection articleUrl={`${SITE_URL}${article.href}`} />
