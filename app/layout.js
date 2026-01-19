@@ -23,6 +23,9 @@ const heebo = Heebo({
 export const metadata = {
   // ... (השארתי את ה-metadata המקורי שלך ללא שינוי)
   metadataBase: new URL("https://www.onmotormedia.com"),
+  alternates: {
+    canonical: '/',
+  },
   title: {
     default: "OnMotor Media – מגזין אופנועים ישראלי",
     template: "%s | OnMotor Media",
