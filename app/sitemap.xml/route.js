@@ -67,7 +67,7 @@ export async function GET() {
     // 2. שליפת הכתבות מ-Strapi
     // הוספתי את שדה href לשליפה למקרה שיש כתובות מותאמות אישית
     const res = await fetch(
-      `${API_URL}/api/articles?fields=slug,href,updatedAt&pagination[pageSize]=1000`, 
+      `${API_URL}/api/articles?fields=slug,href,updatedAt&pagination[pageSize]=1000&sort=updatedAt:desc`, 
       { cache: "no-store" }
     );
 
