@@ -51,7 +51,16 @@ export default function TagsBox() {
               });
             }
           });
-          const sortedTags = Object.keys(tagCounts).sort((a, b) => tagCounts[b] - tagCounts[a]);
+          const sortedTags = Object.keys(tagCounts).sort((tagA, tagB) => {
+              // לוגיקת המיון החדשה (אותו קוד כמו למעלה)
+              const getPriority = (c) => (/[0-9]/.test(c) ? 1 : /[\u0590-\u05FF]/.test(c) ? 2 : /[a-zA-Z]/.test(c) ? 3 : 4);
+              
+              const pA = getPriority(tagA.trim().charAt(0));
+              const pB = getPriority(tagB.trim().charAt(0));
+
+              if (pA !== pB) return pA - pB;
+              return tagA.localeCompare(tagB, 'he');
+          });
           setTags(sortedTags);
         }
       } catch (err) {

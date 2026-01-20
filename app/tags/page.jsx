@@ -116,10 +116,28 @@ export default function TagsIndex() {
     { label: 'אינדקס תגיות' },
   ];
 
+  // פונקציית עזר לדירוג סוג התו הראשון (מספר, עברית, אנגלית, אחר)
+  const getCharPriority = (char) => {
+    if (/[0-9]/.test(char)) return 1;           // עדיפות 1: מספרים
+    if (/[\u0590-\u05FF]/.test(char)) return 2; // עדיפות 2: עברית
+    if (/[a-zA-Z]/.test(char)) return 3;        // עדיפות 3: אנגלית
+    return 4;                                   // עדיפות 4: כל השאר
+  };
+
   const sortedTags = Object.keys(groupedArticles).sort((tagA, tagB) => {
-    const dateA = new Date(groupedArticles[tagA][0].date);
-    const dateB = new Date(groupedArticles[tagB][0].date);
-    return dateB - dateA;
+    const charA = tagA.trim().charAt(0);
+    const charB = tagB.trim().charAt(0);
+
+    const priorityA = getCharPriority(charA);
+    const priorityB = getCharPriority(charB);
+
+    // אם הם מסוגים שונים (למשל אחד מספר ואחד אות), נמיין לפי העדיפות
+    if (priorityA !== priorityB) {
+      return priorityA - priorityB;
+    }
+
+    // אם הם מאותו סוג (שניהם עברית וכו'), נמיין אלפביתית רגיל
+    return tagA.localeCompare(tagB, 'he', { sensitivity: 'base' });
   });
 
   // 👇 תוספת: יצירת המערך החלקי להצגה לפי ה-state
