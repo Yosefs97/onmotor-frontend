@@ -18,7 +18,7 @@ const heebo = Heebo({
   display: 'swap',
 });
 
-// --- עדכון 1: הרחבת ה-Metadata ---
+// --- Metadata ---
 export const metadata = {
   metadataBase: new URL("https://www.onmotormedia.com"),
   alternates: {
@@ -31,10 +31,8 @@ export const metadata = {
   description:
     "מגזין אופנועים ישראלי מוביל – חדשות אופנועים, סקירות דגמים, סקירת ציוד ומבחני דרך. כל מה שרוכב בישראל צריך לדעת.",
   
-  // הוספת מילות מפתח עוזרת למנועים להבין את ההקשר הרחב
   keywords: ["אופנועים", "מגזין אופנועים", "סקירות אופנועים", "חדשות רכב", "OnMotor Media", "יוסף סבג", "CF Moto", "מבחני דרכים"],
   
-  // הוספת מחברים - חשוב ל-E-E-A-T
   authors: [{ name: 'יוסף סבג', url: 'https://www.onmotormedia.com' }, { name: 'אסף אפרים' }],
 
   icons: {
@@ -77,7 +75,7 @@ export const metadata = {
   },
 };
 
-// ... (שאר פונקציות העזר נשארות ללא שינוי: getTickerHeadlines, extractDomainName, getSidebarData) ...
+// ... פונקציות עזר ...
 async function getTickerHeadlines() {
   const API_URL = process.env.STRAPI_API_URL;
   try {
@@ -185,7 +183,7 @@ async function getSidebarData() {
 }
 
 
-// --- עדכון 2: רכיב ה-Schema בתוך RootLayout ---
+// --- RootLayout המעודכן ---
 
 export default async function RootLayout({ children }) {
   const tickerDataPromise = getTickerHeadlines();
@@ -196,7 +194,7 @@ export default async function RootLayout({ children }) {
   // בניית נתוני ה-Schema
   const schemaData = {
     "@context": "https://schema.org",
-    "@type": "NewsMediaOrganization", // הגדרה מדויקת יותר למגזין
+    "@type": "NewsMediaOrganization",
     "name": "OnMotor Media",
     "url": "https://www.onmotormedia.com",
     "logo": {
@@ -206,14 +204,12 @@ export default async function RootLayout({ children }) {
       "height": 512
     },
     "description": "מגזין אופנועים ישראלי מוביל – חדשות אופנועים, סקירות דגמים, סקירת ציוד ומבחני דרך.",
-    // פרטים עליך - המייסד
     "founder": {
       "@type": "Person",
       "name": "יוסף סבג",
       "jobTitle": "מהנדס מכונות ומייסד",
       "description": "מהנדס מכונות, יזם ומפתח האתר"
     },
-    // פרטים על הצוות - אסף
     "employee": [
       {
         "@type": "Person",
@@ -222,11 +218,10 @@ export default async function RootLayout({ children }) {
         "description": "מכונאי אופנועים, רוכב בוחן ועורך תוכן"
       }
     ],
-    // קישורים לרשתות חברתיות - עוזר ל-AI לחבר נקודות
     "sameAs": [
       "https://www.facebook.com/OnMotorMedia",
-      "https://www.instagram.com/onmotormedia", // (וודא שזה הלינק הנכון)
-      "https://www.tiktok.com/@onmotormedia"    // (וודא שזה הלינק הנכון)
+      "https://www.instagram.com/onmotormedia",
+      "https://www.tiktok.com/@onmotormedia"
     ]
   };
 
@@ -236,17 +231,19 @@ export default async function RootLayout({ children }) {
         <meta property="fb:app_id" content="1702134291174147" />
         <meta property="fb:pages" content="1671844356419083" />
         <meta property="article:publisher" content="https://www.facebook.com/OnMotorMedia" />
+        {/* ה-Script הוסר מכאן */}
+      </head>
 
-        {/* הטמעת ה-Schema המשודרגת */}
+      <body className="flex flex-col min-h-screen">
+        
+        {/* ✅ ה-Script עבר לכאן - לתחילת ה-body */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(schemaData),
           }}
         />
-      </head>
 
-      <body className="flex flex-col min-h-screen">
         <AuthModalProvider>
           <ScrollToTopButton />
           
