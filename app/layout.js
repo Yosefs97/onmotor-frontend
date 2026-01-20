@@ -4,7 +4,7 @@ import './globals.css';
 import { AuthModalProvider } from '@/contexts/AuthModalProvider';
 import ClientLayout from '@/components/ClientLayout';
 import ScrollToTopButton from '@/components/ScrollToTopButton';
-import CookieBanner from '@/components/CookieBanner'; // <--- 1. הוספתי את הייבוא כאן
+import CookieBanner from '@/components/CookieBanner';
 import Script from 'next/script';
 import { Heebo } from 'next/font/google';
 import { getMainImage } from '@/utils/resolveMainImage';
@@ -18,10 +18,8 @@ const heebo = Heebo({
   display: 'swap',
 });
 
-// ... (כל הקוד של ה-metadata והפונקציות נשאר זהה לחלוטין, לא נגעתי בו) ...
-
+// --- עדכון 1: הרחבת ה-Metadata ---
 export const metadata = {
-  // ... (השארתי את ה-metadata המקורי שלך ללא שינוי)
   metadataBase: new URL("https://www.onmotormedia.com"),
   alternates: {
     canonical: '/',
@@ -33,6 +31,12 @@ export const metadata = {
   description:
     "מגזין אופנועים ישראלי מוביל – חדשות אופנועים, סקירות דגמים, סקירת ציוד ומבחני דרך. כל מה שרוכב בישראל צריך לדעת.",
   
+  // הוספת מילות מפתח עוזרת למנועים להבין את ההקשר הרחב
+  keywords: ["אופנועים", "מגזין אופנועים", "סקירות אופנועים", "חדשות רכב", "OnMotor Media", "יוסף סבג", "CF Moto", "מבחני דרכים"],
+  
+  // הוספת מחברים - חשוב ל-E-E-A-T
+  authors: [{ name: 'יוסף סבג', url: 'https://www.onmotormedia.com' }, { name: 'אסף אפרים' }],
+
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' }, 
@@ -73,7 +77,7 @@ export const metadata = {
   },
 };
 
-// ... (פונקציות העזר getTickerHeadlines וכו' נשארות זהות) ...
+// ... (שאר פונקציות העזר נשארות ללא שינוי: getTickerHeadlines, extractDomainName, getSidebarData) ...
 async function getTickerHeadlines() {
   const API_URL = process.env.STRAPI_API_URL;
   try {
@@ -180,13 +184,51 @@ async function getSidebarData() {
   };
 }
 
-// --- פונקציית ה-RootLayout המעודכנת ---
+
+// --- עדכון 2: רכיב ה-Schema בתוך RootLayout ---
 
 export default async function RootLayout({ children }) {
   const tickerDataPromise = getTickerHeadlines();
   const sidebarDataPromise = getSidebarData();
 
   const [tickerHeadlines, sidebarData] = await Promise.all([tickerDataPromise, sidebarDataPromise]);
+
+  // בניית נתוני ה-Schema
+  const schemaData = {
+    "@context": "https://schema.org",
+    "@type": "NewsMediaOrganization", // הגדרה מדויקת יותר למגזין
+    "name": "OnMotor Media",
+    "url": "https://www.onmotormedia.com",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://www.onmotormedia.com/web-app-manifest-512x512.png",
+      "width": 512,
+      "height": 512
+    },
+    "description": "מגזין אופנועים ישראלי מוביל – חדשות אופנועים, סקירות דגמים, סקירת ציוד ומבחני דרך.",
+    // פרטים עליך - המייסד
+    "founder": {
+      "@type": "Person",
+      "name": "יוסף סבג",
+      "jobTitle": "מהנדס מכונות ומייסד",
+      "description": "מהנדס מכונות, יזם ומפתח האתר"
+    },
+    // פרטים על הצוות - אסף
+    "employee": [
+      {
+        "@type": "Person",
+        "name": "אסף אפרים",
+        "jobTitle": "עורך ובוחן אופנועים",
+        "description": "מכונאי אופנועים, רוכב בוחן ועורך תוכן"
+      }
+    ],
+    // קישורים לרשתות חברתיות - עוזר ל-AI לחבר נקודות
+    "sameAs": [
+      "https://www.facebook.com/OnMotorMedia",
+      "https://www.instagram.com/onmotormedia", // (וודא שזה הלינק הנכון)
+      "https://www.tiktok.com/@onmotormedia"    // (וודא שזה הלינק הנכון)
+    ]
+  };
 
   return (
     <html lang="he" dir="rtl" className={heebo.className}>
@@ -195,16 +237,11 @@ export default async function RootLayout({ children }) {
         <meta property="fb:pages" content="1671844356419083" />
         <meta property="article:publisher" content="https://www.facebook.com/OnMotorMedia" />
 
+        {/* הטמעת ה-Schema המשודרגת */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "Organization",
-              "name": "OnMotor Media",
-              "url": "https://www.onmotormedia.com",
-              "logo": "https://www.onmotormedia.com/web-app-manifest-512x512.png",
-            }),
+            __html: JSON.stringify(schemaData),
           }}
         />
       </head>
@@ -217,7 +254,6 @@ export default async function RootLayout({ children }) {
             {children}
           </ClientLayout>
 
-          {/* <--- 2. הוספתי את הרכיב כאן, מחוץ ל-ClientLayout אך בתוך ה-AuthModalProvider (למרות שזה לא קריטי, העיקר שיהיה ב-Body) */}
           <CookieBanner />
 
         </AuthModalProvider>
