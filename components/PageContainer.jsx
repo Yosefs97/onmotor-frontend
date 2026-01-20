@@ -1,15 +1,15 @@
 // components/PageContainer.jsx
 'use client';
+
 import React from 'react';
+import Link from 'next/link';
+import { FaTh } from 'react-icons/fa'; // אייקון של גריד/קוביות
 import Breadcrumbs from './Breadcrumbs';
 import useIsMobile from '@/hooks/useIsMobile';
 
 /**
- * 📦 PageContainer — גרסה מעודכנת
+ * 📦 PageContainer — גרסה מעודכנת עם כפתור תגיות
  * ---------------------------------------
- * - משמשת להצגת תוכן הדף בלבד (צד ימין).
- * - הסיידרים (אמצעי + שמאלי) הועברו ל-ClientLayout.jsx כדי למנוע ריענון.
- * - שומרת על יחס הגודל: 1/2 מסך בצד ימין עם גבול שמאלי.
  */
 export default function PageContainer({ title, breadcrumbs = [], children }) {
   const isMobile = useIsMobile();
@@ -19,21 +19,34 @@ export default function PageContainer({ title, breadcrumbs = [], children }) {
       {/* תוכן מוצמד מתחת לכותרת */}
       <div className="sticky top-[70px] min-h-screen flex flex-col text-right px-1 sm:px-4">
         
-        {/* 🔴 ברדקרמבס (מתעדכנים לפי הנתיב, לא נטענים מחדש) */}
+        {/* 🔴 ברדקרמבס */}
         {breadcrumbs.length > 0 && (
           <div className="mb-1">
             <Breadcrumbs items={breadcrumbs} />
           </div>
         )}
 
-        {/* 🔶 כותרת ראשית */}
+        {/* 🔶 אזור הכותרת + כפתור תגיות */}
         {title && (
-          <h1 className="text-2xl sm:text-3xl font-bold text-black mb-2 border-b-2 border-[#e60000] pb-1">
-            {title}
-          </h1>
+          <div className="flex items-end justify-between border-b-2 border-[#e60000] mb-2 pb-1">
+            {/* הכותרת עצמה */}
+            <h1 className="text-2xl sm:text-3xl font-bold text-black leading-none">
+              {title}
+            </h1>
+
+            {/* 🏷️ כפתור לאינדקס תגיות (משמאל לכותרת) */}
+            <Link 
+              href="/tags"
+              className="flex items-center gap-1.5 bg-gray-200 hover:bg-[#e60000] text-gray-700 hover:text-white px-3 py-1.5 rounded-md transition-all duration-300 text-xs font-bold shadow-sm"
+              title="מעבר לאינדקס נושאים"
+            >
+              <span className="hidden sm:inline">אינדקס נושאים</span>
+              <FaTh className="text-sm" /> {/* אייקון גריד */}
+            </Link>
+          </div>
         )}
 
-        {/* 🟢 תוכן דינמי (כתבות / קטגוריות / עמודים) */}
+        {/* 🟢 תוכן דינמי */}
         <div className="flex-1 w-full px-0 mx-0">{children}</div>
       </div>
     </div>
