@@ -1,8 +1,15 @@
+//components\SimpleKeyValueTable.jsx
 'use client';
 import React, { useState } from "react";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 
 export default function SimpleKeyValueTable({ data }) {
+  // --- הגנה: אם אין דאטה או שהאובייקט ריק, לא מחזירים כלום ---
+  if (!data || (typeof data === 'object' && Object.keys(data).length === 0)) {
+    return null;
+  }
+  // ------------------------------------------------------------
+
   const isNested = Object.values(data)[0] && typeof Object.values(data)[0] === "object";
   const [openSections, setOpenSections] = useState({});
 
@@ -14,7 +21,7 @@ export default function SimpleKeyValueTable({ data }) {
   };
 
   return (
-    <div className="overflow-x-auto mt-6">
+    <div className="overflow-x-auto mt-6 mb-6">
       <table className="w-full table-auto border border-gray-400 text-right rounded-lg shadow-sm">
         <thead>
           <tr className="bg-gray-100">
