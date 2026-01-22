@@ -610,14 +610,22 @@ export default async function ArticlePage({ params }) {
             </div>
           )}
 
-          <div className="article-gallery-section">
-            <Gallery
-              images={article.gallery}
-              externalImageUrls={article.externalImageUrls}
-              externalMediaUrl={article.externalMediaUrl}
-              external_media_links={article.external_media_links}
-            />
-          </div>
+         {/* בדיקה שיש תוכן לגלריה כדי לא להציג כותרת ריקה */}
+          {(article.gallery.length > 0 || article.externalImageUrls.length > 0 || (article.external_media_links && article.external_media_links.length > 0)) && (
+            <div className="article-gallery-section mt-10 mb-8">
+              {/* כותרת מעוצבת עם פס צד אדום */}
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 border-r-4 border-red-600 pr-3">
+                גלריית תמונות
+              </h2>
+              
+              <Gallery
+                images={article.gallery}
+                externalImageUrls={article.externalImageUrls}
+                externalMediaUrl={article.externalMediaUrl}
+                external_media_links={article.external_media_links}
+              />
+            </div>
+          )}
           <div className="w-full flex justify-end relative my-1">
               <ArticleShareBottom />
           </div>
