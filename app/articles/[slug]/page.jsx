@@ -100,33 +100,27 @@ function parseMarkdownTable(text) {
   if (!lines[1].includes('---')) return null;
 
   try {
-    // פירוק הכותרות
     const headers = lines[0]
       .split('|')
       .map(h => h.trim())
-      .filter(h => h !== ''); // מסננים תאים ריקים שנוצרים בצדדים
+      .filter(h => h !== '');
 
-    // פירוק השורות (מדלגים על שורת הכותרת ושורת המפריד)
     const rows = lines.slice(2).map(line => 
       line
         .split('|')
         .map(c => c.trim())
-        .filter(c => c !== '') // מסננים תאים ריקים בצדדים
+        .filter(c => c !== '')
     ).filter(row => row.length > 0);
 
-    // אם הפירוק נכשל או שאין שורות, מחזירים null (ואז זה יוצג כטקסט רגיל)
     if (headers.length === 0) return null;
 
-    // בניית ה-HTML של הטבלה
     let html = `<div class="overflow-x-auto my-6 border border-gray-300 rounded-lg shadow-sm">
       <table class="w-full text-right border-collapse min-w-[300px]">
         <thead class="bg-gray-100">
           <tr>`;
     
     headers.forEach(header => {
-      // ניקוי כוכביות מהכותרת
       let headerContent = header.replace(/\*\*(.*?)\*\*/g, '$1');
-      // ניקוי תגיות HTML שאולי נדבקו
       headerContent = headerContent.replace(/<[^>]*>/g, '');
       html += `<th class="px-4 py-3 border-b border-gray-300 font-bold text-gray-900 text-lg">${headerContent}</th>`;
     });
@@ -136,7 +130,6 @@ function parseMarkdownTable(text) {
     rows.forEach((row, rowIndex) => {
       html += `<tr class="${rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100 transition-colors">`;
       row.forEach(cell => {
-         // טיפול בתוכן התא - המרה של **בולד** לתגית HTML
          let cellContent = cell.replace(/\*\*(.*?)\*\*/g, '<span class="font-bold text-gray-900">$1</span>');
          html += `<td class="px-4 py-3 border-b border-gray-200 text-gray-800 text-base align-top">${cellContent}</td>`;
       });
@@ -147,47 +140,45 @@ function parseMarkdownTable(text) {
     return html;
   } catch (e) {
     console.error("Failed to parse markdown table", e);
-    return null; // אם נכשל, יחזור לרינדור טקסט רגיל
+    return null;
   }
 }
 
 // ===================================================================
-// ✅ פונקציה פשוטה: חיפוש כתבות לפי תגיות בלבד (Simple Logic)
+// ✅ פונקציה חכמה: רק תגיות! (ואם אין, אז תת-קטגוריה)
 // ===================================================================
-async function getSimilarArticles(currentSlugOrHref, tags) {
+async function getSimilarArticles(currentSlugOrHref, tags, subcategory) {
   try {
-    // 1. נרמול מבנה התגיות (טיפול במקרים של undefined או מבנה Strapi מקונן)
+    // נרמול מבנה התגיות
     const tagsArray = Array.isArray(tags) ? tags : (tags?.data || []);
 
-    if (!tagsArray || tagsArray.length === 0) {
-      console.log("No tags found for similar articles.");
-      return [];
+    // --- שלב 1: עדיפות מוחלטת לתגיות ---
+    if (tagsArray.length > 0) {
+      const tagIds = tagsArray.map(t => t.id);
+      
+      const tagsQuery = tagIds
+        .map((id, index) => `filters[tags][id][$in][${index}]=${id}`)
+        .join('&');
+
+      const urlTags = `${API_URL}/api/articles?populate=*&filters[href][$ne]=${encodeURIComponent(currentSlugOrHref)}&filters[slug][$ne]=${encodeURIComponent(currentSlugOrHref)}&${tagsQuery}&pagination[limit]=9`;
+      
+      const resTags = await fetch(urlTags, { next: { revalidate: 60 } });
+      const jsonTags = await resTags.json();
+      
+      // אם מצאנו אפילו כתבה אחת - זה מספיק. מחזירים ויוצאים.
+      if (jsonTags.data?.length > 0) {
+        return jsonTags.data;
+      }
     }
 
-    // 2. חילוץ ה-ID של התגיות
-    const tagIds = tagsArray.map(t => t.id).filter(Boolean); // מסננים ID לא תקינים
-
-    if (tagIds.length === 0) {
-      return [];
-    }
-
-    // 3. בניית השאילתה הפשוטה ביותר
-    // filters[tags][id][$in][0]=1&filters[tags][id][$in][1]=2...
-    const tagsQuery = tagIds
-      .map((id, index) => `filters[tags][id][$in][${index}]=${id}`)
-      .join('&');
-
-    const urlTags = `${API_URL}/api/articles?populate=*&filters[href][$ne]=${encodeURIComponent(currentSlugOrHref)}&filters[slug][$ne]=${encodeURIComponent(currentSlugOrHref)}&${tagsQuery}&pagination[limit]=6`;
-    
-    console.log(`Fetching similar articles by tags: ${tagIds.join(', ')}`);
-
-    const resTags = await fetch(urlTags, { next: { revalidate: 60 } });
-    const jsonTags = await resTags.json();
-    
-    // 4. החזרת התוצאות (אם יש)
-    if (jsonTags.data?.length > 0) {
-      console.log(`Found ${jsonTags.data.length} similar articles.`);
-      return jsonTags.data;
+    // --- שלב 2: גיבוי - תת-קטגוריה (רק אם לא נמצאו תגיות) ---
+    if (subcategory) {
+      // Strapi filters syntax: filters[field][$eq]=value
+      const urlSubCategory = `${API_URL}/api/articles?populate=*&filters[href][$ne]=${encodeURIComponent(currentSlugOrHref)}&filters[slug][$ne]=${encodeURIComponent(currentSlugOrHref)}&filters[subcategory][$eq]=${encodeURIComponent(subcategory)}&pagination[limit]=9`;
+      
+      const resSub = await fetch(urlSubCategory, { next: { revalidate: 3600 } });
+      const jsonSub = await resSub.json();
+      return jsonSub.data || [];
     }
 
     return [];
@@ -216,19 +207,15 @@ export async function generateMetadata({ params }) {
     const article = json.data?.[0];
     if (!article) return {};
 
-    // חילוץ חכם של Attributes
-    const strapiData = article.attributes || article;
-
-    const title = strapiData.title || "OnMotor Media";
+    const title = article.title || "OnMotor Media";
     const description =
-      strapiData.headline ||
-      strapiData.description ||
-      strapiData.subdescription ||
+      article.headline ||
+      article.description ||
+      article.subdescription ||
       "כתבה מתוך מגזין OnMotor Media";
 
     let finalImageUrl = null;
-    const strapiImageAttributes = strapiData.image?.data?.attributes || strapiData.image?.attributes;
-    
+    const strapiImageAttributes = article.image?.data?.attributes;
     if (strapiImageAttributes) {
         if (strapiImageAttributes.url?.includes('cloudinary')) {
             finalImageUrl = strapiImageAttributes.url;
@@ -243,7 +230,7 @@ export async function generateMetadata({ params }) {
     }
 
     if (!finalImageUrl) {
-        finalImageUrl = getArticleImage(strapiData); // וודא שהפונקציה יודעת לטפל במידע
+        finalImageUrl = getArticleImage(article);
     }
 
     if (finalImageUrl && !finalImageUrl.startsWith('http')) {
@@ -297,17 +284,17 @@ export default async function ArticlePage({ params }) {
   const json = await res.json();
   const rawArticle = json.data?.[0];
   if (!rawArticle) return notFound();
-
-  // ✅ נרמול הגישה לנתונים (Attributes) - קריטי!
-  const data = rawArticle.attributes || rawArticle;
-  
-  // הוספת ה-ID לנתונים
-  data.id = rawArticle.id; 
+  const data = rawArticle;
 
   const realIdentifier = data.href || data.slug;
   
-  // ✅ שליחת התגיות לפונקציית החיפוש הפשוטה
-  const similarArticlesData = await getSimilarArticles(realIdentifier, data.tags);
+  // חילוץ תת-הקטגוריה לצורך שליחה לפונקציית החיפוש
+  const rawSubcategory = Array.isArray(data.subcategory)
+      ? data.subcategory[0]
+      : data.subcategory;
+
+  // ✅ שליחת תגיות + תת-קטגוריה (לגיבוי בלבד)
+  const similarArticlesData = await getSimilarArticles(realIdentifier, data.tags, rawSubcategory);
 
   const galleryItems = data.gallery?.data
     ? data.gallery.data.map((item) => item.attributes)
@@ -329,15 +316,12 @@ export default async function ArticlePage({ params }) {
   let mainImage = PLACEHOLDER_IMG;
   let mainImageAlt = "תמונה ראשית";
 
-  // בדיקת תמונה ראשית עם תמיכה במבנה שטוח ומקונן
-  const mainImageData = data.image?.data?.attributes || data.image?.attributes || data.image;
-
   if (galleryItems?.length > 0 && galleryItems[0]?.url) {
     mainImage = resolveImageUrl(galleryItems[0].url);
     mainImageAlt = galleryItems[0].alternativeText || "תמונה ראשית";
-  } else if (mainImageData?.url) {
-    mainImage = resolveImageUrl(mainImageData.url);
-    mainImageAlt = mainImageData.alternativeText || "תמונה ראשית";
+  } else if (data.image?.data?.attributes?.url) {
+    mainImage = resolveImageUrl(data.image.data.attributes.url);
+    mainImageAlt = data.image.data.attributes.alternativeText || "תמונה ראשית";
   } else if (
     Array.isArray(data.external_media_links) &&
     data.external_media_links.length > 1 &&
@@ -369,9 +353,7 @@ export default async function ArticlePage({ params }) {
     tableData: data.tableData || {},
     href: `/articles/${data.href || resolvedParams.slug}`,
     category: data.category || "general",
-    subcategory: Array.isArray(data.subcategory)
-      ? data.subcategory[0]
-      : data.subcategory,
+    subcategory: rawSubcategory, // שימוש בערך שחילצנו קודם
     values: Array.isArray(data.Values)
       ? data.Values
       : data.Values
@@ -413,7 +395,7 @@ export default async function ArticlePage({ params }) {
     "dateModified": article.date,
     "inLanguage": "he-IL",
     "articleSection": article.category,
-    "keywords": Array.isArray(article.tags) ? article.tags.map(t => t.attributes?.name || t.name || "").join(", ") : "",
+    "keywords": (article.tags || []).join(", "),
     "articleBody": typeof article.content === "string"
       ? article.content.substring(0, 500)
       : ""
