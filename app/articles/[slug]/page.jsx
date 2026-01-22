@@ -32,22 +32,11 @@ const PLACEHOLDER_IMG = "/default-image.jpg";
 function optimizeCloudinaryUrl(url) {
   if (!url || typeof url !== 'string') return url;
 
-  // בדיקה שזו תמונה של Cloudinary
   if (!url.includes('res.cloudinary.com')) return url;
-
-  // אם ה-URL כבר מכיל הגדרות גובה/רוחב, לא נדרוס כדי לא לשבור
   if (url.includes('/w_') && url.includes('/h_')) return url;
 
-  // --- התיקון הקריטי לוואטסאפ ---
-  // w_1200,h_630: מכריח גודל מלבני מושלם (OG Standard)
-  // c_fill: חותך את התמונה כדי למלא את המלבן (מונע עיוותים או שטחים ריקים)
-  // g_auto: מוודא שהחיתוך מתמקד באובייקט המרכזי בתמונה
-  // f_jpg: מבטל שקיפות וממיר ל-JPG קל
-  // q_auto: דחיסה אופטימלית
   return url.replace('/upload/', '/upload/w_1200,h_630,c_fill,g_auto,f_jpg,q_auto/');
 }
-
-// ... שאר פונקציות העזר ...
 
 function normalizeHref(href) {
   if (!href) return '#';
@@ -85,11 +74,55 @@ function toHtmlFromStrapiChildren(children) {
   }).join('');
 }
 
+// ===================================================================
+//           פונקציה חדשה: המרת טבלת Markdown ל-HTML
+// ===================================================================
+function parseMarkdownTable(text) {
+  // בדיקה מהירה אם זה נראה כמו טבלה
+  const lines = text.trim().split('\n');
+  if (lines.length < 3) return null;
+  if (!lines[1].includes('---')) return null;
+
+  try {
+    const headers = lines[0].split('|').map(h => h.trim()).filter(h => h !== '');
+    const rows = lines.slice(2).map(line => 
+      line.split('|').map(c => c.trim()).filter(c => c !== '')
+    ).filter(row => row.length > 0);
+
+    // בניית ה-HTML של הטבלה
+    let html = `<div class="overflow-x-auto my-4 border border-gray-300 rounded-lg shadow-sm">
+      <table class="w-full text-right border-collapse">
+        <thead class="bg-gray-100">
+          <tr>`;
+    
+    headers.forEach(header => {
+      html += `<th class="px-4 py-2 border-b border-gray-300 font-bold text-gray-900">${header}</th>`;
+    });
+
+    html += `</tr></thead><tbody>`;
+
+    rows.forEach((row, rowIndex) => {
+      html += `<tr class="${rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100">`;
+      row.forEach(cell => {
+         // טיפול בסיסי בתוכן התא (למשל אם יש בולד)
+         let cellContent = cell.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+         html += `<td class="px-4 py-2 border-b border-gray-200 text-gray-800">${cellContent}</td>`;
+      });
+      html += `</tr>`;
+    });
+
+    html += `</tbody></table></div>`;
+    return html;
+  } catch (e) {
+    console.error("Failed to parse markdown table", e);
+    return null; // אם נכשל, יחזור לרינדור טקסט רגיל
+  }
+}
+
 // ✅ פונקציה לשליפת כתבות דומות בשרת (תומך בעברית)
 async function getSimilarArticles(currentSlugOrHref, category) {
   try {
     if (!category) return [];
-    // מסננים לפי ה-slug/href הנוכחי כדי לא להציג את הכתבה פעמיים
     const res = await fetch(
       `${API_URL}/api/articles?populate=*&filters[href][$ne]=${encodeURIComponent(currentSlugOrHref)}&filters[slug][$ne]=${encodeURIComponent(currentSlugOrHref)}&filters[category][$eq]=${category}&pagination[limit]=9`,
       { next: { revalidate: 3600 } }
@@ -127,17 +160,12 @@ export async function generateMetadata({ params }) {
       article.subdescription ||
       "כתבה מתוך מגזין OnMotor Media";
 
-    // --- לוגיקה חכמה לבחירת תמונה ---
     let finalImageUrl = null;
-
-    // 1. ננסה לקחת תמונה ראשית מתוך Strapi Formats (עדיפות למדיום אם קיים)
     const strapiImageAttributes = article.image?.data?.attributes;
     if (strapiImageAttributes) {
-        // אם זה ב-Cloudinary, עדיף לקחת את המקור כי אנחנו חותכים אותו
         if (strapiImageAttributes.url?.includes('cloudinary')) {
             finalImageUrl = strapiImageAttributes.url;
         } 
-        // אם זה מקומי, עדיף לקחת פורמטים קטנים
         else if (strapiImageAttributes.formats?.medium?.url) {
             finalImageUrl = strapiImageAttributes.formats.medium.url;
         } else if (strapiImageAttributes.formats?.small?.url) {
@@ -147,20 +175,16 @@ export async function generateMetadata({ params }) {
         }
     }
 
-    // 2. Fallback לפונקציית העזר הרגילה (גלריה/לינקים חיצוניים)
     if (!finalImageUrl) {
         finalImageUrl = getArticleImage(article);
     }
 
-    // 3. וידוא כתובת אבסולוטית (למקרה של תמונות מקומיות)
     if (finalImageUrl && !finalImageUrl.startsWith('http')) {
         finalImageUrl = resolveImageUrl(finalImageUrl);
     }
 
-    // 4. הפעלת התיקון של Cloudinary (חיתוך למלבן)
     finalImageUrl = optimizeCloudinaryUrl(finalImageUrl);
 
-    // 5. ברירת מחדל אחרונה
     if (!finalImageUrl) {
         finalImageUrl = `${SITE_URL}${PLACEHOLDER_IMG}`;
     }
@@ -339,27 +363,35 @@ export default async function ArticlePage({ params }) {
   breadcrumbs.push({ label: article.title });
 
   // ===================================================================
-  //           הפונקציה המעודכנת לטיפול בטקסט + תמונות + כיתוב
+  //           הפונקציה המעודכנת לטיפול בטקסט + תמונות + טבלאות
   // ===================================================================
   const renderParagraph = (block, i) => {
 
-    // ---------------------------------------------------------
-    // 0. טיפול בבלוק מסוג טבלה (התוספת החדשה)
-    // ---------------------------------------------------------
+    // 0. שיטה 1: בלוק טבלה ייעודי (JSON)
     if (block.__component === 'shared.table-block' || block.type === 'table') {
-        // SimpleKeyValueTable כבר כוללת הגנה, אם הדאטה ריק היא לא תרנדר כלום
         return <SimpleKeyValueTable key={i} data={block.tableData} />;
     }
 
-    // ---------------------------------------------------------
     // 1. טיפול בבלוק מסוג טקסט רגיל (String)
-    // ---------------------------------------------------------
       if (typeof block === "string") {
         let cleanText = fixRelativeImages(block.trim());
         
+        // --- שיטה 2: בדיקה אם זה Markdown Table ---
+        if (cleanText.includes('|') && cleanText.includes('---')) {
+            const tableHtml = parseMarkdownTable(cleanText);
+            if (tableHtml) {
+                return <div key={i} dangerouslySetInnerHTML={{ __html: tableHtml }} />;
+            }
+        }
+        // ------------------------------------------
+
         // --- לוגיקה לזיהוי caption באמצעות | ---
         let caption = "";
-        if (cleanText.includes("|")) {
+        // אם זה טבלה, לא נרצה בטעות לחתוך אותה בגלל ה-pipe
+        // לכן נבדוק קודם אם זה לא טבלה, או שה-pipe הוא בסוף לצרכי כיתוב
+        const isLikelyTable = cleanText.includes('|') && cleanText.includes('---');
+        
+        if (!isLikelyTable && cleanText.includes("|")) {
             const parts = cleanText.split("|");
             cleanText = parts[0].trim();
             caption = parts.slice(1).join("|").trim();
@@ -389,7 +421,7 @@ export default async function ArticlePage({ params }) {
                 key={i}
                 src={url}
                 alt="תמונה מתוך הכתבה"
-                caption={caption} // הזרקת הכיתוב אם קיים
+                caption={caption}
               />
             );
           }
@@ -422,17 +454,26 @@ export default async function ArticlePage({ params }) {
         );
       }
    
-      // ---------------------------------------------------------
       // 2. טיפול בבלוק מסוג פסקה (Paragraph Object)
-      // ---------------------------------------------------------
       if (block.type === "paragraph" && block.children) {
         let html = toHtmlFromStrapiChildren(block.children);
         html = fixRelativeImages(html);
+
+        // --- שיטה 2: בדיקה אם זה Markdown Table (גם בתוך אובייקט פסקה) ---
+        if (html.includes('|') && html.includes('---')) {
+            // לפעמים Strapi עוטף את ה-Markdown ב-HTML entities, צריך להיזהר
+            // כאן אני מניח שזה טקסט נקי יחסית. אם זה מסובך, עדיף להשתמש בבלוק String
+            const tableHtml = parseMarkdownTable(html);
+            if (tableHtml) {
+                 return <div key={i} dangerouslySetInnerHTML={{ __html: tableHtml }} />;
+            }
+        }
+        // ----------------------------------------------------------------
         
-        // --- לוגיקה לזיהוי caption בתוך HTML ---
         let caption = "";
-        // מזהים אם יש הפרדה | והאם יש לינק בתחילת המחרוזת
-        if (html.includes("|") && html.match(/https?:\/\/[^\s"']+/)) {
+        const isLikelyTable = html.includes('|') && html.includes('---');
+
+        if (!isLikelyTable && html.includes("|") && html.match(/https?:\/\/[^\s"']+/)) {
              const parts = html.split("|");
              html = parts[0].trim();
              caption = parts.slice(1).join("|").trim();
@@ -441,8 +482,6 @@ export default async function ArticlePage({ params }) {
         const urlMatch = html.match(/https?:\/\/[^\s"']+/);
         if (urlMatch) {
           let url = urlMatch[0];
-          
-          // ניקוי תגיות HTML אם נדבקו ללינק
           url = url.replace(/<[^>]*>/g, '');
 
           if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
@@ -451,7 +490,7 @@ export default async function ArticlePage({ params }) {
                 key={i}
                 src={url}
                 alt="תמונה מתוך הכתבה"
-                caption={caption} // הזרקת הכיתוב
+                caption={caption} 
               />
             );
           }
