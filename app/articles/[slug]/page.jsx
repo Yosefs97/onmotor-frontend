@@ -75,45 +75,71 @@ function toHtmlFromStrapiChildren(children) {
 }
 
 // ===================================================================
-//           פונקציה חדשה: המרת טבלת Markdown ל-HTML (כולל תיקון BR)
+//           פונקציה חדשה ומשופרת: המרת טבלת Markdown ל-HTML
 // ===================================================================
 function parseMarkdownTable(text) {
-  // 1. נרמול: החלפת תגיות BR של HTML לירידת שורה רגילה
-  // זה התיקון הקריטי עבור הטקסט שמגיע מסטראפי
-  let cleanText = text.replace(/<br\s*\/?>/gi, '\n');
+  if (!text) return null;
 
-  // בדיקה מהירה אם זה נראה כמו טבלה
-  const lines = cleanText.trim().split('\n').filter(line => line.trim() !== '');
-  
-  if (lines.length < 3) return null;
+  // 1. ניקוי אגרסיבי: המרה של כל סוגי ירידות השורה וה-HTML לפורמט אחיד
+  let cleanText = text
+    .replace(/<br\s*\/?>/gi, '\n') // המרת <br> לניו-ליין
+    .replace(/<\/p>/gi, '\n')      // סוף פסקה = ניו-ליין
+    .replace(/<p>/gi, '')          // תחילת פסקה = כלום
+    .replace(/&nbsp;/gi, ' ');     // רווחים קשיחים לרווח רגיל
+
+  // 2. פירוק לשורות וניקוי רווחים מתים
+  const lines = cleanText
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0); // מסננים שורות ריקות לגמרי
+
+  // בדיקת תקינות מינימלית: צריך לפחות כותרת, מפריד ושורה אחת
+  if (lines.length < 2) return null;
+
+  // בדיקה אם השורה השנייה היא המפריד (---)
+  // Strapi לפעמים מוסיף רווחים, אז בודקים אם זה מכיל רצף של מקפים
   if (!lines[1].includes('---')) return null;
 
   try {
-    const headers = lines[0].split('|').map(h => h.trim()).filter(h => h !== '');
+    // פירוק הכותרות
+    const headers = lines[0]
+      .split('|')
+      .map(h => h.trim())
+      .filter(h => h !== ''); // מסננים תאים ריקים שנוצרים בצדדים
+
+    // פירוק השורות (מדלגים על שורת הכותרת ושורת המפריד)
     const rows = lines.slice(2).map(line => 
-      line.split('|').map(c => c.trim()).filter(c => c !== '')
+      line
+        .split('|')
+        .map(c => c.trim())
+        .filter(c => c !== '') // מסננים תאים ריקים בצדדים
     ).filter(row => row.length > 0);
 
+    // אם הפירוק נכשל או שאין שורות, מחזירים null (ואז זה יוצג כטקסט רגיל)
+    if (headers.length === 0) return null;
+
     // בניית ה-HTML של הטבלה
-    let html = `<div class="overflow-x-auto my-4 border border-gray-300 rounded-lg shadow-sm">
-      <table class="w-full text-right border-collapse">
+    let html = `<div class="overflow-x-auto my-6 border border-gray-300 rounded-lg shadow-sm">
+      <table class="w-full text-right border-collapse min-w-[300px]">
         <thead class="bg-gray-100">
           <tr>`;
     
     headers.forEach(header => {
-      // ניקוי כוכביות גם בכותרת
+      // ניקוי כוכביות מהכותרת
       let headerContent = header.replace(/\*\*(.*?)\*\*/g, '$1');
-      html += `<th class="px-4 py-2 border-b border-gray-300 font-bold text-gray-900">${headerContent}</th>`;
+      // ניקוי תגיות HTML שאולי נדבקו
+      headerContent = headerContent.replace(/<[^>]*>/g, '');
+      html += `<th class="px-4 py-3 border-b border-gray-300 font-bold text-gray-900 text-lg">${headerContent}</th>`;
     });
 
     html += `</tr></thead><tbody>`;
 
     rows.forEach((row, rowIndex) => {
-      html += `<tr class="${rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100">`;
+      html += `<tr class="${rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100 transition-colors">`;
       row.forEach(cell => {
-         // טיפול בתוכן התא (הדגשה)
-         let cellContent = cell.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-         html += `<td class="px-4 py-2 border-b border-gray-200 text-gray-800">${cellContent}</td>`;
+         // טיפול בתוכן התא - המרה של **בולד** לתגית HTML
+         let cellContent = cell.replace(/\*\*(.*?)\*\*/g, '<span class="font-bold text-gray-900">$1</span>');
+         html += `<td class="px-4 py-3 border-b border-gray-200 text-gray-800 text-base align-top">${cellContent}</td>`;
       });
       html += `</tr>`;
     });
@@ -384,7 +410,8 @@ export default async function ArticlePage({ params }) {
         let cleanText = fixRelativeImages(block.trim());
         
         // --- שיטה 2: בדיקה אם זה Markdown Table ---
-        if (cleanText.includes('|') && cleanText.includes('---')) {
+        // התיקון כאן: בדיקה אם המילה '---' קיימת, גם אם זה בתוך HTML
+        if (cleanText.includes('---') && cleanText.includes('|')) {
             const tableHtml = parseMarkdownTable(cleanText);
             if (tableHtml) {
                 return <div key={i} dangerouslySetInnerHTML={{ __html: tableHtml }} />;
@@ -392,8 +419,8 @@ export default async function ArticlePage({ params }) {
         }
         // ------------------------------------------
 
-        // --- לוגיקה לזיהוי caption באמצעות | ---
         let caption = "";
+        // אם זה טבלה, לא נרצה בטעות לחתוך אותה בגלל ה-pipe
         const isLikelyTable = cleanText.includes('|') && cleanText.includes('---');
         
         if (!isLikelyTable && cleanText.includes("|")) {
@@ -465,6 +492,7 @@ export default async function ArticlePage({ params }) {
         html = fixRelativeImages(html);
 
         // --- שיטה 2: בדיקה אם זה Markdown Table (גם בתוך אובייקט פסקה) ---
+        // הבדיקה נעשית לפני כל טיפול אחר
         if (html.includes('|') && html.includes('---')) {
             const tableHtml = parseMarkdownTable(html);
             if (tableHtml) {
