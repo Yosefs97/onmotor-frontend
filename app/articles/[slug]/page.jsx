@@ -75,11 +75,16 @@ function toHtmlFromStrapiChildren(children) {
 }
 
 // ===================================================================
-//           פונקציה חדשה: המרת טבלת Markdown ל-HTML
+//           פונקציה חדשה: המרת טבלת Markdown ל-HTML (כולל תיקון BR)
 // ===================================================================
 function parseMarkdownTable(text) {
+  // 1. נרמול: החלפת תגיות BR של HTML לירידת שורה רגילה
+  // זה התיקון הקריטי עבור הטקסט שמגיע מסטראפי
+  let cleanText = text.replace(/<br\s*\/?>/gi, '\n');
+
   // בדיקה מהירה אם זה נראה כמו טבלה
-  const lines = text.trim().split('\n');
+  const lines = cleanText.trim().split('\n').filter(line => line.trim() !== '');
+  
   if (lines.length < 3) return null;
   if (!lines[1].includes('---')) return null;
 
@@ -96,7 +101,9 @@ function parseMarkdownTable(text) {
           <tr>`;
     
     headers.forEach(header => {
-      html += `<th class="px-4 py-2 border-b border-gray-300 font-bold text-gray-900">${header}</th>`;
+      // ניקוי כוכביות גם בכותרת
+      let headerContent = header.replace(/\*\*(.*?)\*\*/g, '$1');
+      html += `<th class="px-4 py-2 border-b border-gray-300 font-bold text-gray-900">${headerContent}</th>`;
     });
 
     html += `</tr></thead><tbody>`;
@@ -104,7 +111,7 @@ function parseMarkdownTable(text) {
     rows.forEach((row, rowIndex) => {
       html += `<tr class="${rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100">`;
       row.forEach(cell => {
-         // טיפול בסיסי בתוכן התא (למשל אם יש בולד)
+         // טיפול בתוכן התא (הדגשה)
          let cellContent = cell.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
          html += `<td class="px-4 py-2 border-b border-gray-200 text-gray-800">${cellContent}</td>`;
       });
@@ -387,8 +394,6 @@ export default async function ArticlePage({ params }) {
 
         // --- לוגיקה לזיהוי caption באמצעות | ---
         let caption = "";
-        // אם זה טבלה, לא נרצה בטעות לחתוך אותה בגלל ה-pipe
-        // לכן נבדוק קודם אם זה לא טבלה, או שה-pipe הוא בסוף לצרכי כיתוב
         const isLikelyTable = cleanText.includes('|') && cleanText.includes('---');
         
         if (!isLikelyTable && cleanText.includes("|")) {
@@ -461,14 +466,11 @@ export default async function ArticlePage({ params }) {
 
         // --- שיטה 2: בדיקה אם זה Markdown Table (גם בתוך אובייקט פסקה) ---
         if (html.includes('|') && html.includes('---')) {
-            // לפעמים Strapi עוטף את ה-Markdown ב-HTML entities, צריך להיזהר
-            // כאן אני מניח שזה טקסט נקי יחסית. אם זה מסובך, עדיף להשתמש בבלוק String
             const tableHtml = parseMarkdownTable(html);
             if (tableHtml) {
                  return <div key={i} dangerouslySetInnerHTML={{ __html: tableHtml }} />;
             }
         }
-        // ----------------------------------------------------------------
         
         let caption = "";
         const isLikelyTable = html.includes('|') && html.includes('---');
@@ -610,7 +612,7 @@ export default async function ArticlePage({ params }) {
             </div>
           )}
 
-         {/* בדיקה שיש תוכן לגלריה כדי לא להציג כותרת ריקה */}
+          {/* בדיקה שיש תוכן לגלריה כדי לא להציג כותרת ריקה */}
           {(article.gallery.length > 0 || article.externalImageUrls.length > 0 || (article.external_media_links && article.external_media_links.length > 0)) && (
             <div className="article-gallery-section mt-10 mb-8">
               {/* כותרת מעוצבת עם פס צד אדום */}
