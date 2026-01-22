@@ -152,12 +152,30 @@ function parseMarkdownTable(text) {
   }
 }
 
-// ✅ פונקציה לשליפת כתבות דומות בשרת (תומך בעברית)
-async function getSimilarArticles(currentSlugOrHref, category) {
+// ===================================================================
+// ✅ פונקציה מעודכנת לשליפת כתבות דומות לפי תגיות
+// ===================================================================
+async function getSimilarArticles(currentSlugOrHref, tags) {
   try {
-    if (!category) return [];
+    // 1. בדיקה שיש תגיות לכתבה הנוכחית
+    const tagsArray = Array.isArray(tags) ? tags : (tags?.data || []);
+    
+    if (tagsArray.length === 0) {
+      // אם אין תגיות, מחזירים מערך ריק (או שאפשר לשקול להחזיר לפי קטגוריה כ-fallback)
+      return [];
+    }
+
+    // 2. חילוץ ה-IDs של התגיות
+    const tagIds = tagsArray.map(t => t.id);
+
+    // 3. בניית ה-Query String באופן דינמי
+    const tagsQuery = tagIds
+      .map((id, index) => `filters[tags][id][$in][${index}]=${id}`)
+      .join('&');
+
+    // 4. ביצוע הקריאה
     const res = await fetch(
-      `${API_URL}/api/articles?populate=*&filters[href][$ne]=${encodeURIComponent(currentSlugOrHref)}&filters[slug][$ne]=${encodeURIComponent(currentSlugOrHref)}&filters[category][$eq]=${category}&pagination[limit]=9`,
+      `${API_URL}/api/articles?populate=*&filters[href][$ne]=${encodeURIComponent(currentSlugOrHref)}&filters[slug][$ne]=${encodeURIComponent(currentSlugOrHref)}&${tagsQuery}&pagination[limit]=9`,
       { next: { revalidate: 3600 } }
     );
     const json = await res.json();
@@ -266,7 +284,9 @@ export default async function ArticlePage({ params }) {
   const data = rawArticle;
 
   const realIdentifier = data.href || data.slug;
-  const similarArticlesData = await getSimilarArticles(realIdentifier, data.category);
+  
+  // ✅ שינוי: שליחת התגיות במקום הקטגוריה לפונקציית החיפוש
+  const similarArticlesData = await getSimilarArticles(realIdentifier, data.tags);
 
   const galleryItems = data.gallery?.data
     ? data.gallery.data.map((item) => item.attributes)
