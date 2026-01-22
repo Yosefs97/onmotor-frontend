@@ -97,37 +97,30 @@ function parseMarkdownTable(text) {
   if (lines.length < 2) return null;
 
   // בדיקה אם השורה השנייה היא המפריד (---)
-  // Strapi לפעמים מוסיף רווחים, אז בודקים אם זה מכיל רצף של מקפים
   if (!lines[1].includes('---')) return null;
 
   try {
-    // פירוק הכותרות
     const headers = lines[0]
       .split('|')
       .map(h => h.trim())
-      .filter(h => h !== ''); // מסננים תאים ריקים שנוצרים בצדדים
+      .filter(h => h !== '');
 
-    // פירוק השורות (מדלגים על שורת הכותרת ושורת המפריד)
     const rows = lines.slice(2).map(line => 
       line
         .split('|')
         .map(c => c.trim())
-        .filter(c => c !== '') // מסננים תאים ריקים בצדדים
+        .filter(c => c !== '')
     ).filter(row => row.length > 0);
 
-    // אם הפירוק נכשל או שאין שורות, מחזירים null (ואז זה יוצג כטקסט רגיל)
     if (headers.length === 0) return null;
 
-    // בניית ה-HTML של הטבלה
     let html = `<div class="overflow-x-auto my-6 border border-gray-300 rounded-lg shadow-sm">
       <table class="w-full text-right border-collapse min-w-[300px]">
         <thead class="bg-gray-100">
           <tr>`;
     
     headers.forEach(header => {
-      // ניקוי כוכביות מהכותרת
       let headerContent = header.replace(/\*\*(.*?)\*\*/g, '$1');
-      // ניקוי תגיות HTML שאולי נדבקו
       headerContent = headerContent.replace(/<[^>]*>/g, '');
       html += `<th class="px-4 py-3 border-b border-gray-300 font-bold text-gray-900 text-lg">${headerContent}</th>`;
     });
@@ -137,7 +130,6 @@ function parseMarkdownTable(text) {
     rows.forEach((row, rowIndex) => {
       html += `<tr class="${rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100 transition-colors">`;
       row.forEach(cell => {
-         // טיפול בתוכן התא - המרה של **בולד** לתגית HTML
          let cellContent = cell.replace(/\*\*(.*?)\*\*/g, '<span class="font-bold text-gray-900">$1</span>');
          html += `<td class="px-4 py-3 border-b border-gray-200 text-gray-800 text-base align-top">${cellContent}</td>`;
       });
@@ -148,59 +140,48 @@ function parseMarkdownTable(text) {
     return html;
   } catch (e) {
     console.error("Failed to parse markdown table", e);
-    return null; // אם נכשל, יחזור לרינדור טקסט רגיל
+    return null;
   }
 }
 
 // ===================================================================
-// ✅ פונקציה חכמה: עדיפות לתגיות, השלמה מקטגוריה (Combined Logic)
+// ✅ פונקציה חכמה: רק תגיות! (ואם אין, אז תת-קטגוריה)
 // ===================================================================
-async function getSimilarArticles(currentSlugOrHref, tags, category) {
+async function getSimilarArticles(currentSlugOrHref, tags, subcategory) {
   try {
-    let results = [];
-    
-    // נרמול מבנה התגיות (תומך גם במבנה שטוח וגם במבנה Strapi)
+    // נרמול מבנה התגיות
     const tagsArray = Array.isArray(tags) ? tags : (tags?.data || []);
 
-    // --- שלב 1: שליפה לפי תגיות (הכי רלוונטי) ---
+    // --- שלב 1: עדיפות מוחלטת לתגיות ---
     if (tagsArray.length > 0) {
       const tagIds = tagsArray.map(t => t.id);
       
-      // בניית שאילתה: "תביא לי כתבות שיש להן את אחד מה-ID האלה"
       const tagsQuery = tagIds
         .map((id, index) => `filters[tags][id][$in][${index}]=${id}`)
         .join('&');
 
       const urlTags = `${API_URL}/api/articles?populate=*&filters[href][$ne]=${encodeURIComponent(currentSlugOrHref)}&filters[slug][$ne]=${encodeURIComponent(currentSlugOrHref)}&${tagsQuery}&pagination[limit]=9`;
       
-      // משתמשים ב-revalidate קצר כדי לוודא שתוצאות חדשות מתעדכנות מהר
       const resTags = await fetch(urlTags, { next: { revalidate: 60 } });
       const jsonTags = await resTags.json();
       
+      // אם מצאנו אפילו כתבה אחת - זה מספיק. מחזירים ויוצאים.
       if (jsonTags.data?.length > 0) {
-        results = jsonTags.data;
+        return jsonTags.data;
       }
     }
 
-    // --- שלב 2: השלמה לפי קטגוריה (גיבוי) ---
-    // אם מצאנו פחות מ-3 כתבות, נשלים את החסר מתוך הקטגוריה
-    if (results.length < 3 && category) {
-      const limitNeeded = 9 - results.length; // ננסה למלא עד 9 בסה"כ
+    // --- שלב 2: גיבוי - תת-קטגוריה (רק אם לא נמצאו תגיות) ---
+    if (subcategory) {
+      // Strapi filters syntax: filters[field][$eq]=value
+      const urlSubCategory = `${API_URL}/api/articles?populate=*&filters[href][$ne]=${encodeURIComponent(currentSlugOrHref)}&filters[slug][$ne]=${encodeURIComponent(currentSlugOrHref)}&filters[subcategory][$eq]=${encodeURIComponent(subcategory)}&pagination[limit]=9`;
       
-      const urlCategory = `${API_URL}/api/articles?populate=*&filters[href][$ne]=${encodeURIComponent(currentSlugOrHref)}&filters[slug][$ne]=${encodeURIComponent(currentSlugOrHref)}&filters[category][$eq]=${category}&pagination[limit]=${limitNeeded + 3}`; // לוקחים ספייר לסינון כפילויות
-      
-      const resCat = await fetch(urlCategory, { next: { revalidate: 3600 } });
-      const jsonCat = await resCat.json();
-      const categoryArticles = jsonCat.data || [];
-
-      // סינון כפילויות: מוסיפים רק כתבות שלא נמצאו כבר בשלב התגיות
-      const existingIds = new Set(results.map(a => a.id));
-      const newArticles = categoryArticles.filter(a => !existingIds.has(a.id));
-      
-      results = [...results, ...newArticles].slice(0, 9);
+      const resSub = await fetch(urlSubCategory, { next: { revalidate: 3600 } });
+      const jsonSub = await resSub.json();
+      return jsonSub.data || [];
     }
 
-    return results;
+    return [];
 
   } catch (err) {
     console.error("Error fetching similar articles:", err);
@@ -307,8 +288,13 @@ export default async function ArticlePage({ params }) {
 
   const realIdentifier = data.href || data.slug;
   
-  // ✅ שינוי: שליחת התגיות וגם הקטגוריה לפונקציית החיפוש החכמה
-  const similarArticlesData = await getSimilarArticles(realIdentifier, data.tags, data.category);
+  // חילוץ תת-הקטגוריה לצורך שליחה לפונקציית החיפוש
+  const rawSubcategory = Array.isArray(data.subcategory)
+      ? data.subcategory[0]
+      : data.subcategory;
+
+  // ✅ שליחת תגיות + תת-קטגוריה (לגיבוי בלבד)
+  const similarArticlesData = await getSimilarArticles(realIdentifier, data.tags, rawSubcategory);
 
   const galleryItems = data.gallery?.data
     ? data.gallery.data.map((item) => item.attributes)
@@ -367,9 +353,7 @@ export default async function ArticlePage({ params }) {
     tableData: data.tableData || {},
     href: `/articles/${data.href || resolvedParams.slug}`,
     category: data.category || "general",
-    subcategory: Array.isArray(data.subcategory)
-      ? data.subcategory[0]
-      : data.subcategory,
+    subcategory: rawSubcategory, // שימוש בערך שחילצנו קודם
     values: Array.isArray(data.Values)
       ? data.Values
       : data.Values
