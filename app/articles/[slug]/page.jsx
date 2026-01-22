@@ -75,63 +75,45 @@ function toHtmlFromStrapiChildren(children) {
 }
 
 // ===================================================================
-//           פונקציה חדשה ומשופרת: המרת טבלת Markdown ל-HTML
+//           פונקציה חדשה: המרת טבלת Markdown ל-HTML (כולל תיקון BR)
 // ===================================================================
 function parseMarkdownTable(text) {
-  if (!text) return null;
+  // 1. נרמול: החלפת תגיות BR של HTML לירידת שורה רגילה
+  // זה התיקון הקריטי עבור הטקסט שמגיע מסטראפי
+  let cleanText = text.replace(/<br\s*\/?>/gi, '\n');
 
-  // 1. ניקוי אגרסיבי: המרה של כל סוגי ירידות השורה וה-HTML לפורמט אחיד
-  let cleanText = text
-    .replace(/<br\s*\/?>/gi, '\n') // המרת <br> לניו-ליין
-    .replace(/<\/p>/gi, '\n')      // סוף פסקה = ניו-ליין
-    .replace(/<p>/gi, '')          // תחילת פסקה = כלום
-    .replace(/&nbsp;/gi, ' ');     // רווחים קשיחים לרווח רגיל
-
-  // 2. פירוק לשורות וניקוי רווחים מתים
-  const lines = cleanText
-    .split('\n')
-    .map(line => line.trim())
-    .filter(line => line.length > 0); // מסננים שורות ריקות לגמרי
-
-  // בדיקת תקינות מינימלית: צריך לפחות כותרת, מפריד ושורה אחת
-  if (lines.length < 2) return null;
-
-  // בדיקה אם השורה השנייה היא המפריד (---)
+  // בדיקה מהירה אם זה נראה כמו טבלה
+  const lines = cleanText.trim().split('\n').filter(line => line.trim() !== '');
+  
+  if (lines.length < 3) return null;
   if (!lines[1].includes('---')) return null;
 
   try {
-    const headers = lines[0]
-      .split('|')
-      .map(h => h.trim())
-      .filter(h => h !== '');
-
+    const headers = lines[0].split('|').map(h => h.trim()).filter(h => h !== '');
     const rows = lines.slice(2).map(line => 
-      line
-        .split('|')
-        .map(c => c.trim())
-        .filter(c => c !== '')
+      line.split('|').map(c => c.trim()).filter(c => c !== '')
     ).filter(row => row.length > 0);
 
-    if (headers.length === 0) return null;
-
-    let html = `<div class="overflow-x-auto my-6 border border-gray-300 rounded-lg shadow-sm">
-      <table class="w-full text-right border-collapse min-w-[300px]">
+    // בניית ה-HTML של הטבלה
+    let html = `<div class="overflow-x-auto my-4 border border-gray-300 rounded-lg shadow-sm">
+      <table class="w-full text-right border-collapse">
         <thead class="bg-gray-100">
           <tr>`;
     
     headers.forEach(header => {
+      // ניקוי כוכביות גם בכותרת
       let headerContent = header.replace(/\*\*(.*?)\*\*/g, '$1');
-      headerContent = headerContent.replace(/<[^>]*>/g, '');
-      html += `<th class="px-4 py-3 border-b border-gray-300 font-bold text-gray-900 text-lg">${headerContent}</th>`;
+      html += `<th class="px-4 py-2 border-b border-gray-300 font-bold text-gray-900">${headerContent}</th>`;
     });
 
     html += `</tr></thead><tbody>`;
 
     rows.forEach((row, rowIndex) => {
-      html += `<tr class="${rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100 transition-colors">`;
+      html += `<tr class="${rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100">`;
       row.forEach(cell => {
-         let cellContent = cell.replace(/\*\*(.*?)\*\*/g, '<span class="font-bold text-gray-900">$1</span>');
-         html += `<td class="px-4 py-3 border-b border-gray-200 text-gray-800 text-base align-top">${cellContent}</td>`;
+         // טיפול בתוכן התא (הדגשה)
+         let cellContent = cell.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+         html += `<td class="px-4 py-2 border-b border-gray-200 text-gray-800">${cellContent}</td>`;
       });
       html += `</tr>`;
     });
@@ -140,49 +122,20 @@ function parseMarkdownTable(text) {
     return html;
   } catch (e) {
     console.error("Failed to parse markdown table", e);
-    return null;
+    return null; // אם נכשל, יחזור לרינדור טקסט רגיל
   }
 }
 
-// ===================================================================
-// ✅ פונקציה חכמה: רק תגיות! (ואם אין, אז תת-קטגוריה)
-// ===================================================================
-async function getSimilarArticles(currentSlugOrHref, tags, subcategory) {
+// ✅ פונקציה לשליפת כתבות דומות בשרת (תומך בעברית)
+async function getSimilarArticles(currentSlugOrHref, category) {
   try {
-    // נרמול מבנה התגיות
-    const tagsArray = Array.isArray(tags) ? tags : (tags?.data || []);
-
-    // --- שלב 1: עדיפות מוחלטת לתגיות ---
-    if (tagsArray.length > 0) {
-      const tagIds = tagsArray.map(t => t.id);
-      
-      const tagsQuery = tagIds
-        .map((id, index) => `filters[tags][id][$in][${index}]=${id}`)
-        .join('&');
-
-      const urlTags = `${API_URL}/api/articles?populate=*&filters[href][$ne]=${encodeURIComponent(currentSlugOrHref)}&filters[slug][$ne]=${encodeURIComponent(currentSlugOrHref)}&${tagsQuery}&pagination[limit]=9`;
-      
-      const resTags = await fetch(urlTags, { next: { revalidate: 60 } });
-      const jsonTags = await resTags.json();
-      
-      // אם מצאנו אפילו כתבה אחת - זה מספיק. מחזירים ויוצאים.
-      if (jsonTags.data?.length > 0) {
-        return jsonTags.data;
-      }
-    }
-
-    // --- שלב 2: גיבוי - תת-קטגוריה (רק אם לא נמצאו תגיות) ---
-    if (subcategory) {
-      // Strapi filters syntax: filters[field][$eq]=value
-      const urlSubCategory = `${API_URL}/api/articles?populate=*&filters[href][$ne]=${encodeURIComponent(currentSlugOrHref)}&filters[slug][$ne]=${encodeURIComponent(currentSlugOrHref)}&filters[subcategory][$eq]=${encodeURIComponent(subcategory)}&pagination[limit]=9`;
-      
-      const resSub = await fetch(urlSubCategory, { next: { revalidate: 3600 } });
-      const jsonSub = await resSub.json();
-      return jsonSub.data || [];
-    }
-
-    return [];
-
+    if (!category) return [];
+    const res = await fetch(
+      `${API_URL}/api/articles?populate=*&filters[href][$ne]=${encodeURIComponent(currentSlugOrHref)}&filters[slug][$ne]=${encodeURIComponent(currentSlugOrHref)}&filters[category][$eq]=${category}&pagination[limit]=9`,
+      { next: { revalidate: 3600 } }
+    );
+    const json = await res.json();
+    return json.data || [];
   } catch (err) {
     console.error("Error fetching similar articles:", err);
     return [];
@@ -287,14 +240,7 @@ export default async function ArticlePage({ params }) {
   const data = rawArticle;
 
   const realIdentifier = data.href || data.slug;
-  
-  // חילוץ תת-הקטגוריה לצורך שליחה לפונקציית החיפוש
-  const rawSubcategory = Array.isArray(data.subcategory)
-      ? data.subcategory[0]
-      : data.subcategory;
-
-  // ✅ שליחת תגיות + תת-קטגוריה (לגיבוי בלבד)
-  const similarArticlesData = await getSimilarArticles(realIdentifier, data.tags, rawSubcategory);
+  const similarArticlesData = await getSimilarArticles(realIdentifier, data.category);
 
   const galleryItems = data.gallery?.data
     ? data.gallery.data.map((item) => item.attributes)
@@ -353,7 +299,9 @@ export default async function ArticlePage({ params }) {
     tableData: data.tableData || {},
     href: `/articles/${data.href || resolvedParams.slug}`,
     category: data.category || "general",
-    subcategory: rawSubcategory, // שימוש בערך שחילצנו קודם
+    subcategory: Array.isArray(data.subcategory)
+      ? data.subcategory[0]
+      : data.subcategory,
     values: Array.isArray(data.Values)
       ? data.Values
       : data.Values
@@ -436,13 +384,15 @@ export default async function ArticlePage({ params }) {
         let cleanText = fixRelativeImages(block.trim());
         
         // --- שיטה 2: בדיקה אם זה Markdown Table ---
-        if (cleanText.includes('---') && cleanText.includes('|')) {
+        if (cleanText.includes('|') && cleanText.includes('---')) {
             const tableHtml = parseMarkdownTable(cleanText);
             if (tableHtml) {
                 return <div key={i} dangerouslySetInnerHTML={{ __html: tableHtml }} />;
             }
         }
-        
+        // ------------------------------------------
+
+        // --- לוגיקה לזיהוי caption באמצעות | ---
         let caption = "";
         const isLikelyTable = cleanText.includes('|') && cleanText.includes('---');
         
@@ -662,8 +612,10 @@ export default async function ArticlePage({ params }) {
             </div>
           )}
 
+          {/* בדיקה שיש תוכן לגלריה כדי לא להציג כותרת ריקה */}
           {(article.gallery.length > 0 || article.externalImageUrls.length > 0 || (article.external_media_links && article.external_media_links.length > 0)) && (
             <div className="article-gallery-section mt-10 mb-8">
+              {/* כותרת מעוצבת עם פס צד אדום */}
               <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 border-r-4 border-red-600 pr-3">
                 גלריית תמונות
               </h2>
