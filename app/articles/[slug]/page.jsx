@@ -153,33 +153,55 @@ function parseMarkdownTable(text) {
 }
 
 // ===================================================================
-// ✅ פונקציה מעודכנת לשליפת כתבות דומות לפי תגיות
+// ✅ פונקציה חכמה: עדיפות לתגיות, השלמה מקטגוריה (Combined Logic)
 // ===================================================================
-async function getSimilarArticles(currentSlugOrHref, tags) {
+async function getSimilarArticles(currentSlugOrHref, tags, category) {
   try {
-    // 1. בדיקה שיש תגיות לכתבה הנוכחית
-    const tagsArray = Array.isArray(tags) ? tags : (tags?.data || []);
+    let results = [];
     
-    if (tagsArray.length === 0) {
-      // אם אין תגיות, מחזירים מערך ריק (או שאפשר לשקול להחזיר לפי קטגוריה כ-fallback)
-      return [];
+    // נרמול מבנה התגיות (תומך גם במבנה שטוח וגם במבנה Strapi)
+    const tagsArray = Array.isArray(tags) ? tags : (tags?.data || []);
+
+    // --- שלב 1: שליפה לפי תגיות (הכי רלוונטי) ---
+    if (tagsArray.length > 0) {
+      const tagIds = tagsArray.map(t => t.id);
+      
+      // בניית שאילתה: "תביא לי כתבות שיש להן את אחד מה-ID האלה"
+      const tagsQuery = tagIds
+        .map((id, index) => `filters[tags][id][$in][${index}]=${id}`)
+        .join('&');
+
+      const urlTags = `${API_URL}/api/articles?populate=*&filters[href][$ne]=${encodeURIComponent(currentSlugOrHref)}&filters[slug][$ne]=${encodeURIComponent(currentSlugOrHref)}&${tagsQuery}&pagination[limit]=9`;
+      
+      // משתמשים ב-revalidate קצר כדי לוודא שתוצאות חדשות מתעדכנות מהר
+      const resTags = await fetch(urlTags, { next: { revalidate: 60 } });
+      const jsonTags = await resTags.json();
+      
+      if (jsonTags.data?.length > 0) {
+        results = jsonTags.data;
+      }
     }
 
-    // 2. חילוץ ה-IDs של התגיות
-    const tagIds = tagsArray.map(t => t.id);
+    // --- שלב 2: השלמה לפי קטגוריה (גיבוי) ---
+    // אם מצאנו פחות מ-3 כתבות, נשלים את החסר מתוך הקטגוריה
+    if (results.length < 3 && category) {
+      const limitNeeded = 9 - results.length; // ננסה למלא עד 9 בסה"כ
+      
+      const urlCategory = `${API_URL}/api/articles?populate=*&filters[href][$ne]=${encodeURIComponent(currentSlugOrHref)}&filters[slug][$ne]=${encodeURIComponent(currentSlugOrHref)}&filters[category][$eq]=${category}&pagination[limit]=${limitNeeded + 3}`; // לוקחים ספייר לסינון כפילויות
+      
+      const resCat = await fetch(urlCategory, { next: { revalidate: 3600 } });
+      const jsonCat = await resCat.json();
+      const categoryArticles = jsonCat.data || [];
 
-    // 3. בניית ה-Query String באופן דינמי
-    const tagsQuery = tagIds
-      .map((id, index) => `filters[tags][id][$in][${index}]=${id}`)
-      .join('&');
+      // סינון כפילויות: מוסיפים רק כתבות שלא נמצאו כבר בשלב התגיות
+      const existingIds = new Set(results.map(a => a.id));
+      const newArticles = categoryArticles.filter(a => !existingIds.has(a.id));
+      
+      results = [...results, ...newArticles].slice(0, 9);
+    }
 
-    // 4. ביצוע הקריאה
-    const res = await fetch(
-      `${API_URL}/api/articles?populate=*&filters[href][$ne]=${encodeURIComponent(currentSlugOrHref)}&filters[slug][$ne]=${encodeURIComponent(currentSlugOrHref)}&${tagsQuery}&pagination[limit]=9`,
-      { next: { revalidate: 3600 } }
-    );
-    const json = await res.json();
-    return json.data || [];
+    return results;
+
   } catch (err) {
     console.error("Error fetching similar articles:", err);
     return [];
@@ -285,8 +307,8 @@ export default async function ArticlePage({ params }) {
 
   const realIdentifier = data.href || data.slug;
   
-  // ✅ שינוי: שליחת התגיות במקום הקטגוריה לפונקציית החיפוש
-  const similarArticlesData = await getSimilarArticles(realIdentifier, data.tags);
+  // ✅ שינוי: שליחת התגיות וגם הקטגוריה לפונקציית החיפוש החכמה
+  const similarArticlesData = await getSimilarArticles(realIdentifier, data.tags, data.category);
 
   const galleryItems = data.gallery?.data
     ? data.gallery.data.map((item) => item.attributes)
@@ -430,17 +452,14 @@ export default async function ArticlePage({ params }) {
         let cleanText = fixRelativeImages(block.trim());
         
         // --- שיטה 2: בדיקה אם זה Markdown Table ---
-        // התיקון כאן: בדיקה אם המילה '---' קיימת, גם אם זה בתוך HTML
         if (cleanText.includes('---') && cleanText.includes('|')) {
             const tableHtml = parseMarkdownTable(cleanText);
             if (tableHtml) {
                 return <div key={i} dangerouslySetInnerHTML={{ __html: tableHtml }} />;
             }
         }
-        // ------------------------------------------
-
+        
         let caption = "";
-        // אם זה טבלה, לא נרצה בטעות לחתוך אותה בגלל ה-pipe
         const isLikelyTable = cleanText.includes('|') && cleanText.includes('---');
         
         if (!isLikelyTable && cleanText.includes("|")) {
@@ -512,7 +531,6 @@ export default async function ArticlePage({ params }) {
         html = fixRelativeImages(html);
 
         // --- שיטה 2: בדיקה אם זה Markdown Table (גם בתוך אובייקט פסקה) ---
-        // הבדיקה נעשית לפני כל טיפול אחר
         if (html.includes('|') && html.includes('---')) {
             const tableHtml = parseMarkdownTable(html);
             if (tableHtml) {
@@ -660,10 +678,8 @@ export default async function ArticlePage({ params }) {
             </div>
           )}
 
-          {/* בדיקה שיש תוכן לגלריה כדי לא להציג כותרת ריקה */}
           {(article.gallery.length > 0 || article.externalImageUrls.length > 0 || (article.external_media_links && article.external_media_links.length > 0)) && (
             <div className="article-gallery-section mt-10 mb-8">
-              {/* כותרת מעוצבת עם פס צד אדום */}
               <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 border-r-4 border-red-600 pr-3">
                 גלריית תמונות
               </h2>
