@@ -13,9 +13,16 @@ export default function ArticleHeader({
   title = "כותרת כתבה",
   subdescription = "",
   tags = [],
+  photoCredit = "", // 1️⃣ השדה החדש
 }) {
   const finalImage = image || "/images/default-article.jpg";
-  const photographer = tags.length > 0 ? tags[0] : author;
+
+  // 2️⃣ הלוגיקה המעודכנת:
+  // שלב א: שולפים את התג הראשון, אבל רק אם הוא לא סתם רווחים
+  const validTag = (tags.length > 0 && tags[0].trim() !== "") ? tags[0] : null;
+
+  // שלב ב: הסדר הקובע -> שדה חדש, ואם אין -> תגית תקינה, ואם אין -> מחבר
+  const photographer = photoCredit || validTag || author;
 
   return (
     <div className="flex flex-col gap-4 mb-6 text-gray-800 text-right">
@@ -39,12 +46,10 @@ export default function ArticleHeader({
       {/* 🟤 שורת פרטים (מחבר, זמן, צלם, תגיות) */}
       <div className="flex flex-wrap gap-3 text-sm text-gray-500 items-center border-b border-gray-300 pb-2">
         
-        {/* ✅ השינוי כאן: שם המחבר כחול ומודגש תמיד */}
         <span>
             🖊️ מחבר:{" "}
             <Link 
               href="/about" 
-              // שיניתי כאן ל-text-blue-600 ו-underline קבועים
               className="text-blue-600 underline font-semibold hover:text-blue-800 transition-colors cursor-pointer"
               title="קרא עוד עלינו בדף האודות"
             >
@@ -56,9 +61,9 @@ export default function ArticleHeader({
           🕒 {date} | {time}
         </span>
         
+        {/* הצגת הצלם הסופי */}
         <span>🎥 צילום: <span className="text-gray-800 font-semibold">{photographer}</span></span>
         
-        {/* לינק לאינדקס תגיות */}
         <Link 
           href="/tags" 
           prefetch={false}
