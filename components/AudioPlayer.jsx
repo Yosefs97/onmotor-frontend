@@ -1,20 +1,19 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Play, Pause, Volume2, X } from 'lucide-react';
+import { Play, Pause, Volume2 } from 'lucide-react';
 
 export default function AudioPlayer({ 
   segments = [], 
   authorName = "OnMotor Media", 
   authorImage = "/OnMotorLogonoback.png",
-  desktopRight = 100 // ברירת מחדל, תעביר את הערך שאתה מעביר לכפתור התגובות
 }) {
   
   // זיהוי דסקטופ/מובייל לצורך מיקום הכפתור
   const [isDesktop, setIsDesktop] = useState(true);
 
   useEffect(() => {
-    const checkDesktop = () => setIsDesktop(window.innerWidth > 768);
+    const checkDesktop = () => setIsDesktop(window.innerWidth > 1024);
     checkDesktop();
     window.addEventListener('resize', checkDesktop);
     return () => window.removeEventListener('resize', checkDesktop);
@@ -45,7 +44,7 @@ export default function AudioPlayer({
   const utteranceRef = useRef(null);
   const containerRef = useRef(null);
 
-  // טעינת קולות
+  // 1. טעינת קולות + ניקוי ביציאה (Unmount)
   useEffect(() => {
     if (typeof window !== 'undefined') {
       synthesisRef.current = window.speechSynthesis;
@@ -59,9 +58,29 @@ export default function AudioPlayer({
         synthesisRef.current.onvoiceschanged = loadVoices;
       }
     }
+
+    // פונקציית ניקוי - רצה כשהקומפוננטה יוצאת מהמסך (מעבר עמוד ב-Next.js)
     return () => {
-      if (synthesisRef.current) synthesisRef.current.cancel();
+      if (synthesisRef.current) {
+        synthesisRef.current.cancel();
+      }
       clearHighlight();
+    };
+  }, []);
+
+  // 2. 🆕 עצירה מוחלטת כשהדף מוסתר (מעבר טאב / מזעור / יציאה מהאפליקציה)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        if (synthesisRef.current) synthesisRef.current.cancel();
+        setIsPlaying(false);
+        clearHighlight();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 
@@ -93,7 +112,6 @@ export default function AudioPlayer({
       if (el) {
         el.classList.add('bg-blue-50', 'text-blue-900', 'highlight-active', 'transition-colors', 'duration-500', 'p-2', 'rounded-lg');
         
-        // גלילה למרכז - מה שמאפשר לכפתור המובייל להיות ב-50% גובה ולהיראות "עוקב"
         const rect = el.getBoundingClientRect();
         const isInViewport = rect.top >= 0 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight);
         
@@ -115,8 +133,6 @@ export default function AudioPlayer({
 
     synthesisRef.current.cancel();
 
-    // טריק למובייל: אם מתחילים מההתחלה, לפעמים צריך "חימום"
-    // אנחנו מפרידים את ההפעלה ל-Timeout גדול יותר
     setTimeout(() => {
         const textToSpeak = fullText.substring(startIndex);
         if (!textToSpeak.trim()) return;
@@ -132,7 +148,6 @@ export default function AudioPlayer({
           const currentGlobalIndex = startIndex + event.charIndex;
           const percent = (currentGlobalIndex / fullText.length) * 100;
           
-          // עדכון רק אם יש שינוי משמעותי כדי למנוע ריצוד
           if (Math.abs(percent - progress) > 0.1) {
              setProgress(percent);
           }
@@ -155,13 +170,12 @@ export default function AudioPlayer({
         utteranceRef.current = utterance;
         synthesisRef.current.speak(utterance);
         
-        // בטיחות: מוודאים שהמנוע לא במצב PAUSE
         if (synthesisRef.current.paused) {
              synthesisRef.current.resume();
         }
 
         setIsPlaying(true);
-    }, 50); // הגדלתי ל-50ms ליציבות במובייל
+    }, 50); 
   };
 
   const handlePlayPause = () => {
@@ -197,7 +211,7 @@ export default function AudioPlayer({
 
   return (
     <>
-      {/* הנגן הראשי (embedded) */}
+      {/* הנגן הראשי */}
       <div ref={containerRef} className="flex items-center gap-3 bg-[#f0f2f5] p-3 rounded-xl max-w-md w-full shadow-sm border border-gray-200 mb-4" dir="ltr">
         
         <div className="relative w-12 h-12 flex-shrink-0">
@@ -254,10 +268,7 @@ export default function AudioPlayer({
         </button>
       </div>
 
-      {/* === הכפתור הצף המעודכן === 
-         הלוגיקה: מופיע רק כשמנגן + הנגן המקורי לא במסך.
-         מיקום: משתנה לפי מובייל/דסקטופ
-      */}
+      {/* הנגן הצף המעודכן */}
       {isPlaying && showStickyPlayer && (
         <button 
           onClick={handlePlayPause}
@@ -266,17 +277,17 @@ export default function AudioPlayer({
             transition-all duration-500 ease-in-out shadow-lg
             ${isDesktop 
                ? 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-full px-4 py-2 gap-2' // עיצוב דסקטופ
-               : 'bg-white/90 backdrop-blur-sm text-red-600 border border-gray-200 rounded-full p-3' // עיצוב מובייל (מינימליסטי יותר)
+               : 'bg-white/90 backdrop-blur-sm text-red-600 border border-gray-200 rounded-full p-3' // עיצוב מובייל
              }
           `}
           style={{
-             // דסקטופ: צד ימין (לפי ה-Prop), גובה 80px (מתחת לתגובות שנמצא ב-150)
-             // מובייל: צד שמאל, גובה 50% (אמצע המסך - "עוקב" אחרי הפסקה שממורכזת)
+             // דסקטופ: 4 פיקסל מימין, 90 מלמטה
+             // מובייל: צד שמאל, אמצע גובה
              bottom: isDesktop ? '90px' : 'auto', 
              top: isDesktop ? 'auto' : '50%',
-             transform: isDesktop ? 'none' : 'translateY(-50%)', // סנטור במובייל
-             right: isDesktop ? `${desktopRight}px` : 'auto',
-             left: isDesktop ? 'auto' : '4px', // מרווח מהצד במובייל
+             transform: isDesktop ? 'none' : 'translateY(-50%)', 
+             right: isDesktop ? '4px' : 'auto', // 🆕 שינוי לפי בקשתך (4px במחשב)
+             left: isDesktop ? 'auto' : '16px', 
           }}
         >
           {isDesktop ? (
@@ -288,10 +299,9 @@ export default function AudioPlayer({
               <Pause size={18} fill="currentColor" />
             </>
           ) : (
-            // במובייל רק אייקון נקי
             <div className="relative">
                <Pause size={24} fill="currentColor" />
-               <div className="absolute -top-1 -right-0.2 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
+               <div className="absolute -top-1 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
             </div>
           )}
         </button>
