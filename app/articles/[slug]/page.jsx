@@ -20,24 +20,14 @@ import ScrollToCommentsButton from "@/components/ScrollToCommentsButton";
 import { fixRelativeImages, resolveImageUrl } from "@/lib/fixArticleImages";
 import { getArticleImage } from "@/lib/getArticleImage";
 import ArticleShareBottom from "@/components/ArticleShareBottom";
-import AudioPlayer from "@/components/AudioPlayer"; // 🆕 הנגן
+import AudioPlayer from "@/components/AudioPlayer";
+// 👇 ייבוא הפונקציה למיתוג הלוגו
+import { getBrandedUrl } from "@/utils/cloudinary"; 
 
 const API_URL = process.env.STRAPI_API_URL;
 const PUBLIC_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || API_URL;
 const SITE_URL = "https://www.onmotormedia.com";
 const PLACEHOLDER_IMG = "/default-image.jpg";
-
-// ===================================================================
-//              פונקציית עזר לתיקון תמונות לוואטסאפ (Cloudinary)
-// ===================================================================
-function optimizeCloudinaryUrl(url) {
-  if (!url || typeof url !== 'string') return url;
-
-  if (!url.includes('res.cloudinary.com')) return url;
-  if (url.includes('/w_') && url.includes('/h_')) return url;
-
-  return url.replace('/upload/', '/upload/w_1200,h_630,c_fill,g_auto,f_jpg,q_auto/');
-}
 
 function normalizeHref(href) {
   if (!href) return '#';
@@ -76,7 +66,7 @@ function toHtmlFromStrapiChildren(children) {
 }
 
 // ===================================================================
-//           פונקציה חדשה: המרת טבלת Markdown ל-HTML (כולל תיקון BR)
+//          פונקציה המרת טבלת Markdown ל-HTML (כולל תיקון BR)
 // ===================================================================
 function parseMarkdownTable(text) {
   let cleanText = text.replace(/<br\s*\/?>/gi, '\n');
@@ -135,7 +125,7 @@ async function getSimilarArticles(currentSlugOrHref, category) {
   }
 }
 
-// 🆕 פונקציית עזר מעודכנת - מחזירה מערך פסקאות (Segments) לנגן
+// מחזירה מערך פסקאות (Segments) לנגן
 function getTextSegmentsForAudio(content) {
   if (!content) return [];
   
@@ -223,7 +213,8 @@ export async function generateMetadata({ params }) {
         finalImageUrl = resolveImageUrl(finalImageUrl);
     }
 
-    finalImageUrl = optimizeCloudinaryUrl(finalImageUrl);
+    // 👇 שימוש בפונקציה החדשה למיתוג גם בשיתוף
+    finalImageUrl = getBrandedUrl(finalImageUrl);
 
     if (!finalImageUrl) {
         finalImageUrl = `${SITE_URL}${PLACEHOLDER_IMG}`;
@@ -319,10 +310,13 @@ export default async function ArticlePage({ params }) {
     mainImageAlt = "תמונה ראשית מהמדיה החיצונית";
   }
 
+  // 👇 🔥 כאן הקסם קורה: הוספת הלוגו לתמונה הראשית לפני ההצגה
+  mainImage = getBrandedUrl(mainImage);
+
   const article = {
     title: data.title || "כתבה ללא כותרת",
     description: data.description || "",
-    image: mainImage,
+    image: mainImage, // כעת זה מכיל את הלינק הממותג
     imageAlt: mainImageAlt,
     author: data.author || "מערכת OnMotor",
     date: data.date || "2025-06-22",
@@ -453,6 +447,8 @@ export default async function ArticlePage({ params }) {
         if (urlMatch) {
           let url = urlMatch[0].trim();
           if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
+            // גם כאן אפשר להשתמש ב- getBrandedUrl אם רוצים לוגו על תמונות גוף הכתבה
+            // return <InlineImage key={i} src={getBrandedUrl(url)} alt="תמונה מתוך הכתבה" caption={caption} />;
             return (
               <InlineImage key={i} src={url} alt="תמונה מתוך הכתבה" caption={caption} />
             );
