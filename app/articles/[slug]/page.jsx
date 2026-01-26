@@ -20,6 +20,7 @@ import ScrollToCommentsButton from "@/components/ScrollToCommentsButton";
 import { fixRelativeImages, resolveImageUrl } from "@/lib/fixArticleImages";
 import { getArticleImage } from "@/lib/getArticleImage";
 import ArticleShareBottom from "@/components/ArticleShareBottom";
+import AudioPlayer from "@/components/AudioPlayer"; // 🆕 הוספנו את הנגן
 
 const API_URL = process.env.STRAPI_API_URL;
 const PUBLIC_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || API_URL;
@@ -140,6 +141,36 @@ async function getSimilarArticles(currentSlugOrHref, category) {
     console.error("Error fetching similar articles:", err);
     return [];
   }
+}
+
+// 🆕 פונקציית עזר חדשה לחילוץ טקסט נקי עבור הנגן
+function getCleanTextForAudio(content) {
+  if (!content) return "";
+  
+  let text = "";
+  
+  // מקרה 1: התוכן הוא מערך (Strapi blocks)
+  if (Array.isArray(content)) {
+    text = content.map(block => {
+      if (typeof block === 'string') return block;
+      if (block.type === 'paragraph' && block.children) {
+        return block.children.map(child => child.text).join(' ');
+      }
+      return ""; 
+    }).join('. ');
+  } 
+  // מקרה 2: התוכן הוא מחרוזת (Markdown/HTML)
+  else if (typeof content === 'string') {
+    text = content;
+  }
+
+  // ניקוי סופי של תגיות HTML ומארקדאון
+  return text
+    .replace(/<[^>]*>?/gm, '') // הסרת HTML
+    .replace(/#{1,6}\s?/g, '') // הסרת כותרות Markdown
+    .replace(/\*\*/g, '')      // הסרת בולד
+    .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // הסרת לינקים
+    .trim();
 }
 
 // ===================================================================
@@ -598,6 +629,14 @@ export default async function ArticlePage({ params }) {
             subdescription={article.subdescription}
             tags={article.tags}
           />
+
+          {/* 🆕 כאן מכניסים את הנגן - בין הכותרת לטקסט */}
+          <div className="mb-6 mt-2">
+             <AudioPlayer 
+                text={getCleanTextForAudio(article.content)}
+                authorName={article.author}
+             />
+          </div>
 
           {article.description && (
             <p className="font-bold text-2xl text-gray-600">{article.description}</p>
