@@ -1,23 +1,32 @@
-//components\AudioPlayer.jsx
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Play, Pause, X, Volume2 } from 'lucide-react';
+import { Play, Pause, Volume2, X } from 'lucide-react';
 
 export default function AudioPlayer({ 
-  segments = [], // מקבלים מערך של פסקאות טקסט
+  segments = [], 
   authorName = "OnMotor Media", 
-  authorImage = "/OnMotorLogonoback.png" 
+  authorImage = "/OnMotorLogonoback.png",
+  desktopRight = 100 // ברירת מחדל, תעביר את הערך שאתה מעביר לכפתור התגובות
 }) {
-  // בניית הטקסט המלא מהמערך
+  
+  // זיהוי דסקטופ/מובייל לצורך מיקום הכפתור
+  const [isDesktop, setIsDesktop] = useState(true);
+
+  useEffect(() => {
+    const checkDesktop = () => setIsDesktop(window.innerWidth > 768);
+    checkDesktop();
+    window.addEventListener('resize', checkDesktop);
+    return () => window.removeEventListener('resize', checkDesktop);
+  }, []);
+
   const fullText = useMemo(() => segments.join('. '), [segments]);
   
-  // מיפוי גבולות הפסקאות (כדי לדעת איזה אינדקס שייך לאיזו פסקה)
   const paragraphMap = useMemo(() => {
     let charCount = 0;
     return segments.map((seg, index) => {
       const start = charCount;
-      const end = charCount + seg.length + 2; // +2 בגלל הנקודה והרווח
+      const end = charCount + seg.length + 2; 
       charCount = end;
       return { index, start, end };
     });
@@ -29,14 +38,14 @@ export default function AudioPlayer({
   const [offset, setOffset] = useState(0);
   const [voices, setVoices] = useState([]); 
   const [isReady, setIsReady] = useState(false);
-  const [activeParaIndex, setActiveParaIndex] = useState(-1); // הפסקה הנוכחית המודגשת
-  const [showStickyPlayer, setShowStickyPlayer] = useState(false); // האם להציג נגן צף
+  const [activeParaIndex, setActiveParaIndex] = useState(-1);
+  const [showStickyPlayer, setShowStickyPlayer] = useState(false);
 
   const synthesisRef = useRef(null);
   const utteranceRef = useRef(null);
-  const containerRef = useRef(null); // רפרנס לנגן הראשי כדי לזהות גלילה
+  const containerRef = useRef(null);
 
-  // 1. טעינת קולות
+  // טעינת קולות
   useEffect(() => {
     if (typeof window !== 'undefined') {
       synthesisRef.current = window.speechSynthesis;
@@ -52,50 +61,39 @@ export default function AudioPlayer({
     }
     return () => {
       if (synthesisRef.current) synthesisRef.current.cancel();
-      clearHighlight(); // ניקוי הדגשות ביציאה
+      clearHighlight();
     };
   }, []);
 
-  // 2. זיהוי גלילה (Intersection Observer)
+  // Intersection Observer
   useEffect(() => {
     if (!containerRef.current) return;
-
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        // אם הנגן לא נראה במסך (isIntersecting false) והוא מנגן - הצג נגן צף
-        // אם הוא לא מנגן, אין סיבה להציג נגן צף
-        setShowStickyPlayer(!entry.isIntersecting);
-      },
+      ([entry]) => setShowStickyPlayer(!entry.isIntersecting),
       { threshold: 0 }
     );
-
     observer.observe(containerRef.current);
     return () => observer.disconnect();
   }, [containerRef]);
 
-  // פונקציה לניקוי הדגשות קודמות
   const clearHighlight = () => {
     document.querySelectorAll('.highlight-active').forEach(el => {
       el.classList.remove('bg-blue-50', 'text-blue-900', 'highlight-active', 'transition-colors', 'duration-500', 'p-2', 'rounded-lg');
     });
   };
 
-  // פונקציה להדגשת הפסקה הנוכחית וגלילה אליה
   const highlightParagraph = (globalCharIndex) => {
-    // מציאת הפסקה הרלוונטית לפי האינדקס הנוכחי
     const currentPara = paragraphMap.find(p => globalCharIndex >= p.start && globalCharIndex < p.end);
     
     if (currentPara && currentPara.index !== activeParaIndex) {
       setActiveParaIndex(currentPara.index);
       clearHighlight();
 
-      // חיפוש האלמנט ב-DOM (ה-IDs שיצרנו בשלב הקודם)
       const el = document.getElementById(`article-para-${currentPara.index}`);
       if (el) {
-        // הוספת קלאסים להדגשה (Tailwind)
         el.classList.add('bg-blue-50', 'text-blue-900', 'highlight-active', 'transition-colors', 'duration-500', 'p-2', 'rounded-lg');
         
-        // גלילה עדינה לאלמנט (רק אם הוא לא במרכז המסך)
+        // גלילה למרכז - מה שמאפשר לכפתור המובייל להיות ב-50% גובה ולהיראות "עוקב"
         const rect = el.getBoundingClientRect();
         const isInViewport = rect.top >= 0 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight);
         
@@ -115,15 +113,14 @@ export default function AudioPlayer({
   const speak = (startIndex = offset) => {
     if (!synthesisRef.current) return;
 
-    // ביטול הקראה קודמת
     synthesisRef.current.cancel();
 
-    const textToSpeak = fullText.substring(startIndex);
-    if (!textToSpeak.trim()) return;
-
-    // 🛠️ תיקון לבאג המובייל (0%): שימוש ב-setTimeout
-    // זה נותן לדפדפן "לנשום" ולוודא שה-Cancel בוצע לפני שמתחילים מחדש
+    // טריק למובייל: אם מתחילים מההתחלה, לפעמים צריך "חימום"
+    // אנחנו מפרידים את ההפעלה ל-Timeout גדול יותר
     setTimeout(() => {
+        const textToSpeak = fullText.substring(startIndex);
+        if (!textToSpeak.trim()) return;
+
         const utterance = new SpeechSynthesisUtterance(textToSpeak);
         const selectedVoice = getHebrewVoice();
         if (selectedVoice) utterance.voice = selectedVoice;
@@ -135,9 +132,12 @@ export default function AudioPlayer({
           const currentGlobalIndex = startIndex + event.charIndex;
           const percent = (currentGlobalIndex / fullText.length) * 100;
           
-          setProgress(percent);
+          // עדכון רק אם יש שינוי משמעותי כדי למנוע ריצוד
+          if (Math.abs(percent - progress) > 0.1) {
+             setProgress(percent);
+          }
           setOffset(currentGlobalIndex);
-          highlightParagraph(currentGlobalIndex); // קריאה לפונקציית ההדגשה
+          highlightParagraph(currentGlobalIndex);
         };
 
         utterance.onend = () => {
@@ -154,8 +154,14 @@ export default function AudioPlayer({
 
         utteranceRef.current = utterance;
         synthesisRef.current.speak(utterance);
+        
+        // בטיחות: מוודאים שהמנוע לא במצב PAUSE
+        if (synthesisRef.current.paused) {
+             synthesisRef.current.resume();
+        }
+
         setIsPlaying(true);
-    }, 10); // דיליי קצרצר של 10ms
+    }, 50); // הגדלתי ל-50ms ליציבות במובייל
   };
 
   const handlePlayPause = () => {
@@ -191,7 +197,7 @@ export default function AudioPlayer({
 
   return (
     <>
-      {/* הנגן הראשי שמוטמע בכתבה */}
+      {/* הנגן הראשי (embedded) */}
       <div ref={containerRef} className="flex items-center gap-3 bg-[#f0f2f5] p-3 rounded-xl max-w-md w-full shadow-sm border border-gray-200 mb-4" dir="ltr">
         
         <div className="relative w-12 h-12 flex-shrink-0">
@@ -248,29 +254,47 @@ export default function AudioPlayer({
         </button>
       </div>
 
-      {/* 🆕 נגן צף (Sticky Stop Button) */}
-      {/* מופיע רק אם הנגן פועל + הנגן המקורי יצא מהמסך */}
+      {/* === הכפתור הצף המעודכן === 
+         הלוגיקה: מופיע רק כשמנגן + הנגן המקורי לא במסך.
+         מיקום: משתנה לפי מובייל/דסקטופ
+      */}
       {isPlaying && showStickyPlayer && (
-        <div className="fixed bottom-4 left-4 z-50 flex items-center gap-3 bg-white p-3 rounded-full shadow-xl border border-gray-200 animate-in slide-in-from-bottom-5 duration-300">
-          <div className="relative">
-             <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 animate-pulse">
-                <Volume2 size={20} />
-             </div>
-             <div className="absolute top-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-          </div>
-          
-          <div className="flex flex-col mr-2">
-            <span className="text-xs font-bold text-gray-800">מקריא כעת...</span>
-            <span className="text-[10px] text-gray-500">לחץ לעצירה</span>
-          </div>
-
-          <button 
-            onClick={handlePlayPause}
-            className="bg-red-50 hover:bg-red-100 text-red-600 p-2 rounded-full transition border border-red-100"
-          >
-            <Pause size={20} fill="currentColor" />
-          </button>
-        </div>
+        <button 
+          onClick={handlePlayPause}
+          className={`
+            fixed z-[5000] flex items-center justify-center
+            transition-all duration-500 ease-in-out shadow-lg
+            ${isDesktop 
+               ? 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-full px-4 py-2 gap-2' // עיצוב דסקטופ
+               : 'bg-white/90 backdrop-blur-sm text-red-600 border border-gray-200 rounded-full p-3' // עיצוב מובייל (מינימליסטי יותר)
+             }
+          `}
+          style={{
+             // דסקטופ: צד ימין (לפי ה-Prop), גובה 80px (מתחת לתגובות שנמצא ב-150)
+             // מובייל: צד שמאל, גובה 50% (אמצע המסך - "עוקב" אחרי הפסקה שממורכזת)
+             bottom: isDesktop ? '90px' : 'auto', 
+             top: isDesktop ? 'auto' : '50%',
+             transform: isDesktop ? 'none' : 'translateY(-50%)', // סנטור במובייל
+             right: isDesktop ? `${desktopRight}px` : 'auto',
+             left: isDesktop ? 'auto' : '16px', // מרווח מהצד במובייל
+          }}
+        >
+          {isDesktop ? (
+            <>
+              <div className="relative">
+                 <Volume2 size={18} className="animate-pulse" />
+              </div>
+              <span className="text-sm font-bold">עצור הקראה</span>
+              <Pause size={18} fill="currentColor" />
+            </>
+          ) : (
+            // במובייל רק אייקון נקי
+            <div className="relative">
+               <Pause size={24} fill="currentColor" />
+               <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
+            </div>
+          )}
+        </button>
       )}
     </>
   );
