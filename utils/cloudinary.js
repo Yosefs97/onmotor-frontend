@@ -16,10 +16,10 @@ export function getBrandedUrl(url) {
   // 2. הגדרת המיקום והגודל (Watermark Configuration)
   // l_ : שכבת הלוגו
   // w_0.30,fl_relative : רוחב הלוגו יהיה 30% מרוחב התמונה (מתאים ללוגו רחב)
-  // g_south_east : מיקום פינה ימנית תחתונה
+  // g_south_west : מיקום פינה שמאלית תחתונה
   // x_15,y_15 : מרווח מהשוליים
   // o_90 : שקיפות 90%
-  const watermark = `l_${logoId},w_0.30,fl_relative,g_south_east,x_15,y_15,o_90`;
+  const watermark = `l_${logoId},w_0.30,fl_relative,g_south_west,x_15,y_15,o_90`;
 
   // 3. הגדרות אופטימיזציה (דחיסה ופורמט אוטומטי)
   const optimization = 'f_auto,q_auto';
