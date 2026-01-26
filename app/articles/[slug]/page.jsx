@@ -20,7 +20,7 @@ import ScrollToCommentsButton from "@/components/ScrollToCommentsButton";
 import { fixRelativeImages, resolveImageUrl } from "@/lib/fixArticleImages";
 import { getArticleImage } from "@/lib/getArticleImage";
 import ArticleShareBottom from "@/components/ArticleShareBottom";
-import AudioPlayer from "@/components/AudioPlayer"; // 🆕 הוספנו את הנגן
+import AudioPlayer from "@/components/AudioPlayer"; // 🆕 הנגן
 
 const API_URL = process.env.STRAPI_API_URL;
 const PUBLIC_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || API_URL;
@@ -79,11 +79,7 @@ function toHtmlFromStrapiChildren(children) {
 //           פונקציה חדשה: המרת טבלת Markdown ל-HTML (כולל תיקון BR)
 // ===================================================================
 function parseMarkdownTable(text) {
-  // 1. נרמול: החלפת תגיות BR של HTML לירידת שורה רגילה
-  // זה התיקון הקריטי עבור הטקסט שמגיע מסטראפי
   let cleanText = text.replace(/<br\s*\/?>/gi, '\n');
-
-  // בדיקה מהירה אם זה נראה כמו טבלה
   const lines = cleanText.trim().split('\n').filter(line => line.trim() !== '');
   
   if (lines.length < 3) return null;
@@ -95,14 +91,12 @@ function parseMarkdownTable(text) {
       line.split('|').map(c => c.trim()).filter(c => c !== '')
     ).filter(row => row.length > 0);
 
-    // בניית ה-HTML של הטבלה
     let html = `<div class="overflow-x-auto my-4 border border-gray-300 rounded-lg shadow-sm">
       <table class="w-full text-right border-collapse">
         <thead class="bg-gray-100">
           <tr>`;
     
     headers.forEach(header => {
-      // ניקוי כוכביות גם בכותרת
       let headerContent = header.replace(/\*\*(.*?)\*\*/g, '$1');
       html += `<th class="px-4 py-2 border-b border-gray-300 font-bold text-gray-900">${headerContent}</th>`;
     });
@@ -112,7 +106,6 @@ function parseMarkdownTable(text) {
     rows.forEach((row, rowIndex) => {
       html += `<tr class="${rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100">`;
       row.forEach(cell => {
-         // טיפול בתוכן התא (הדגשה)
          let cellContent = cell.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
          html += `<td class="px-4 py-2 border-b border-gray-200 text-gray-800">${cellContent}</td>`;
       });
@@ -123,11 +116,10 @@ function parseMarkdownTable(text) {
     return html;
   } catch (e) {
     console.error("Failed to parse markdown table", e);
-    return null; // אם נכשל, יחזור לרינדור טקסט רגיל
+    return null;
   }
 }
 
-// ✅ פונקציה לשליפת כתבות דומות בשרת (תומך בעברית)
 async function getSimilarArticles(currentSlugOrHref, category) {
   try {
     if (!category) return [];
@@ -143,34 +135,44 @@ async function getSimilarArticles(currentSlugOrHref, category) {
   }
 }
 
-// 🆕 פונקציית עזר חדשה לחילוץ טקסט נקי עבור הנגן
-function getCleanTextForAudio(content) {
-  if (!content) return "";
+// 🆕 פונקציית עזר מעודכנת - מחזירה מערך פסקאות (Segments) לנגן
+function getTextSegmentsForAudio(content) {
+  if (!content) return [];
   
-  let text = "";
+  const segments = [];
   
+  const cleanBlock = (text) => {
+      return text
+        .replace(/<[^>]*>?/gm, '') // הסרת HTML
+        .replace(/#{1,6}\s?/g, '') // הסרת כותרות Markdown
+        .replace(/\*\*/g, '')      // הסרת בולד
+        .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // הסרת לינקים
+        .trim();
+  };
+
   // מקרה 1: התוכן הוא מערך (Strapi blocks)
   if (Array.isArray(content)) {
-    text = content.map(block => {
-      if (typeof block === 'string') return block;
-      if (block.type === 'paragraph' && block.children) {
-        return block.children.map(child => child.text).join(' ');
+    content.forEach(block => {
+      if (typeof block === 'string' && block.trim()) {
+          segments.push(cleanBlock(block));
       }
-      return ""; 
-    }).join('. ');
+      else if (block.type === 'paragraph' && block.children) {
+        const text = block.children.map(child => child.text).join(' ');
+        if (text.trim()) segments.push(cleanBlock(text));
+      }
+    });
   } 
-  // מקרה 2: התוכן הוא מחרוזת (Markdown/HTML)
+  // מקרה 2: התוכן הוא מחרוזת
   else if (typeof content === 'string') {
-    text = content;
+    // מפרקים לפי ירידת שורה כפולה
+    const rawSegments = content.split('\n\n');
+    rawSegments.forEach(seg => {
+        const clean = cleanBlock(seg);
+        if (clean) segments.push(clean);
+    });
   }
 
-  // ניקוי סופי של תגיות HTML ומארקדאון
-  return text
-    .replace(/<[^>]*>?/gm, '') // הסרת HTML
-    .replace(/#{1,6}\s?/g, '') // הסרת כותרות Markdown
-    .replace(/\*\*/g, '')      // הסרת בולד
-    .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // הסרת לינקים
-    .trim();
+  return segments;
 }
 
 // ===================================================================
@@ -421,9 +423,7 @@ export default async function ArticlePage({ params }) {
                 return <div key={i} dangerouslySetInnerHTML={{ __html: tableHtml }} />;
             }
         }
-        // ------------------------------------------
-
-        // --- לוגיקה לזיהוי caption באמצעות | ---
+        
         let caption = "";
         const isLikelyTable = cleanText.includes('|') && cleanText.includes('---');
         
@@ -439,7 +439,9 @@ export default async function ArticlePage({ params }) {
           return (
             <div
               key={i}
-              className="article-text text-gray-800 text-[18px] leading-relaxed"
+              // 🆕 הוספת ID לשימוש הנגן
+              id={`article-para-${i}`}
+              className="article-text text-gray-800 text-[18px] leading-relaxed transition-colors duration-300 rounded-lg"
               dangerouslySetInnerHTML={{
                 __html: cleanText
               }}
@@ -450,31 +452,17 @@ export default async function ArticlePage({ params }) {
         const urlMatch = cleanText.match(/https?:\/\/[^\s]+/);
         if (urlMatch) {
           let url = urlMatch[0].trim();
-            
           if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
             return (
-              <InlineImage
-                key={i}
-                src={url}
-                alt="תמונה מתוך הכתבה"
-                caption={caption}
-              />
+              <InlineImage key={i} src={url} alt="תמונה מתוך הכתבה" caption={caption} />
             );
           }
-   
-          if (
-            /(youtube\.com|youtu\.be|facebook\.com|instagram\.com|tiktok\.com|x\.com|twitter\.com)/i.test(
-              url
-            )
-          ) {
+          if (/(youtube\.com|youtu\.be|facebook\.com|instagram\.com|tiktok\.com|x\.com|twitter\.com)/i.test(url)) {
             return <EmbedContent key={i} url={url} />;
           }
-   
           return (
             <p key={i} className="article-text text-blue-600 underline">
-              <a href={url} target="_blank" rel="noopener noreferrer">
-                {url}
-              </a>
+              <a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
             </p>
           );
         }
@@ -482,7 +470,9 @@ export default async function ArticlePage({ params }) {
         return (
           <p
             key={i}
-            className="article-text text-gray-800 text-[18px] leading-relaxed"
+            // 🆕 הוספת ID לשימוש הנגן
+            id={`article-para-${i}`}
+            className="article-text text-gray-800 text-[18px] leading-relaxed transition-colors duration-300 rounded-lg"
             dangerouslySetInnerHTML={{
               __html: cleanText.replace(/\n/g, "<br/>"),
             }}
@@ -495,7 +485,6 @@ export default async function ArticlePage({ params }) {
         let html = toHtmlFromStrapiChildren(block.children);
         html = fixRelativeImages(html);
 
-        // --- שיטה 2: בדיקה אם זה Markdown Table (גם בתוך אובייקט פסקה) ---
         if (html.includes('|') && html.includes('---')) {
             const tableHtml = parseMarkdownTable(html);
             if (tableHtml) {
@@ -516,23 +505,10 @@ export default async function ArticlePage({ params }) {
         if (urlMatch) {
           let url = urlMatch[0];
           url = url.replace(/<[^>]*>/g, '');
-
           if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
-            return (
-              <InlineImage
-                key={i}
-                src={url}
-                alt="תמונה מתוך הכתבה"
-                caption={caption} 
-              />
-            );
+            return <InlineImage key={i} src={url} alt="תמונה מתוך הכתבה" caption={caption} />;
           }
-   
-          if (
-            /(youtube\.com|youtu\.be|facebook\.com|instagram\.com|tiktok\.com|x\.com|twitter\.com)/i.test(
-              url
-            )
-          ) {
+          if (/(youtube\.com|youtu\.be|facebook\.com|instagram\.com|tiktok\.com|x\.com|twitter\.com)/i.test(url)) {
             return <EmbedContent key={i} url={url} />;
           }
         }
@@ -540,7 +516,9 @@ export default async function ArticlePage({ params }) {
         return (
           <p
             key={i}
-            className="article-text text-gray-800 text-[18px] leading-relaxed"
+            // 🆕 הוספת ID לשימוש הנגן
+            id={`article-para-${i}`}
+            className="article-text text-gray-800 text-[18px] leading-relaxed transition-colors duration-300 rounded-lg"
             dangerouslySetInnerHTML={{
               __html: html
             }}
@@ -630,10 +608,10 @@ export default async function ArticlePage({ params }) {
             tags={article.tags}
           />
 
-          {/* 🆕 כאן מכניסים את הנגן - בין הכותרת לטקסט */}
+          {/* 🆕 הנגן המעודכן - עם מערך סגמנטים לטובת גלילה */}
           <div className="mb-6 mt-2">
              <AudioPlayer 
-                text={getCleanTextForAudio(article.content)}
+                segments={getTextSegmentsForAudio(article.content)}
                 authorName={article.author}
              />
           </div>
@@ -651,10 +629,8 @@ export default async function ArticlePage({ params }) {
             </div>
           )}
 
-          {/* בדיקה שיש תוכן לגלריה כדי לא להציג כותרת ריקה */}
           {(article.gallery.length > 0 || article.externalImageUrls.length > 0 || (article.external_media_links && article.external_media_links.length > 0)) && (
             <div className="article-gallery-section mt-10 mb-8">
-              {/* כותרת מעוצבת עם פס צד אדום */}
               <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 border-r-4 border-red-600 pr-3">
                 גלריית תמונות
               </h2>
