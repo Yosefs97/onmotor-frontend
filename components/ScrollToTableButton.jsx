@@ -78,7 +78,7 @@ export default function ScrollToTableButton() {
       `}
       style={{
         bottom: isDesktop ? '226px' : '150px',
-        right: isDesktop ? `${desktopRight}px` : '8px',
+        right: isDesktop ? `${desktopRight}px` : '4px',
       }}
     >
       <FaTable className="text-lg" />

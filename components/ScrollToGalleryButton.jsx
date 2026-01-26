@@ -79,7 +79,7 @@ export default function ScrollToGalleryButton() {
       `}
       style={{
         bottom: isDesktop ? '188px' : '110px',
-        right: isDesktop ? `${desktopRight}px` : '8px',
+        right: isDesktop ? `${desktopRight}px` : '4px',
       }}
     >
       <FaImages className="text-lg" />

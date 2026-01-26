@@ -80,7 +80,7 @@ export default function ScrollToCommentsButton() {
       `}
       style={{
         bottom: isDesktop ? '150px' : '70px',
-        right: isDesktop ? `${desktopRight}px` : '8px',
+        right: isDesktop ? `${desktopRight}px` : '4px',
       }}
     >
       <FaCommentDots className="text-lg" />
