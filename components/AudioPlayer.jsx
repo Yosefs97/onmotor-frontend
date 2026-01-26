@@ -301,7 +301,7 @@ export default function AudioPlayer({
           ) : (
             <div className="relative">
                <Pause size={24} fill="currentColor" />
-               <div className="absolute -top-1 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
+               <div className="absolute -top-1 -right-0.2 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
             </div>
           )}
         </button>
