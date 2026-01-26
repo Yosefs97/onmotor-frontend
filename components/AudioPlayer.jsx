@@ -276,7 +276,7 @@ export default function AudioPlayer({
              top: isDesktop ? 'auto' : '50%',
              transform: isDesktop ? 'none' : 'translateY(-50%)', // סנטור במובייל
              right: isDesktop ? `${desktopRight}px` : 'auto',
-             left: isDesktop ? 'auto' : '16px', // מרווח מהצד במובייל
+             left: isDesktop ? 'auto' : '4px', // מרווח מהצד במובייל
           }}
         >
           {isDesktop ? (
@@ -291,7 +291,7 @@ export default function AudioPlayer({
             // במובייל רק אייקון נקי
             <div className="relative">
                <Pause size={24} fill="currentColor" />
-               <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
+               <div className="absolute -top-1 -right-0.2 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
             </div>
           )}
         </button>
