@@ -1,6 +1,8 @@
 // components/Gallery.jsx
 'use client';
 import React, { useState, useEffect, useMemo } from 'react';
+// 👇 1. ייבוא הפונקציה החדשה שיצרנו
+import { getBrandedUrl } from '../utils/cloudinary'; 
 
 const PUBLIC_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL;
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.onmotormedia.com';
@@ -141,13 +143,15 @@ export default function Gallery({
   const next = () => setCurrent((prev) => (prev + 1) % allImages.length);
   const prev = () => setCurrent((prev) => (prev - 1 + allImages.length) % allImages.length);
 
-  // 🔥 פה התיקון — Cloudinary לא עובר דרך פרוקסי
+  // 🔥 פה התיקון — שימוש בפונקציה החדשה
   const getImageUrl = (src) => {
     if (!src || typeof src !== 'string') return '';
     const s = src.trim();
 
-    // Cloudinary = ישיר
-    if (isCloudinary(s)) return s;
+    // 👇 2. אם זה Cloudinary, נפעיל עליו את המיתוג והאופטימיזציה
+    if (isCloudinary(s)) {
+      return getBrandedUrl(s); 
+    }
 
     // כתובת חיצונית → proxy-media
     if (s.startsWith('http')) {
