@@ -94,7 +94,7 @@ export default function NewsletterBox({ mode = 'inline' }) {
 
           {/* --- כפתור 1: הרשמה עם מייל --- */}
           <a
-            href={`https://wa.me/972522304604?text=הרשמה לניוזלטר: ${encodeURIComponent(email)}`}
+            href={`https://wa.me/972506129664?text=הרשמה לניוזלטר: ${encodeURIComponent(email)}`}
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => {

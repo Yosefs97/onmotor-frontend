@@ -122,7 +122,7 @@ export default function ShopSidebar({
       <h3 className="font-extrabold text-2xl border-b border-red-600 pb-2">סינון מוצרים</h3>
 
       <motion.a
-        href="https://wa.me/972522304604" target="_blank" rel="noopener noreferrer"
+        href="https://wa.me/972506129664" target="_blank" rel="noopener noreferrer"
         className="flex items-center gap-2 bg-green-500 text-white px-3 py-2 rounded-md hover:bg-green-600 transition mb-3"
         animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
       >

@@ -83,7 +83,7 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
 
     {
       title: 'צור קשר', path: '/contact', links: [
-        { title: 'וואטסאפ', path: 'https://wa.me/972522304604' },
+        { title: 'וואטסאפ', path: 'https://wa.me/972506129664' },
         { title: 'שלח מייל', path: 'mailto:onmotormedia@gmail.com' },
       ]
     }

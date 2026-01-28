@@ -13,7 +13,7 @@ export default function ContactPage() {
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-right max-w-2xl mx-auto mt-6">
         <a
-          href="https://wa.me/972522304604"
+          href="https://wa.me/972506129664"
           target="_blank"
           rel="noopener noreferrer"
           className="bg-green-600 hover:bg-green-700 text-white py-4 px-6 rounded shadow text-center"

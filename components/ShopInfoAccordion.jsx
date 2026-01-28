@@ -106,7 +106,7 @@ export default function ShopInfoAccordion() {
 
         {/* כפתור וואטסאפ */}
         <a
-          href="https://wa.me/972522304604" // ✅ מספר שלך
+          href="https://wa.me/972506129664" // ✅ מספר שלך
           target="_blank"
           rel="noopener noreferrer"
           className="mt-3 inline-flex items-center gap-2 bg-[#e60000] text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-red-700 transition"

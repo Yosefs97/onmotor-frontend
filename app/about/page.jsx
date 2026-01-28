@@ -61,13 +61,13 @@ export default function AboutPage() {
               <div className="flex items-center gap-2">
                  <strong>וואטסאפ למערכת:</strong>
                  <a 
-                   href="https://wa.me/972522304604" 
+                   href="https://wa.me/972506129664" 
                    target="_blank" 
                    rel="noopener noreferrer"
                    className="flex items-center gap-1 text-[#25D366] font-bold hover:underline"
                  >
                    <FaWhatsapp size={20} />
-                   052-230-4604
+                   050-612-9664
                  </a>
               </div>
             </div>
