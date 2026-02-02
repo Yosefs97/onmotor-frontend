@@ -152,7 +152,16 @@ export default function TagsIndex() {
     <PageContainer title="אינדקס תגיות" breadcrumbs={breadcrumbs}>
       <div className="space-y-8 min-h-[50vh] pb-10">
         {loading && (
-          <div className="text-center py-10 text-gray-500">טוען תגיות...</div>
+          <div className="flex flex-col items-center justify-center py-20 w-full">
+            <div className="animate-pulse">
+              <img 
+                src="/OnMotorLogonoback.png" 
+                alt="טוען..." 
+                className="h-20 md:h-28 w-auto object-contain" 
+              />
+            </div>
+            <p className="mt-4 text-gray-400 text-sm animate-bounce">טוען תגיות...</p>
+          </div>
         )}
 
         {!loading && sortedTags.length === 0 && (

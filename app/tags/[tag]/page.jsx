@@ -117,7 +117,16 @@ export default function TagPage() {
     <PageContainer title={`כתבות עם תגית: ${displayTag}`} breadcrumbs={breadcrumbs}>
       <div className="space-y-6 min-h-[50vh]">
         {loading && (
-          <div className="text-center py-10 text-gray-500">טוען כתבות...</div>
+          <div className="flex flex-col items-center justify-center py-20 w-full">
+            <div className="animate-pulse">
+              <img 
+                src="/OnMotorLogonoback.png" 
+                alt="טוען..." 
+                className="h-20 md:h-28 w-auto object-contain" 
+              />
+            </div>
+            <p className="mt-4 text-gray-400 text-sm animate-bounce">טוען תגיות...</p>
+          </div>
         )}
 
         {!loading && articles.length === 0 && (
