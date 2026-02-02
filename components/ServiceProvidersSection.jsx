@@ -15,7 +15,7 @@ export default async function ServiceProvidersSection() {
 
   return (
     <div className="border-t border-gray-200 pt-0 pb-0 mt-0">
-      <h2 className="text-2xl font-bold text-center mb-2 text-[#e60000]">
+      <h2 className="text-2xl font-bold text-center mb-2 text-gray-900">
         נותני שירות שבחרנו לפרסם (ללא עלות)
       </h2>
       {/* טקסט ההבהרה */}
