@@ -29,10 +29,10 @@ export default function LawsPage() {
             href={cat.href}
             className="block p-1 border border-[#e60000] rounded-xl transition-all group hover:border-[#e60000] hover:shadow-lg bg-white"
           >
-            <h2 className="text-xl font-bold mb-1 text-[#e60000] md:text-gray-900 group-hover:text-[#e60000]">
+            <h2 className="text-xl font-bold mb-1 text-gray-900 md:text-gray-900 group-hover:text-[#e60000]">
               {cat.title}
             </h2>
-            <p className="text-[#e60000] md:text-gray-600 leading-relaxed text-sm">
+            <p className="text-gray-900 md:text-gray-600 leading-relaxed text-sm">
               {cat.desc}
             </p>
           </Link>
