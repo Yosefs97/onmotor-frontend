@@ -101,7 +101,20 @@ export default function MainGridContentDesktop() {
     (a, b) => desiredOrder.indexOf(a) - desiredOrder.indexOf(b)
   );
 
-  if (loading) return <p className="text-center text-gray-500">טוען כתבות...</p>;
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] w-full">
+        <div className="animate-pulse">
+          <img 
+            src="/OnMotorLogonoback.png" 
+            alt="Loading..." 
+            className="h-24 w-auto object-contain" // שנה את h-24 כדי לשלוט בגודל
+          />
+        </div>
+        <p className="mt-4 text-gray-500 animate-bounce">טוען תוכן מעניין...</p>
+      </div>
+    );
+  }
   if (articles.length === 0) return <p className="text-center text-gray-500">אין כתבות להצגה</p>;
 
   return (
