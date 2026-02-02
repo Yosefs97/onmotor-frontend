@@ -33,7 +33,20 @@ export default function RelatedArticles({ tags = [] }) {
     })();
   }, [JSON.stringify(tags)]);
 
-  if (loading) return <div className="mt-8">טוען כתבות קשורות...</div>;
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] w-full">
+        <div className="animate-pulse">
+          <img 
+            src="/OnMotorLogonoback.png" 
+            alt="Loading..." 
+            className="h-24 w-auto object-contain" // שנה את h-24 כדי לשלוט בגודל
+          />
+        </div>
+        <p className="mt-4 text-gray-500 animate-bounce">טוען כתובת...</p>
+      </div>
+    );
+  }
   if (!articles.length) return null;
 
   return (

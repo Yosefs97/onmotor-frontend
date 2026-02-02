@@ -167,7 +167,18 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
   }, [categoryKey, subcategoryKey, guideSubKey]);
 
   if (loading) {
-    return <p className="text-center text-gray-500">טוען כתבות...</p>;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] w-full">
+        <div className="animate-pulse">
+          <img 
+            src="/OnMotorLogonoback.png" 
+            alt="Loading..." 
+            className="h-24 w-auto object-contain" // שנה את h-24 כדי לשלוט בגודל
+          />
+        </div>
+        <p className="mt-4 text-gray-500 animate-bounce">טוען כתבות...</p>
+      </div>
+    );
   }
 
   if (articles.length === 0) {

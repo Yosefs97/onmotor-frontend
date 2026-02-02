@@ -111,7 +111,7 @@ export default function MainGridContentDesktop() {
             className="h-24 w-auto object-contain" // שנה את h-24 כדי לשלוט בגודל
           />
         </div>
-        <p className="mt-4 text-gray-500 animate-bounce">טוען תוכן מעניין...</p>
+        <p className="mt-4 text-gray-500 animate-bounce">טוען כתבות...</p>
       </div>
     );
   }
