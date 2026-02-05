@@ -15,7 +15,7 @@ export async function generateMetadata({ params }) {
 
   if (!product) return { title: 'מוצר לא נמצא' };
 
-  // 1. טיפול בתמונה ואופטימיזציה לוואטסאפ (הקטנה ל-800px למניעת התעלמות בגלל משקל)
+  // 1. טיפול בתמונה ואופטימיזציה לוואטסאפ
   let shareImage = product.featuredImage?.url || product.images?.edges?.[0]?.node?.url;
   if (shareImage) {
     if (shareImage.startsWith('//')) shareImage = `https:${shareImage}`;
@@ -28,18 +28,15 @@ export async function generateMetadata({ params }) {
     ? product.descriptionHtml.replace(/<[^>]*>?/gm, '').substring(0, 160) 
     : 'מוצר חדש במגזין OnMotor';
 
-  // הכתובת לדף המוצר - השארת ה-handle כפי שהוא כדי למנוע Exception באפליקציה
   const pageUrl = `/shop/${handle}`;
 
   return {
     title: product.title,
     description: cleanDescription,
-    // קנוניקל ספציפי למוצר
     alternates: {
       canonical: pageUrl,
     },
-    // פייסבוק דורש property ולא name, לכן אנחנו שמים את זה ב-layout בצורה ידנית.
-    // כאן נשאיר את ה-Metadata הסטנדרטי.
+    // הסרנו את ה-other: fb:app_id מכאן! הוא כבר מוגדר ב-layout כ-property.
     openGraph: {
       title: product.title,
       description: cleanDescription,
@@ -71,11 +68,14 @@ export default async function ProductPage({ params, searchParams }) {
 
   const handle = resolvedParams.handle;
 
-  // --- לוגיקת חיפוש ---
+  // --- תיקון קריטי למניעת קריסה באפליקציית פייסבוק ---
   const filters = Object.fromEntries(
     Object.entries(resolvedSearchParams || {}).map(([k, v]) => [k, String(v)])
   );
-  const isSearch = Object.keys(filters).length > 0;
+  
+  // אנחנו בודקים אם יש פילטרים אמיתיים (לא רק פרמטרים של מעקב כמו fbclid)
+  const queryKeys = Object.keys(filters).filter(key => !['fbclid', 'utm_source', 'utm_medium', 'gclid'].includes(key));
+  const isSearch = queryKeys.length > 0;
 
   if (isSearch) {
     const items = await fetchSearchResults(filters);
@@ -109,7 +109,6 @@ export default async function ProductPage({ params, searchParams }) {
     console.error(`Error fetching stats for ${collectionHandleToFetch}:`, error);
   }
 
-  // Fallback אם לא נמצאו נתונים לקטגוריה הספציפית
   if (!collectionStats && collectionHandleToFetch !== 'all') {
       try {
           collectionStats = await fetchCollectionStats('all');
