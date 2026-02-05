@@ -171,6 +171,8 @@ function getTextSegmentsForAudio(content) {
 export async function generateMetadata({ params }) {
   try {
     const resolvedParams = await params;
+    // נרמול ה-slug למניעת שגיאות קידוד עברית בתוך אפליקציות
+    const safeSlug = encodeURIComponent(decodeURIComponent(resolvedParams.slug));
     const decodedSlug = decodeURIComponent(resolvedParams.slug);
 
     const res = await fetch(
@@ -223,13 +225,13 @@ export async function generateMetadata({ params }) {
     return {
       title: `${title} | OnMotor Media`,
       description,
-      alternates: { canonical: `${SITE_URL}/articles/${resolvedParams.slug}` },
+      alternates: { canonical: `${SITE_URL}/articles/${safeSlug}` },
       openGraph: {
         title,
         description,
         type: "article",
         locale: "he_IL",
-        url: `${SITE_URL}/articles/${resolvedParams.slug}`,
+        url: `${SITE_URL}/articles/${safeSlug}`,
         siteName: "OnMotor Media",
         images: [{ url: finalImageUrl, width: 1200, height: 630, alt: title }],
       },
@@ -249,8 +251,10 @@ export async function generateMetadata({ params }) {
 // ===================================================================
 //                          ArticlePage Component
 // ===================================================================
-export default async function ArticlePage({ params }) {
+export default async function ArticlePage({ params, searchParams }) {
   const resolvedParams = await params;
+  // הוספת קבלת searchParams כדי למנוע קריסת Hydration כשפייסבוק מזריקה פרמטרים
+  const sParams = await searchParams; 
   const decodedSlug = decodeURIComponent(resolvedParams.slug);
 
   const res = await fetch(
@@ -433,7 +437,6 @@ export default async function ArticlePage({ params }) {
           return (
             <div
               key={i}
-              // 🆕 הוספת ID לשימוש הנגן
               id={`article-para-${i}`}
               className="article-text text-gray-800 text-[18px] leading-relaxed transition-colors duration-300 rounded-lg"
               dangerouslySetInnerHTML={{
@@ -447,8 +450,6 @@ export default async function ArticlePage({ params }) {
         if (urlMatch) {
           let url = urlMatch[0].trim();
           if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
-            // גם כאן אפשר להשתמש ב- getBrandedUrl אם רוצים לוגו על תמונות גוף הכתבה
-            // return <InlineImage key={i} src={getBrandedUrl(url)} alt="תמונה מתוך הכתבה" caption={caption} />;
             return (
               <InlineImage key={i} src={url} alt="תמונה מתוך הכתבה" caption={caption} />
             );
@@ -466,7 +467,6 @@ export default async function ArticlePage({ params }) {
         return (
           <p
             key={i}
-            // 🆕 הוספת ID לשימוש הנגן
             id={`article-para-${i}`}
             className="article-text text-gray-800 text-[18px] leading-relaxed transition-colors duration-300 rounded-lg"
             dangerouslySetInnerHTML={{
@@ -512,7 +512,6 @@ export default async function ArticlePage({ params }) {
         return (
           <p
             key={i}
-            // 🆕 הוספת ID לשימוש הנגן
             id={`article-para-${i}`}
             className="article-text text-gray-800 text-[18px] leading-relaxed transition-colors duration-300 rounded-lg"
             dangerouslySetInnerHTML={{
@@ -604,7 +603,6 @@ export default async function ArticlePage({ params }) {
             tags={article.tags}
           />
 
-          {/* 🆕 הנגן המעודכן - עם מערך סגמנטים לטובת גלילה */}
           <div className="mb-6 mt-2">
              <AudioPlayer 
                 segments={getTextSegmentsForAudio(article.content)}
