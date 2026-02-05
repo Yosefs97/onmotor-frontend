@@ -1,5 +1,3 @@
-//app\shop\[handle]\page.jsx
-
 import ProductPageInner from './ProductPageInner';
 import { fetchProduct } from '@/lib/shop/fetchProduct';
 import { fetchSearchResults } from '@/lib/shop/fetchSearch';
@@ -7,47 +5,48 @@ import { fetchCollectionStats } from '@/lib/shop/fetchCollectionStats';
 
 export const revalidate = 600;
 
-// --- תוספת Metadata מעודכנת לפתרון בעיית ה-Redirect ---
+// --- פונקציית Metadata משופרת לשיתוף מושלם ---
 export async function generateMetadata({ params }) {
   const resolvedParams = await params;
-  const product = await fetchProduct(resolvedParams.handle);
+  const handle = resolvedParams.handle;
+  const product = await fetchProduct(handle);
 
   if (!product) return { title: 'מוצר לא נמצא' };
 
-  // וודא כתובת מלאה לתמונה
+  // 1. טיפול בתמונה ואופטימיזציה לוואטסאפ (הקטנה ל-800px למניעת התעלמות בגלל משקל)
   let shareImage = product.featuredImage?.url || product.images?.edges?.[0]?.node?.url;
-  if (shareImage && shareImage.startsWith('//')) {
-    shareImage = `https:${shareImage}`;
+  if (shareImage) {
+    if (shareImage.startsWith('//')) shareImage = `https:${shareImage}`;
+    shareImage = shareImage.includes('?') ? `${shareImage}&width=800` : `${shareImage}?width=800`;
   }
 
   const cleanDescription = product.descriptionHtml 
     ? product.descriptionHtml.replace(/<[^>]*>?/gm, '').substring(0, 160) 
     : '';
 
-  const pageUrl = `https://www.onmotormedia.com/shop/${resolvedParams.handle}`;
+  // 2. נרמול ה-URL כדי למנוע שגיאות צד-לקוח באפליקציות (עקב תווים בעברית)
+  const safeHandle = encodeURIComponent(decodeURIComponent(handle));
+  const pageUrl = `https://www.onmotormedia.com/shop/${safeHandle}`;
 
   return {
     title: product.title,
     description: cleanDescription,
-    // קביעת ה-URL הקנוני מונעת מפייסבוק להפנות לדף הבית
     alternates: {
       canonical: pageUrl,
     },
     openGraph: {
       title: product.title,
       description: cleanDescription,
-      url: pageUrl, // מגדיר לרשתות החברתיות שזה העמוד המקורי
+      url: pageUrl,
       siteName: 'OnMotor Media',
+      type: 'website', 
       images: shareImage ? [
         {
           url: shareImage,
-          width: 1200,
-          height: 630,
           alt: product.title,
         }
       ] : [],
       locale: 'he_IL',
-      type: 'article',
     },
     twitter: {
       card: 'summary_large_image',
@@ -79,10 +78,14 @@ export default async function ProductPage({ params, searchParams }) {
   const product = await fetchProduct(handle);
 
   if (!product) {
-      return <div className="p-10 text-center" dir="rtl">המוצר לא נמצא</div>;
+      return (
+        <div className="min-h-screen flex items-center justify-center text-xl font-bold" dir="rtl">
+          המוצר לא נמצא
+        </div>
+      );
   }
 
-  // --- לוגיקת שליפת הנתונים לסיידבר ---
+  // --- לוגיקת שליפת נתונים לסיידבר ---
   let collectionStats = null;
   let collectionHandleToFetch = 'all'; 
 
@@ -94,14 +97,13 @@ export default async function ProductPage({ params, searchParams }) {
 
   try {
     collectionStats = await fetchCollectionStats(collectionHandleToFetch);
-    console.log(`Sidebar stats fetched for: ${collectionHandleToFetch}`, !!collectionStats);
   } catch (error) {
     console.error(`Error fetching stats for ${collectionHandleToFetch}:`, error);
   }
 
+  // Fallback אם לא נמצאו נתונים לקטגוריה הספציפית
   if (!collectionStats && collectionHandleToFetch !== 'all') {
       try {
-          console.log('Fetching fallback stats (all)...');
           collectionStats = await fetchCollectionStats('all');
       } catch (e) {
           console.error('Fallback fetch failed:', e);
