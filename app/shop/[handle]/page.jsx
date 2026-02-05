@@ -1,10 +1,33 @@
-// /app/shop/[handle]/page.jsx (או ProductPage.js)
 import ProductPageInner from './ProductPageInner';
 import { fetchProduct } from '@/lib/shop/fetchProduct';
 import { fetchSearchResults } from '@/lib/shop/fetchSearch';
 import { fetchCollectionStats } from '@/lib/shop/fetchCollectionStats'; 
 
 export const revalidate = 600;
+
+// --- תוספת Metadata עבור שיתוף תמונה ---
+export async function generateMetadata({ params }) {
+  const resolvedParams = await params;
+  const product = await fetchProduct(resolvedParams.handle);
+
+  if (!product) return { title: 'מוצר לא נמצא' };
+
+  const shareImage = product.featuredImage?.url || product.images?.edges?.[0]?.node?.url;
+  const cleanDescription = product.descriptionHtml 
+    ? product.descriptionHtml.replace(/<[^>]*>?/gm, '').substring(0, 160) 
+    : '';
+
+  return {
+    title: product.title,
+    description: cleanDescription,
+    openGraph: {
+      title: product.title,
+      description: cleanDescription,
+      images: shareImage ? [{ url: shareImage }] : [],
+      type: 'website',
+    },
+  };
+}
 
 export default async function ProductPage({ params, searchParams }) {
   const resolvedParams = await params;
@@ -30,11 +53,10 @@ export default async function ProductPage({ params, searchParams }) {
       return <div>Product not found</div>;
   }
 
-  // 👇👇👇 תיקון הלוגיקה לשליפת הנתונים לסיידבר 👇👇👇
+  // 👇 לוגיקת שליפת הנתונים לסיידבר כפי ששלחת במקור 👇
   let collectionStats = null;
-  let collectionHandleToFetch = 'all'; // ברירת מחדל: שליפת הכל
+  let collectionHandleToFetch = 'all'; 
 
-  // 1. ננסה למצוא תגית קטגוריה ספציפית
   const categoryTag = product.tags?.find(t => t.startsWith('cat:'));
 
   if (categoryTag) {
@@ -42,18 +64,12 @@ export default async function ProductPage({ params, searchParams }) {
   }
 
   try {
-    // 2. ננסה לשלוף נתונים לקטגוריה שנמצאה
     collectionStats = await fetchCollectionStats(collectionHandleToFetch);
-    
-    // לוג דיבאג לשרת (תוכל לראות בטרמינל אם זה מצליח)
     console.log(`Sidebar stats fetched for: ${collectionHandleToFetch}`, !!collectionStats);
-
   } catch (error) {
     console.error(`Error fetching stats for ${collectionHandleToFetch}:`, error);
   }
 
-  // 3. מנגנון Fallback: אם לא הצלחנו להביא נתונים (או שהמוצר לא משויך), נביא נתונים כלליים
-  // זה מבטיח שהסיידבר לא יהיה ריק
   if (!collectionStats && collectionHandleToFetch !== 'all') {
       try {
           console.log('Fetching fallback stats (all)...');
@@ -62,13 +78,11 @@ export default async function ProductPage({ params, searchParams }) {
           console.error('Fallback fetch failed:', e);
       }
   }
-  // 👆👆👆 סוף התיקון
 
   return (
     <ProductPageInner 
       type="product" 
       product={product} 
-      // אם עדיין null, הסיידבר יציג אלמנט ריק אך לא ישבור את העמוד
       collectionStats={collectionStats || { types: [], vendors: [], tags: [], handle: 'all' }} 
     />
   );

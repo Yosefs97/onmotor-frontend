@@ -5,34 +5,30 @@ import { FaWhatsapp, FaTwitter, FaFacebook, FaInstagram, FaTiktok } from 'react-
 import { MdMoreHoriz } from 'react-icons/md';
 import { gsap } from 'gsap';
 
-export default function ArticleShareBottom() {
+// הוספתי label כפרופס כדי שנוכל לשנות את הטקסט דינמית
+export default function ArticleShareBottom({ label = "שתף כתבה" }) {
   const [open, setOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false); // מצב חדש: האם הכפתור מכווץ?
+  const [collapsed, setCollapsed] = useState(false); 
   const [menuDirection, setMenuDirection] = useState('up');
   const buttonRef = useRef(null);
   const dropRef = useRef(null);
   
   const url = typeof window !== 'undefined' ? window.location.href : '';
 
-  // פונקציה שמטפלת בלחיצה על הכפתור הראשי
   const handleMainClick = () => {
-    // אם הכפתור מכווץ - קודם כל נרחיב אותו ונפתח את התפריט
     if (collapsed) {
       setCollapsed(false);
       calculateDirectionAndOpen();
       return;
     }
 
-    // אם הוא כבר פתוח - נסגור
     if (open) {
       setOpen(false);
     } else {
-      // אם הוא סגור (אך לא מכווץ) - נפתח
       calculateDirectionAndOpen();
     }
   };
 
-  // פונקציה לחישוב כיוון ופתיחה
   const calculateDirectionAndOpen = () => {
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
@@ -49,12 +45,10 @@ export default function ArticleShareBottom() {
     setOpen(true);
   };
 
-  // פונקציה שמטפלת בלחיצה על ה-X
   const handleCloseAndCollapse = (e) => {
-    e.stopPropagation(); // מונע מהלחיצה לעבור לכפתור הראשי ולפתוח שוב
+    e.stopPropagation(); 
     setOpen(false);
     
-    // דיליי קטן כדי שהתפריט ייסגר לפני שהכפתור מתכווץ (אנימציה חלקה יותר)
     setTimeout(() => {
       setCollapsed(true);
     }, 100);
@@ -78,7 +72,6 @@ export default function ArticleShareBottom() {
       if (buttonRef.current && !buttonRef.current.contains(event.target) && 
           dropRef.current && !dropRef.current.contains(event.target)) {
         setOpen(false);
-        // הערה: כאן בחרתי לא לכווץ אוטומטית, אלא רק אם המשתמש לחץ על ה-X במפורש
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -89,6 +82,7 @@ export default function ArticleShareBottom() {
       if (typeof navigator !== 'undefined') {
           navigator.clipboard.writeText(url);
           setOpen(false);
+          // אופציונלי: להוסיף כאן Alert קטן או Toast של "הועתק!"
       }
   };
 
@@ -103,7 +97,7 @@ export default function ArticleShareBottom() {
   };
 
   return (
-    <div className="relative inline-block z-10" ref={buttonRef}>
+    <div className="relative inline-block z-10" ref={buttonRef} dir="rtl">
       
       {/* תפריט השיתוף */}
       {open && (
@@ -116,7 +110,6 @@ export default function ArticleShareBottom() {
           <div className="flex justify-between items-center p-2 border-b border-gray-100 bg-gray-50">
             <span className="text-sm font-medium text-gray-700">שתף באמצעות</span>
             
-            {/* כפתור ה-X שגורם לכיווץ */}
             <button
               onClick={handleCloseAndCollapse}
               className="text-gray-400 hover:text-red-500 transition-colors p-1"
@@ -156,18 +149,17 @@ export default function ArticleShareBottom() {
           bg-red-600 hover:bg-red-700 text-white hover:shadow-lg transform active:scale-95
           ${open ? 'ring-2 ring-offset-2 ring-red-500' : ''}
           ${collapsed 
-              ? 'w-12 h-12 justify-center rounded-full p-0' // עיצוב למצב מכווץ (עגול)
-              : 'w-auto px-6 py-2 rounded-full gap-1'      // עיצוב למצב פתוח (אליפסה)
+              ? 'w-10 h-10 justify-center rounded-full p-0' // קצת קטן יותר למראה אלגנטי
+              : 'w-auto px-4 py-2 rounded-full gap-2' 
            }
         `}
       >
         <FiShare2 className="w-5 h-5 flex-shrink-0" />
         
-        {/* הטקסט מוסתר כשהכפתור מכווץ */}
-        <span className={`font-medium whitespace-nowrap overflow-hidden transition-all duration-300
-            ${collapsed ? 'max-w-0 opacity-0' : 'max-w-[100px] opacity-100'}
+        <span className={`font-bold text-sm whitespace-nowrap overflow-hidden transition-all duration-300
+            ${collapsed ? 'max-w-0 opacity-0' : 'max-w-[120px] opacity-100'}
         `}>
-          {!collapsed && "שתף כתבה"}
+          {!collapsed && label}
         </span>
       </button>
 
@@ -181,6 +173,10 @@ export default function ArticleShareBottom() {
           font-size: 14px;
           color: #374151;
           text-decoration: none;
+          border: none;
+          background: none;
+          cursor: pointer;
+          text-align: right;
         }
         .share-item:hover {
           background-color: #f3f4f6;

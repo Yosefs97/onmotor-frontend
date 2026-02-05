@@ -1,4 +1,3 @@
-// /app/shop/[handle]/ProductPageInner.jsx
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -10,6 +9,7 @@ import RelatedArticles from '@/components/RelatedArticles';
 import WhatsAppButton from '@/components/WhatsAppButton';
 import AutoShopBreadcrumbs from '@/components/AutoShopBreadcrumbs';
 import CategorySidebar from '@/components/CategorySidebar';
+import ArticleShareBottom from '@/components/ArticleShareBottom'; // תוספת: ייבוא כפתור שיתוף
 import { getProductYearRange, formatYearRange } from '@/lib/productYears';
 
 export default function ProductPageInner({ type, product, items, collectionStats }) {
@@ -40,17 +40,14 @@ export default function ProductPageInner({ type, product, items, collectionStats
   const isValueAvailable = (optionName, value) => {
     if (!product?.variants?.edges) return true;
     
-    // מוצאים את הוריאציה שמתאימה לערך הנוכחי + שאר הבחירות הקיימות
     const matchingVariant = product.variants.edges.find(({ node }) => {
         return node.selectedOptions.every(opt => {
-            // עבור האופציה הנבדקת כרגע - בודקים את הערך מהלולאה
             if (opt.name === optionName) return opt.value === value;
-            // עבור שאר האופציות - בודקים מה כבר מסומן ב-State
             return selectedOptions[opt.name] === opt.value;
         });
     });
 
-    if (!matchingVariant) return false; // הוריאציה לא קיימת בכלל
+    if (!matchingVariant) return false; 
     return matchingVariant.node.availableForSale && matchingVariant.node.quantityAvailable > 0;
   };
 
@@ -111,12 +108,9 @@ export default function ProductPageInner({ type, product, items, collectionStats
     sidebarContent = null;
   } else {
     if (collectionStats) {
-      // 👇 כאן היה התיקון: הסרתי את ה-div עם ה-hidden lg:block
       sidebarContent = (
         <div> 
-            <div className="mb-2 font-bold text-gray-500 text-sm px-1">
-                 עוד בקטגוריה:
-            </div>
+            <div className="mb-2 font-bold text-gray-500 text-sm px-1">עוד בקטגוריה:</div>
             <CategorySidebar 
                 filtersFromAPI={[]} 
                 dynamicData={{
@@ -130,32 +124,30 @@ export default function ProductPageInner({ type, product, items, collectionStats
         </div>
       );
     } else {
-      sidebarContent = null; // שיניתי מ-div מוסתר ל-null נקי
+      sidebarContent = null;
     }
   }
 
   return (
-    <ShopLayoutInternal 
-        product={product} 
-        hideSidebar={false} 
-        customSidebar={sidebarContent}
-    >
+    <ShopLayoutInternal product={product} hideSidebar={false} customSidebar={sidebarContent}>
       
       <div className="px-2 md:px-0 mt-2 mb-4">
         <AutoShopBreadcrumbs product={product} />
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        {/* גלריה */}
         <ProductGallery
           images={product.images?.edges}
           title={product.title}
           selectedImage={currentVariant?.image?.url}
         />
 
-        {/* פרטי מוצר */}
         <div className="space-y-4 text-gray-900">
-          <h1 className="text-3xl font-bold">{product.title}</h1>
+          {/* כותרת עם כפתור שיתוף - התוספת החדשה */}
+          <div className="flex justify-between items-start gap-4">
+            <h1 className="text-3xl font-bold">{product.title}</h1>
+            <ArticleShareBottom label="שתף מוצר" />
+          </div>
           
           <div
             className="prose max-w-none text-gray-900"
