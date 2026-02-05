@@ -1,3 +1,5 @@
+//app\shop\[handle]\page.jsx
+
 import ProductPageInner from './ProductPageInner';
 import { fetchProduct } from '@/lib/shop/fetchProduct';
 import { fetchSearchResults } from '@/lib/shop/fetchSearch';
@@ -5,26 +7,53 @@ import { fetchCollectionStats } from '@/lib/shop/fetchCollectionStats';
 
 export const revalidate = 600;
 
-// --- תוספת Metadata עבור שיתוף תמונה ---
+// --- תוספת Metadata מעודכנת לפתרון בעיית ה-Redirect ---
 export async function generateMetadata({ params }) {
   const resolvedParams = await params;
   const product = await fetchProduct(resolvedParams.handle);
 
   if (!product) return { title: 'מוצר לא נמצא' };
 
-  const shareImage = product.featuredImage?.url || product.images?.edges?.[0]?.node?.url;
+  // וודא כתובת מלאה לתמונה
+  let shareImage = product.featuredImage?.url || product.images?.edges?.[0]?.node?.url;
+  if (shareImage && shareImage.startsWith('//')) {
+    shareImage = `https:${shareImage}`;
+  }
+
   const cleanDescription = product.descriptionHtml 
     ? product.descriptionHtml.replace(/<[^>]*>?/gm, '').substring(0, 160) 
     : '';
 
+  const pageUrl = `https://www.onmotormedia.com/shop/${resolvedParams.handle}`;
+
   return {
     title: product.title,
     description: cleanDescription,
+    // קביעת ה-URL הקנוני מונעת מפייסבוק להפנות לדף הבית
+    alternates: {
+      canonical: pageUrl,
+    },
     openGraph: {
       title: product.title,
       description: cleanDescription,
-      images: shareImage ? [{ url: shareImage }] : [],
-      type: 'website',
+      url: pageUrl, // מגדיר לרשתות החברתיות שזה העמוד המקורי
+      siteName: 'OnMotor Media',
+      images: shareImage ? [
+        {
+          url: shareImage,
+          width: 1200,
+          height: 630,
+          alt: product.title,
+        }
+      ] : [],
+      locale: 'he_IL',
+      type: 'article',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: product.title,
+      description: cleanDescription,
+      images: shareImage ? [shareImage] : [],
     },
   };
 }
@@ -35,7 +64,7 @@ export default async function ProductPage({ params, searchParams }) {
 
   const handle = resolvedParams.handle;
 
-  // --- לוגיקת חיפוש (ללא שינוי) ---
+  // --- לוגיקת חיפוש ---
   const filters = Object.fromEntries(
     Object.entries(resolvedSearchParams || {}).map(([k, v]) => [k, String(v)])
   );
@@ -50,10 +79,10 @@ export default async function ProductPage({ params, searchParams }) {
   const product = await fetchProduct(handle);
 
   if (!product) {
-      return <div>Product not found</div>;
+      return <div className="p-10 text-center" dir="rtl">המוצר לא נמצא</div>;
   }
 
-  // 👇 לוגיקת שליפת הנתונים לסיידבר כפי ששלחת במקור 👇
+  // --- לוגיקת שליפת הנתונים לסיידבר ---
   let collectionStats = null;
   let collectionHandleToFetch = 'all'; 
 
