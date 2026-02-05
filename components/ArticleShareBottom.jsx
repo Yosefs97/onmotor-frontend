@@ -10,7 +10,7 @@ export default function ArticleShareBottom({ label = "שתף כתבה" }) {
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false); 
   const [menuDirection, setMenuDirection] = useState('up');
-  const [isMounted, setIsMounted] = useState(false); // למניעת שגיאות Hydration
+  const [isMounted, setIsMounted] = useState(false); 
   
   const buttonRef = useRef(null);
   const dropRef = useRef(null);
@@ -19,7 +19,16 @@ export default function ArticleShareBottom({ label = "שתף כתבה" }) {
     setIsMounted(true);
   }, []);
 
-  const url = isMounted ? window.location.href : '';
+  // --- תיקון: שליפת הכתובת הנקייה מהתג הקנוניקל ---
+  const getCleanUrl = () => {
+    if (typeof document !== 'undefined') {
+      const canonical = document.querySelector('link[rel="canonical"]');
+      if (canonical && canonical.href) return canonical.href;
+    }
+    return typeof window !== 'undefined' ? window.location.origin + window.location.pathname : '';
+  };
+
+  const url = isMounted ? getCleanUrl() : '';
 
   const handleMainClick = () => {
     if (!isMounted) return;
@@ -37,7 +46,6 @@ export default function ArticleShareBottom({ label = "שתף כתבה" }) {
       const windowHeight = window.innerHeight;
       const spaceBelow = windowHeight - rect.bottom;
       
-      // הגנה נוספת עבור דפדפנים פנימיים של אפליקציות
       if (spaceBelow < 320 || rect.top > windowHeight * 0.6) {
         setMenuDirection('up');
       } else {
@@ -95,7 +103,6 @@ export default function ArticleShareBottom({ label = "שתף כתבה" }) {
     } else handleCopy();
   };
 
-  // מונע רינדור שבור בשרת
   if (!isMounted) return null;
 
   return (

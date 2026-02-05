@@ -36,7 +36,6 @@ export async function generateMetadata({ params }) {
     alternates: {
       canonical: pageUrl,
     },
-    // הסרנו את ה-other: fb:app_id מכאן! הוא כבר מוגדר ב-layout כ-property.
     openGraph: {
       title: product.title,
       description: cleanDescription,
@@ -73,8 +72,8 @@ export default async function ProductPage({ params, searchParams }) {
     Object.entries(resolvedSearchParams || {}).map(([k, v]) => [k, String(v)])
   );
   
-  // אנחנו בודקים אם יש פילטרים אמיתיים (לא רק פרמטרים של מעקב כמו fbclid)
-  const queryKeys = Object.keys(filters).filter(key => !['fbclid', 'utm_source', 'utm_medium', 'gclid'].includes(key));
+  // אנחנו בודקים אם יש פילטרים אמיתיים (מתעלמים מפרמטרים של מעקב שפייסבוק מוסיפה)
+  const queryKeys = Object.keys(filters).filter(key => !['fbclid', 'utm_source', 'utm_medium', 'gclid', '_rsc'].includes(key));
   const isSearch = queryKeys.length > 0;
 
   if (isSearch) {

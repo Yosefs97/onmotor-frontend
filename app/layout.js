@@ -21,6 +21,7 @@ const heebo = Heebo({
 // --- Metadata ---
 export const metadata = {
   metadataBase: new URL("https://www.onmotormedia.com"),
+  // הוסר ה-alternates הקבוע שהפנה תמיד ל-'/' ושיבש את פייסבוק
   title: {
     default: "OnMotor Media – מגזין אופנועים ישראלי",
     template: "%s | OnMotor Media",
@@ -48,7 +49,7 @@ export const metadata = {
   openGraph: {
     title: "OnMotor Media – מגזין אופנועים ישראלי",
     description:
-      "חדשות אופנועים, סקירות, ציוד ומבחני דרך – מגזין האופנועים לרוכב בישראל.",
+      "חדשות אופנועים, סקירות, ציוד וניסיון מהשטח – מגזין האופנועים לרוכב בישראל.",
     url: "https://www.onmotormedia.com",
     siteName: "OnMotor Media",
     images: [
@@ -223,7 +224,7 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="he" dir="rtl" className={heebo.className}>
       <head>
-        {/* הגדרה ידנית בלעדית כ-property למניעת שגיאות הדיבאגר */}
+        {/* הגדרה ידנית כ-property למניעת אזהרות הדיבאגר של פייסבוק */}
         <meta property="fb:app_id" content="1702134291174147" />
         <meta property="fb:pages" content="1671844356419083" />
         <meta property="article:publisher" content="https://www.facebook.com/OnMotorMedia" />
