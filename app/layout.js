@@ -21,9 +21,7 @@ const heebo = Heebo({
 // --- Metadata ---
 export const metadata = {
   metadataBase: new URL("https://www.onmotormedia.com"),
-  alternates: {
-    canonical: '/',
-  },
+  // הוסר ה-alternates הקבוע שהפנה תמיד ל-'/' ושיבש את פייסבוק
   title: {
     default: "OnMotor Media – מגזין אופנועים ישראלי",
     template: "%s | OnMotor Media",
@@ -56,7 +54,7 @@ export const metadata = {
     siteName: "OnMotor Media",
     images: [
       {
-        url: "https://www.onmotormedia.com/full_Logo_v2.jpg",
+        url: "/full_Logo_v2.jpg",
         width: 1200,
         height: 630,
         alt: "OnMotor Media Logo",
@@ -71,7 +69,7 @@ export const metadata = {
     title: "OnMotor Media – מגזין אופנועים ישראלי",
     description:
       "חדשות אופנועים, סקירות דגמים לקהילת הרוכבים של ישראל.",
-    images: ["https://www.onmotormedia.com/full_Logo_v2.jpg"],
+    images: ["/full_Logo_v2.jpg"],
   },
 };
 
@@ -182,8 +180,7 @@ async function getSidebarData() {
   };
 }
 
-
-// --- RootLayout המעודכן ---
+// --- RootLayout ---
 
 export default async function RootLayout({ children }) {
   const tickerDataPromise = getTickerHeadlines();
@@ -191,7 +188,6 @@ export default async function RootLayout({ children }) {
 
   const [tickerHeadlines, sidebarData] = await Promise.all([tickerDataPromise, sidebarDataPromise]);
 
-  // בניית נתוני ה-Schema
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "NewsMediaOrganization",
@@ -231,12 +227,9 @@ export default async function RootLayout({ children }) {
         <meta property="fb:app_id" content="1702134291174147" />
         <meta property="fb:pages" content="1671844356419083" />
         <meta property="article:publisher" content="https://www.facebook.com/OnMotorMedia" />
-        {/* ה-Script הוסר מכאן */}
       </head>
 
       <body className="flex flex-col min-h-screen">
-        
-        {/* ✅ ה-Script עבר לכאן - לתחילת ה-body */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
