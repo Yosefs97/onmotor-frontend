@@ -1,3 +1,4 @@
+// app/shop/[handle]/page.jsx
 import ProductPageInner from './ProductPageInner';
 import { fetchProduct } from '@/lib/shop/fetchProduct';
 import { fetchSearchResults } from '@/lib/shop/fetchSearch';
@@ -5,7 +6,7 @@ import { fetchCollectionStats } from '@/lib/shop/fetchCollectionStats';
 
 export const revalidate = 600;
 
-// --- פונקציית Metadata משופרת לשיתוף מושלם ---
+// --- פונקציית Metadata משופרת לשיתוף מושלם ושיוך רשמי לפייסבוק ---
 export async function generateMetadata({ params }) {
   const resolvedParams = await params;
   const handle = resolvedParams.handle;
@@ -14,7 +15,7 @@ export async function generateMetadata({ params }) {
   if (!product) return { title: 'מוצר לא נמצא' };
 
   // 1. טיפול בתמונה ואופטימיזציה לוואטסאפ (הקטנה ל-800px למניעת התעלמות בגלל משקל)
-  let shareImage = product.featuredImage?.url || product.images?.edges?.[0]?.node?.url;
+  let shareImage = product.featuredImage?.url || product.images?.edges?.[0]?.url;
   if (shareImage) {
     if (shareImage.startsWith('//')) shareImage = `https:${shareImage}`;
     shareImage = shareImage.includes('?') ? `${shareImage}&width=800` : `${shareImage}?width=800`;
@@ -24,13 +25,20 @@ export async function generateMetadata({ params }) {
     ? product.descriptionHtml.replace(/<[^>]*>?/gm, '').substring(0, 160) 
     : '';
 
-  // 2. נרמול ה-URL כדי למנוע שגיאות צד-לקוח באפליקציות (עקב תווים בעברית)
+  // 2. נרמול ה-URL למניעת שגיאות צד-לקוח עקב תווים בעברית
   const safeHandle = encodeURIComponent(decodeURIComponent(handle));
   const pageUrl = `https://www.onmotormedia.com/shop/${safeHandle}`;
 
   return {
     title: product.title,
     description: cleanDescription,
+    
+    // --- חיבור רשמי לדף ולאפליקציית הפייסבוק (פותר את בעיית האתר הלא מוכר) ---
+    other: {
+      'fb:app_id': '1702134291174147', 
+      'fb:pages': '1671844356419083',  
+    },
+
     alternates: {
       canonical: pageUrl,
     },
@@ -101,7 +109,6 @@ export default async function ProductPage({ params, searchParams }) {
     console.error(`Error fetching stats for ${collectionHandleToFetch}:`, error);
   }
 
-  // Fallback אם לא נמצאו נתונים לקטגוריה הספציפית
   if (!collectionStats && collectionHandleToFetch !== 'all') {
       try {
           collectionStats = await fetchCollectionStats('all');

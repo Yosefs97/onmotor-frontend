@@ -1,32 +1,34 @@
+// components/ArticleShareBottom.jsx
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
 import { FiShare2, FiCopy, FiX } from 'react-icons/fi';
-import { FaWhatsapp, FaTwitter, FaFacebook, FaInstagram, FaTiktok } from 'react-icons/fa';
+import { FaWhatsapp, FaTwitter, FaFacebook, FaTiktok } from 'react-icons/fa';
 import { MdMoreHoriz } from 'react-icons/md';
 import { gsap } from 'gsap';
 
-// הוספתי label כפרופס כדי שנוכל לשנות את הטקסט דינמית
 export default function ArticleShareBottom({ label = "שתף כתבה" }) {
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false); 
   const [menuDirection, setMenuDirection] = useState('up');
+  const [isMounted, setIsMounted] = useState(false); // למניעת שגיאות Hydration
+  
   const buttonRef = useRef(null);
   const dropRef = useRef(null);
   
-  const url = typeof window !== 'undefined' ? window.location.href : '';
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const url = isMounted ? window.location.href : '';
 
   const handleMainClick = () => {
+    if (!isMounted) return;
     if (collapsed) {
       setCollapsed(false);
       calculateDirectionAndOpen();
       return;
     }
-
-    if (open) {
-      setOpen(false);
-    } else {
-      calculateDirectionAndOpen();
-    }
+    open ? setOpen(false) : calculateDirectionAndOpen();
   };
 
   const calculateDirectionAndOpen = () => {
@@ -34,9 +36,9 @@ export default function ArticleShareBottom({ label = "שתף כתבה" }) {
       const rect = buttonRef.current.getBoundingClientRect();
       const windowHeight = window.innerHeight;
       const spaceBelow = windowHeight - rect.bottom;
-      const menuHeightEstimate = 320;
-
-      if (spaceBelow < menuHeightEstimate || rect.top > windowHeight * 0.66) {
+      
+      // הגנה נוספת עבור דפדפנים פנימיים של אפליקציות
+      if (spaceBelow < 320 || rect.top > windowHeight * 0.6) {
         setMenuDirection('up');
       } else {
         setMenuDirection('down');
@@ -48,15 +50,13 @@ export default function ArticleShareBottom({ label = "שתף כתבה" }) {
   const handleCloseAndCollapse = (e) => {
     e.stopPropagation(); 
     setOpen(false);
-    
     setTimeout(() => {
       setCollapsed(true);
     }, 100);
   };
 
-  /* 🎬 אנימציה לתפריט */
   useEffect(() => {
-    if (open && dropRef.current) {
+    if (open && dropRef.current && isMounted) {
       const startY = menuDirection === 'up' ? 10 : -10;
       gsap.fromTo(
         dropRef.current,
@@ -64,10 +64,10 @@ export default function ArticleShareBottom({ label = "שתף כתבה" }) {
         { y: 0, opacity: 1, duration: 0.25, ease: 'power1.out' }
       );
     }
-  }, [open, menuDirection]);
+  }, [open, menuDirection, isMounted]);
 
-  /* סגירה בלחיצה בחוץ */
   useEffect(() => {
+    if (!isMounted) return;
     const handleClickOutside = (event) => {
       if (buttonRef.current && !buttonRef.current.contains(event.target) && 
           dropRef.current && !dropRef.current.contains(event.target)) {
@@ -76,14 +76,13 @@ export default function ArticleShareBottom({ label = "שתף כתבה" }) {
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [isMounted]);
 
   const handleCopy = () => {
-      if (typeof navigator !== 'undefined') {
-          navigator.clipboard.writeText(url);
-          setOpen(false);
-          // אופציונלי: להוסיף כאן Alert קטן או Toast של "הועתק!"
-      }
+    if (typeof navigator !== 'undefined') {
+      navigator.clipboard.writeText(url);
+      setOpen(false);
+    }
   };
 
   const handleShareAPI = async () => {
@@ -96,10 +95,11 @@ export default function ArticleShareBottom({ label = "שתף כתבה" }) {
     } else handleCopy();
   };
 
+  // מונע רינדור שבור בשרת
+  if (!isMounted) return null;
+
   return (
     <div className="relative inline-block z-10" ref={buttonRef} dir="rtl">
-      
-      {/* תפריט השיתוף */}
       {open && (
         <div
           ref={dropRef}
@@ -109,11 +109,9 @@ export default function ArticleShareBottom({ label = "שתף כתבה" }) {
         >
           <div className="flex justify-between items-center p-2 border-b border-gray-100 bg-gray-50">
             <span className="text-sm font-medium text-gray-700">שתף באמצעות</span>
-            
             <button
               onClick={handleCloseAndCollapse}
               className="text-gray-400 hover:text-red-500 transition-colors p-1"
-              title="סגור וכווץ"
             >
               <FiX className="w-4 h-4" />
             </button>
@@ -142,20 +140,18 @@ export default function ArticleShareBottom({ label = "שתף כתבה" }) {
         </div>
       )}
 
-      {/* הכפתור הראשי */}
       <button
         onClick={handleMainClick}
         className={`flex items-center shadow-md transition-all duration-300 ease-in-out
           bg-red-600 hover:bg-red-700 text-white hover:shadow-lg transform active:scale-95
           ${open ? 'ring-2 ring-offset-2 ring-red-500' : ''}
           ${collapsed 
-              ? 'w-10 h-10 justify-center rounded-full p-0' // קצת קטן יותר למראה אלגנטי
+              ? 'w-10 h-10 justify-center rounded-full p-0' 
               : 'w-auto px-4 py-2 rounded-full gap-2' 
            }
         `}
       >
         <FiShare2 className="w-5 h-5 flex-shrink-0" />
-        
         <span className={`font-bold text-sm whitespace-nowrap overflow-hidden transition-all duration-300
             ${collapsed ? 'max-w-0 opacity-0' : 'max-w-[120px] opacity-100'}
         `}>
