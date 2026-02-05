@@ -249,9 +249,8 @@ export async function generateMetadata({ params }) {
 // ===================================================================
 //                          ArticlePage Component
 // ===================================================================
-export default async function ArticlePage({ params, searchParams }) {
+export default async function ArticlePage({ params }) {
   const resolvedParams = await params;
-  const sParams = await searchParams; // טיפול בפרמטרים של פייסבוק (fbclid)
   const decodedSlug = decodeURIComponent(resolvedParams.slug);
 
   const res = await fetch(
@@ -311,12 +310,13 @@ export default async function ArticlePage({ params, searchParams }) {
     mainImageAlt = "תמונה ראשית מהמדיה החיצונית";
   }
 
+  // 👇 🔥 כאן הקסם קורה: הוספת הלוגו לתמונה הראשית לפני ההצגה
   mainImage = getBrandedUrl(mainImage);
 
   const article = {
     title: data.title || "כתבה ללא כותרת",
     description: data.description || "",
-    image: mainImage, 
+    image: mainImage, // כעת זה מכיל את הלינק הממותג
     imageAlt: mainImageAlt,
     author: data.author || "מערכת OnMotor",
     date: data.date || "2025-06-22",
@@ -396,39 +396,111 @@ export default async function ArticlePage({ params, searchParams }) {
   }
   breadcrumbs.push({ label: article.title });
 
+  // ===================================================================
+  //           הפונקציה המעודכנת לטיפול בטקסט + תמונות + טבלאות
+  // ===================================================================
   const renderParagraph = (block, i) => {
+
+    // 0. שיטה 1: בלוק טבלה ייעודי (JSON)
     if (block.__component === 'shared.table-block' || block.type === 'table') {
         return <SimpleKeyValueTable key={i} data={block.tableData} />;
     }
+
+    // 1. טיפול בבלוק מסוג טקסט רגיל (String)
       if (typeof block === "string") {
         let cleanText = fixRelativeImages(block.trim());
+        
+        // --- שיטה 2: בדיקה אם זה Markdown Table ---
         if (cleanText.includes('|') && cleanText.includes('---')) {
             const tableHtml = parseMarkdownTable(cleanText);
             if (tableHtml) {
                 return <div key={i} dangerouslySetInnerHTML={{ __html: tableHtml }} />;
             }
         }
+        
         let caption = "";
         const isLikelyTable = cleanText.includes('|') && cleanText.includes('---');
+        
         if (!isLikelyTable && cleanText.includes("|")) {
             const parts = cleanText.split("|");
             cleanText = parts[0].trim();
             caption = parts.slice(1).join("|").trim();
         }
+
         const hasHTMLTags = /<\/?[a-z][\s\S]*>/i.test(cleanText);
+   
         if (hasHTMLTags) {
           return (
             <div
               key={i}
+              // 🆕 הוספת ID לשימוש הנגן
               id={`article-para-${i}`}
               className="article-text text-gray-800 text-[18px] leading-relaxed transition-colors duration-300 rounded-lg"
-              dangerouslySetInnerHTML={{ __html: cleanText }}
+              dangerouslySetInnerHTML={{
+                __html: cleanText
+              }}
             />
           );
         }
+   
         const urlMatch = cleanText.match(/https?:\/\/[^\s]+/);
         if (urlMatch) {
           let url = urlMatch[0].trim();
+          if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
+            // גם כאן אפשר להשתמש ב- getBrandedUrl אם רוצים לוגו על תמונות גוף הכתבה
+            // return <InlineImage key={i} src={getBrandedUrl(url)} alt="תמונה מתוך הכתבה" caption={caption} />;
+            return (
+              <InlineImage key={i} src={url} alt="תמונה מתוך הכתבה" caption={caption} />
+            );
+          }
+          if (/(youtube\.com|youtu\.be|facebook\.com|instagram\.com|tiktok\.com|x\.com|twitter\.com)/i.test(url)) {
+            return <EmbedContent key={i} url={url} />;
+          }
+          return (
+            <p key={i} className="article-text text-blue-600 underline">
+              <a href={url} target="_blank" rel="noopener noreferrer">{url}</a>
+            </p>
+          );
+        }
+   
+        return (
+          <p
+            key={i}
+            // 🆕 הוספת ID לשימוש הנגן
+            id={`article-para-${i}`}
+            className="article-text text-gray-800 text-[18px] leading-relaxed transition-colors duration-300 rounded-lg"
+            dangerouslySetInnerHTML={{
+              __html: cleanText.replace(/\n/g, "<br/>"),
+            }}
+          />
+        );
+      }
+   
+      // 2. טיפול בבלוק מסוג פסקה (Paragraph Object)
+      if (block.type === "paragraph" && block.children) {
+        let html = toHtmlFromStrapiChildren(block.children);
+        html = fixRelativeImages(html);
+
+        if (html.includes('|') && html.includes('---')) {
+            const tableHtml = parseMarkdownTable(html);
+            if (tableHtml) {
+                 return <div key={i} dangerouslySetInnerHTML={{ __html: tableHtml }} />;
+            }
+        }
+        
+        let caption = "";
+        const isLikelyTable = html.includes('|') && html.includes('---');
+
+        if (!isLikelyTable && html.includes("|") && html.match(/https?:\/\/[^\s"']+/)) {
+             const parts = html.split("|");
+             html = parts[0].trim();
+             caption = parts.slice(1).join("|").trim();
+        }
+   
+        const urlMatch = html.match(/https?:\/\/[^\s"']+/);
+        if (urlMatch) {
+          let url = urlMatch[0];
+          url = url.replace(/<[^>]*>/g, '');
           if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
             return <InlineImage key={i} src={url} alt="תמונה מתוך הכתבה" caption={caption} />;
           }
@@ -436,86 +508,155 @@ export default async function ArticlePage({ params, searchParams }) {
             return <EmbedContent key={i} url={url} />;
           }
         }
+   
         return (
           <p
             key={i}
+            // 🆕 הוספת ID לשימוש הנגן
             id={`article-para-${i}`}
             className="article-text text-gray-800 text-[18px] leading-relaxed transition-colors duration-300 rounded-lg"
-            dangerouslySetInnerHTML={{ __html: cleanText.replace(/\n/g, "<br/>") }}
+            dangerouslySetInnerHTML={{
+              __html: html
+            }}
           />
         );
       }
-      if (block.type === "paragraph" && block.children) {
-        let html = toHtmlFromStrapiChildren(block.children);
-        html = fixRelativeImages(html);
-        if (html.includes('|') && html.includes('---')) {
-            const tableHtml = parseMarkdownTable(html);
-            if (tableHtml) return <div key={i} dangerouslySetInnerHTML={{ __html: tableHtml }} />;
-        }
-        return (
-          <p
-            key={i}
-            id={`article-para-${i}`}
-            className="article-text text-gray-800 text-[18px] leading-relaxed transition-colors duration-300 rounded-lg"
-            dangerouslySetInnerHTML={{ __html: html }}
-          />
-        );
-      }
+   
       if (block.type === "list") {
-        const Tag = block.format === "ordered" ? "ol" : "ul";
+        const isOrdered = block.format === "ordered";
+        const Tag = isOrdered ? "ol" : "ul";
         return (
-          <Tag key={i} dir="rtl" className={`my-3 pr-6 space-y-1 text-[18px] text-gray-800 leading-relaxed ${block.format === "ordered" ? "list-decimal" : "list-disc"}`}>
-            {block.children?.map((item, idx) => (
-                <li key={idx} dangerouslySetInnerHTML={{ __html: fixRelativeImages(toHtmlFromStrapiChildren(item.children || [])) }} />
-            ))}
+          <Tag
+            key={i}
+            dir="rtl"
+            className={`my-3 pr-6 space-y-1 text-[18px] text-gray-800 leading-relaxed ${
+              isOrdered ? "list-decimal" : "list-disc"
+            }`}
+          >
+            {block.children?.map((item, idx) => {
+              const html = toHtmlFromStrapiChildren(item.children || []);
+              return (
+                <li
+                  key={idx}
+                  dangerouslySetInnerHTML={{
+                    __html: fixRelativeImages(html),
+                  }}
+                />
+              );
+            })}
           </Tag>
         );
       }
+   
       if (block.type === "heading") {
-        const Tag = `h${Math.min(block.level || 2, 3)}`;
+        const level = block.level || 2;
+        const Tag = `h${Math.min(level, 3)}`;
         const text = block.children?.map((c) => c.text).join("") || "";
-        return <Tag key={i} className="font-bold text-2xl text-gray-900 mt-4 mb-2" dangerouslySetInnerHTML={{ __html: fixRelativeImages(text) }} />;
+        return (
+          <Tag
+            key={i}
+            className="font-bold text-2xl text-gray-900 mt-4 mb-2"
+            dangerouslySetInnerHTML={{ __html: fixRelativeImages(text) }}
+          />
+        );
       }
+   
       if (block.type === "image") {
-        const imageData = block.image?.data?.attributes || block.image?.attributes || block.image;
+        const imageData =
+          block.image?.data?.attributes || block.image?.attributes || block.image;
         if (!imageData?.url) return null;
-        return <InlineImage key={i} src={resolveImageUrl(imageData.url)} alt={imageData.alternativeText || "תמונה"} caption={imageData.caption} />;
+        const alt = imageData.alternativeText || "תמונה מתוך הכתבה";
+        const caption = imageData.caption || "";
+        const src = resolveImageUrl(imageData.url);
+        return (
+          <InlineImage key={i} src={src} alt={alt} caption={caption} />
+        );
       }
+   
       return null;
   };
 
-  const paragraphs = Array.isArray(article.content) ? article.content : article.content.split("\n\n");
+  const paragraphs = Array.isArray(article.content)
+    ? article.content
+    : article.content.split("\n\n");
 
   return (
     <>
-      <Script id="structured-data" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <Script
+            id="structured-data"
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       <PageContainer title={article.title} breadcrumbs={breadcrumbs}>
-        <div className="mx-auto max-w-[740px] space-y-0.5 text-right leading-relaxed text-base text-gray-800 px-2" style={{ fontFamily: article.font_family }}>
-          <ArticleHeader author={article.author} date={article.date} time={article.time} image={article.image} imageAlt={article.imageAlt} title={article.headline} subdescription={article.subdescription} tags={article.tags} />
-          
+        <div
+          className="mx-auto max-w-[740px] space-y-0.5 text-right leading-relaxed text-base text-gray-800 px-2"
+          style={{ fontFamily: article.font_family }}
+        >
+          <ArticleHeader
+            author={article.author}
+            date={article.date}
+            time={article.time}
+            image={article.image}
+            imageAlt={article.imageAlt}
+            title={article.headline}
+            subdescription={article.subdescription}
+            tags={article.tags}
+          />
+
+          {/* 🆕 הנגן המעודכן - עם מערך סגמנטים לטובת גלילה */}
           <div className="mb-6 mt-2">
-             <AudioPlayer segments={getTextSegmentsForAudio(article.content)} authorName={article.author} />
+             <AudioPlayer 
+                segments={getTextSegmentsForAudio(article.content)}
+                authorName={article.author}
+             />
           </div>
 
-          {article.description && <p className="font-bold text-2xl text-gray-600">{article.description}</p>}
-          <div className="article-content">{paragraphs.map(renderParagraph)}</div>
-          
-          {article.tableData && <div className="article-table-section"><SimpleKeyValueTable data={article.tableData} /></div>}
-
-          {(article.gallery.length > 0 || article.externalImageUrls.length > 0 || (article.external_media_links?.length > 0)) && (
-            <div className="article-gallery-section mt-10 mb-8">
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 border-r-4 border-red-600 pr-3">גלריית תמונות</h2>
-              <Gallery images={article.gallery} externalImageUrls={article.externalImageUrls} externalMediaUrl={article.externalMediaUrl} external_media_links={article.external_media_links} />
+          {article.description && (
+            <p className="font-bold text-2xl text-gray-600">{article.description}</p>
+          )}
+            
+          <div className="article-content">
+            {paragraphs.map(renderParagraph)}
+          </div>
+          {article.tableData && (
+            <div className="article-table-section">
+              <SimpleKeyValueTable data={article.tableData} />
             </div>
           )}
 
-          <div className="w-full flex justify-end relative my-1"><ArticleShareBottom /></div>
-          <div className="comments-section"><CommentsSection articleUrl={`${SITE_URL}${article.href}`} /></div>
+          {(article.gallery.length > 0 || article.externalImageUrls.length > 0 || (article.external_media_links && article.external_media_links.length > 0)) && (
+            <div className="article-gallery-section mt-10 mb-8">
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 border-r-4 border-red-600 pr-3">
+                גלריית תמונות
+              </h2>
+              
+              <Gallery
+                images={article.gallery}
+                externalImageUrls={article.externalImageUrls}
+                externalMediaUrl={article.externalMediaUrl}
+                external_media_links={article.external_media_links}
+              />
+            </div>
+          )}
+          <div className="w-full flex justify-end relative my-1">
+              <ArticleShareBottom />
+          </div>
+          <div className="comments-section">
+            <CommentsSection articleUrl={`${SITE_URL}${article.href}`} />
+          </div>
+
           <Tags tags={article.tags} />
-          <div className="similar-articles-section"><SimilarArticles articles={similarArticlesData} /></div>
+            
+          <div className="similar-articles-section">
+            <SimilarArticles articles={similarArticlesData} />
+          </div>
+            
         </div>
       </PageContainer>
-      <ScrollToTableButton /><ScrollToGalleryButton /><ScrollToCommentsButton />
+      <ScrollToTableButton />
+      <ScrollToGalleryButton />
+      <ScrollToCommentsButton />
     </>
   );
 }
