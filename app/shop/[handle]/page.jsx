@@ -28,21 +28,18 @@ export async function generateMetadata({ params }) {
     ? product.descriptionHtml.replace(/<[^>]*>?/gm, '').substring(0, 160) 
     : 'מוצר חדש במגזין OnMotor';
 
-  // 2. נרמול ה-URL כדי למנוע שגיאות צד-לקוח באפליקציות (עקב תווים בעברית)
-  const safeHandle = encodeURIComponent(decodeURIComponent(handle));
-  const pageUrl = `/shop/${safeHandle}`;
+  // הכתובת לדף המוצר - השארת ה-handle כפי שהוא כדי למנוע Exception באפליקציה
+  const pageUrl = `/shop/${handle}`;
 
   return {
     title: product.title,
     description: cleanDescription,
-    // הוספת קנוניקל ספציפי למוצר כדי שפייסבוק לא תחזור לדף הבית
+    // קנוניקל ספציפי למוצר
     alternates: {
       canonical: pageUrl,
     },
-    other: {
-      'fb:app_id': '1702134291174147', 
-      'fb:pages': '1671844356419083',  
-    },
+    // פייסבוק דורש property ולא name, לכן אנחנו שמים את זה ב-layout בצורה ידנית.
+    // כאן נשאיר את ה-Metadata הסטנדרטי.
     openGraph: {
       title: product.title,
       description: cleanDescription,
