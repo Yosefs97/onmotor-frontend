@@ -1,3 +1,5 @@
+// components/AudioPlayer.jsx
+
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
@@ -9,7 +11,6 @@ export default function AudioPlayer({
   authorImage = "/OnMotorLogonoback.png",
 }) {
   
-  // זיהוי דסקטופ/מובייל לצורך מיקום הכפתור
   const [isDesktop, setIsDesktop] = useState(true);
 
   useEffect(() => {
@@ -44,35 +45,52 @@ export default function AudioPlayer({
   const utteranceRef = useRef(null);
   const containerRef = useRef(null);
 
-  // 1. טעינת קולות + ניקוי ביציאה (Unmount)
+  // 1. טעינת קולות + הגנה מפני דפדפנים לא תומכים (כמו פייסבוק)
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
       synthesisRef.current = window.speechSynthesis;
+      
       const loadVoices = () => {
-        const availableVoices = synthesisRef.current.getVoices();
-        setVoices(availableVoices);
-        if (availableVoices.length > 0) setIsReady(true);
+        // בדיקת הגנה נוספת לפני קריאה ל-getVoices
+        if (!synthesisRef.current) return;
+        
+        try {
+          const availableVoices = synthesisRef.current.getVoices();
+          setVoices(availableVoices || []);
+          if (availableVoices && availableVoices.length > 0) {
+            setIsReady(true);
+          }
+        } catch (err) {
+          console.warn("Could not load voices:", err);
+        }
       };
+
       loadVoices();
+      
       if (synthesisRef.current.onvoiceschanged !== undefined) {
         synthesisRef.current.onvoiceschanged = loadVoices;
       }
+    } else {
+      console.warn("Speech Synthesis is not supported in this browser.");
+      setIsReady(false);
     }
 
-    // פונקציית ניקוי - רצה כשהקומפוננטה יוצאת מהמסך (מעבר עמוד ב-Next.js)
     return () => {
-      if (synthesisRef.current) {
+      // ביטול בטוח רק אם האובייקט קיים
+      if (synthesisRef.current && typeof synthesisRef.current.cancel === 'function') {
         synthesisRef.current.cancel();
       }
       clearHighlight();
     };
   }, []);
 
-  // 2. 🆕 עצירה מוחלטת כשהדף מוסתר (מעבר טאב / מזעור / יציאה מהאפליקציה)
+  // 2. עצירה כשהדף מוסתר
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        if (synthesisRef.current) synthesisRef.current.cancel();
+        if (synthesisRef.current && typeof synthesisRef.current.cancel === 'function') {
+          synthesisRef.current.cancel();
+        }
         setIsPlaying(false);
         clearHighlight();
       }
@@ -84,7 +102,6 @@ export default function AudioPlayer({
     };
   }, []);
 
-  // Intersection Observer
   useEffect(() => {
     if (!containerRef.current) return;
     const observer = new IntersectionObserver(
@@ -123,13 +140,18 @@ export default function AudioPlayer({
   };
 
   const getHebrewVoice = () => {
-    const googleVoice = voices.find(v => v.name.includes("Google") && v.lang.includes("he"));
+    if (!voices || voices.length === 0) return null;
+    const googleVoice = voices.find(v => v.name && v.name.includes("Google") && v.lang && v.lang.includes("he"));
     if (googleVoice) return googleVoice;
     return voices.find(v => v.lang === 'he-IL' || v.lang === 'he');
   };
 
   const speak = (startIndex = offset) => {
-    if (!synthesisRef.current) return;
+    // הגנה: אם אין תמיכה בדפדפן, לא עושים כלום
+    if (!synthesisRef.current || typeof synthesisRef.current.speak !== 'function') {
+      alert("הקראה קולית אינה נתמכת בדפדפן זה. מומלץ לפתוח בדפדפן כרום או ספארי.");
+      return;
+    }
 
     synthesisRef.current.cancel();
 
@@ -137,48 +159,54 @@ export default function AudioPlayer({
         const textToSpeak = fullText.substring(startIndex);
         if (!textToSpeak.trim()) return;
 
-        const utterance = new SpeechSynthesisUtterance(textToSpeak);
-        const selectedVoice = getHebrewVoice();
-        if (selectedVoice) utterance.voice = selectedVoice;
-        
-        utterance.lang = 'he-IL';
-        utterance.rate = rate;
-
-        utterance.onboundary = (event) => {
-          const currentGlobalIndex = startIndex + event.charIndex;
-          const percent = (currentGlobalIndex / fullText.length) * 100;
+        try {
+          const utterance = new SpeechSynthesisUtterance(textToSpeak);
+          const selectedVoice = getHebrewVoice();
+          if (selectedVoice) utterance.voice = selectedVoice;
           
-          if (Math.abs(percent - progress) > 0.1) {
-             setProgress(percent);
+          utterance.lang = 'he-IL';
+          utterance.rate = rate;
+
+          utterance.onboundary = (event) => {
+            const currentGlobalIndex = startIndex + event.charIndex;
+            const percent = (currentGlobalIndex / fullText.length) * 100;
+            
+            if (Math.abs(percent - progress) > 0.1) {
+                setProgress(percent);
+            }
+            setOffset(currentGlobalIndex);
+            highlightParagraph(currentGlobalIndex);
+          };
+
+          utterance.onend = () => {
+            setIsPlaying(false);
+            setProgress(100);
+            setOffset(0);
+            clearHighlight();
+          };
+
+          utterance.onerror = (e) => {
+            console.error("Speech Error:", e);
+            setIsPlaying(false);
+          };
+
+          utteranceRef.current = utterance;
+          synthesisRef.current.speak(utterance);
+          
+          if (synthesisRef.current.paused) {
+               synthesisRef.current.resume();
           }
-          setOffset(currentGlobalIndex);
-          highlightParagraph(currentGlobalIndex);
-        };
 
-        utterance.onend = () => {
+          setIsPlaying(true);
+        } catch (err) {
+          console.error("Failed to start speaking:", err);
           setIsPlaying(false);
-          setProgress(100);
-          setOffset(0);
-          clearHighlight();
-        };
-
-        utterance.onerror = (e) => {
-          console.error("Speech Error:", e);
-          setIsPlaying(false);
-        };
-
-        utteranceRef.current = utterance;
-        synthesisRef.current.speak(utterance);
-        
-        if (synthesisRef.current.paused) {
-             synthesisRef.current.resume();
         }
-
-        setIsPlaying(true);
     }, 50); 
   };
 
   const handlePlayPause = () => {
+    if (!synthesisRef.current) return;
     if (isPlaying) {
       synthesisRef.current.cancel();
       setIsPlaying(false);
@@ -209,9 +237,13 @@ export default function AudioPlayer({
     }
   };
 
+  // אם אין תמיכה בסיסי במנוע הקול, נחזיר דיב ריק או הודעה קטנה כדי לא להקריס
+  if (typeof window !== 'undefined' && !window.speechSynthesis) {
+    return null; 
+  }
+
   return (
     <>
-      {/* הנגן הראשי */}
       <div ref={containerRef} className="flex items-center gap-3 bg-[#f0f2f5] p-3 rounded-xl max-w-md w-full shadow-sm border border-gray-200 mb-4" dir="ltr">
         
         <div className="relative w-12 h-12 flex-shrink-0">
@@ -268,7 +300,6 @@ export default function AudioPlayer({
         </button>
       </div>
 
-      {/* הנגן הצף המעודכן */}
       {isPlaying && showStickyPlayer && (
         <button 
           onClick={handlePlayPause}
@@ -276,18 +307,16 @@ export default function AudioPlayer({
             fixed z-[5000] flex items-center justify-center
             transition-all duration-500 ease-in-out shadow-lg
             ${isDesktop 
-               ? 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-full px-4 py-2 gap-2' // עיצוב דסקטופ
-               : 'bg-white/90 backdrop-blur-sm text-red-600 border border-gray-200 rounded-full p-3' // עיצוב מובייל
+               ? 'bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-full px-4 py-2 gap-2'
+               : 'bg-white/90 backdrop-blur-sm text-red-600 border border-gray-200 rounded-full p-3'
              }
           `}
           style={{
-             // דסקטופ: 4 פיקסל מימין, 90 מלמטה
-             // מובייל: צד שמאל, אמצע גובה
-             bottom: isDesktop ? '90px' : 'auto', 
-             top: isDesktop ? 'auto' : '50%',
-             transform: isDesktop ? 'none' : 'translateY(-50%)', 
-             right: isDesktop ? '4px' : 'auto', // 🆕 שינוי לפי בקשתך (4px במחשב)
-             left: isDesktop ? 'auto' : '16px', 
+            bottom: isDesktop ? '90px' : 'auto', 
+            top: isDesktop ? 'auto' : '50%',
+            transform: isDesktop ? 'none' : 'translateY(-50%)', 
+            right: isDesktop ? '4px' : 'auto', 
+            left: isDesktop ? 'auto' : '16px', 
           }}
         >
           {isDesktop ? (
