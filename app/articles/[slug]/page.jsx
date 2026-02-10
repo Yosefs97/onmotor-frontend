@@ -23,6 +23,7 @@ import ArticleShareBottom from "@/components/ArticleShareBottom";
 import AudioPlayer from "@/components/AudioPlayer";
 // 👇 ייבוא הפונקציה למיתוג הלוגו
 import { getBrandedUrl } from "@/utils/cloudinary"; 
+import SafeHydration from "@/components/SafeHydration"; // <--- הוספת הייבוא
 
 const API_URL = process.env.STRAPI_API_URL;
 const PUBLIC_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || API_URL;
@@ -66,7 +67,7 @@ function toHtmlFromStrapiChildren(children) {
 }
 
 // ===================================================================
-//          פונקציה המרת טבלת Markdown ל-HTML (כולל תיקון BR)
+//           פונקציה המרת טבלת Markdown ל-HTML (כולל תיקון BR)
 // ===================================================================
 function parseMarkdownTable(text) {
   let cleanText = text.replace(/<br\s*\/?>/gi, '\n');
@@ -166,7 +167,7 @@ function getTextSegmentsForAudio(content) {
 }
 
 // ===================================================================
-//                          Generate Metadata
+//                           Generate Metadata
 // ===================================================================
 export async function generateMetadata({ params }) {
   try {
@@ -603,12 +604,14 @@ export default async function ArticlePage({ params, searchParams }) {
             tags={article.tags}
           />
 
-          <div className="mb-6 mt-2">
-             <AudioPlayer 
+          <SafeHydration>
+            <div className="mb-6 mt-2">
+               <AudioPlayer 
                 segments={getTextSegmentsForAudio(article.content)}
                 authorName={article.author}
-             />
-          </div>
+               />
+            </div>
+          </SafeHydration>
 
           {article.description && (
             <p className="font-bold text-2xl text-gray-600">{article.description}</p>
@@ -640,9 +643,12 @@ export default async function ArticlePage({ params, searchParams }) {
           <div className="w-full flex justify-end relative my-1">
               <ArticleShareBottom />
           </div>
-          <div className="comments-section">
-            <CommentsSection articleUrl={`${SITE_URL}${article.href}`} />
-          </div>
+          
+          <SafeHydration>
+            <div className="comments-section">
+              <CommentsSection articleUrl={`${SITE_URL}${article.href}`} />
+            </div>
+          </SafeHydration>
 
           <Tags tags={article.tags} />
             
