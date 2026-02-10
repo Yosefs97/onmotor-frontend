@@ -23,7 +23,7 @@ import ArticleShareBottom from "@/components/ArticleShareBottom";
 import AudioPlayer from "@/components/AudioPlayer";
 // 👇 ייבוא הפונקציה למיתוג הלוגו
 import { getBrandedUrl } from "@/utils/cloudinary"; 
-import SafeHydration from "@/components/SafeHydration"; // <--- הוספת הייבוא
+import SafeHydration from "@/components/SafeHydration"; // <--- ייבוא הקומפוננטה החדשה
 
 const API_URL = process.env.STRAPI_API_URL;
 const PUBLIC_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || API_URL;
@@ -604,6 +604,7 @@ export default async function ArticlePage({ params, searchParams }) {
             tags={article.tags}
           />
 
+          {/* הגנה על נגן השמע באמצעות SafeHydration */}
           <SafeHydration>
             <div className="mb-6 mt-2">
                <AudioPlayer 
@@ -644,6 +645,7 @@ export default async function ArticlePage({ params, searchParams }) {
               <ArticleShareBottom />
           </div>
           
+          {/* הגנה על מערכת התגובות באמצעות SafeHydration */}
           <SafeHydration>
             <div className="comments-section">
               <CommentsSection articleUrl={`${SITE_URL}${article.href}`} />

@@ -223,6 +223,20 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="he" dir="rtl" className={heebo.className}>
       <head>
+        {/* קוד תיקון למניעת קריסה בדפדפן פייסבוק - מנטרל את השגיאה של unload Permissions policy */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                var originalAddEventListener = window.addEventListener;
+                window.addEventListener = function(type, listener, options) {
+                  if (type === 'unload') return;
+                  return originalAddEventListener.call(this, type, listener, options);
+                };
+              })();
+            `,
+          }}
+        />
         <meta property="fb:app_id" content="1702134291174147" />
         <meta property="fb:pages" content="1671844356419083" />
         <meta property="article:publisher" content="https://www.facebook.com/OnMotorMedia" />
@@ -250,9 +264,9 @@ export default async function RootLayout({ children }) {
         <Script src="https://cdn.enable.co.il/licenses/enable-L491236ornf8p4x2-1025-75004/init.js"
                 strategy="lazyOnload" />
         <Script
-          id="fb-sdk"
+          id="fb-sdk-layout"
           src="https://connect.facebook.net/he_IL/sdk.js#xfbml=1&version=v23.0"
-          strategy="afterInteractive" // שונה מ-lazyOnload לטעינה יציבה יותר
+          strategy="afterInteractive"
         />
         <AdvertisingPopup />
         <WhatsAppSlideIn />

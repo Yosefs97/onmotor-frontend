@@ -1,4 +1,4 @@
-//components\SafeHydration.jsx
+// components/SafeHydration.jsx
 'use client';
 import { useState, useEffect } from 'react';
 
@@ -9,8 +9,8 @@ export default function SafeHydration({ children }) {
     setMounted(true);
   }, []);
 
-  // עד שהצד של הלקוח לא "עולה" (Mounted), אנחנו לא מרנדרים רכיבים רגישים
-  if (!mounted) return <div className="animate-pulse bg-gray-50 h-96 w-full rounded-lg" />;
+  // עד שהלקוח לא מוכן, לא מרנדרים את הרכיבים הבעייתיים
+  if (!mounted) return null;
 
   return <>{children}</>;
 }
