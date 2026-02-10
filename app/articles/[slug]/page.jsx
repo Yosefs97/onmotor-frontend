@@ -23,7 +23,7 @@ import ArticleShareBottom from "@/components/ArticleShareBottom";
 import AudioPlayer from "@/components/AudioPlayer";
 // 👇 ייבוא הפונקציה למיתוג הלוגו
 import { getBrandedUrl } from "@/utils/cloudinary"; 
-import SafeHydration from "@/components/SafeHydration"; // <--- ייבוא הקומפוננטה החדשה
+import SafeHydration from "@/components/SafeHydration"; 
 
 const API_URL = process.env.STRAPI_API_URL;
 const PUBLIC_API_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || API_URL;
@@ -589,9 +589,11 @@ export default async function ArticlePage({ params, searchParams }) {
       />
 
       <PageContainer title={article.title} breadcrumbs={breadcrumbs}>
+        {/* הוספת suppressHydrationWarning למניעת קריסות פייסבוק */}
         <div
           className="mx-auto max-w-[740px] space-y-0.5 text-right leading-relaxed text-base text-gray-800 px-2"
           style={{ fontFamily: article.font_family }}
+          suppressHydrationWarning={true}
         >
           <ArticleHeader
             author={article.author}
@@ -604,7 +606,6 @@ export default async function ArticlePage({ params, searchParams }) {
             tags={article.tags}
           />
 
-          {/* הגנה על נגן השמע באמצעות SafeHydration */}
           <SafeHydration>
             <div className="mb-6 mt-2">
                <AudioPlayer 
@@ -618,7 +619,7 @@ export default async function ArticlePage({ params, searchParams }) {
             <p className="font-bold text-2xl text-gray-600">{article.description}</p>
           )}
             
-          <div className="article-content">
+          <div className="article-content" suppressHydrationWarning={true}>
             {paragraphs.map(renderParagraph)}
           </div>
           {article.tableData && (
@@ -645,7 +646,6 @@ export default async function ArticlePage({ params, searchParams }) {
               <ArticleShareBottom />
           </div>
           
-          {/* הגנה על מערכת התגובות באמצעות SafeHydration */}
           <SafeHydration>
             <div className="comments-section">
               <CommentsSection articleUrl={`${SITE_URL}${article.href}`} />

@@ -223,7 +223,7 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="he" dir="rtl" className={heebo.className}>
       <head>
-        {/* קוד תיקון למניעת קריסה בדפדפן פייסבוק - מנטרל את השגיאה של unload Permissions policy */}
+        {/* הזרקת קוד הגנה ראשון ב-Head למניעת קריסה בדפדפן פייסבוק */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -264,7 +264,7 @@ export default async function RootLayout({ children }) {
         <Script src="https://cdn.enable.co.il/licenses/enable-L491236ornf8p4x2-1025-75004/init.js"
                 strategy="lazyOnload" />
         <Script
-          id="fb-sdk-layout"
+          id="fb-sdk-main"
           src="https://connect.facebook.net/he_IL/sdk.js#xfbml=1&version=v23.0"
           strategy="afterInteractive"
         />

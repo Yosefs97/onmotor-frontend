@@ -1,4 +1,3 @@
-// components/SafeHydration.jsx
 'use client';
 import { useState, useEffect } from 'react';
 
@@ -9,7 +8,6 @@ export default function SafeHydration({ children }) {
     setMounted(true);
   }, []);
 
-  // עד שהלקוח לא מוכן, לא מרנדרים את הרכיבים הבעייתיים
   if (!mounted) return null;
 
   return <>{children}</>;
