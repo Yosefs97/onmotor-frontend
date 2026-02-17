@@ -38,7 +38,7 @@ export default function InlineImage({ src, alt = '', caption = '', maxWidth = '1
   const finalSrc = getInlineSrc(src);
 
   return (
-    <div className="my-6 flex flex-col items-end">
+    <div className="my-6 flex flex-col items-start gap-0.5 dir="rtl"">
       <img
         src={finalSrc}
         alt={alt}
@@ -46,7 +46,7 @@ export default function InlineImage({ src, alt = '', caption = '', maxWidth = '1
         className="rounded-md border border-gray-300 shadow-sm"
       />
       {caption && (
-        <p className="text-sm text-gray-500 text-center max-w-[90%]">{caption}</p>
+        <p className="text-sm text-gray-500 text-right max-w-[90%]">{caption}</p>
       )}
     </div>
   );
