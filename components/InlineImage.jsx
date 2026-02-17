@@ -38,7 +38,7 @@ export default function InlineImage({ src, alt = '', caption = '', maxWidth = '1
   const finalSrc = getInlineSrc(src);
 
   return (
-    <div className="my-6 flex flex-col items-center gap-2">
+    <div className="my-6 flex flex-col items-end">
       <img
         src={finalSrc}
         alt={alt}
