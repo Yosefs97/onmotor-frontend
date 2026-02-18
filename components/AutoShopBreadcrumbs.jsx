@@ -145,7 +145,7 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
        if (vendorName) {
          // כאן אנחנו מניחים שה-URL כבר בפורמט נכון, אז משתמשים בו
          crumbs.push({ label: vendorName.toUpperCase(), href: `/shop/vendor/${vendorName}` });
-         pageTitle = `חלקים ל-${vendorName}`;
+         pageTitle = `דגמי ${vendorName}`;
        }
        if (modelName) {
          crumbs.push({ label: modelName.toUpperCase(), href: null }); // דף נוכחי
