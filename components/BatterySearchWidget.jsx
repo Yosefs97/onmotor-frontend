@@ -94,9 +94,6 @@ export default function BatterySearchWidget() {
           <a href="https://wa.me/972506129664" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
             <img src="https://cdn.shopify.com/s/files/1/0691/9245/0274/files/whatsapp-social.png?v=1722724045" alt="WhatsApp" className="w-10 h-10" />
           </a>
-          <a href="https://www.facebook.com/motopower.co.il/" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
-            <img src="https://cdn.shopify.com/s/files/1/0691/9245/0274/files/facebook-social.png?v=1722723796" alt="Facebook" className="w-10 h-10" />
-          </a>
         </div>
       </div>
     </div>
