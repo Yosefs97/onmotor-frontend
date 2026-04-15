@@ -4,6 +4,8 @@
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { ChevronLeft, Store } from 'lucide-react';
+// 1. ייבוא הקומפוננטה החדשה שיצרנו
+import BatterySearchWidget from './BatterySearchWidget';
 
 // פונקציית עזר להפוך טקסט ל-Slug (למשל: "S 1000RR" -> "s-1000rr")
 const toSlug = (str) => {
@@ -156,6 +158,14 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
     }
   }
 
+  // 2. בדיקה האם אנחנו בעמוד מצברים
+  // אם השם של הקולקציה, או סוג המוצר הוא "מצברים" (תתאים את המילה למה שמוגדר אצלך בשופיפיי אם זה שונה)
+  const isBatteriesPage = 
+    pageTitle === 'מצברים' || 
+    collection?.title === 'מצברים' || 
+    type === 'מצברים' ||
+    collection?.handle === 'batteries'; // במידה וה-handle באנגלית
+
   return (
     <div className="mb-2 px-2 md:px-0">
       <nav className="flex items-center text-sm text-gray-500 mb-2" dir="rtl">
@@ -168,7 +178,7 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
                 {index > 0 && <ChevronLeft className="w-4 h-4 text-gray-400 mx-1" />}
                 
                 {isLast || !crumb.href ? (
-                  <span className={`font-bold ${isLast ? 'text-red-600' : 'text-red-600'}`}>
+                  <span className={`font-bold text-red-600`}>
                     {crumb.label}
                   </span>
                 ) : (
@@ -188,6 +198,13 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mt-2 capitalize">
           {pageTitle}
         </h1>
+      )}
+
+      {/* 3. רינדור מותנה: מציג את הווידג'ט רק אם אנחנו בעמוד מצברים */}
+      {isBatteriesPage && (
+        <div className="mt-4">
+          <BatterySearchWidget />
+        </div>
       )}
     </div>
   );
