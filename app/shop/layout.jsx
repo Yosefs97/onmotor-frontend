@@ -1,3 +1,4 @@
+//app\shop\layout.jsx
 import CartUnderHeader from "@/components/CartUnderHeader";
 import { fetchMenu } from '@/lib/shopify/fetchMenu';
 import { fetchCategoryList } from '@/lib/shop/fetchCategoryList'; // 👈 1. הוספת הייבוא הזה
