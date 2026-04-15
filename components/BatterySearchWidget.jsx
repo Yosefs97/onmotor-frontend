@@ -68,7 +68,7 @@ export default function BatterySearchWidget({ compact = false }) {
       <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 shadow-sm w-full md:w-auto">
         <span className="text-sm font-bold text-gray-700 whitespace-nowrap">התאמת מצבר:</span>
         <select 
-          className="py-1 px-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-red-600 focus:outline-none flex-grow md:w-48"
+          className="py-1 px-2 text-sm border border-gray-700 rounded focus:ring-1 focus:ring-red-600 focus:outline-none flex-grow md:w-48"
           value={selectedModel}
           onChange={(e) => setSelectedModel(e.target.value)}
         >
