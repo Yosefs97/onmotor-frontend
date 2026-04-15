@@ -64,7 +64,7 @@ export default function BatterySearchWidget() {
 
   return (
     <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-lg shadow-sm my-6 border border-gray-200">
-      <h2 className="text-center font-bold text-xl mb-4 text-gray-800">מצא את המצבר לאופנוע שלך 🏍️⚡</h2>
+      <h2 className="text-center font-bold text-xl mb-4 text-gray-800">מצא את המצבר לאופנוע שלך</h2>
       
       <div className="flex flex-col md:flex-row justify-center items-center gap-4">
         <label htmlFor="replacementDropdown" className="font-bold text-gray-700">המצבר הנוכחי שלך</label>
@@ -88,9 +88,9 @@ export default function BatterySearchWidget() {
         </button>
       </div>
 
-      <div className="mt-8 text-center">
-        <h3 className="font-semibold text-gray-700 mb-3">צריך התייעצות? צור קשר:</h3>
-        <div className="flex justify-center gap-4">
+      <div className="mt-2 text-center">
+        <h3 className="font-semibold text-gray-700 mb-2">לכל שאלה, צור קשר:</h3>
+        <div className="flex justify-center gap-2">
           <a href="https://wa.me/972506129664" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
             <img src="https://cdn.shopify.com/s/files/1/0691/9245/0274/files/whatsapp-social.png?v=1722724045" alt="WhatsApp" className="w-10 h-10" />
           </a>

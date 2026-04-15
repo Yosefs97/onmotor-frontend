@@ -202,7 +202,7 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
 
       {/* 3. רינדור מותנה: מציג את הווידג'ט רק אם אנחנו בעמוד מצברים */}
       {isBatteriesPage && (
-        <div className="mt-4">
+        <div className="mt-1">
           <BatterySearchWidget />
         </div>
       )}
