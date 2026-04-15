@@ -25,6 +25,10 @@ export async function GET() {
     "/shop/collection/road",
     "/shop/collection/adventure",
     "/shop/collection/custom",
+    "/shop/collection/oils",
+    "/shop/collection/parts",
+    "/shop/collection/battery",
+    "/shop/collection/tires",
 
     // ✅ עודכן: אזור "חוק ומשפט" החדש
     "/laws",
