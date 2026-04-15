@@ -3,7 +3,7 @@
 
 import { useState, useMemo } from 'react';
 
-export default function BatterySearchWidget() {
+export default function BatterySearchWidget({ compact = false }) {
   const [selectedModel, setSelectedModel] = useState('');
 
   const tableData = [
@@ -62,6 +62,32 @@ export default function BatterySearchWidget() {
     }
   };
 
+  // === תצוגה מינימליסטית (עבור דף מוצרים קשורים) ===
+  if (compact) {
+    return (
+      <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 shadow-sm w-full md:w-auto">
+        <span className="text-sm font-bold text-gray-700 whitespace-nowrap">התאמת מצבר:</span>
+        <select 
+          className="py-1 px-2 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-red-600 focus:outline-none flex-grow md:w-48"
+          value={selectedModel}
+          onChange={(e) => setSelectedModel(e.target.value)}
+        >
+          <option value="">בחר דגם...</option>
+          {options.map(option => (
+            <option key={option} value={option}>{option}</option>
+          ))}
+        </select>
+        <button 
+          onClick={handleSearch}
+          className="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm transition-colors"
+        >
+          חפש
+        </button>
+      </div>
+    );
+  }
+
+  // === התצוגה המלאה (הקוד שלך) ===
   return (
     <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-lg shadow-sm my-6 border border-gray-200">
       <h2 className="text-center font-bold text-xl mb-4 text-gray-800">מצא את המצבר לאופנוע שלך</h2>

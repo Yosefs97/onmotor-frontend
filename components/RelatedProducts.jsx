@@ -2,6 +2,8 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+// ייבוא של הווידג'ט החדש
+import BatterySearchWidget from './BatterySearchWidget';
 
 export default function RelatedProducts({ vendor, productType, model, excludeHandle }) {
   const [items, setItems] = useState([]);
@@ -26,7 +28,18 @@ export default function RelatedProducts({ vendor, productType, model, excludeHan
 
   return (
     <div dir="rtl" className="space-y-3 mt-8">
-      <h3 className="font-bold text-lg text-gray-900">מוצרים נוספים לדגם</h3>
+      
+      {/* אזור הכותרת משולב עם הווידג'ט המינימליסטי */}
+      <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-3 mb-4">
+        <h3 className="font-bold text-lg text-gray-900">מוצרים נוספים לדגם</h3>
+        
+        {/* העברת compact={true} כדי להציג את הגרסה הקטנה */}
+        <div className="w-full md:w-auto">
+          <BatterySearchWidget compact={true} />
+        </div>
+      </div>
+
+      {/* הגריד של המוצרים */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-0.5">
         {items.map((p) => {
           const img = p.images?.edges?.[0]?.node?.url;
