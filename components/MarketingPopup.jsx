@@ -51,7 +51,6 @@ export default function MarketingPopup() {
     if (localStorage.getItem(storageKey)) return;
 
     // 2. בדיקה האם המשתמש סגר את הפופ-אפ בביקור הנוכחי (X)
-    // אנו משתמשים באותו מפתח (Key) אבל ב-sessionStorage
     if (sessionStorage.getItem(storageKey)) return;
 
     const delayTime = (DelaySeconds || 25) * 1000;
@@ -97,71 +96,61 @@ export default function MarketingPopup() {
   return (
     <AnimatePresence>
       {isVisible && (
-        <>
-          {/* רקע כהה (Backdrop) */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            onClick={handleClose}
-            className="fixed inset-0 bg-black/60 z-[9998] backdrop-blur-sm"
-          />
-
-          {/* החלון עצמו */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[9999] w-[90%] max-w-sm bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden"
-            style={{ direction: 'rtl' }}
+        <motion.div
+          // מתחיל מחוץ למסך (מימין) ומחליק ל-0 (קצה המסך)
+          initial={{ x: '100%', opacity: 0 }} 
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: '100%', opacity: 0 }}
+          transition={{ type: 'spring', stiffness: 80, damping: 20 }}
+          
+          // עיצוב ומיקום בדומה לוואטסאפ
+          className="fixed top-[20%] right-0 z-[9999] w-[320px] max-w-[90vw] bg-white border-l-4 border-red-600 rounded-l-xl rounded-r-none shadow-[0_5px_20px_rgba(0,0,0,0.2)] overflow-hidden flex flex-col"
+          style={{ direction: 'rtl' }}
+        >
+          {/* כפתור סגירה */}
+          <button 
+            onClick={handleClose} 
+            className="absolute top-2 left-2 z-10 p-1.5 bg-white/90 rounded-full hover:bg-gray-100 transition shadow-sm"
           >
-            <button 
-              onClick={handleClose} 
-              className="absolute top-2 left-2 z-10 p-1 bg-white/80 rounded-full hover:bg-gray-200 transition shadow-sm"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
 
-            <div className="relative h-48 w-full bg-gray-100">
-               <Image 
-                 src={imageUrl} 
-                 alt={Title || ''} 
-                 fill 
-                 className="object-cover" 
-                 unoptimized 
-               />
-            </div>
+          {/* תמונת שיווק */}
+          <div className="relative h-40 w-full bg-gray-100">
+             <Image 
+               src={imageUrl} 
+               alt={Title || ''} 
+               fill 
+               className="object-cover" 
+               unoptimized 
+             />
+          </div>
 
-            <div className="p-5">
-              {Title && <h3 className="text-xl font-bold text-gray-900 mb-3 leading-tight">{Title}</h3>}
-              
-              {targetLink && (
-                <Link href={targetLink} passHref>
-                    <button className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2.5 px-4 rounded transition-colors shadow-md">
-                      {ButtonText || 'לפרטים נוספים'}
-                    </button>
-                </Link>
-              )}
+          {/* תוכן הפופ-אפ */}
+          <div className="p-4">
+            {Title && <h3 className="text-lg font-bold text-gray-900 mb-3 leading-tight">{Title}</h3>}
+            
+            {targetLink && (
+              <Link href={targetLink} passHref onClick={handleClose}>
+                  <button className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded transition-transform transform active:scale-95 shadow-md">
+                    {ButtonText || 'לפרטים נוספים'}
+                  </button>
+              </Link>
+            )}
 
-              <div className="flex items-center gap-2 mt-4 pt-3 border-t border-gray-100">
-                <input 
-                  id="dont-show-again" 
-                  type="checkbox" 
-                  checked={dontShowAgain} 
-                  onChange={(e) => setDontShowAgain(e.target.checked)}
-                  className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500 cursor-pointer"
-                />
-                <label htmlFor="dont-show-again" className="text-sm text-gray-500 cursor-pointer select-none">
-                  אל תציג לי את זה שוב
-                </label>
-              </div>
-            </div>
-          </motion.div>
-        </>
+            <label className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100 text-sm text-gray-500 cursor-pointer select-none">
+              <input 
+                type="checkbox" 
+                checked={dontShowAgain} 
+                onChange={(e) => setDontShowAgain(e.target.checked)}
+                className="w-3.5 h-3.5 text-red-600 border-gray-300 rounded focus:ring-red-500 cursor-pointer"
+              />
+              אל תציג לי את זה שוב
+            </label>
+          </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );
