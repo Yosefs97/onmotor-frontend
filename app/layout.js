@@ -70,6 +70,11 @@ export const metadata = {
       "חדשות אופנועים, סקירות דגמים לקהילת הרוכבים של ישראל.",
     images: ["/full_Logo_v2.jpg"],
   },
+  
+  // אפשרות נוספת ומומלצת ב-Next.js היא להוסיף את תג המטא גם כאן ב-metadata
+  other: {
+    "google-adsense-account": "ca-pub-8875204562020254",
+  },
 };
 
 // ... פונקציות עזר ...
@@ -240,6 +245,15 @@ export default async function RootLayout({ children }) {
         <meta property="fb:app_id" content="1702134291174147" />
         <meta property="fb:pages" content="1671844356419083" />
         <meta property="article:publisher" content="https://www.facebook.com/OnMotorMedia" />
+        
+        {/* ---- Google AdSense Snippets ---- */}
+        <meta name="google-adsense-account" content="ca-pub-8875204562020254" />
+        <script 
+          async 
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8875204562020254"
+          crossOrigin="anonymous"
+        ></script>
+        {/* ---------------------------------- */}
       </head>
 
       <body className="flex flex-col min-h-screen">
