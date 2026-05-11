@@ -67,7 +67,7 @@ function toHtmlFromStrapiChildren(children) {
 }
 
 // ===================================================================
-//           פונקציה המרת טבלת Markdown ל-HTML (כולל תיקון BR)
+//          פונקציה המרת טבלת Markdown ל-HTML (כולל תיקון BR)
 // ===================================================================
 function parseMarkdownTable(text) {
   let cleanText = text.replace(/<br\s*\/?>/gi, '\n');
@@ -216,7 +216,7 @@ export async function generateMetadata({ params }) {
         finalImageUrl = resolveImageUrl(finalImageUrl);
     }
 
-    // 👇 שימוש בפונקציה החדשה למיתוג גם בשיתוף
+    // 👇 שימוש בפונקציה למיתוג גם בשיתוף
     finalImageUrl = getBrandedUrl(finalImageUrl);
 
     if (!finalImageUrl) {
@@ -250,7 +250,7 @@ export async function generateMetadata({ params }) {
 }
 
 // ===================================================================
-//                          ArticlePage Component
+//                           ArticlePage Component
 // ===================================================================
 export default async function ArticlePage({ params, searchParams }) {
   const resolvedParams = await params;
@@ -276,7 +276,8 @@ export default async function ArticlePage({ params, searchParams }) {
     : data.gallery || [];
 
   const gallery = galleryItems.map((img) => ({
-    src: resolveImageUrl(img.url),
+    // 👇 הוספת מיתוג לתמונות הגלריה
+    src: getBrandedUrl(resolveImageUrl(img.url)),
     alt: img.alternativeText || "תמונה מהגלריה",
   }));
 
@@ -402,7 +403,7 @@ export default async function ArticlePage({ params, searchParams }) {
   breadcrumbs.push({ label: article.title });
 
   // ===================================================================
-  //           הפונקציה המעודכנת לטיפול בטקסט + תמונות + טבלאות
+  //          הפונקציה המעודכנת לטיפול בטקסט + תמונות + טבלאות
   // ===================================================================
   const renderParagraph = (block, i) => {
 
@@ -452,7 +453,8 @@ export default async function ArticlePage({ params, searchParams }) {
           let url = urlMatch[0].trim();
           if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
             return (
-              <InlineImage key={i} src={url} alt="תמונה מתוך הכתבה" caption={caption} />
+              // 👇 הוספת מיתוג לתמונת String (Inline)
+              <InlineImage key={i} src={getBrandedUrl(url)} alt="תמונה מתוך הכתבה" caption={caption} />
             );
           }
           if (/(youtube\.com|youtu\.be|facebook\.com|instagram\.com|tiktok\.com|x\.com|twitter\.com)/i.test(url)) {
@@ -503,7 +505,8 @@ export default async function ArticlePage({ params, searchParams }) {
           let url = urlMatch[0];
           url = url.replace(/<[^>]*>/g, '');
           if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
-            return <InlineImage key={i} src={url} alt="תמונה מתוך הכתבה" caption={caption} />;
+            // 👇 הוספת מיתוג לתמונת Paragraph (Inline)
+            return <InlineImage key={i} src={getBrandedUrl(url)} alt="תמונה מתוך הכתבה" caption={caption} />;
           }
           if (/(youtube\.com|youtu\.be|facebook\.com|instagram\.com|tiktok\.com|x\.com|twitter\.com)/i.test(url)) {
             return <EmbedContent key={i} url={url} />;
@@ -568,8 +571,12 @@ export default async function ArticlePage({ params, searchParams }) {
         const alt = imageData.alternativeText || "תמונה מתוך הכתבה";
         const caption = imageData.caption || "";
         const src = resolveImageUrl(imageData.url);
+        
+        // 👇 הוספת מיתוג לתמונות מבלוק image
+        const brandedSrc = getBrandedUrl(src);
+        
         return (
-          <InlineImage key={i} src={src} alt={alt} caption={caption} />
+          <InlineImage key={i} src={brandedSrc} alt={alt} caption={caption} />
         );
       }
    
