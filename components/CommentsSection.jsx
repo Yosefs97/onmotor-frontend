@@ -1,57 +1,17 @@
-// components/FacebookComments.jsx
+//components\CommentsSection.jsx
 'use client';
-import { useEffect, useState } from 'react';
-import Script from 'next/script';
+import React from 'react';
+import FacebookComments from './FacebookComments';
 
-export default function FacebookComments({ url }) {
-  const [pageUrl, setPageUrl] = useState('');
-
-  // 1. הגדרת הכתובת שעליה מגיבים
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // עדיף להשתמש קודם כל ב-url שהועבר מ-CommentsSection
-      setPageUrl(url || window.location.href.split('?')[0]);
-    }
-  }, [url]);
-
-  // 2. פונקציה שתופעל בדיוק כשהסקריפט של פייסבוק יסיים להיטען
-  const handleFacebookLoad = () => {
-    if (window.FB) {
-      window.FB.XFBML.parse();
-    }
-  };
-
-  // 3. תמיכה במעבר בין עמודים (SPA)
-  useEffect(() => {
-    if (pageUrl && window.FB) {
-      window.FB.XFBML.parse();
-    }
-  }, [pageUrl]);
-
+export default function CommentsSection({ articleUrl }) {
   return (
-    <div className="mt-2">
-      {/* טעינת הסקריפט של פייסבוק.
-        השפה כאן היא he_IL (עברית). 
-        אסטרטגיית lazyOnload מבטיחה שהאתר שלך לא יואט בגלל פייסבוק.
-      */}
-      <Script
-        src="https://connect.facebook.net/he_IL/sdk.js#xfbml=1&version=v19.0"
-        strategy="lazyOnload"
-        onLoad={handleFacebookLoad}
-        crossOrigin="anonymous"
-      />
+    <div className="w-full mt-2" dir="rtl">
+      <h3 className="text-xl font-bold border-red-600 border-t-2 pb-0.2">
+        תגובות הגולשים
+      </h3>
 
-      {/* הקונטיינר של פייסבוק - חשוב שהוא יהיה קיים ב-DOM כשהפונקציה parse רצה */}
-      {pageUrl && (
-        <div
-          className="fb-comments"
-          data-href={pageUrl}
-          data-width="100%"
-          data-numposts="5"
-          data-order-by="reverse_time"
-          data-mobile="true"
-        />
-      )}
+      {/* ✅ מציג רק תגובות מפייסבוק */}
+      <FacebookComments url={articleUrl} />
     </div>
   );
 }
