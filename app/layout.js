@@ -257,7 +257,7 @@ export default async function RootLayout({ children }) {
       </head>
 
       <body className="flex flex-col min-h-screen">
-        {/* אלמנט החובה של פייסבוק */}
+        {/* אלמנט החובה של פייסבוק - נשאר כאן */}
         <div id="fb-root"></div>
 
         <script
@@ -281,13 +281,9 @@ export default async function RootLayout({ children }) {
         <Script src="https://cdn.enable.co.il/licenses/enable-L491236ornf8p4x2-1025-75004/init.js"
                 strategy="lazyOnload" />
                 
-        {/* הסקריפט המעודכן של פייסבוק עם appId מוגדר */}
-        <Script
-          id="fb-sdk-main"
-          src="https://connect.facebook.net/he_IL/sdk.js#xfbml=1&version=v23.0&appId=1702134291174147"
-          strategy="afterInteractive"
-          crossOrigin="anonymous"
-        />
+        {/* הערה: הסרנו מכאן את הסקריפט של פייסבוק (facebook-jssdk).
+            הוא נטען כעת ישירות ובצורה מבוקרת מתוך קומפוננטת FacebookComments.jsx
+        */}
         
         <AdvertisingPopup />
         <WhatsAppSlideIn />

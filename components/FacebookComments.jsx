@@ -1,57 +1,71 @@
 // components/FacebookComments.jsx
 'use client';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export default function FacebookComments({ url }) {
   const containerRef = useRef(null);
+  const [pageUrl, setPageUrl] = useState('');
+
+  // 1. קביעת הכתובת הנוכחית
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setPageUrl(url || window.location.href.split('?')[0]);
+    }
+  }, [url]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (!pageUrl) return;
 
-    // למטרת הבדיקה בלבד! נסה קודם כל עם הכתובת של פייסבוק.
-    // אם זה עובד, שים // לפני השורה הזו ותוריד את ה-// מהשורה שמתחתיה.
-    const actualUrl = 'https://developers.facebook.com/docs/plugins/comments/';
-    // const actualUrl = url || window.location.href.split('?')[0];
-
-    let timeoutId;
-
-    const renderComments = () => {
+    // 2. פונקציה לבניית התגובות וקריאה לפייסבוק
+    const renderFbComments = () => {
       if (containerRef.current && window.FB) {
-        // 1. מנקים את הקונטיינר לחלוטין כדי למנוע התנגשויות עם React
-        containerRef.current.innerHTML = '';
-
-        // 2. יוצרים את האלמנט של פייסבוק בעזרת JS טהור
-        const fbDiv = document.createElement('div');
-        fbDiv.className = 'fb-comments';
-        fbDiv.setAttribute('data-href', actualUrl);
-        fbDiv.setAttribute('data-width', '100%');
-        fbDiv.setAttribute('data-numposts', '5');
-        fbDiv.setAttribute('data-mobile', 'true');
-
-        // 3. שותלים אותו בקונטיינר
-        containerRef.current.appendChild(fbDiv);
-
-        // 4. אומרים לפייסבוק לסרוק רק את הקונטיינר הספציפי הזה
+        // מנקים את הקונטיינר לחלוטין ושותלים את האלמנט של פייסבוק מחדש
+        // זה מונע מ-React לדרוס את ה-iframe שפייסבוק מייצר
+        containerRef.current.innerHTML = `<div class="fb-comments" data-href="${pageUrl}" data-width="100%" data-numposts="5" data-mobile="true"></div>`;
+        
+        // פוקדים על פייסבוק לרנדר רק את הקונטיינר הזה
         window.FB.XFBML.parse(containerRef.current);
-      } else if (!window.FB) {
-        // אם ה-SDK עדיין לא מוכן, ננסה שוב עוד חצי שנייה
-        timeoutId = setTimeout(renderComments, 500);
       }
     };
 
-    // מתחילים את התהליך עם השהייה קלה
-    timeoutId = setTimeout(renderComments, 300);
-
-    return () => {
-      clearTimeout(timeoutId);
+    // 3. אתחול מפורש של פייסבוק (מונע את רוב הבאגים ב-Next.js)
+    window.fbAsyncInit = function () {
+      window.FB.init({
+        appId: '1702134291174147', // ה-App ID שלך
+        cookie: true,
+        xfbml: true,
+        version: 'v19.0'
+      });
+      
+      // ברגע שהאתחול הסתיים, מרנדרים את התגובות
+      renderFbComments();
     };
-  }, [url]);
+
+    // 4. הזרקה ידנית של הסקריפט (עוקף את רכיב Script של Next)
+    if (!document.getElementById('facebook-jssdk')) {
+      const script = document.createElement('script');
+      script.id = 'facebook-jssdk';
+      script.src = 'https://connect.facebook.net/he_IL/sdk.js';
+      script.async = true;
+      script.defer = true;
+      script.crossOrigin = 'anonymous';
+      document.body.appendChild(script);
+    } else {
+      // אם הסקריפט כבר נמצא (למשל במעבר מכתבה לכתבה), פשוט נרנדר מחדש
+      if (window.FB) {
+        renderFbComments();
+      }
+    }
+  }, [pageUrl]);
+
+  if (!pageUrl) return null;
 
   return (
-    // הוספתי גבול אדום מקווקו רק כדי שתראה בעין איפה הקונטיינר יושב
-    <div 
-      className="mt-4 w-full min-h-[250px] border-2 border-dashed border-red-300" 
-      ref={containerRef} 
-    />
+    <div className="mt-4 w-full min-h-[200px]">
+      {/* הקונטיינר שאליו מוזרק הקוד של פייסבוק.
+        הוא ריק כדי למנוע התנגשויות ברינדור של React.
+      */}
+      <div ref={containerRef} className="w-full" />
+    </div>
   );
 }
