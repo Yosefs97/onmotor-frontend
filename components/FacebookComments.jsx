@@ -43,7 +43,7 @@ export default function FacebookComments({ url }) {
         <div
           className="fb-comments w-full"
           data-href={pageUrl}
-          data-width="100%"
+          data-width=""
           data-numposts="5"
           data-mobile="true"
         />
