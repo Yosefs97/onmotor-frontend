@@ -1,51 +1,57 @@
 // components/FacebookComments.jsx
 'use client';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 export default function FacebookComments({ url }) {
-  const [pageUrl, setPageUrl] = useState('');
   const containerRef = useRef(null);
 
-  // 1. קביעת הכתובת שעליה מגיבים
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setPageUrl(url || window.location.href.split('?')[0]);
-    }
+    if (typeof window === 'undefined') return;
+
+    // למטרת הבדיקה בלבד! נסה קודם כל עם הכתובת של פייסבוק.
+    // אם זה עובד, שים // לפני השורה הזו ותוריד את ה-// מהשורה שמתחתיה.
+    const actualUrl = 'https://developers.facebook.com/docs/plugins/comments/';
+    // const actualUrl = url || window.location.href.split('?')[0];
+
+    let timeoutId;
+
+    const renderComments = () => {
+      if (containerRef.current && window.FB) {
+        // 1. מנקים את הקונטיינר לחלוטין כדי למנוע התנגשויות עם React
+        containerRef.current.innerHTML = '';
+
+        // 2. יוצרים את האלמנט של פייסבוק בעזרת JS טהור
+        const fbDiv = document.createElement('div');
+        fbDiv.className = 'fb-comments';
+        fbDiv.setAttribute('data-href', actualUrl);
+        fbDiv.setAttribute('data-width', '100%');
+        fbDiv.setAttribute('data-numposts', '5');
+        fbDiv.setAttribute('data-mobile', 'true');
+
+        // 3. שותלים אותו בקונטיינר
+        containerRef.current.appendChild(fbDiv);
+
+        // 4. אומרים לפייסבוק לסרוק רק את הקונטיינר הספציפי הזה
+        window.FB.XFBML.parse(containerRef.current);
+      } else if (!window.FB) {
+        // אם ה-SDK עדיין לא מוכן, ננסה שוב עוד חצי שנייה
+        timeoutId = setTimeout(renderComments, 500);
+      }
+    };
+
+    // מתחילים את התהליך עם השהייה קלה
+    timeoutId = setTimeout(renderComments, 300);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
   }, [url]);
 
-  // 2. קריאה לפייסבוק לרנדר את התגובות
-  useEffect(() => {
-    // אנחנו נותנים ל-React רגע לסיים לצייר את ה-DOM עם ה-setTimeout
-    const timeoutId = setTimeout(() => {
-      if (pageUrl && window.FB && window.FB.XFBML) {
-        // אם תפסנו את הקונטיינר, נבקש מפייסבוק לסרוק רק אותו
-        if (containerRef.current) {
-          window.FB.XFBML.parse(containerRef.current);
-        } else {
-          window.FB.XFBML.parse();
-        }
-      }
-    }, 200);
-
-    return () => clearTimeout(timeoutId);
-  }, [pageUrl]);
-
-  if (!pageUrl) return null;
-
   return (
-    <div className="mt-4 w-full min-h-[150px]" ref={containerRef}>
-      {/* השימוש ב-key עם הכתובת הוא קריטי! 
-        הוא אומר ל-React: "אם הכתובת השתנתה, תמחק את הדיב הישן ותייצר אחד חדש לגמרי".
-        זה מונע מפייסבוק להיתקע על גובה 0.
-      */}
-      <div
-        key={pageUrl}
-        className="fb-comments w-full"
-        data-href={pageUrl}
-        data-width="100%"
-        data-numposts="5"
-        data-mobile="true"
-      />
-    </div>
+    // הוספתי גבול אדום מקווקו רק כדי שתראה בעין איפה הקונטיינר יושב
+    <div 
+      className="mt-4 w-full min-h-[250px] border-2 border-dashed border-red-300" 
+      ref={containerRef} 
+    />
   );
 }
