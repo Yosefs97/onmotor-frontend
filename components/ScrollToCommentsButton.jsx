@@ -84,7 +84,6 @@ export default function ScrollToCommentsButton() {
       }}
     >
       <FaCommentDots className="text-lg" />
-      <span className="text-sm font-semibold">לתגובות</span>
     </button>
   );
 }

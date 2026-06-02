@@ -82,7 +82,6 @@ export default function ScrollToTableButton() {
       }}
     >
       <FaTable className="text-lg" />
-      <span className="text-sm font-semibold">למפרט</span>
     </button>
   );
 }

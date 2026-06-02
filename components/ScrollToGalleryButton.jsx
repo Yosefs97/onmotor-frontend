@@ -83,7 +83,6 @@ export default function ScrollToGalleryButton() {
       }}
     >
       <FaImages className="text-lg" />
-      <span className="text-sm font-semibold">לגלריה</span>
     </button>
   );
 }
