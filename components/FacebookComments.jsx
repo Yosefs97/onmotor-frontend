@@ -6,7 +6,7 @@ export default function FacebookComments({ url }) {
   const containerRef = useRef(null);
   const [pageUrl, setPageUrl] = useState('');
 
-  // 1. קביעת הכתובת הנוכחית
+  // קביעת הכתובת שעליה מגיבים (מזהה הכתבה)
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setPageUrl(url || window.location.href.split('?')[0]);
@@ -16,32 +16,29 @@ export default function FacebookComments({ url }) {
   useEffect(() => {
     if (!pageUrl) return;
 
-    // 2. פונקציה לבניית התגובות וקריאה לפייסבוק
     const renderFbComments = () => {
       if (containerRef.current && window.FB) {
-        // מנקים את הקונטיינר לחלוטין ושותלים את האלמנט של פייסבוק מחדש
-        // זה מונע מ-React לדרוס את ה-iframe שפייסבוק מייצר
-        containerRef.current.innerHTML = `<div class="fb-comments" data-href="${pageUrl}" data-width="100%" data-numposts="5" data-mobile="true"></div>`;
+        // מנקים את הקונטיינר ושותלים את אלמנט התגובות מחדש
+        containerRef.current.innerHTML = `<div class="fb-comments w-full" data-href="${pageUrl}" data-width="100%" data-numposts="5" data-mobile="true"></div>`;
         
-        // פוקדים על פייסבוק לרנדר רק את הקונטיינר הזה
+        // מורים לפייסבוק לסרוק ולרנדר את הדיב
         window.FB.XFBML.parse(containerRef.current);
       }
     };
 
-    // 3. אתחול מפורש של פייסבוק (מונע את רוב הבאגים ב-Next.js)
+    // הגדרת פונקציית האתחול הרשמית של פייסבוק
     window.fbAsyncInit = function () {
       window.FB.init({
-        appId: '1702134291174147', // ה-App ID שלך
+        appId: '1702134291174147',
         cookie: true,
         xfbml: true,
         version: 'v19.0'
       });
       
-      // ברגע שהאתחול הסתיים, מרנדרים את התגובות
       renderFbComments();
     };
 
-    // 4. הזרקה ידנית של הסקריפט (עוקף את רכיב Script של Next)
+    // הזרקת הסקריפט של ה-SDK לעמוד אם הוא עדיין לא קיים
     if (!document.getElementById('facebook-jssdk')) {
       const script = document.createElement('script');
       script.id = 'facebook-jssdk';
@@ -51,7 +48,7 @@ export default function FacebookComments({ url }) {
       script.crossOrigin = 'anonymous';
       document.body.appendChild(script);
     } else {
-      // אם הסקריפט כבר נמצא (למשל במעבר מכתבה לכתבה), פשוט נרנדר מחדש
+      // אם הסקריפט כבר שם (במעבר בין כתבות), פשוט נרנדר שוב
       if (window.FB) {
         renderFbComments();
       }
@@ -61,10 +58,8 @@ export default function FacebookComments({ url }) {
   if (!pageUrl) return null;
 
   return (
-    <div className="mt-4 w-full min-h-[200px]">
-      {/* הקונטיינר שאליו מוזרק הקוד של פייסבוק.
-        הוא ריק כדי למנוע התנגשויות ברינדור של React.
-      */}
+    <div className="mt-2 w-full min-h-[150px]">
+      {/* הקונטיינר אליו אנחנו מזריקים את פייסבוק */}
       <div ref={containerRef} className="w-full" />
     </div>
   );
