@@ -285,9 +285,9 @@ export default async function RootLayout({ children }) {
             הוא נטען כעת ישירות ובצורה מבוקרת מתוך קומפוננטת FacebookComments.jsx
         */}
         
-        <AdvertisingPopup />
+        {/*<AdvertisingPopup />
         <WhatsAppSlideIn />
-        <MarketingPopup />
+        <MarketingPopup />*/}
       </body>
     </html>
   );
