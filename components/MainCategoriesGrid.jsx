@@ -2,73 +2,65 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 
-export default function MainCategoriesGrid({ categories = [], isSidebar = false }) {
-  if (!categories.length) return null;
+export default function MainCategoriesGrid({ categories = [] }) {
+  if (!categories || categories.length === 0) return null;
+
+  // פונקציית עזר שמתאימה לכל קטגוריה את הגודל שלה ברשת לפי ה-handle שלה בשופיפיי
+  const getGridClass = (handle) => {
+    switch (handle) {
+      case 'parts': // חלקי חילוף
+        return 'md:col-span-2 md:row-span-2 h-64 md:h-full';
+      case 'road': // כביש
+        return 'md:col-span-2 md:row-span-1 h-64 md:h-64';
+      case 'offroad': // שטח
+      case 'oils': // שמנים ונוזלים
+        return 'md:col-span-1 md:row-span-1 h-64 md:h-64';
+      case 'tires': // צמיגים
+      case 'battery': // מצברים
+        return 'md:col-span-2 md:row-span-1 h-64 md:h-64';
+      default:
+        // ברירת מחדל אם הוספת משהו חדש לשופיפיי
+        return 'md:col-span-1 md:row-span-1 h-64 md:h-64'; 
+    }
+  };
 
   return (
-    <section 
-      className={`py-1 px-1 ${isSidebar ? 'w-full mt-1' : 'max-w-7xl mx-auto'}`} 
-      dir="rtl"
-    >
-      
-      {/* כותרת ראשית - מוצגת רק כשהקומפוננטה בגוף הדף (לא בסיידבר) */}
-      {!isSidebar && (
-        <div className="flex items-center gap-0.5 mb-4 px-2">
-          <div className="w-1.5 h-8 bg-red-600 rounded-full" />
-          <h2 className="text-2xl font-bold text-gray-900">
-            החנות לרוכב
-          </h2>
-        </div>
-      )}
+    <div className="w-full max-w-7xl mx-auto" dir="rtl">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 auto-rows-min">
+        {categories.map((category) => {
+          // שולפים את התמונה שמגיעה משופיפיי (או שמים ברירת מחדל אם חסר)
+          const imageUrl = category.image?.url || category.image || '/images/placeholder-category.jpg';
 
-      {/* כותרת משנית - מוצגת רק בתוך הסיידבר */}
-      {isSidebar && (
-        <div className="flex items-center gap-2 mb-3 border-b border-gray-100 pb-2">
-            <h3 className="font-bold text-lg text-gray-800">
-                קטגוריות
-            </h3>
-        </div>
-      )}
-      
-      {/* הגריד: בסיידבר הוא יהיה 2 טורים (גדולים), בראשי הוא יהיה 4-6 טורים */}
-      <div className={`grid gap-0.5 ${
-          isSidebar 
-            ? 'grid-cols-2' 
-            : 'grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-0.5'
-        }`}
-      > 
-        {categories.map((cat) => (
-          <Link 
-            key={cat.handle} 
-            href={cat.href}
-            className="group relative w-full aspect-square rounded overflow-hidden border border-gray-200 bg-white hover:border-red-600 transition-colors duration-300"
-          >
-            {cat.image ? (
-              <Image
-                src={cat.image}
-                alt={cat.title}
-                fill
-                sizes={isSidebar ? "200px" : "(max-width: 768px) 50vw, 16vw"}
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
+          return (
+            <Link
+              key={category.handle}
+              href={category.href}
+              className={`group relative w-full overflow-hidden rounded-2xl bg-zinc-900 shadow-md hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-[#e60000] flex items-end ${getGridClass(category.handle)}`}
+            >
+              {/* תמונת הרקע משופיפיי */}
+              <img
+                src={imageUrl}
+                alt={category.title} // הכותרת (alt) מגיעה משופיפיי
+                className="absolute inset-0 h-full w-full object-cover opacity-70 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 ease-in-out"
               />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-400">
-                <span className="text-xs">אין תמונה</span>
+
+              {/* גרדיאנט שחור בתחתית */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+
+              {/* טקסט */}
+              <div className="relative z-10 w-full p-6 text-right">
+                <h2 className="text-3xl font-black text-white group-hover:text-[#e60000] transition-colors duration-300 drop-shadow-lg">
+                  {category.title} {/* 🌟 הכותרת מוצגת ישירות מהנתונים של שופיפיי! 🌟 */}
+                </h2>
+                <span className="inline-block mt-2 text-sm font-bold text-gray-200 opacity-0 transform translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                  לכניסה &larr;
+                </span>
               </div>
-            )}
-            
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
-            
-            <div className="absolute bottom-0 w-full p-2 text-center">
-              <h3 className="text-white font-bold text-sm leading-tight drop-shadow-md">
-                {cat.title}
-              </h3>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          );
+        })}
       </div>
-    </section>
+    </div>
   );
 }
