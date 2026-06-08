@@ -1,9 +1,11 @@
+//components/ClientLayout.jsx
+
 'use client';
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Header from "./Header";
-import ShopHeader from "./ShopHeader"; // 👈 ייבוא ההידר החדש של החנות
+import ShopHeader from "./ShopHeader";
 import Footer from "./Footer";
 import NewsTicker from "./NewsTicker";
 import MobileMenu from "./MobileMenu";
@@ -19,7 +21,6 @@ export default function ClientLayout({ children, tickerHeadlines = [], sidebarDa
   const [isAtTop, setIsAtTop] = useState(true);
   const [headerHeight, setHeaderHeight] = useState(60);
 
-  /* 📌 טעינת סקריפטים */
   useEffect(() => {
     const scripts = [
       { id: "twitter-embed-script", src: "https://platform.twitter.com/widgets.js" },
@@ -38,7 +39,6 @@ export default function ClientLayout({ children, tickerHeadlines = [], sidebarDa
     });
   }, []);
 
-  /* 📌 זיהוי גלילה */
   useEffect(() => {
     if (!isMobile) return;
     const onScroll = () => {
@@ -48,7 +48,6 @@ export default function ClientLayout({ children, tickerHeadlines = [], sidebarDa
     return () => window.removeEventListener("scroll", onScroll);
   }, [isMobile]);
 
-  /* 📌 חישוב גובה Header */
   useEffect(() => {
     const header = document.querySelector("header");
     if (!header) return;
@@ -60,16 +59,17 @@ export default function ClientLayout({ children, tickerHeadlines = [], sidebarDa
     return () => window.removeEventListener("resize", updateHeight);
   }, []);
 
-  // בדיקה האם אנחנו בדף חנות
   const isShopPage = pathname.startsWith("/shop");
 
   return (
     <>
-      <div className="fixed top-4 right-0 z-[9999] lg:hidden">
-        <MobileMenu />
-      </div>
+      {/* 👇 ההמבורגר יופיע עכשיו רק אם אנחנו לא בחנות 👇 */}
+      {!isShopPage && (
+        <div className="fixed top-4 right-0 z-[9999] lg:hidden">
+          <MobileMenu />
+        </div>
+      )}
 
-      {/* 👇 ה"טריק": מחליפים את ההידר לפי העמוד 👇 */}
       {isShopPage ? <ShopHeader /> : <Header />}
 
       {!isShopPage && (

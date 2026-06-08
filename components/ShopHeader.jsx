@@ -1,4 +1,4 @@
-// components/ShopHeader.jsx
+//components/ShopHeader.jsx
 'use client';
 
 import React, { useLayoutEffect, useRef } from 'react';
@@ -80,26 +80,26 @@ export default function ShopHeader() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-black text-[#C0C0C0] h-[80px] w-full flex items-center justify-center px-4 py-2 shadow-md border-b border-gray-800">
+    // השינוי כאן: flex-row-reverse מצמיד אותו לשמאל בדיוק כמו במגזין
+    <header className="sticky top-0 z-50 bg-black text-[#C0C0C0] h-[80px] w-full flex flex-row-reverse items-center px-2 md:px-6 py-2 shadow-md border-b border-gray-800">
       
-      {/* אזור הלוגו - לחיץ ומונפש */}
       <div
         ref={containerRef}
-        className="flex flex-row-reverse items-center gap-3 cursor-pointer"
+        className="flex flex-row-reverse items-center gap-2 min-w-0 cursor-pointer"
         onClick={handleClick}
       >
         <img
           ref={logoRef}
           src="/OnMotorLogonoback.png"
           alt="OnMotor Parts Logo"
-          className="w-16 md:w-20 shrink-0 z-50"
+          className="w-20 shrink-0 z-50"
           dir="rtl"
         />
 
         <div className="truncate overflow-visible text-right">
           <h1
             dir="ltr"
-            className="text-2xl md:text-4xl font-bold whitespace-nowrap z-50 flex justify-end"
+            className="text-2xl lg:text-4xl font-bold whitespace-nowrap z-50 flex justify-end"
           >
             {logoText.map((part, i) => (
               <span
@@ -111,7 +111,7 @@ export default function ShopHeader() {
               </span>
             ))}
           </h1>
-          <p className="text-xs md:text-sm font-bold whitespace-nowrap truncate mt-0.5">
+          <p className="text-xs lg:text-sm font-bold whitespace-nowrap truncate">
             החנות המקצועית לחלפים וציוד רכיבה
           </p>
         </div>
