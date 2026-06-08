@@ -14,7 +14,7 @@ export default async function ShopPage() {
 
   return (
     <ShopLayoutInternal menuItems={menuItems} categories={categories} hideSidebar={true}>
-      <div className="flex flex-col items-center gap-1 py-6 px-4 w-full max-w-7xl mx-auto">
+      <div className="flex flex-col items-center gap-1 py-1 px-4 w-full max-w-7xl mx-auto">
         
         {/* כותרת מבצע משלוח חינם */}
         <div className="text-center w-full mt-1">
