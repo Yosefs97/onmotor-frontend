@@ -1,9 +1,9 @@
-// components/ClientLayout.jsx
 'use client';
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Header from "./Header";
+import ShopHeader from "./ShopHeader"; // 👈 ייבוא ההידר החדש של החנות
 import Footer from "./Footer";
 import NewsTicker from "./NewsTicker";
 import MobileMenu from "./MobileMenu";
@@ -69,13 +69,9 @@ export default function ClientLayout({ children, tickerHeadlines = [], sidebarDa
         <MobileMenu />
       </div>
 
-      <Header />
+      {/* 👇 ה"טריק": מחליפים את ההידר לפי העמוד 👇 */}
+      {isShopPage ? <ShopHeader /> : <Header />}
 
-      {/* 👇 השינוי כאן: 
-          עטפנו את הדיב של הטיקר בתנאי !isShopPage.
-          זה אומר: אם אנחנו בחנות - אל תציג את הטיקר בכלל.
-          זה יבטל את הרווח המיותר ויצמיד את העגלה להדר.
-      */}
       {!isShopPage && (
         <div
           className={`
