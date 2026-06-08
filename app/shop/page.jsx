@@ -14,10 +14,10 @@ export default async function ShopPage() {
 
   return (
     <ShopLayoutInternal menuItems={menuItems} categories={categories} hideSidebar={true}>
-      <div className="flex flex-col items-center gap-6 py-6 px-4 w-full max-w-7xl mx-auto">
+      <div className="flex flex-col items-center gap-1 py-6 px-4 w-full max-w-7xl mx-auto">
         
         {/* כותרת מבצע משלוח חינם */}
-        <div className="text-center w-full mt-2">
+        <div className="text-center w-full mt-1">
           <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight bg-gray-50 py-3 px-6 rounded-xl inline-block border border-gray-200 shadow-sm">
             משלוח חינם עד הבית בכל רכישה מעל <span className="text-[#e60000]">₪299</span>
           </h1>
