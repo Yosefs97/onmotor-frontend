@@ -105,7 +105,12 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
           const handleClick = () => {
             if (mobile && hasLinks && !isOnMotorParts) {
               toggleMenu(index);
+            } else if (isOnMotorParts) {
+              // פתיחת OnMotor Parts בחלון חדש
+              window.open(menu.path, '_blank', 'noopener,noreferrer');
+              onClose();
             } else {
+              // ניווט רגיל באותו חלון לשאר הקישורים
               onClose();
               router.push(menu.path);
             }
