@@ -13,25 +13,21 @@ export default async function ShopPage() {
   ]);
 
   return (
-    // הוספנו hideSidebar={true} כדי שהקוביות יתפרסו על כל המסך
     <ShopLayoutInternal menuItems={menuItems} categories={categories} hideSidebar={true}>
-      
-      <div className="flex flex-col items-center gap-8 py-8 px-4 w-full max-w-7xl mx-auto">
+      <div className="flex flex-col items-center gap-6 py-6 px-4 w-full max-w-7xl mx-auto">
         
-        <div className="text-center">
-          <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tight uppercase mb-4">
-            החנות של <span className="text-[#e60000]">OnMotor</span>
+        {/* כותרת מבצע משלוח חינם */}
+        <div className="text-center w-full mt-2">
+          <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight bg-gray-50 py-3 px-6 rounded-xl inline-block border border-gray-200 shadow-sm">
+            משלוח חינם עד הבית בכל רכישה מעל <span className="text-[#e60000]">₪299</span>
           </h1>
-          <p className="text-lg text-gray-500 font-medium">בחר קטגוריה כדי להתחיל</p>
         </div>
 
-        {/* רשת הקוביות הא-סימטרית (Bento Grid) שמקבלת את כל הבמה */}
+        {/* רשת הקוביות */}
         <div className="w-full">
            <MainCategoriesGrid categories={categories} />
         </div>
-
       </div>
-
     </ShopLayoutInternal>
   );
 }
