@@ -8,7 +8,7 @@ import DropdownSimple from './DropdownSimple';
 import { buildUrlFromFilters } from '@/utils/buildUrlFromFilters';
 import { motion } from 'framer-motion';
 import { MessageCircle, Loader2 } from 'lucide-react';
-import MainCategoriesGrid from './MainCategoriesGrid'; 
+
 
 export default function ShopSidebar({ 
   onFilterChange = () => {}, 
@@ -186,9 +186,7 @@ export default function ShopSidebar({
 
       <button id="filter-submit-btn" onClick={applyFilters} className="w-full mt-4 bg-red-600 text-white font-bold py-2 px-4 rounded-md">חפש</button>
 
-      <div className="hidden md:block mt-2 pt-2 border-t border-gray-100">
-         <MainCategoriesGrid categories={categories} isSidebar={true} />
-      </div>
+      
 
     </aside>
   );
