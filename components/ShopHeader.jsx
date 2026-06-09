@@ -75,14 +75,14 @@ export default function ShopHeader({ menuItems = [], categories = [] }) {
         <div ref={containerRef} className="flex items-center gap-2 cursor-pointer shrink-0" onClick={handleClick}>
           <img ref={logoRef} src="/OnMotorLogonoback.png" alt="OnMotor Parts Logo" className="w-16 md:w-20 shrink-0 z-50" />
           <div className="truncate overflow-visible text-right">
-            <h1 dir="ltr" className="text-xl md:text-3xl lg:text-4xl font-bold whitespace-nowrap z-50 flex justify-end">
+            <h1 dir="ltr" className="text-2xl md:text-3xl lg:text-4xl font-bold whitespace-nowrap z-50 flex justify-end">
               {logoText.map((part, i) => (
                 <span key={i} ref={(el) => (lettersRef.current[i] = el)} className={`inline-block opacity-0 ${part.red ? 'text-[#e60000]' : 'text-white'}`}>
                   {part.char}
                 </span>
               ))}
             </h1>
-            <p className="text-[10px] md:text-xs lg:text-sm font-bold whitespace-nowrap truncate text-[#C0C0C0]">
+            <p className="text-xs md:text-sm lg:text-base font-bold whitespace-nowrap truncate text-[#C0C0C0] mt-0.5">
               החנות המקצועית לחלפים וציוד רכיבה
             </p>
           </div>
