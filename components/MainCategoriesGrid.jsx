@@ -61,13 +61,19 @@ export default function MainCategoriesGrid({ categories = [] }) {
 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none"></div>
 
-                <div className="relative z-10 w-full p-5 text-right pointer-events-none">
-                  <h2 className="text-2xl md:text-3xl font-black text-white group-hover:text-[#e60000] transition-colors duration-300 drop-shadow-md">
+                {/* 🌟 שינינו ל- text-center במובייל, ו- md:text-right במחשב 🌟 */}
+                <div className="relative z-10 w-full p-5 text-center md:text-right pointer-events-none">
+                  
+                  {/* 🌟 הגדלנו את הפונט במובייל ל- text-4xl 🌟 */}
+                  <h2 className="text-4xl md:text-3xl font-black text-white group-hover:text-[#e60000] transition-colors duration-300 drop-shadow-md">
                     {category.title}
                   </h2>
-                  <span className="inline-block mt-1 text-sm font-bold text-gray-200 opacity-0 transform translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                  
+                  {/* 🌟 הגדלנו את "לכניסה" במובייל ל- text-base וטיפה ריווח (mt-2) 🌟 */}
+                  <span className="inline-block mt-2 text-base md:text-sm font-bold text-gray-200 opacity-0 transform translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
                     לכניסה &larr;
                   </span>
+                  
                 </div>
               </Link>
             );
