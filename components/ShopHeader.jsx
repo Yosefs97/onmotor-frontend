@@ -3,9 +3,9 @@
 
 import React, { useLayoutEffect, useRef } from 'react';
 import { gsap } from 'gsap';
-import CartUnderHeader from "@/components/CartUnderHeader";
+import CartUnderHeader from './CartUnderHeader';
 
-export default function ShopHeader() {
+export default function ShopHeader({ menuItems = [], categories = [] }) {
   const logoRef = useRef(null);
   const lettersRef = useRef([]);
   const containerRef = useRef(null);
@@ -81,42 +81,47 @@ export default function ShopHeader() {
   ];
 
   return (
-    // השינוי כאן: flex-row-reverse מצמיד אותו לשמאל בדיוק כמו במגזין
-    <header className="sticky top-0 z-50 bg-black text-[#C0C0C0] h-[80px] w-full flex flex-row-reverse items-center px-2 md:px-6 py-2 shadow-md border-b border-gray-800">
+    // במחשב זה הופך לשורה אחת אחידה (lg:flex-row-reverse) שמכילה בתוכה את הכל
+    <header className="sticky top-0 z-50 w-full bg-black flex flex-col lg:flex-row-reverse lg:items-center lg:justify-between border-b border-gray-800 shadow-md">
       
-      <div
-        ref={containerRef}
-        className="flex flex-row-reverse items-center gap-2 min-w-0 cursor-pointer"
-        onClick={handleClick}
-      >
-        <img
-          ref={logoRef}
-          src="/OnMotorLogonoback.png"
-          alt="OnMotor Parts Logo"
-          className="w-20 shrink-0 z-50"
-          dir="rtl"
-        />
+      {/* אזור הלוגו והסלוגן */}
+      <div className="h-[80px] flex flex-row-reverse items-center justify-between lg:justify-start px-2 md:px-6 py-2 shrink-0 w-full lg:w-auto">
+        <div
+          ref={containerRef}
+          className="flex flex-row-reverse items-center gap-2 min-w-0 cursor-pointer"
+          onClick={handleClick}
+        >
+          <img
+            ref={logoRef}
+            src="/OnMotorLogonoback.png"
+            alt="OnMotor Parts Logo"
+            className="w-20 shrink-0 z-50"
+            dir="rtl"
+          />
 
-        <div className="truncate overflow-visible text-right">
-          <h1
-            dir="ltr"
-            className="text-2xl lg:text-4xl font-bold whitespace-nowrap z-50 flex justify-end"
-          >
-            {logoText.map((part, i) => (
-              <span
-                key={i}
-                ref={(el) => (lettersRef.current[i] = el)}
-                className={`inline-block opacity-0 ${part.red ? 'text-[#e60000]' : ''}`}
-              >
-                {part.char}
-              </span>
-            ))}
-          </h1>
-          <p className="text-xs lg:text-sm font-bold whitespace-nowrap truncate">
-            החנות המקצועית לחלפים וציוד רכיבה
-          </p>
+          <div className="truncate overflow-visible text-right">
+            <h1
+              dir="ltr"
+              className="text-2xl lg:text-4xl font-bold whitespace-nowrap z-50 flex"
+            >
+              {logoText.map((part, i) => (
+                <span
+                  key={i}
+                  ref={(el) => (lettersRef.current[i] = el)}
+                  className={`inline-block opacity-0 ${part.red ? 'text-[#e60000]' : ''}`}
+                >
+                  {part.char}
+                </span>
+              ))}
+            </h1>
+            <p className="text-xs lg:text-sm font-bold text-right whitespace-nowrap truncate text-[#C0C0C0]">
+              החנות המקצועית לחלפים וציוד רכיבה
+            </p>
+          </div>
         </div>
       </div>
+
+      {/* 🌟 הלשונית של החיפוש והעגלה מולבשת כאן ישירות 🌟 */}
       <CartUnderHeader menuItems={menuItems} categories={categories} />
 
     </header>
