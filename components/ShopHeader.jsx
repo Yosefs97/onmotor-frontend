@@ -67,46 +67,52 @@ export default function ShopHeader({ menuItems = [], categories = [] }) {
   ];
 
   return (
-    <header className="sticky top-0 z-[60] bg-black text-white h-[80px] w-full flex items-center justify-between px-2 md:px-6 py-2 shadow-md border-b border-gray-800" dir="rtl">
-      
-      {/* צד ימין: לוגו וטקסט */}
-      <div ref={containerRef} className="flex items-center gap-2 cursor-pointer shrink-0" onClick={handleClick}>
-        <img ref={logoRef} src="/OnMotorLogonoback.png" alt="OnMotor Parts Logo" className="w-16 md:w-20 shrink-0 z-50" />
-        <div className="truncate overflow-visible text-right">
-          <h1 dir="ltr" className="text-xl md:text-3xl lg:text-4xl font-bold whitespace-nowrap z-50 flex justify-end">
-            {logoText.map((part, i) => (
-              <span key={i} ref={(el) => (lettersRef.current[i] = el)} className={`inline-block opacity-0 ${part.red ? 'text-[#e60000]' : 'text-white'}`}>
-                {part.char}
-              </span>
-            ))}
-          </h1>
-          <p className="text-[10px] md:text-xs lg:text-sm font-bold whitespace-nowrap truncate text-[#C0C0C0]">
-            החנות המקצועית לחלפים וציוד רכיבה
-          </p>
-        </div>
-      </div>
-
-      {/* צד שמאל: ניווט, חיפוש ועגלה (מוצג בשורה אחת במחשב, מוסתר במובייל) */}
-      <div className="hidden md:flex items-center gap-6 justify-end flex-1 pl-2">
+    <>
+      {/* שינינו את sticky ל-fixed, והוספנו left-0 right-0 כדי שיתפרס על הכל */}
+      <header className="fixed top-0 left-0 right-0 z-[60] bg-black text-white h-[80px] flex items-center justify-between px-2 md:px-6 py-2 shadow-md border-b border-gray-800" dir="rtl">
         
-        {/* קטגוריות: הוספתי דריסת צבע כפויה כדי שהטקסט יהיה לבן ולא ייבלע */}
-        <div className="flex items-center gap-4 text-white font-medium [&_a]:!text-white [&_span]:!text-white hover:[&_a]:!text-[#e60000] transition-colors">
-          <CategoriesNav categories={categories} />
-          <DesktopMegaMenu menuItems={menuItems} />
+        {/* צד ימין: לוגו וטקסט */}
+        <div ref={containerRef} className="flex items-center gap-2 cursor-pointer shrink-0" onClick={handleClick}>
+          <img ref={logoRef} src="/OnMotorLogonoback.png" alt="OnMotor Parts Logo" className="w-16 md:w-20 shrink-0 z-50" />
+          <div className="truncate overflow-visible text-right">
+            <h1 dir="ltr" className="text-xl md:text-3xl lg:text-4xl font-bold whitespace-nowrap z-50 flex justify-end">
+              {logoText.map((part, i) => (
+                <span key={i} ref={(el) => (lettersRef.current[i] = el)} className={`inline-block opacity-0 ${part.red ? 'text-[#e60000]' : 'text-white'}`}>
+                  {part.char}
+                </span>
+              ))}
+            </h1>
+            <p className="text-[10px] md:text-xs lg:text-sm font-bold whitespace-nowrap truncate text-[#C0C0C0]">
+              החנות המקצועית לחלפים וציוד רכיבה
+            </p>
+          </div>
         </div>
 
-        {/* שורת חיפוש */}
-        <div className="w-[200px] lg:w-[300px]">
-          <LiveSearchBar />
-        </div>
+        {/* צד שמאל: ניווט, חיפוש ועגלה (מוסתר במובייל, מוצג במחשב) */}
+        <div className="hidden md:flex items-center gap-6 justify-end flex-1 pl-2">
+          
+          {/* קטגוריות */}
+          <div className="flex items-center gap-4 text-white font-medium [&_a]:!text-white [&_span]:!text-white hover:[&_a]:!text-[#e60000] transition-colors">
+            <CategoriesNav categories={categories} />
+            <DesktopMegaMenu menuItems={menuItems} />
+          </div>
 
-        {/* עגלת קניות */}
-        <div className="flex items-center gap-2 font-bold text-white shrink-0 bg-zinc-900 px-3 py-1.5 rounded-full border border-gray-800">
-          <span className="text-base">₪{total}</span>
-          <CartButton />
-        </div>
+          {/* שורת חיפוש */}
+          <div className="w-[200px] lg:w-[300px]">
+            <LiveSearchBar />
+          </div>
 
-      </div>
-    </header>
+          {/* עגלת קניות */}
+          <div className="flex items-center gap-2 font-bold text-white shrink-0 bg-zinc-900 px-3 py-1.5 rounded-full border border-gray-800">
+            <span className="text-base">₪{total}</span>
+            <CartButton />
+          </div>
+
+        </div>
+      </header>
+      
+      {/* 🌟 הספייסר: בלוק ריק בגובה 80px שמונע מהתוכן (הקוביות) להחליק מתחת להידר הצף 🌟 */}
+      <div className="h-[80px] w-full shrink-0"></div>
+    </>
   );
 }
