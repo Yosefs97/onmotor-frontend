@@ -6,7 +6,7 @@ import Link from 'next/link';
 import CartButton from './CartButton';
 import LiveSearchBar from './LiveSearchBar';
 import CategoriesNav from './CategoriesNav'; 
-import DesktopMegaMenu from './DesktopMegaMenu';
+import DesktopMegaMenu from './DesktopMegaMenu'; // 👈 1. ייבוא
 
 export default function CartUnderHeader({ menuItems = [], categories = [] }) {
   const [total, setTotal] = useState(0);
@@ -34,33 +34,32 @@ export default function CartUnderHeader({ menuItems = [], categories = [] }) {
         className="
             w-full bg-gray-100 border-b transition-all z-30
             fixed top-[80px] left-0 right-0
-            lg:relative lg:top-0 lg:bg-transparent lg:border-none lg:shadow-none lg:flex-1
+            md:sticky md:top-[80px] md:relative md:z-30
             shadow-sm
         " 
         dir="rtl"
         style={{ height: 'auto' }} 
       >
-        {/* במצב מחשב (lg) אנחנו דוחפים את הכל שמאלה ומגדילים גובה ל-80px שיתאים בדיוק ללוגו */}
-        <div className="container mx-auto px-4 min-h-[50px] lg:min-h-[80px] flex items-center justify-between lg:justify-end gap-2 lg:gap-6">
+        <div className="container mx-auto px-4 min-h-[50px] flex items-center justify-between gap-2">
           
-          <div className="flex items-center gap-4 flex-1 lg:flex-initial overflow-visible lg:justify-end w-full lg:w-auto">
-            
-            <div className="w-full max-w-[220px] md:max-w-[300px] lg:max-w-[250px] xl:max-w-[300px]">
-                <LiveSearchBar />
-            </div>
+          {/* 👇 2. overflow-visible חובה כאן! */}
+          <div className="flex items-center gap-4 flex-1 overflow-visible">
+              
+              <div className="w-full max-w-[220px] md:max-w-[300px]">
+                  <LiveSearchBar />
+              </div>
 
-            {/* במצב מחשב הטקסטים של הניווט הופכים ללבנים כדי לבלוט על השחור */}
-            <div className="hidden lg:block text-white">
-                <CategoriesNav categories={categories} />
-            </div>
+              <div className="hidden md:block">
+                  <CategoriesNav categories={categories} />
+              </div>
 
-            <DesktopMegaMenu menuItems={menuItems} />
+              {/* 👇 3. שימוש בקומפוננטה החדשה */}
+              <DesktopMegaMenu menuItems={menuItems} />
 
           </div>
 
-          {/* צבע המחיר משתנה ללבן במצב מחשב (lg:text-white) */}
-          <div className="flex items-center gap-2 pl-1 shrink-0 text-gray-800 lg:text-white">
-              <div className="text-sm md:text-base font-bold whitespace-nowrap">
+          <div className="flex items-center gap-2 pl-1 shrink-0">
+              <div className="text-sm md:text-base font-bold text-gray-800 whitespace-nowrap">
                   ₪{total}
               </div>
               <CartButton />
@@ -68,15 +67,13 @@ export default function CartUnderHeader({ menuItems = [], categories = [] }) {
 
         </div>
 
-        {/* תפריט קטגוריות למובייל בלבד (מתחת לפס השחור) */}
-        <div className="block lg:hidden w-full bg-gray-100">
+        <div className="block md:hidden w-full">
              <CategoriesNav categories={categories} />
         </div>
 
       </div>
 
-      {/* מרווח ביטחון למובייל בלבד */}
-      <div className="h-[90px] w-full lg:hidden"></div>
+      <div className="h-[90px] w-full md:hidden"></div>
     </>
   );
 }
