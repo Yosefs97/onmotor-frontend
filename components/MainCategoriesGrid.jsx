@@ -37,9 +37,10 @@ export default function MainCategoriesGrid({ categories = [] }) {
         }
       `}} />
 
-      {/* השינוי כאן: שימוש ב- margins שליליים (-mx-4) כדי להתפרס מקצה לקצה במובייל בצורה בטוחה */}
-      <div className="-mx-4 md:mx-auto md:max-w-7xl" dir="rtl">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-1 md:gap-2 auto-rows-min">
+      {/* קיזוז מדויק של שולי העמוד (16 פיקסלים מכל צד) ליצירת פריסה מקצה לקצה */}
+      <div className="-mx-4 w-[calc(100%+2rem)] md:w-full md:mx-auto md:max-w-7xl" dir="rtl">
+        {/* רווח עדין של 2 פיקסלים בין הקוביות למראה נקי */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-[2px] md:gap-2 auto-rows-min">
           {categories.map((category, index) => {
             const imageUrl = category.image?.url || category.image || '/images/placeholder-category.jpg';
 
@@ -47,9 +48,10 @@ export default function MainCategoriesGrid({ categories = [] }) {
               <Link
                 key={category.handle}
                 href={category.href}
-                className={`group relative w-full overflow-hidden rounded-none bg-black shadow-sm transition-all duration-300 border-2 border-transparent hover:border-[#e60000] flex items-end ${getGridClass(category.handle)}`}
+             
+                className={`group relative w-full overflow-hidden rounded-none bg-black shadow-sm transition-all duration-300 ring-0 hover:ring-4 hover:ring-[#e60000] hover:ring-inset flex items-end ${getGridClass(category.handle)}`}
               >
-                {/* התמונה מקבלת את האנימציה עם דיליי קטן בין כל קוביה */}
+                {/* התמונה מקבלת את אנימציית הזום עם דיליי משתנה */}
                 <img
                   src={imageUrl}
                   alt={category.title}
@@ -57,9 +59,9 @@ export default function MainCategoriesGrid({ categories = [] }) {
                   style={{ animationDelay: `${index * 1.5}s` }}
                 />
 
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none"></div>
 
-                <div className="relative z-10 w-full p-5 text-right">
+                <div className="relative z-10 w-full p-5 text-right pointer-events-none">
                   <h2 className="text-2xl md:text-3xl font-black text-white group-hover:text-[#e60000] transition-colors duration-300 drop-shadow-md">
                     {category.title}
                   </h2>
