@@ -29,7 +29,7 @@ export default function CartDrawer({ open, onClose }) {
         <h2 className="text-lg font-bold mb-4">העגלה שלי</h2>
 
         {!cart || cart.lines.edges.length === 0 ? (
-          <div>העגלה ריקה</div>
+          <div className="text-gray-500 font-medium text-center py-4">העגלה ריקה</div>
         ) : (
           <div className="flex-1 space-y-4 overflow-y-auto">
             {cart.lines.edges.map(({ node }) => (

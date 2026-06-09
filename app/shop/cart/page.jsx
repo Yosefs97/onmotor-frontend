@@ -116,7 +116,7 @@ export default function CartPage() {
           <h1 className="text-2xl font-bold text-gray-900">עגלה</h1>
 
           {!cart || cart.lines.edges.length === 0 ? (
-            <div>העגלה ריקה</div>
+            <div className="text-gray-500 font-medium text-center py-4">העגלה ריקה</div>
           ) : (
             <div className="space-y-4">
               {cart.lines.edges.map(({ node }) => (
