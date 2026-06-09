@@ -1,21 +1,25 @@
-//app\shop\layout.jsx
+// app/shop/layout.jsx
+import ShopHeader from "@/components/ShopHeader";
 import CartUnderHeader from "@/components/CartUnderHeader";
 import { fetchMenu } from '@/lib/shopify/fetchMenu';
-import { fetchCategoryList } from '@/lib/shop/fetchCategoryList'; // 👈 1. הוספת הייבוא הזה
+import { fetchCategoryList } from '@/lib/shop/fetchCategoryList';
 
 export default async function ShopLayout({ children }) {
-  // 👈 2. משיכת הקטגוריות והתפריט במקביל
   const [menuItems, categories] = await Promise.all([
     fetchMenu('mega-menu-1'),
     fetchCategoryList()
   ]);
 
   return (
-    <div className="w-full min-h-screen bg-white">
-      {/* 👈 3. העברת ה-categories לקומפוננטה */}
-      {/*<CartUnderHeader menuItems={menuItems} categories={categories} />*/}
+    <div className="w-full min-h-screen bg-gray-50">
       
-      <main className="container mx-auto px-4 py-0">
+      {/* ההידר העליון - עכשיו מכיל גם את הכלים למחשב */}
+      <ShopHeader menuItems={menuItems} categories={categories} />
+      
+      {/* הפס הלבן התחתון - יופיע עכשיו רק במובייל! */}
+      <CartUnderHeader categories={categories} />
+      
+      <main className="container mx-auto px-4 py-0 mt-4">
         {children}
       </main>
     </div>

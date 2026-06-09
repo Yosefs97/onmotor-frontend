@@ -1,14 +1,12 @@
-// /components/CartUnderHeader.jsx
+// components/CartUnderHeader.jsx
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import CartButton from './CartButton';
 import LiveSearchBar from './LiveSearchBar';
 import CategoriesNav from './CategoriesNav'; 
-import DesktopMegaMenu from './DesktopMegaMenu'; // 👈 1. ייבוא
 
-export default function CartUnderHeader({ menuItems = [], categories = [] }) {
+export default function CartUnderHeader({ categories = [] }) {
   const [total, setTotal] = useState(0);
 
   const fetchCart = async () => {
@@ -30,50 +28,34 @@ export default function CartUnderHeader({ menuItems = [], categories = [] }) {
 
   return (
     <>
+      {/* הקומפוננטה הזו מוסתרת לחלוטין במחשב (md:hidden). 
+        במובייל היא נצמדת למטה מתחת להידר השחור.
+      */}
       <div 
-        className="
-            w-full bg-gray-100 border-b transition-all z-30
-            fixed top-[80px] left-0 right-0
-            md:sticky md:top-[80px] md:relative md:z-30
-            shadow-sm
-        " 
+        className="block md:hidden w-full bg-gray-100 border-b transition-all z-30 fixed top-[80px] left-0 right-0 shadow-sm" 
         dir="rtl"
         style={{ height: 'auto' }} 
       >
-        <div className="container mx-auto px-4 min-h-[50px] flex items-center justify-between gap-2">
+        <div className="px-4 py-2 flex items-center justify-between gap-3">
           
-          {/* 👇 2. overflow-visible חובה כאן! */}
-          <div className="flex items-center gap-4 flex-1 overflow-visible">
-              
-              <div className="w-full max-w-[220px] md:max-w-[300px]">
-                  <LiveSearchBar />
-              </div>
-
-              <div className="hidden md:block">
-                  <CategoriesNav categories={categories} />
-              </div>
-
-              {/* 👇 3. שימוש בקומפוננטה החדשה */}
-              <DesktopMegaMenu menuItems={menuItems} />
-
+          <div className="flex-1">
+            <LiveSearchBar />
           </div>
 
-          <div className="flex items-center gap-2 pl-1 shrink-0">
-              <div className="text-sm md:text-base font-bold text-gray-800 whitespace-nowrap">
-                  ₪{total}
-              </div>
-              <CartButton />
+          <div className="flex items-center gap-2 text-gray-800 shrink-0">
+            <span className="text-sm font-bold whitespace-nowrap">₪{total}</span>
+            <CartButton />
           </div>
 
         </div>
 
-        <div className="block md:hidden w-full">
+        <div className="w-full pb-1 border-t border-gray-200">
              <CategoriesNav categories={categories} />
         </div>
-
       </div>
 
-      <div className="h-[90px] w-full md:hidden"></div>
+      {/* בלוק ריק ששומר על המקום כדי שהתוכן לא ייכנס מתחת להידר הצף */}
+      <div className="h-[95px] w-full md:hidden"></div>
     </>
   );
 }
