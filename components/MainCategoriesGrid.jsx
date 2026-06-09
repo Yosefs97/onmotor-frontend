@@ -25,7 +25,7 @@ export default function MainCategoriesGrid({ categories = [] }) {
 
   return (
     <>
-      {/* 🌟 אנימציית הדינמיות לרקע (תזוזה עדינה ויוקרתית) 🌟 */}
+      {/* אנימציית הדינמיות לרקע (תזוזה עדינה ויוקרתית) */}
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes smoothPan {
           0% { transform: scale(1.0); }
@@ -37,9 +37,8 @@ export default function MainCategoriesGrid({ categories = [] }) {
         }
       `}} />
 
-      {/* 🌟 מתיחה אבסולוטית מקצה לקצה במובייל (100vw) 🌟 */}
-      <div className="w-[100vw] relative left-1/2 -translate-x-1/2 md:w-full md:static md:translate-x-0 md:max-w-7xl md:mx-auto" dir="rtl">
-        {/* הרווח (gap) הוקטן ל-1 כדי שיהיה רק קו הפרדה דקיק ויפה במובייל */}
+      {/* השינוי כאן: שימוש ב- margins שליליים (-mx-4) כדי להתפרס מקצה לקצה במובייל בצורה בטוחה */}
+      <div className="-mx-4 md:mx-auto md:max-w-7xl" dir="rtl">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-1 md:gap-2 auto-rows-min">
           {categories.map((category, index) => {
             const imageUrl = category.image?.url || category.image || '/images/placeholder-category.jpg';
@@ -48,10 +47,9 @@ export default function MainCategoriesGrid({ categories = [] }) {
               <Link
                 key={category.handle}
                 href={category.href}
-                // rounded-none מבטל לחלוטין את עיגול הקצוות
                 className={`group relative w-full overflow-hidden rounded-none bg-black shadow-sm transition-all duration-300 border-2 border-transparent hover:border-[#e60000] flex items-end ${getGridClass(category.handle)}`}
               >
-                {/* התמונה מקבלת את אנימציית התזוזה (animate-smooth-pan). הוספנו דיליי לכל תמונה כדי שלא יזוזו יחד כמו רובוט */}
+                {/* התמונה מקבלת את האנימציה עם דיליי קטן בין כל קוביה */}
                 <img
                   src={imageUrl}
                   alt={category.title}
