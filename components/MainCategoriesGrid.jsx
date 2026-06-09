@@ -24,9 +24,10 @@ export default function MainCategoriesGrid({ categories = [] }) {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto" dir="rtl">
-      {/* השינוי המרכזי כאן: gap-2 במקום gap-4 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-2 auto-rows-min">
+    {/* 🌟 מתיחת הקומפוננטה מקצה לקצה במובייל על ידי ביטול שולי העמוד 🌟 */}
+    <div className="w-[calc(100%+2rem)] -mx-4 md:w-full md:mx-auto max-w-7xl" dir="rtl">
+      {/* gap-1 במובייל מייצר קו הפרדה דק ונקי בין הקוביות מקצה לקצה */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-1 md:gap-2 auto-rows-min">
         {categories.map((category) => {
           const imageUrl = category.image?.url || category.image || '/images/placeholder-category.jpg';
 
@@ -34,8 +35,8 @@ export default function MainCategoriesGrid({ categories = [] }) {
             <Link
               key={category.handle}
               href={category.href}
-              // שיניתי גם ל- rounded-xl כדי שיתאים לריווח הצפוף יותר
-              className={`group relative w-full overflow-hidden rounded-xl bg-zinc-900 shadow-sm hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-[#e60000] flex items-end ${getGridClass(category.handle)}`}
+              {/* 🌟 rounded-none מבטל את עיגול הקצוות לחלוטין בכל המסכים 🌟 */}
+              className={`group relative w-full overflow-hidden rounded-none bg-zinc-900 shadow-sm hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-[#e60000] flex items-end ${getGridClass(category.handle)}`}
             >
               <img
                 src={imageUrl}
