@@ -1,4 +1,4 @@
-// /components/MainCategoriesGrid.jsx
+// components/MainCategoriesGrid.jsx
 'use client';
 
 import Link from 'next/link';
@@ -23,10 +23,10 @@ export default function MainCategoriesGrid({ categories = [] }) {
     }
   };
 
+  // מתיחת הקומפוננטה מקצה לקצה במובייל על ידי ביטול השוליים
   return (
-    {/* 🌟 מתיחת הקומפוננטה מקצה לקצה במובייל על ידי ביטול שולי העמוד 🌟 */}
     <div className="w-[calc(100%+2rem)] -mx-4 md:w-full md:mx-auto max-w-7xl" dir="rtl">
-      {/* gap-1 במובייל מייצר קו הפרדה דק ונקי בין הקוביות מקצה לקצה */}
+      {/* gap-1 במובייל לקו הפרדה עדין מאוד בין הקוביות */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-1 md:gap-2 auto-rows-min">
         {categories.map((category) => {
           const imageUrl = category.image?.url || category.image || '/images/placeholder-category.jpg';
@@ -35,7 +35,7 @@ export default function MainCategoriesGrid({ categories = [] }) {
             <Link
               key={category.handle}
               href={category.href}
-              {/* 🌟 rounded-none מבטל את עיגול הקצוות לחלוטין בכל המסכים 🌟 */}
+              {/* rounded-none מבטל את עיגול הפינות לחלוטין */}
               className={`group relative w-full overflow-hidden rounded-none bg-zinc-900 shadow-sm hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-[#e60000] flex items-end ${getGridClass(category.handle)}`}
             >
               <img
