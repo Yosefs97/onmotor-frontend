@@ -3,6 +3,7 @@
 
 import React, { useLayoutEffect, useRef } from 'react';
 import { gsap } from 'gsap';
+import CartUnderHeader from "@/components/CartUnderHeader";
 
 export default function ShopHeader() {
   const logoRef = useRef(null);
@@ -116,6 +117,7 @@ export default function ShopHeader() {
           </p>
         </div>
       </div>
+      <CartUnderHeader menuItems={menuItems} categories={categories} />
 
     </header>
   );
