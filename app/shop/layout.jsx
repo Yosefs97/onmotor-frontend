@@ -13,7 +13,7 @@ export default async function ShopLayout({ children }) {
   return (
     <div className="w-full min-h-screen bg-white">
       {/* 👈 3. העברת ה-categories לקומפוננטה */}
-      <CartUnderHeader menuItems={menuItems} categories={categories} /> 
+      {/*<CartUnderHeader menuItems={menuItems} categories={categories} />*/}
       
       <main className="container mx-auto px-4 py-0">
         {children}
