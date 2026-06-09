@@ -13,10 +13,10 @@ export default async function ShopLayout({ children }) {
   return (
     <div className="w-full min-h-screen bg-gray-50">
       
-      {/* ההידר העליון - עכשיו מכיל גם את הכלים למחשב */}
+      {/* ההידר העליון הדינמי */}
       <ShopHeader menuItems={menuItems} categories={categories} />
       
-      {/* הפס הלבן התחתון - יופיע עכשיו רק במובייל! */}
+      {/* שורת החיפוש והקטגוריות למובייל בלבד */}
       <CartUnderHeader categories={categories} />
       
       <main className="container mx-auto px-4 py-0 mt-4">

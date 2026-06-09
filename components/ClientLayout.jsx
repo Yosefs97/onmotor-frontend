@@ -70,7 +70,7 @@ export default function ClientLayout({ children, tickerHeadlines = [], sidebarDa
         </div>
       )}
 
-      {isShopPage ? <ShopHeader /> : <Header />}
+      {!isShopPage && <Header />}
 
       {!isShopPage && (
         <div

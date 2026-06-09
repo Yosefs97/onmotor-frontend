@@ -28,9 +28,6 @@ export default function CartUnderHeader({ categories = [] }) {
 
   return (
     <>
-      {/* הקומפוננטה הזו מוסתרת לחלוטין במחשב (md:hidden). 
-        במובייל היא נצמדת למטה מתחת להידר השחור.
-      */}
       <div 
         className="block md:hidden w-full bg-gray-100 border-b transition-all z-30 fixed top-[80px] left-0 right-0 shadow-sm" 
         dir="rtl"
@@ -54,7 +51,6 @@ export default function CartUnderHeader({ categories = [] }) {
         </div>
       </div>
 
-      {/* בלוק ריק ששומר על המקום כדי שהתוכן לא ייכנס מתחת להידר הצף */}
       <div className="h-[95px] w-full md:hidden"></div>
     </>
   );
