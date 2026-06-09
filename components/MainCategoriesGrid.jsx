@@ -9,7 +9,7 @@ export default function MainCategoriesGrid({ categories = [] }) {
   const getGridClass = (handle) => {
     switch (handle) {
       case 'parts':
-        return 'md:col-span-2 md:row-span-2 h-64 md:h-full';
+        return 'md:col-span-2 md:row-span-2 h-72 md:h-full';
       case 'road':
         return 'md:col-span-2 md:row-span-1 h-64 md:h-64';
       case 'offroad':
@@ -24,37 +24,56 @@ export default function MainCategoriesGrid({ categories = [] }) {
   };
 
   return (
-    <div className="w-[calc(100%+2rem)] -mx-4 md:w-full md:mx-auto max-w-7xl" dir="rtl">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-1 md:gap-2 auto-rows-min">
-        {categories.map((category) => {
-          const imageUrl = category.image?.url || category.image || '/images/placeholder-category.jpg';
+    <>
+      {/* 🌟 אנימציית הדינמיות לרקע (תזוזה עדינה ויוקרתית) 🌟 */}
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes smoothPan {
+          0% { transform: scale(1.0); }
+          50% { transform: scale(1.12); }
+          100% { transform: scale(1.0); }
+        }
+        .animate-smooth-pan {
+          animation: smoothPan 20s infinite ease-in-out;
+        }
+      `}} />
 
-          return (
-            <Link
-              key={category.handle}
-              href={category.href}
-              className={`group relative w-full overflow-hidden rounded-none bg-zinc-900 shadow-sm hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-[#e60000] flex items-end ${getGridClass(category.handle)}`}
-            >
-              <img
-                src={imageUrl}
-                alt={category.title}
-                className="absolute inset-0 h-full w-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 ease-in-out"
-              />
+      {/* 🌟 מתיחה אבסולוטית מקצה לקצה במובייל (100vw) 🌟 */}
+      <div className="w-[100vw] relative left-1/2 -translate-x-1/2 md:w-full md:static md:translate-x-0 md:max-w-7xl md:mx-auto" dir="rtl">
+        {/* הרווח (gap) הוקטן ל-1 כדי שיהיה רק קו הפרדה דקיק ויפה במובייל */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-1 md:gap-2 auto-rows-min">
+          {categories.map((category, index) => {
+            const imageUrl = category.image?.url || category.image || '/images/placeholder-category.jpg';
 
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+            return (
+              <Link
+                key={category.handle}
+                href={category.href}
+                // rounded-none מבטל לחלוטין את עיגול הקצוות
+                className={`group relative w-full overflow-hidden rounded-none bg-black shadow-sm transition-all duration-300 border-2 border-transparent hover:border-[#e60000] flex items-end ${getGridClass(category.handle)}`}
+              >
+                {/* התמונה מקבלת את אנימציית התזוזה (animate-smooth-pan). הוספנו דיליי לכל תמונה כדי שלא יזוזו יחד כמו רובוט */}
+                <img
+                  src={imageUrl}
+                  alt={category.title}
+                  className="absolute inset-0 h-full w-full object-cover opacity-70 group-hover:opacity-100 transition-opacity duration-700 ease-in-out animate-smooth-pan"
+                  style={{ animationDelay: `${index * 1.5}s` }}
+                />
 
-              <div className="relative z-10 w-full p-5 text-right">
-                <h2 className="text-2xl md:text-3xl font-black text-white group-hover:text-[#e60000] transition-colors duration-300 drop-shadow-md">
-                  {category.title}
-                </h2>
-                <span className="inline-block mt-1 text-sm font-bold text-gray-200 opacity-0 transform translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-                  לכניסה &larr;
-                </span>
-              </div>
-            </Link>
-          );
-        })}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+
+                <div className="relative z-10 w-full p-5 text-right">
+                  <h2 className="text-2xl md:text-3xl font-black text-white group-hover:text-[#e60000] transition-colors duration-300 drop-shadow-md">
+                    {category.title}
+                  </h2>
+                  <span className="inline-block mt-1 text-sm font-bold text-gray-200 opacity-0 transform translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
+                    לכניסה &larr;
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
