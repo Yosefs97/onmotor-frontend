@@ -54,11 +54,7 @@ export default function ShopHeader({ menuItems = [], categories = [] }) {
     isAnimating.current = true;
     const tl = gsap.timeline({ onComplete: () => { window.location.href = '/shop'; } });
     tl.to(logoRef.current, { rotate: '+=720', duration: 1.2, ease: 'power3.out' }, 'start');
-    tl.to(
-      lettersRef.current,
-      { y: -10, x: 5, rotate: 5, duration: 0.4, stagger: 0.05, ease: 'power1.out', yoyo: true, repeat: 1 },
-      '-=1'
-    );
+    tl.to(lettersRef.current, { y: -10, x: 5, rotate: 5, duration: 0.4, stagger: 0.05, ease: 'power1.out', yoyo: true, repeat: 1 }, '-=1');
   };
 
   const logoText = [
@@ -69,7 +65,7 @@ export default function ShopHeader({ menuItems = [], categories = [] }) {
   return (
     <header className="sticky top-0 z-[60] bg-black text-white h-[80px] w-full flex items-center justify-between px-2 md:px-6 py-2 shadow-md border-b border-gray-800" dir="rtl">
       
-      {/* צד ימין: לוגו וטקסט */}
+      {/* 1. צד ימין: לוגו וטקסט */}
       <div ref={containerRef} className="flex items-center gap-2 cursor-pointer shrink-0" onClick={handleClick}>
         <img ref={logoRef} src="/OnMotorLogonoback.png" alt="OnMotor Parts Logo" className="w-16 md:w-20 shrink-0 z-50" />
         <div className="truncate overflow-visible text-right">
@@ -86,11 +82,11 @@ export default function ShopHeader({ menuItems = [], categories = [] }) {
         </div>
       </div>
 
-      {/* צד שמאל: ניווט, חיפוש ועגלה (מוסתר במובייל, מוצג במחשב) */}
+      {/* 2. צד שמאל: ניווט, חיפוש ועגלה (מוסתר במובייל, מוצג במחשב) */}
       <div className="hidden md:flex items-center gap-6 justify-end flex-1 pl-2">
         
-        {/* קטגוריות (הטקסט יורש את הצבע הלבן) */}
-        <div className="flex items-center gap-4 text-white">
+        {/* קטגוריות: הוספתי דריסת צבע כפויה כדי שהטקסט יהיה לבן ולא ייבלע! */}
+        <div className="flex items-center gap-4 text-white font-medium [&_a]:!text-white [&_span]:!text-white hover:[&_a]:!text-[#e60000] transition-colors">
           <CategoriesNav categories={categories} />
           <DesktopMegaMenu menuItems={menuItems} />
         </div>
