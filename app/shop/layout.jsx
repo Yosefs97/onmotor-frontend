@@ -19,7 +19,7 @@ export default async function ShopLayout({ children }) {
       {/* שורת החיפוש והקטגוריות למובייל בלבד */}
       <CartUnderHeader categories={categories} />
       
-      <main className="container mx-auto px-4 py-0 mt-4">
+      <main className="container mx-auto px-0 py-0 mt-4">
         {children}
       </main>
     </div>

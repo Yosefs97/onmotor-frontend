@@ -69,7 +69,7 @@ export default function ShopInfoAccordion() {
     <section className="mt-10 border rounded-lg bg-white shadow-md overflow-hidden">
       <AccordionItem title="משלוחים">
         <p> משלוח רגיל תוך 2-5 ימי עסקים מרגע הטיפול בהזמנה.</p>
-        <p> משלוח עם שליח עד הבית - 35 ₪, או חינם בקנייה מעל 500 ₪.</p>
+        <p> משלוח עם שליח עד הבית - 35 ₪, או חינם בקנייה מעל 299 ₪.</p>
       </AccordionItem>
 
       <AccordionItem title="החזרות / החלפות">
