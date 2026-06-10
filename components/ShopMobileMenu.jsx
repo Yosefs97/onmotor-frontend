@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { gsap } from 'gsap';
 import { useSwipeable } from 'react-swipeable';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, User } from 'lucide-react'; // הוספנו את User
 import ShopInfoAccordion from './ShopInfoAccordion';
 
 export default function ShopMobileMenu({ categories = [] }) {
@@ -94,6 +94,21 @@ export default function ShopMobileMenu({ categories = [] }) {
           {/* ⚙️ גוף התפריט הנגלל */}
           <div className="flex-1 overflow-y-auto px-4 py-6 space-y-8">
             
+            {/* 🌟 כפתור לאזור האישי (חדש) 🌟 */}
+            <Link 
+              href="/shop/account" 
+              onClick={closeMenu}
+              className="flex items-center gap-3 bg-zinc-900 text-white p-4 rounded-xl shadow-md hover:bg-black transition"
+            >
+              <div className="bg-[#e60000] p-2 rounded-full">
+                <User className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-bold text-lg">החשבון שלי</span>
+                <span className="text-xs text-gray-300">היסטוריית הזמנות ומעקב</span>
+              </div>
+            </Link>
+
             {/* 1. קטגוריות החנות (בתצוגה אנכית נוחה למובייל) */}
             <section>
               <h3 className="text-sm font-bold text-gray-400 mb-3 uppercase tracking-wider">קטגוריות</h3>
