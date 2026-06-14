@@ -3,7 +3,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { User, ShoppingBag, MapPin, LogOut, Loader2, Mail, Lock } from 'lucide-react';
+// 🌟 נוספו אייקונים של Eye ו-EyeOff 🌟
+import { User, ShoppingBag, MapPin, LogOut, Loader2, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 
 export default function AccountPage() {
   const router = useRouter();
@@ -17,6 +18,9 @@ export default function AccountPage() {
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+  
+  // 🌟 סטייט חדש לשליטה בהצגת הסיסמה 🌟
+  const [showPassword, setShowPassword] = useState(false);
 
   // 1. בדיקת סטטוס חיבור בטעינת העמוד
   const checkAuth = async () => {
@@ -166,15 +170,32 @@ export default function AccountPage() {
             <label className="block text-sm font-bold mb-1 text-gray-700">כתובת אימייל</label>
             <div className="relative">
               <input type="email" name="email" required onChange={handleInputChange} className="w-full border p-2.5 pr-10 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500 rounded-none text-black" />
-              <Mail className="w-5 h-5 text-gray-400 absolute left-3 top-3" />
+              <Mail className="w-5 h-5 text-gray-400 absolute right-3 top-3" />
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-bold mb-1 text-gray-700">סיסמה</label>
             <div className="relative">
-              <input type="password" name="password" required onChange={handleInputChange} className="w-full border p-2.5 pr-10 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500 rounded-none text-black" />
-              <Lock className="w-5 h-5 text-gray-400 absolute left-3 top-3" />
+              {/* 🌟 שינוי דינמי של סוג השדה (password / text) 🌟 */}
+              <input 
+                type={showPassword ? "text" : "password"} 
+                name="password" 
+                required 
+                onChange={handleInputChange} 
+                className="w-full border p-2.5 px-10 bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500 rounded-none text-black" 
+              />
+              <Lock className="w-5 h-5 text-gray-400 absolute right-3 top-3" />
+              
+              {/* 🌟 כפתור להצגה/הסתרה של הסיסמה 🌟 */}
+              <button 
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute left-3 top-3 text-gray-400 hover:text-gray-700 transition"
+                tabIndex="-1"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
             </div>
           </div>
 
