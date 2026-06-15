@@ -96,7 +96,7 @@ export default function ShopHeader({ menuItems = [], categories = [] }) {
         {/* צד שמאל: ניווט, חיפוש ועגלה */}
         <div className="hidden md:flex items-center gap-6 justify-end flex-1 pl-2">
           
-          <div className="flex items-center gap-4 text-white font-medium [&_a]:!text-white [&_span]:!text-white hover:[&_a]:!text-[#e60000] transition-colors">
+          <div className="flex items-center gap-4 text-white font-medium [&_a]:!text-white [&_span]:!text-white [&_a:hover]:!text-[#e60000] transition-colors">
             <CategoriesNav categories={categories} />
             <DesktopMegaMenu menuItems={menuItems} />
           </div>
