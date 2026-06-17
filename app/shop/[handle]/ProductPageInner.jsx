@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import Link from 'next/link'; // 👈 הוספנו ייבוא של Link
 import ShopLayoutInternal from '@/components/ShopLayoutInternal';
 import ProductGrid from '@/components/ProductGrid';
 import ProductGallery from '@/components/ProductGallery';
@@ -13,7 +14,6 @@ import CategorySidebar from '@/components/CategorySidebar';
 import ArticleShareBottom from '@/components/ArticleShareBottom';
 import { getProductYearRange, formatYearRange } from '@/lib/productYears';
 
-// הוספנו את modelImages לפרופס כדי להציג את התמונות של הדגמים
 export default function ProductPageInner({ type, product, items, collectionStats, modelImages = {} }) {
   const [adding, setAdding] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState({});
@@ -71,7 +71,6 @@ export default function ProductPageInner({ type, product, items, collectionStats
     return found?.node || product.variants.edges[0].node;
   }, [product, selectedOptions]);
 
-  // 1. חילוץ התאימות החדשה (Multiple Models) במקום דגם בודד
   const compatibleModels = useMemo(() => {
     const tags = product.tags || [];
     const models = [];
@@ -83,7 +82,7 @@ export default function ProductPageInner({ type, product, items, collectionStats
           models.push({
             brand: parts[1].trim(),
             modelName: parts[2].trim(),
-            tagCode: parts[3] ? parts[3].trim() : null // קוד ה-Metaobject לתמונה
+            tagCode: parts[3] ? parts[3].trim() : null 
           });
         }
       }
@@ -224,17 +223,23 @@ export default function ProductPageInner({ type, product, items, collectionStats
             </div>
           )}
 
-          {/* 2. תצוגת הדגמים התואמים (מחליף את השורה הבודדת שהייתה קודם) */}
+          {/* 🔥 הפיכת הדגמים התואמים לכפתורים לחיצים */}
           {compatibleModels.length > 0 && (
             <div className="mt-4 pt-4 border-t border-gray-100">
               <span className="text-sm font-bold text-gray-800 block mb-3">תואם לדגמים:</span>
               <div className="flex flex-wrap gap-2">
                 {compatibleModels.map((m, idx) => {
                   const imageUrl = m.tagCode ? modelImages[m.tagCode] : null;
+                  
+                  // יצירת מבנה ה-URL לדף הדגם
+                  const brandSlug = encodeURIComponent(m.brand);
+                  const modelSlug = m.modelName.toLowerCase().replace(/\s+/g, '-');
+                  
                   return (
-                    <span 
+                    <Link 
                       key={idx} 
-                      className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-800 border border-gray-200 shadow-sm"
+                      href={`/shop/vendor/${brandSlug}/${modelSlug}`}
+                      className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-800 border border-gray-200 shadow-sm hover:bg-gray-200 hover:border-gray-300 transition-colors cursor-pointer"
                     >
                       {imageUrl && (
                         <img 
@@ -244,7 +249,7 @@ export default function ProductPageInner({ type, product, items, collectionStats
                         />
                       )}
                       {m.brand} {m.modelName}
-                    </span>
+                    </Link>
                   );
                 })}
               </div>
@@ -270,7 +275,6 @@ export default function ProductPageInner({ type, product, items, collectionStats
         </div>
       </div>
 
-      {/* 3. עדכון העברת הפרופס לקומפוננטות הקשורות */}
       <RelatedProducts
         partVendor={product.vendor}
         productType={product.productType}
