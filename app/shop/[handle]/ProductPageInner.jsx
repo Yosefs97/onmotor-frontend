@@ -1,3 +1,4 @@
+// /app/shop/[handle]/ProductPageInner.jsx
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -9,21 +10,20 @@ import RelatedArticles from '@/components/RelatedArticles';
 import WhatsAppButton from '@/components/WhatsAppButton';
 import AutoShopBreadcrumbs from '@/components/AutoShopBreadcrumbs';
 import CategorySidebar from '@/components/CategorySidebar';
-import ArticleShareBottom from '@/components/ArticleShareBottom'; // תוספת: ייבוא כפתור שיתוף
+import ArticleShareBottom from '@/components/ArticleShareBottom';
 import { getProductYearRange, formatYearRange } from '@/lib/productYears';
 
-export default function ProductPageInner({ type, product, items, collectionStats }) {
+// הוספנו את modelImages לפרופס כדי להציג את התמונות של הדגמים
+export default function ProductPageInner({ type, product, items, collectionStats, modelImages = {} }) {
   const [adding, setAdding] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState({});
 
-  // 1. זיהוי האם זה חלק חילוף
   const isSparePart = useMemo(() => {
     if (!product) return false;
     const range = getProductYearRange(product);
     return range && (range.from || range.to);
   }, [product]);
 
-  // הגדרת ברירת מחדל לאופציות
   useEffect(() => {
     if (product?.options) {
       const defaultOpts = {};
@@ -36,7 +36,6 @@ export default function ProductPageInner({ type, product, items, collectionStats
     }
   }, [product]);
 
-  // בדיקה האם וריאציה ספציפית זמינה (עבור כפתורי המידות)
   const isValueAvailable = (optionName, value) => {
     if (!product?.variants?.edges) return true;
     
@@ -51,7 +50,6 @@ export default function ProductPageInner({ type, product, items, collectionStats
     return matchingVariant.node.availableForSale && matchingVariant.node.quantityAvailable > 0;
   };
 
-  // -------- מצב חיפוש --------
   if (type === 'search') {
     return (
       <ShopLayoutInternal>
@@ -64,7 +62,6 @@ export default function ProductPageInner({ type, product, items, collectionStats
     return <ShopLayoutInternal><div dir="rtl">מוצר לא נמצא</div></ShopLayoutInternal>;
   }
 
-  // חישוב הוריאציה הנוכחית
   const currentVariant = useMemo(() => {
     if (!product.variants?.edges?.length) return null;
     const found = product.variants.edges.find(({ node }) => {
@@ -74,8 +71,27 @@ export default function ProductPageInner({ type, product, items, collectionStats
     return found?.node || product.variants.edges[0].node;
   }, [product, selectedOptions]);
 
-  const tags = product.tags || [];
-  const modelTag = tags.find((t) => t.toLowerCase().startsWith('model:'))?.replace('model:', '');
+  // 1. חילוץ התאימות החדשה (Multiple Models) במקום דגם בודד
+  const compatibleModels = useMemo(() => {
+    const tags = product.tags || [];
+    const models = [];
+    
+    tags.forEach(tag => {
+      if (tag.toLowerCase().startsWith('fit:')) {
+        const parts = tag.split(':');
+        if (parts.length >= 3) {
+          models.push({
+            brand: parts[1].trim(),
+            modelName: parts[2].trim(),
+            tagCode: parts[3] ? parts[3].trim() : null // קוד ה-Metaobject לתמונה
+          });
+        }
+      }
+    });
+    
+    return models;
+  }, [product.tags]);
+
   const yr = getProductYearRange(product);
   const yrText = formatYearRange(yr);
 
@@ -102,7 +118,6 @@ export default function ProductPageInner({ type, product, items, collectionStats
   const showAddToCart = currentVariant?.availableForSale && currentVariant?.quantityAvailable > 0;
   const handleOptionChange = (name, value) => setSelectedOptions(prev => ({ ...prev, [name]: value }));
 
-  // לוגיקה לסיידבר
   let sidebarContent;
   if (isSparePart) {
     sidebarContent = null;
@@ -143,7 +158,6 @@ export default function ProductPageInner({ type, product, items, collectionStats
         />
 
         <div className="space-y-4 text-gray-900">
-          {/* כותרת עם כפתור שיתוף - התוספת החדשה */}
           <div className="flex justify-between items-start gap-4">
             <h1 className="text-3xl font-bold">{product.title}</h1>
             <ArticleShareBottom label="שתף מוצר" />
@@ -154,7 +168,6 @@ export default function ProductPageInner({ type, product, items, collectionStats
             dangerouslySetInnerHTML={{ __html: product.descriptionHtml }}
           />
 
-          {/* בורר אפשרויות */}
           {product.options && product.options.length > 0 && product.options[0].name !== 'Title' && (
             <div className="mt-6 space-y-4"> 
               {product.options.map((opt) => (
@@ -193,7 +206,6 @@ export default function ProductPageInner({ type, product, items, collectionStats
             </div>
           )}
 
-          {/* מחיר ופרטים */}
           {currentVariant && (
             <div className="text-sm space-y-2 border-t pt-4 mt-4">
               <div className="text-2xl font-bold text-red-600">
@@ -207,8 +219,34 @@ export default function ProductPageInner({ type, product, items, collectionStats
                       ? <span className="text-green-600 font-bold">זמין במלאי ({currentVariant.quantityAvailable})</span> 
                       : <span className="text-red-600 font-bold">אזל המלאי</span>}
                 </span>
-                {modelTag && <span><strong>דגם:</strong> {modelTag}</span>}
                 {yrText && <span><strong>שנים:</strong> {yrText}</span>}
+              </div>
+            </div>
+          )}
+
+          {/* 2. תצוגת הדגמים התואמים (מחליף את השורה הבודדת שהייתה קודם) */}
+          {compatibleModels.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <span className="text-sm font-bold text-gray-800 block mb-3">תואם לדגמים:</span>
+              <div className="flex flex-wrap gap-2">
+                {compatibleModels.map((m, idx) => {
+                  const imageUrl = m.tagCode ? modelImages[m.tagCode] : null;
+                  return (
+                    <span 
+                      key={idx} 
+                      className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-800 border border-gray-200 shadow-sm"
+                    >
+                      {imageUrl && (
+                        <img 
+                          src={imageUrl} 
+                          alt={m.brand} 
+                          className="w-5 h-5 ml-2 object-contain rounded-full bg-white border border-gray-200 p-0.5" 
+                        />
+                      )}
+                      {m.brand} {m.modelName}
+                    </span>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -232,15 +270,16 @@ export default function ProductPageInner({ type, product, items, collectionStats
         </div>
       </div>
 
+      {/* 3. עדכון העברת הפרופס לקומפוננטות הקשורות */}
       <RelatedProducts
-        vendor={product.vendor}
+        partVendor={product.vendor}
         productType={product.productType}
-        model={modelTag}
+        compatibleModels={compatibleModels}
         excludeHandle={product.handle}
       />
 
       <RelatedArticles
-        tags={[product.vendor, modelTag].filter(Boolean)}
+        tags={[product.vendor, ...compatibleModels.map(m => m.modelName)].filter(Boolean)}
       />
 
     </ShopLayoutInternal>

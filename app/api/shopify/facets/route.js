@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 export const runtime = "edge"; 
 
-const domain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
+const domain = process.env.NEXT_PUBLIC_SHOPIद्योगिक_STORE_DOMAIN;
 const token = process.env.SHOPIFY_STOREFRONT_API_TOKEN;
 const apiVersion = process.env.SHOPIFY_API_VERSION || '2024-04';
 
@@ -48,86 +48,83 @@ export async function GET() {
     return NextResponse.json({}, { status: 500 });
   }
 
-  const vendors = new Set();
+  const partVendors = new Set();
+  const bikeBrands = new Set(); 
   const models = {}; 
   const yearsByModel = {}; 
   const categoriesByModel = {}; 
 
   data.products.edges.forEach(({ node }) => {
-    const vendor = node.vendor;
-    if (vendor) {
-      vendors.add(vendor);
-      if (!models[vendor]) models[vendor] = new Set();
+    if (node.vendor) {
+      partVendors.add(node.vendor);
     }
 
-    let currentModel = null;
+    const currentModelsForProduct = []; 
     
-    // סריקת תגיות
     node.tags.forEach(tag => {
-      // 1. זיהוי דגם (שומרים על Case Sensitivity כדי שייראה יפה)
-      if (tag.toLowerCase().startsWith('model:')) {
-        const modelName = tag.substring(6).trim(); // מוריד "model:"
+      if (tag.toLowerCase().startsWith('fit:')) {
+        const parts = tag.split(':');
         
-        if (vendor) {
-          models[vendor].add(modelName);
+        if (parts.length >= 3) {
+          const brand = parts[1].trim(); 
+          const modelName = parts[2].trim(); 
+          
+          bikeBrands.add(brand);
+          
+          if (!models[brand]) models[brand] = new Set();
+          models[brand].add(modelName);
+          
+          currentModelsForProduct.push(modelName);
+          
+          if (!yearsByModel[modelName]) yearsByModel[modelName] = new Set();
+          if (!categoriesByModel[modelName]) categoriesByModel[modelName] = new Set();
         }
-        currentModel = modelName;
-        
-        if (!yearsByModel[modelName]) yearsByModel[modelName] = new Set();
-        if (!categoriesByModel[modelName]) categoriesByModel[modelName] = new Set();
       }
     });
 
-    // אם מצאנו דגם, נשייך לו נתונים נוספים
-    if (currentModel) {
-      // שיוך קטגוריה
-      if (node.productType) {
-        categoriesByModel[currentModel].add(node.productType);
-      }
-      // אפשר להוסיף גם קטגוריות מתגיות cat: אם רוצים
-      node.tags.forEach(tag => {
+    if (currentModelsForProduct.length > 0) {
+      currentModelsForProduct.forEach(model => {
+        if (node.productType) {
+          categoriesByModel[model].add(node.productType);
+        }
+        
+        node.tags.forEach(tag => {
           if (tag.toLowerCase().startsWith('cat:')) {
-               categoriesByModel[currentModel].add(tag.substring(4).trim());
+            categoriesByModel[model].add(tag.substring(4).trim());
           }
-      });
+          if (tag.toLowerCase().startsWith('year:')) {
+            yearsByModel[model].add(tag.substring(5).trim());
+          }
+        });
 
-      // שיוך שנים מתגיות (year:2020)
-      node.tags.forEach(tag => {
-        if (tag.toLowerCase().startsWith('year:')) {
-          const year = tag.substring(5).trim();
-          yearsByModel[currentModel].add(year);
-        }
-      });
-
-      // שיוך שנים מ-Metafields (טווחים)
-      const mf = {};
-      node.metafields.forEach(m => { if(m) mf[m.key] = m.value; });
-      
-      if (mf.year_from && mf.year_to) {
-        const start = parseInt(mf.year_from);
-        const end = parseInt(mf.year_to);
-        // מונעים לולאות אינסופיות במקרה של טעות הזנה
-        if (start > 1900 && end < 2100 && start <= end) {
+        const mf = {};
+        node.metafields.forEach(m => { if(m) mf[m.key] = m.value; });
+        
+        if (mf.year_from && mf.year_to) {
+          const start = parseInt(mf.year_from);
+          const end = parseInt(mf.year_to);
+          if (start > 1900 && end < 2100 && start <= end) {
             for (let y = start; y <= end; y++) {
-            yearsByModel[currentModel].add(y.toString());
+              yearsByModel[model].add(y.toString());
             }
+          }
         }
-      }
+      });
     }
   });
 
-  // המרה למבנה סופי וממוין ל-JSON
-  const sortedVendors = Array.from(vendors).sort();
+  const sortedPartVendors = Array.from(partVendors).sort();
+  const sortedBikeBrands = Array.from(bikeBrands).sort();
   const sortedModels = {};
   const sortedYears = {};
   const sortedCategories = {};
 
-  sortedVendors.forEach(v => {
+  sortedBikeBrands.forEach(v => {
     sortedModels[v] = Array.from(models[v] || []).sort();
   });
 
   Object.keys(yearsByModel).forEach(m => {
-    sortedYears[m] = Array.from(yearsByModel[m]).sort((a, b) => b - a); // חדש לישן
+    sortedYears[m] = Array.from(yearsByModel[m]).sort((a, b) => b - a); 
   });
 
   Object.keys(categoriesByModel).forEach(m => {
@@ -135,8 +132,9 @@ export async function GET() {
   });
 
   return NextResponse.json({
-    vendors: sortedVendors,
-    models: sortedModels,
+    partVendors: sortedPartVendors, 
+    vendors: sortedBikeBrands,      
+    models: sortedModels,           
     yearsByModel: sortedYears,
     categoriesByModel: sortedCategories
   });

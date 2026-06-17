@@ -2,80 +2,63 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import BatterySearchWidget from './BatterySearchWidget';
 
-export default function RelatedArticles({ tags = [] }) {
-  const [articles, setArticles] = useState([]);
-  const [loading, setLoading] = useState(true);
+export default function RelatedProducts({ partVendor, productType, compatibleModels = [], excludeHandle }) {
+  const [items, setItems] = useState([]);
 
   useEffect(() => {
-    if (!tags.length) return;
-
     (async () => {
-      try {
-        // בונים query ל-Strapi עם OR בין כל התגיות
-        const query = tags
-          .map(
-            (tag, idx) =>
-              `filters[$or][${idx}][tags][$containsi]=${encodeURIComponent(tag)}`
-          )
-          .join('&');
+      const brandsQuery = compatibleModels.map(m => m.brand).join(',');
+      const modelsQuery = compatibleModels.map(m => m.modelName).join(',');
 
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_STRAPI_API_URL}/articles?${query}&populate=*`
-        );
-        const json = await res.json();
-        setArticles(json.data || []);
-      } catch (err) {
-        console.error('❌ Error fetching related articles:', err);
-      } finally {
-        setLoading(false);
-      }
+      const params = new URLSearchParams({
+        partVendor: partVendor || '',
+        productType: productType || '',
+        fitBrands: brandsQuery,
+        fitModels: modelsQuery,
+        limit: '8',
+        excludeHandle: excludeHandle || '', 
+      });
+
+      const res = await fetch(`/api/shopify/related?${params.toString()}`);
+      const json = await res.json();
+      setItems(json.items || []);
     })();
-  }, [JSON.stringify(tags)]);
+  }, [partVendor, productType, compatibleModels, excludeHandle]);
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] w-full">
-        <div className="animate-pulse">
-          <img 
-            src="/OnMotorLogonoback.png" 
-            alt="Loading..." 
-            className="h-24 w-auto object-contain" // שנה את h-24 כדי לשלוט בגודל
-          />
-        </div>
-        <p className="mt-4 text-gray-500 animate-bounce">טוען כתובת...</p>
-      </div>
-    );
-  }
-  if (!articles.length) return null;
+  if (!items.length) return null;
 
   return (
-    <div className="mt-10" dir="rtl">
-      <h3 className="text-xl font-bold mb-4">כתבות קשורות</h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {articles.map((article) => {
-          const attr = article.attributes;
+    <div dir="rtl" className="space-y-3 mt-8">
+      
+      <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-3 mb-4">
+        <h3 className="font-bold text-lg text-gray-900">מוצרים נוספים שיתאימו</h3>
+        
+        <div className="w-full md:w-auto">
+          <BatterySearchWidget compact={true} />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-0.5">
+        {items.map((p) => {
+          const img = p.images?.edges?.[0]?.node?.url;
+          const price = p.variants?.edges?.[0]?.node?.price;
           return (
             <Link
-              key={article.id}
-              href={attr.href || `/articles/${attr.slug}`}
+              key={p.id}
+              href={`/shop/${p.handle}`}
               prefetch={false}
               className="border rounded-lg overflow-hidden hover:shadow"
             >
-              {attr.image && (
-                <img
-                  src={`${process.env.NEXT_PUBLIC_STRAPI_API_URL}${attr.image}`}
-                  alt={attr.title}
-                  className="w-full h-40 object-cover"
-                />
-              )}
-              <div className="p-3">
-                <h2 className="text-base font-semibold mb-2">
-                  {attr.headline || attr.title}
-                </h2>
-                <p className="text-sm text-gray-600 line-clamp-2">
-                  {attr.description}
-                </p>
+              {img && <img src={img} alt={p.title} className="w-full h-32 object-cover" />}
+              <div className="p-2">
+                <div className="text-sm font-medium text-gray-900 ">{p.title}</div>
+                {price && (
+                  <div className="text-xs opacity-70 text-gray-900">
+                    {price.amount} {price.currencyCode}
+                  </div>
+                )}
               </div>
             </Link>
           );
