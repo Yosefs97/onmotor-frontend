@@ -49,20 +49,19 @@ function buildQueryString({ q, partVendor, fitBrand, fitModel, year, tag, sku, c
     );
   }
 
-  // סינון לפי יצרן החלק עצמו
+  // סינון לפי יצרן החלק עצמו (ספק)
   if (partVendor) {
     const { norm, noSpace } = normalize(partVendor);
     parts.push(`vendor:${JSON.stringify(norm)} OR tag:${JSON.stringify(noSpace)}`);
   }
 
-  // סינון לפי חברת האופנוע (חיפוש בכל הדגמים של החברה)
+  // 👇 התיקון הקריטי: מרכאות יחידות לחיפוש תחילית (Wildcard) בשופיפיי
   if (fitBrand && !fitModel) {
-    parts.push(`tag:"fit:${fitBrand}*"`);
+    parts.push(`tag:'fit:${fitBrand}:*'`);
   }
 
-  // סינון מדויק לפי חברה + דגם אופנוע
   if (fitBrand && fitModel) {
-    parts.push(`tag:"fit:${fitBrand}:${fitModel}*"`);
+    parts.push(`tag:'fit:${fitBrand}:${fitModel}*'`);
   }
 
   if (year) {
@@ -98,14 +97,9 @@ export async function GET(req) {
   const { searchParams } = new URL(req.url);
   
   const q = searchParams.get('q') || '';
-  
-  // חילוץ הפרמטרים החדשים לתאימות אופנועים
   const fitBrand = searchParams.get('fitBrand') || '';
   const fitModel = searchParams.get('fitModel') || '';
-  
-  // ה-vendor הכללי עכשיו מתייחס לספק החלק (partVendor)
   const partVendor = searchParams.get('partVendor') || searchParams.get('vendor') || '';
-  
   const year = searchParams.get('year') || '';
   const yearFrom = parseInt(searchParams.get('yearFrom') || '0', 10);
   const yearTo = parseInt(searchParams.get('yearTo') || '9999', 10);

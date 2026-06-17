@@ -1,13 +1,12 @@
-// app/shop/[handle]/page.jsx
-
+// /app/shop/[handle]/page.jsx
 import ProductPageInner from './ProductPageInner';
 import { fetchProduct } from '@/lib/shop/fetchProduct';
 import { fetchSearchResults } from '@/lib/shop/fetchSearch';
-import { fetchCollectionStats } from '@/lib/shop/fetchCollectionStats'; 
+import { fetchCollectionStats } from '@/lib/shop/fetchCollectionStats';
+import { fetchModelImages } from '@/lib/shop/fetchModelImages'; // 👇 הייבוא שהיה חסר!
 
 export const revalidate = 600;
 
-// --- פונקציית Metadata משופרת לשיתוף מושלם ---
 export async function generateMetadata({ params }) {
   const resolvedParams = await params;
   const handle = resolvedParams.handle;
@@ -15,7 +14,6 @@ export async function generateMetadata({ params }) {
 
   if (!product) return { title: 'מוצר לא נמצא' };
 
-  // 1. טיפול בתמונה ואופטימיזציה לוואטסאפ
   let shareImage = product.featuredImage?.url || product.images?.edges?.[0]?.node?.url;
   if (shareImage) {
     if (shareImage.startsWith('//')) shareImage = `https:${shareImage}`;
@@ -67,12 +65,10 @@ export default async function ProductPage({ params, searchParams }) {
 
   const handle = resolvedParams.handle;
 
-  // --- תיקון קריטי למניעת קריסה באפליקציית פייסבוק ---
   const filters = Object.fromEntries(
     Object.entries(resolvedSearchParams || {}).map(([k, v]) => [k, String(v)])
   );
   
-  // אנחנו בודקים אם יש פילטרים אמיתיים (מתעלמים מפרמטרים של מעקב שפייסבוק מוסיפה)
   const queryKeys = Object.keys(filters).filter(key => !['fbclid', 'utm_source', 'utm_medium', 'gclid', '_rsc'].includes(key));
   const isSearch = queryKeys.length > 0;
 
@@ -81,7 +77,6 @@ export default async function ProductPage({ params, searchParams }) {
     return <ProductPageInner type="search" items={items} />;
   }
 
-  // --- שליפת מוצר ---
   const product = await fetchProduct(handle);
 
   if (!product) {
@@ -92,7 +87,6 @@ export default async function ProductPage({ params, searchParams }) {
       );
   }
 
-  // --- לוגיקת שליפת נתונים לסיידבר ---
   let collectionStats = null;
   let collectionHandleToFetch = 'all'; 
 
@@ -116,11 +110,15 @@ export default async function ProductPage({ params, searchParams }) {
       }
   }
 
+  // 👇 משיכת מילון התמונות מהשרת כדי שהלוגואים יופיעו בעמוד המוצר
+  const modelImages = await fetchModelImages();
+
   return (
     <ProductPageInner 
       type="product" 
       product={product} 
       collectionStats={collectionStats || { types: [], vendors: [], tags: [], handle: 'all' }} 
+      modelImages={modelImages} // העברת התמונות פנימה!
     />
   );
 }
