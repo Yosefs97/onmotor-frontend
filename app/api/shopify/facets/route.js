@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 export const runtime = "edge"; 
 
-const domain = process.env.NEXT_PUBLIC_SHOPIद्योगिक_STORE_DOMAIN;
+const domain = process.env.NEXT_PUBLIC_SHOPIFY_STORE_DOMAIN;
 const token = process.env.SHOPIFY_STOREFRONT_API_TOKEN;
 const apiVersion = process.env.SHOPIFY_API_VERSION || '2024-04';
 
