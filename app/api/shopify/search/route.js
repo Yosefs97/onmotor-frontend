@@ -34,7 +34,7 @@ function normalize(str) {
   return { norm, noSpace };
 }
 
-function buildQueryString({ q, vendor, model, year, tag, sku, category, type }) {
+function buildQueryString({ q, partVendor, fitBrand, fitModel, year, tag, sku, category, type }) {
   const parts = [];
 
   if (q) {
@@ -45,22 +45,24 @@ function buildQueryString({ q, vendor, model, year, tag, sku, category, type }) 
   if (sku) {
     const { norm, noSpace } = normalize(sku);
     parts.push(
-      `sku:${JSON.stringify(norm)} OR barcode:${JSON.stringify(
-        norm
-      )} OR title:${JSON.stringify(norm)} OR sku:${JSON.stringify(noSpace)} OR barcode:${JSON.stringify(noSpace)} OR title:${JSON.stringify(noSpace)}`
+      `sku:${JSON.stringify(norm)} OR barcode:${JSON.stringify(norm)} OR title:${JSON.stringify(norm)} OR sku:${JSON.stringify(noSpace)} OR barcode:${JSON.stringify(noSpace)} OR title:${JSON.stringify(noSpace)}`
     );
   }
 
-  if (vendor) {
-    const { norm, noSpace } = normalize(vendor);
+  // סינון לפי יצרן החלק עצמו
+  if (partVendor) {
+    const { norm, noSpace } = normalize(partVendor);
     parts.push(`vendor:${JSON.stringify(norm)} OR tag:${JSON.stringify(noSpace)}`);
   }
 
-  if (model) {
-    const { norm, noSpace } = normalize(model);
-    parts.push(
-      `tag:${JSON.stringify('model:' + norm)} OR title:${JSON.stringify(norm)} OR tag:${JSON.stringify(norm)} OR tag:${JSON.stringify('model:' + noSpace)} OR title:${JSON.stringify(noSpace)} OR tag:${JSON.stringify(noSpace)}`
-    );
+  // סינון לפי חברת האופנוע (חיפוש בכל הדגמים של החברה)
+  if (fitBrand && !fitModel) {
+    parts.push(`tag:"fit:${fitBrand}*"`);
+  }
+
+  // סינון מדויק לפי חברה + דגם אופנוע
+  if (fitBrand && fitModel) {
+    parts.push(`tag:"fit:${fitBrand}:${fitModel}*"`);
   }
 
   if (year) {
@@ -94,9 +96,16 @@ export { sfFetch, buildQueryString };
 
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
+  
   const q = searchParams.get('q') || '';
-  const vendor = searchParams.get('vendor') || '';
-  const model = searchParams.get('model') || '';
+  
+  // חילוץ הפרמטרים החדשים לתאימות אופנועים
+  const fitBrand = searchParams.get('fitBrand') || '';
+  const fitModel = searchParams.get('fitModel') || '';
+  
+  // ה-vendor הכללי עכשיו מתייחס לספק החלק (partVendor)
+  const partVendor = searchParams.get('partVendor') || searchParams.get('vendor') || '';
+  
   const year = searchParams.get('year') || '';
   const yearFrom = parseInt(searchParams.get('yearFrom') || '0', 10);
   const yearTo = parseInt(searchParams.get('yearTo') || '9999', 10);
@@ -109,8 +118,9 @@ export async function GET(req) {
 
   const queryStr = buildQueryString({
     q,
-    vendor,
-    model,
+    partVendor,
+    fitBrand,
+    fitModel,
     year,
     tag,
     sku,
@@ -166,7 +176,6 @@ export async function GET(req) {
 
   if (error) return Response.json({ error, items: [], pageInfo: {} }, { status });
 
-  // ✅ סינון לפי year_from / year_to מה־metafields
   const items = (data?.data?.products?.edges || [])
     .map((e) => ({ cursor: e.cursor, ...e.node }))
     .filter((prod) => {
