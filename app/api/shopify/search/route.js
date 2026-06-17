@@ -55,13 +55,15 @@ function buildQueryString({ q, partVendor, fitBrand, fitModel, year, tag, sku, c
     parts.push(`vendor:${JSON.stringify(norm)} OR tag:${JSON.stringify(noSpace)}`);
   }
 
-  // 👇 התיקון הקריטי: מרכאות יחידות לחיפוש תחילית (Wildcard) בשופיפיי
+  // 🔥 התיקון הקריטי: חיפוש לפי פירוק טוקנים (Tokens) ללא כוכביות שלא נתמכות
   if (fitBrand && !fitModel) {
-    parts.push(`tag:'fit:${fitBrand}:*'`);
+    parts.push(`tag:fit AND tag:${fitBrand}`);
   }
 
   if (fitBrand && fitModel) {
-    parts.push(`tag:'fit:${fitBrand}:${fitModel}*'`);
+    // מפרקים את שם הדגם (למשל "EC 300") לטוקנים נפרדים כדי ששופיפיי תתאים במדויק
+    const modelTokens = fitModel.split(' ').filter(Boolean).map(t => `tag:${t}`).join(' AND ');
+    parts.push(`tag:fit AND tag:${fitBrand} ${modelTokens ? 'AND ' + modelTokens : ''}`);
   }
 
   if (year) {
