@@ -55,15 +55,16 @@ function buildQueryString({ q, partVendor, fitBrand, fitModel, year, tag, sku, c
     parts.push(`vendor:${JSON.stringify(norm)} OR tag:${JSON.stringify(noSpace)}`);
   }
 
-  // 🔥 התיקון הקריטי: חיפוש לפי פירוק טוקנים (Tokens) ללא כוכביות שלא נתמכות
+  // 🔥 התיקון הקריטי: מנגנון ניקוי שמחפש גם Gas-Gas וגם GasGas
   if (fitBrand && !fitModel) {
-    parts.push(`tag:fit AND tag:${fitBrand}`);
+    const cleanBrand = fitBrand.replace(/[^a-zA-Z0-9]/g, ''); // מנקה מקפים ורווחים
+    parts.push(`tag:fit AND (tag:${fitBrand} OR tag:${cleanBrand})`);
   }
 
   if (fitBrand && fitModel) {
-    // מפרקים את שם הדגם (למשל "EC 300") לטוקנים נפרדים כדי ששופיפיי תתאים במדויק
+    const cleanBrand = fitBrand.replace(/[^a-zA-Z0-9]/g, '');
     const modelTokens = fitModel.split(' ').filter(Boolean).map(t => `tag:${t}`).join(' AND ');
-    parts.push(`tag:fit AND tag:${fitBrand} ${modelTokens ? 'AND ' + modelTokens : ''}`);
+    parts.push(`tag:fit AND (tag:${fitBrand} OR tag:${cleanBrand}) ${modelTokens ? 'AND ' + modelTokens : ''}`);
   }
 
   if (year) {
