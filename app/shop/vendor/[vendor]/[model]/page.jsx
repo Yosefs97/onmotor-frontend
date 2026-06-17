@@ -5,27 +5,27 @@ import { fetchShopifyModel } from '@/lib/shop/fetchShopifyModel';
 export const revalidate = 600;
 
 export default async function ModelPage({ params, searchParams }) {
-  // 👇👇👇 תיקון חובה ל-Next.js 15: המתנה (await) לנתונים
   const resolvedParams = await params;
   const resolvedSearchParams = await searchParams;
 
-  // שימוש במשתנים שחולצו (resolved)
   const vendor = resolvedSearchParams.vendor || resolvedParams.vendor;
-  const model = resolvedSearchParams.model || resolvedParams.model;
+  const rawModel = resolvedSearchParams.model || resolvedParams.model;
 
-  // 🔥 הופכים searchParams לאובייקט רגיל
+  // 🔥 התיקון: הפיכת המקף מה-URL לרווח (למשל "ec-300" הופך ל-"ec 300")
+  const cleanModel = rawModel ? rawModel.replace(/-/g, ' ') : '';
+
   const filters = Object.fromEntries(
     Object.entries(resolvedSearchParams || {}).map(([k, v]) => [k, String(v)])
   );
 
-  // 📌 מביאים נתונים מהשרת
-  const items = await fetchShopifyModel({ vendor, model, filters });
+  // 📌 שליחת הדגם הנקי (עם רווחים) למנוע החיפוש
+  const items = await fetchShopifyModel({ vendor, model: cleanModel, filters });
 
   return (
     <ModelPageInner
       items={items}
       vendor={vendor}
-      model={model}
+      model={cleanModel} // מעבירים את הדגם הנקי גם לקליינט לתצוגה יפה
     />
   );
 }

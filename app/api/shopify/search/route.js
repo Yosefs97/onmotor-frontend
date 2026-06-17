@@ -49,22 +49,21 @@ function buildQueryString({ q, partVendor, fitBrand, fitModel, year, tag, sku, c
     );
   }
 
-  // סינון לפי יצרן החלק עצמו (ספק)
+  // סינון לפי יצרן החלק עצמו (למשל ברמבו, אקרפוביץ)
   if (partVendor) {
     const { norm, noSpace } = normalize(partVendor);
     parts.push(`vendor:${JSON.stringify(norm)} OR tag:${JSON.stringify(noSpace)}`);
   }
 
-  // 🔥 התיקון הקריטי: מנגנון ניקוי שמחפש גם Gas-Gas וגם GasGas
+  // 🔥 התיקון הסופי מול שופיפיי: חיפוש טקסט כללי ללא הגבלת "tag:" הנוקשה
   if (fitBrand && !fitModel) {
-    const cleanBrand = fitBrand.replace(/[^a-zA-Z0-9]/g, ''); // מנקה מקפים ורווחים
-    parts.push(`tag:fit AND (tag:${fitBrand} OR tag:${cleanBrand})`);
+    const cleanBrand = fitBrand.replace(/[^a-zA-Z0-9]/g, ''); // מנקה מקפים (Gas-Gas -> GasGas)
+    parts.push(`(${fitBrand} OR ${cleanBrand})`);
   }
 
   if (fitBrand && fitModel) {
     const cleanBrand = fitBrand.replace(/[^a-zA-Z0-9]/g, '');
-    const modelTokens = fitModel.split(' ').filter(Boolean).map(t => `tag:${t}`).join(' AND ');
-    parts.push(`tag:fit AND (tag:${fitBrand} OR tag:${cleanBrand}) ${modelTokens ? 'AND ' + modelTokens : ''}`);
+    parts.push(`(${fitBrand} OR ${cleanBrand}) ${fitModel}`);
   }
 
   if (year) {

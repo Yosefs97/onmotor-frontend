@@ -5,7 +5,7 @@ import { useRef, useState, useEffect } from 'react';
 import ShopLayoutInternal from '@/components/ShopLayoutInternal';
 import ProductGrid from '@/components/ProductGrid';
 import ScrollSearchBar from '@/components/ScrollSearchBar';
-import AutoShopBreadcrumbs from '@/components/AutoShopBreadcrumbs'; // 👈 1. הוספת הייבוא
+import AutoShopBreadcrumbs from '@/components/AutoShopBreadcrumbs';
 
 export default function ModelPageInner({ items, vendor, model }) {
   const [visibleCount, setVisibleCount] = useState(12);
@@ -24,30 +24,27 @@ export default function ModelPageInner({ items, vendor, model }) {
     }
   };
 
-  // מפענחים את ה-URL params כדי שיוצגו יפה בעברית/אנגלית
-  const decodedVendor = decodeURIComponent(vendor);
+  // מפענחים את ה-URL params ומנקים אותם לתצוגה חלקה
+  const decodedVendor = decodeURIComponent(vendor).replace(/-/g, ' ');
+  // ה-model כבר מגיע נקי מקובץ השרת, רק מוודאים פענוח למקרה של עברית
   const decodedModel = decodeURIComponent(model);
 
   return (
     <ShopLayoutInternal>
       
-      {/* 👈 2. מיקום הפירורים: מעבירים יצרן ודגם */}
       <div className="px-2 md:px-0 mt-2">
          <AutoShopBreadcrumbs filters={{ vendor: decodedVendor, model: decodedModel }} />
       </div>
 
-      {/* חיפוש */}
       <ScrollSearchBar
         placeholder={`חפש חלק בדגם ${decodedVendor} ${decodedModel}`}
         containerRef={containerRef}
       />
 
-      {/* גריד מוצרים */}
       <div ref={containerRef}>
         <ProductGrid products={items.slice(0, visibleCount)} />
       </div>
 
-      {/* כפתור טען עוד */}
       {visibleCount < items.length && (
         <div className="flex justify-center mt-6">
           <button
