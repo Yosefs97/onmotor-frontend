@@ -113,7 +113,18 @@ export default function ProductPageInner({ type, product, items, collectionStats
     }
   };
 
-  const whatsappMessage = `שלום, אני מעוניין במוצר "${product.title}" (מק"ט: ${currentVariant?.sku || 'N/A'}). אשמח לעזרה.`;
+  // 🔥 התיקון: בניית הקישור והודעת הוואטסאפ עם שבירות שורות מסודרות
+  const productUrl = `https://www.onmotormedia.com/shop/${product?.handle}`;
+  const whatsappMessage = `שלום,
+
+אני מעוניין במוצר: "${product.title}"
+(מק"ט: ${currentVariant?.sku || 'N/A'})
+
+קישור למוצר:
+${productUrl}
+
+אשמח לעזרה.`;
+
   const showAddToCart = currentVariant?.availableForSale && currentVariant?.quantityAvailable > 0;
   const handleOptionChange = (name, value) => setSelectedOptions(prev => ({ ...prev, [name]: value }));
 
