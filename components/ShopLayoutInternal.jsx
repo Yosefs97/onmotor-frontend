@@ -1,7 +1,7 @@
 // /components/ShopLayoutInternal.jsx
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect, useRef } from 'react';
 import ShopSidebar from '@/components/ShopSidebar';
 import ShopInfoAccordion from '@/components/ShopInfoAccordion';
 import { buildUrlFromFilters } from '@/utils/buildUrlFromFilters';
@@ -15,12 +15,16 @@ function ShopLayoutInternalContent({
   customSidebar = null, 
   hideSidebar = false,
   menuItems = [],
-  categories = [] // 👈 מקבלים את הקטגוריות
+  categories = [] 
 }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // 🌟 סטייטים למנגנון ההחלקה בגלילה 🌟
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollY = useRef(0);
 
   const handleSearch = (newFilters) => {
     const url = buildUrlFromFilters(newFilters, pathname, product);
@@ -28,10 +32,30 @@ function ShopLayoutInternalContent({
     setIsMobileMenuOpen(false);
   };
 
+  // 🌟 מעקב אחרי הגלילה להסתרת/הצגת כפתור הסינון במובייל 🌟
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      // מסתירים רק אם גוללים למטה ועברנו לפחות 100px
+      if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
+        setIsVisible(false);
+      } 
+      // מציגים בחזרה כשגוללים למעלה
+      else if (currentScrollY < lastScrollY.current) {
+        setIsVisible(true);
+      }
+
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const sidebarContent = customSidebar ? (
     customSidebar
   ) : (
-    // 👇 מעבירים אותן לסיידבר
     <ShopSidebar onFilterChange={handleSearch} product={product} categories={categories} />
   );
 
@@ -40,7 +64,9 @@ function ShopLayoutInternalContent({
       {!hideSidebar && (
         <>
           <div 
-            className="md:hidden fixed left-0 right-0 z-20 bg-gray-100 border-b border-gray-200 shadow-sm" 
+            className={`md:hidden fixed left-0 right-0 z-20 bg-gray-100 border-b border-gray-200 shadow-sm transition-transform duration-300 ease-in-out ${
+              isVisible ? 'translate-y-0' : '-translate-y-[150px]'
+            }`} 
             style={{ top: '170px', height: '50px' }} 
           >
             <button 
@@ -51,14 +77,14 @@ function ShopLayoutInternalContent({
               {customSidebar ? 'סינון וקטגוריות' : 'חיפוש חלפים מתקדם'}
             </button>
           </div>
-          <div className="md:hidden h-[35px]"></div>
+          <div className="md:hidden h-[35px] shrink-0"></div>
         </>
       )}
 
       <MobileCategoryNav menuItems={menuItems} />
 
       {isMobileMenuOpen && !hideSidebar && (
-        <div className="fixed inset-0 z-50 flex md:hidden flex-col" dir="rtl">
+        <div className="fixed inset-0 z-[70] flex md:hidden flex-col" dir="rtl">
           <div 
             className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
             onClick={() => setIsMobileMenuOpen(false)}
