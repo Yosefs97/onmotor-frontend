@@ -2,9 +2,9 @@
 'use client';
 
 import React, { useLayoutEffect, useRef, useEffect, useState } from 'react';
-import Link from 'next/link'; // 👈 ייבוא Link
+import Link from 'next/link';
 import { gsap } from 'gsap';
-import { User } from 'lucide-react'; // 👈 ייבוא אייקון המשתמש
+import { User } from 'lucide-react';
 import LiveSearchBar from './LiveSearchBar';
 import CategoriesNav from './CategoriesNav'; 
 import DesktopMegaMenu from './DesktopMegaMenu';
@@ -18,7 +18,12 @@ export default function ShopHeader({ menuItems = [], categories = [] }) {
   const isAnimating = useRef(false);
 
   const [total, setTotal] = useState(0);
+  
+  // 🌟 סטייטים ורפרנסים למנגנון גלילת ההידר 🌟
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollY = useRef(0);
 
+  // מנגנון העגלה
   const fetchCart = async () => {
     try {
         const res = await fetch('/api/shopify/cart/get');
@@ -34,6 +39,25 @@ export default function ShopHeader({ menuItems = [], categories = [] }) {
     const handler = () => fetchCart();
     window.addEventListener('cartUpdated', handler);
     return () => window.removeEventListener('cartUpdated', handler);
+  }, []);
+
+  // 🌟 מנגנון הסתרה/הצגה של ההידר בגלילה 🌟
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      // אם גללנו למטה יותר מגובה ההידר - נסתיר. אם למעלה - נציג.
+      if (currentScrollY > lastScrollY.current && currentScrollY > 80) {
+        setIsVisible(false);
+      } else {
+        setIsVisible(true);
+      }
+
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   useLayoutEffect(() => {
@@ -69,7 +93,13 @@ export default function ShopHeader({ menuItems = [], categories = [] }) {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-[60] bg-black text-white h-[80px] flex items-center justify-between px-2 md:px-6 py-2 shadow-md border-b border-gray-800" dir="rtl">
+      {/* 🌟 שינוי: הוספנו קלאסים של transition ו-translate כדי שההידר יזוז למעלה ולמטה באנימציה חלקה 🌟 */}
+      <header 
+        className={`fixed top-0 left-0 right-0 z-[60] bg-black text-white h-[80px] flex items-center justify-between px-2 md:px-6 py-2 shadow-md border-b border-gray-800 transition-transform duration-300 ease-in-out ${
+          isVisible ? 'translate-y-0' : '-translate-y-full'
+        }`} 
+        dir="rtl"
+      >
         
         {/* כפתור המבורגר למובייל */}
         <div className="md:hidden flex items-center pr-2">
@@ -105,10 +135,8 @@ export default function ShopHeader({ menuItems = [], categories = [] }) {
             <LiveSearchBar />
           </div>
 
-          {/* 🌟 אזור הכלים: כפתור אזור אישי + עגלה 🌟 */}
           <div className="flex items-center gap-2">
             
-            {/* כפתור אזור אישי */}
             <Link 
               href="/shop/account" 
               className="flex items-center justify-center bg-zinc-900 w-10 h-10 rounded-full border border-gray-800 text-white hover:text-[#e60000] hover:border-[#e60000] transition-colors"
@@ -117,7 +145,6 @@ export default function ShopHeader({ menuItems = [], categories = [] }) {
               <User className="w-5 h-5" />
             </Link>
 
-            {/* עגלת קניות */}
             <div className="flex items-center gap-2 font-bold text-white shrink-0 bg-zinc-900 px-3 h-10 rounded-full border border-gray-800">
               <span className="text-base">₪{total}</span>
               <CartButton />
@@ -128,6 +155,10 @@ export default function ShopHeader({ menuItems = [], categories = [] }) {
         </div>
       </header>
       
+      {/* חלל תופס מקום (Placeholder) - חשוב כדי שהתוכן של העמוד 
+        לא יקפוץ למעלה מתחת להידר בזמן שהוא צף, וגם כדי לשמור 
+        על המרווח הנכון כשההידר מוסתר 
+      */}
       <div className="h-[80px] w-full shrink-0"></div>
     </>
   );
