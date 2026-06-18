@@ -1,13 +1,17 @@
 // components/CartUnderHeader.jsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import CartButton from './CartButton';
 import LiveSearchBar from './LiveSearchBar';
 import CategoriesNav from './CategoriesNav'; 
 
 export default function CartUnderHeader({ categories = [] }) {
   const [total, setTotal] = useState(0);
+  
+  // 🌟 סטייטים למנגנון ההחלקה בגלילה 🌟
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollY = useRef(0);
 
   const fetchCart = async () => {
     try {
@@ -26,10 +30,33 @@ export default function CartUnderHeader({ categories = [] }) {
     return () => window.removeEventListener('cartUpdated', handler);
   }, []);
 
+  // 🌟 מעקב אחרי הגלילה להסתרת/הצגת הסרגל 🌟
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      // מסתירים רק אם גוללים למטה ועברנו לפחות 100px (כדי לא להסתיר מיד בתחילת העמוד)
+      if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
+        setIsVisible(false);
+      } 
+      // מציגים בחזרה כשגוללים למעלה
+      else if (currentScrollY < lastScrollY.current) {
+        setIsVisible(true);
+      }
+
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <>
       <div 
-        className="block md:hidden w-full bg-gray-100 border-b transition-all z-30 fixed top-[80px] left-0 right-0 shadow-sm" 
+        className={`block md:hidden w-full bg-gray-100 border-b transition-transform duration-300 ease-in-out z-30 fixed top-[80px] left-0 right-0 shadow-sm ${
+          isVisible ? 'translate-y-0' : '-translate-y-full'
+        }`} 
         dir="rtl"
         style={{ height: 'auto' }} 
       >
@@ -51,7 +78,8 @@ export default function CartUnderHeader({ categories = [] }) {
         </div>
       </div>
 
-      <div className="h-[95px] w-full md:hidden"></div>
+      {/* בלוק שתופס מקום (Placeholder) כדי שהתוכן בעמוד לא יקפוץ למעלה מתחת להידר */}
+      <div className="h-[95px] w-full md:hidden shrink-0"></div>
     </>
   );
 }
