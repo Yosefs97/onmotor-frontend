@@ -12,11 +12,13 @@ import WhatsAppButton from '@/components/WhatsAppButton';
 import AutoShopBreadcrumbs from '@/components/AutoShopBreadcrumbs';
 import CategorySidebar from '@/components/CategorySidebar';
 import ArticleShareBottom from '@/components/ArticleShareBottom';
+import ProductInfoModals from '@/components/ProductInfoModals'; // 👈 הייבוא החדש!
 import { getProductYearRange, formatYearRange } from '@/lib/productYears';
 
 export default function ProductPageInner({ type, product, items, collectionStats, modelImages = {} }) {
   const [adding, setAdding] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState({});
+  const [quantity, setQuantity] = useState(1); // 👈 מצב לניהול כמות ההוספה
 
   const isSparePart = useMemo(() => {
     if (!product) return false;
@@ -71,6 +73,44 @@ export default function ProductPageInner({ type, product, items, collectionStats
     return found?.node || product.variants.edges[0].node;
   }, [product, selectedOptions]);
 
+  // מניעת בחירת כמות שגדולה מהמלאי הקיים
+  useEffect(() => {
+    if (currentVariant?.quantityAvailable > 0 && quantity > currentVariant.quantityAvailable) {
+      setQuantity(currentVariant.quantityAvailable);
+    }
+    if (quantity < 1) {
+      setQuantity(1);
+    }
+  }, [currentVariant, quantity]);
+
+  const increaseQty = () => {
+    if (currentVariant && quantity < currentVariant.quantityAvailable) {
+      setQuantity(prev => prev + 1);
+    }
+  };
+
+  const decreaseQty = () => {
+    if (quantity > 1) {
+      setQuantity(prev => prev - 1);
+    }
+  };
+
+  const handleQtyChange = (e) => {
+    const val = parseInt(e.target.value);
+    if (!isNaN(val) && val >= 1) {
+      if (currentVariant && val > currentVariant.quantityAvailable) {
+        setQuantity(currentVariant.quantityAvailable);
+      } else {
+        setQuantity(val);
+      }
+    }
+  };
+
+  const handleQtyBlur = (e) => {
+    const val = parseInt(e.target.value);
+    if (isNaN(val) || val < 1) setQuantity(1);
+  };
+
   const compatibleModels = useMemo(() => {
     const tags = product.tags || [];
     const models = [];
@@ -95,12 +135,12 @@ export default function ProductPageInner({ type, product, items, collectionStats
   const yrText = formatYearRange(yr);
 
   const addToCart = async () => {
-    if (!currentVariant) return;
+    if (!currentVariant || quantity < 1) return;
     setAdding(true);
     try {
       const res = await fetch('/api/shopify/cart/add', {
         method: 'POST',
-        body: JSON.stringify({ variantId: currentVariant.id, quantity: 1 }),
+        body: JSON.stringify({ variantId: currentVariant.id, quantity: quantity }), // 👈 כמות דינמית
       });
       const json = await res.json();
       if (json.cart) window.dispatchEvent(new Event('cartUpdated')); 
@@ -113,7 +153,6 @@ export default function ProductPageInner({ type, product, items, collectionStats
     }
   };
 
-  // 🔥 התיקון: בניית הקישור והודעת הוואטסאפ עם שבירות שורות מסודרות
   const productUrl = `https://www.onmotormedia.com/shop/${product?.handle}`;
   const whatsappMessage = `שלום,
 
@@ -126,7 +165,10 @@ ${productUrl}
 אשמח לעזרה.`;
 
   const showAddToCart = currentVariant?.availableForSale && currentVariant?.quantityAvailable > 0;
-  const handleOptionChange = (name, value) => setSelectedOptions(prev => ({ ...prev, [name]: value }));
+  const handleOptionChange = (name, value) => {
+    setSelectedOptions(prev => ({ ...prev, [name]: value }));
+    setQuantity(1); // איפוס כמות בהחלפת וריאציה
+  };
 
   let sidebarContent;
   if (isSparePart) {
@@ -156,24 +198,32 @@ ${productUrl}
   return (
     <ShopLayoutInternal product={product} hideSidebar={false} customSidebar={sidebarContent}>
       
-      <div className="px-2 md:px-0 mt-2 mb-4">
+      <div className="px-2 md:px-0 mt-2 mb-4 flex justify-between items-center">
         <AutoShopBreadcrumbs product={product} />
+        {/* העברת השיתוף למעלה לשורת הפירורים (מקובל יותר מבחינת UX) */}
+        <div className="hidden sm:block">
+           <ArticleShareBottom label="שתף" />
+        </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-2 gap-8">
         <ProductGallery
           images={product.images?.edges}
           title={product.title}
           selectedImage={currentVariant?.image?.url}
         />
 
-        <div className="space-y-4 text-gray-900">
+        <div className="space-y-5 text-gray-900">
           
-          {/* הכותרת ללא כפתור השיתוף (שעבר למטה) */}
-          <h1 className="text-3xl font-bold">{product.title}</h1>
+          <div className="flex justify-between items-start">
+             <h1 className="text-3xl font-bold leading-tight">{product.title}</h1>
+             <div className="sm:hidden mt-1 ml-2">
+                 <ArticleShareBottom label="" />
+             </div>
+          </div>
           
           <div
-            className="prose max-w-none text-gray-900"
+            className="prose prose-sm max-w-none text-gray-700 leading-relaxed"
             dangerouslySetInnerHTML={{ __html: product.descriptionHtml }}
           />
 
@@ -182,7 +232,7 @@ ${productUrl}
               {product.options.map((opt) => (
                 <div key={opt.id}>
                   <label className="block text-sm font-bold mb-1.5 text-gray-800">{opt.name}:</label>
-                  <div className="flex flex-wrap gap-0.2">
+                  <div className="flex flex-wrap gap-2">
                     {opt.values.map((val) => {
                       const isSelected = selectedOptions[opt.name] === val;
                       const isAvailable = isValueAvailable(opt.name, val);
@@ -193,16 +243,16 @@ ${productUrl}
                           onClick={() => isAvailable && handleOptionChange(opt.name, val)}
                           disabled={!isAvailable}
                           className={`
-                            px-2 py-1 min-w-[3rem] border rounded text-sm font-medium transition-all relative
+                            px-4 py-2 min-w-[3.5rem] border rounded-lg text-sm font-medium transition-all relative
                             ${!isAvailable 
                                 ? 'text-gray-400 border-gray-200 bg-gray-50 cursor-not-allowed opacity-70' 
                                 : isSelected 
-                                    ? 'bg-red-600 text-white border-red-600 shadow-sm' 
-                                    : 'bg-white text-gray-700 border-gray-300 hover:border-gray-500' 
+                                    ? 'bg-red-600 text-white border-red-600 shadow-md ring-2 ring-red-200' 
+                                    : 'bg-white text-gray-700 border-gray-300 hover:border-gray-500 hover:bg-gray-50' 
                             }
                           `}
                           style={!isAvailable ? {
-                            backgroundImage: 'linear-gradient(to top right, transparent 48%, #9ca3af 49%, #9ca3af 51%, transparent 52%)'
+                            backgroundImage: 'linear-gradient(to top right, transparent 48%, #e5e7eb 49%, #e5e7eb 51%, transparent 52%)'
                           } : {}}
                         >
                           {val}
@@ -216,30 +266,33 @@ ${productUrl}
           )}
 
           {currentVariant && (
-            <div className="text-sm space-y-2 border-t pt-4 mt-4">
-              <div className="text-2xl font-bold text-red-600">
-                {currentVariant.price.amount} {currentVariant.price.currencyCode}
+            <div className="text-sm space-y-3 border-y border-gray-100 py-5 my-5 bg-gray-50/50 px-4 rounded-xl">
+              <div className="text-3xl font-black text-red-600 flex items-center gap-2">
+                {currentVariant.price.amount} <span className="text-xl font-bold">{currentVariant.price.currencyCode}</span>
               </div>
-              <div className="flex flex-col gap-1 text-gray-600">
-                <span><strong>מק״ט:</strong> {currentVariant.sku || 'N/A'}</span>
-                <span>
+              <div className="grid grid-cols-2 gap-y-2 text-gray-600 mt-2">
+                <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 bg-gray-400 rounded-full"></span><strong>מק״ט:</strong> {currentVariant.sku || 'N/A'}</span>
+                {yrText && <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 bg-gray-400 rounded-full"></span><strong>שנים:</strong> {yrText}</span>}
+                <span className="col-span-2 flex items-center gap-1.5 mt-1">
+                    <span className={`w-2 h-2 rounded-full ${currentVariant.quantityAvailable > 0 ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
                     <strong>מלאי:</strong>{' '}
                     {currentVariant.quantityAvailable > 0 
-                      ? <span className="text-green-600 font-bold">זמין במלאי ({currentVariant.quantityAvailable})</span> 
-                      : <span className="text-red-600 font-bold">אזל המלאי</span>}
+                      ? <span className="text-green-600 font-bold">זמין במלאי ({currentVariant.quantityAvailable} יחידות)</span> 
+                      : <span className="text-red-600 font-bold">אזל המלאי, פנה אלינו להזמנה</span>}
                 </span>
-                {yrText && <span><strong>שנים:</strong> {yrText}</span>}
               </div>
             </div>
           )}
 
           {compatibleModels.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-gray-100">
-              <span className="text-sm font-bold text-gray-800 block mb-3">תואם לדגמים:</span>
+            <div className="mt-4 pt-2">
+              <span className="text-sm font-bold text-gray-800 flex items-center gap-2 mb-3">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 9h4l4 4v4c0 .6-.4 1-1 1h-2"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/><path d="M5 18H3c-.6 0-1-.4-1-1V7c0-.6.4-1 1-1h10c.6 0 1 .4 1 1v11"/></svg>
+                 תואם לדגמים:
+              </span>
               <div className="flex flex-wrap gap-2">
                 {compatibleModels.map((m, idx) => {
                   const imageUrl = m.tagCode ? modelImages[m.tagCode] : null;
-                  
                   const brandSlug = encodeURIComponent(m.brand);
                   const modelSlug = m.modelName.toLowerCase().replace(/\s+/g, '-');
                   
@@ -247,13 +300,13 @@ ${productUrl}
                     <Link 
                       key={idx} 
                       href={`/shop/vendor/${brandSlug}/${modelSlug}`}
-                      className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-800 border border-gray-200 shadow-sm hover:bg-gray-200 hover:border-gray-300 transition-colors cursor-pointer"
+                      className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-gray-700 border border-gray-200 shadow-sm hover:border-red-400 hover:text-red-600 hover:shadow transition-all cursor-pointer group"
                     >
                       {imageUrl && (
                         <img 
                           src={imageUrl} 
                           alt={m.brand} 
-                          className="w-5 h-5 ml-2 object-contain rounded-full bg-white border border-gray-200 p-0.5" 
+                          className="w-5 h-5 ml-2 object-contain rounded-full bg-gray-50 border border-gray-100 p-0.5 group-hover:scale-110 transition-transform" 
                         />
                       )}
                       {m.brand} {m.modelName}
@@ -264,48 +317,76 @@ ${productUrl}
             </div>
           )}
 
-          {/* 🔥 אזור הפעולות החדש והסימטרי */}
-          <div className="pt-6 mt-8 border-t border-gray-100">
+          {/* ========================================================= */}
+          {/* אזור פעולות ראשי (עגלה, כמות, וואטסאפ) מרוכז בצורה אנכית */}
+          {/* ========================================================= */}
+          <div className="pt-6 mt-6 border-t border-gray-200 space-y-4">
             
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              
-              {/* 1. הוסף לעגלה */}
-              <div className="w-full md:flex-1">
-                {showAddToCart ? (
-                  <button
-                    onClick={addToCart}
-                    disabled={adding || !currentVariant}
-                    className="w-full min-h-[50px] bg-red-600 text-white px-4 py-3 rounded-lg hover:bg-red-700 transition shadow-md font-bold text-lg flex items-center justify-center gap-2"
-                  >
-                    {adding ? 'מוסיף...' : 'הוסף לעגלה'}
-                  </button>
-                ) : (
-                  <div className="w-full flex justify-center">
-                    <WhatsAppButton
-                      message={whatsappMessage}
-                      label={"נגמר המלאי – צור קשר לבירור"}
-                    />
-                  </div>
-                )}
-              </div>
-              
-              {/* 2. צור קשר / וואטסאפ */}
-              {showAddToCart && (
-                 <div className="w-full md:flex-1 flex justify-center">
-                   <WhatsAppButton
-                     message={whatsappMessage}
-                     label={"צריך עזרה? פנה אלינו"}
+            {showAddToCart ? (
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                
+                {/* בורר כמות + / - */}
+                <div className="flex items-center justify-between border border-gray-300 rounded-lg bg-white h-[52px] w-full sm:w-32 flex-shrink-0 shadow-sm">
+                   <button 
+                     onClick={increaseQty} 
+                     disabled={quantity >= currentVariant.quantityAvailable}
+                     className="w-10 h-full flex items-center justify-center text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors rounded-r-lg disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-500"
+                     aria-label="הוסף כמות"
+                   >
+                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                   </button>
+                   
+                   <input 
+                     type="number" 
+                     value={quantity}
+                     onChange={handleQtyChange}
+                     onBlur={handleQtyBlur}
+                     className="w-full h-full text-center font-bold text-gray-900 border-none outline-none focus:ring-0 p-0 m-0 [-moz-appearance:_textfield] [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none"
                    />
-                 </div>
-              )}
+                   
+                   <button 
+                     onClick={decreaseQty} 
+                     disabled={quantity <= 1}
+                     className="w-10 h-full flex items-center justify-center text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors rounded-l-lg disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-500"
+                     aria-label="הפחת כמות"
+                   >
+                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                   </button>
+                </div>
 
-              {/* 3. שיתוף מוצר */}
-              <div className={`w-full ${showAddToCart ? 'md:flex-1' : ''} flex justify-center md:justify-end`}>
-                <ArticleShareBottom label="שתף מוצר" />
+                {/* כפתור הוסף לעגלה */}
+                <button
+                  onClick={addToCart}
+                  disabled={adding || !currentVariant}
+                  className="w-full h-[52px] bg-red-600 text-white px-6 rounded-lg hover:bg-red-700 transition-all shadow-md hover:shadow-lg font-bold text-lg flex items-center justify-center gap-3 relative overflow-hidden"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                  {adding ? 'מוסיף לעגלה...' : 'הוסף לעגלה'}
+                </button>
               </div>
+            ) : (
+              <div className="w-full">
+                <WhatsAppButton
+                  message={whatsappMessage}
+                  label={"המוצר אזל מהמלאי – צור קשר לבירור והזמנה"}
+                />
+              </div>
+            )}
 
+            {/* כפתור "צריך עזרה?" מתחת לעגלה */}
+            <div className="w-full">
+              <WhatsAppButton
+                message={whatsappMessage}
+                label={"צריך עזרה עם החלק? דבר איתנו בוואטסאפ"}
+              />
             </div>
+            
           </div>
+
+          {/* ========================================================= */}
+          {/* שורות המידע והחלונות הקופצים (משלוח, החזרות, אבטחה) */}
+          {/* ========================================================= */}
+          <ProductInfoModals />
 
         </div>
       </div>
