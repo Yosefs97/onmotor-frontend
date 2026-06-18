@@ -1,68 +1,119 @@
 // /components/RelatedProducts.jsx
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
-// ייבוא של הווידג'ט החדש
 import BatterySearchWidget from './BatterySearchWidget';
 
-export default function RelatedProducts({ vendor, productType, model, excludeHandle }) {
+export default function RelatedProducts({ partVendor, productType, compatibleModels, excludeHandle }) {
   const [items, setItems] = useState([]);
+  const scrollRef = useRef(null);
 
   useEffect(() => {
     (async () => {
+      const modelName = compatibleModels?.[0]?.modelName || '';
+
       const params = new URLSearchParams({
-        vendor: vendor || '',
+        vendor: partVendor || '',
         productType: productType || '',
-        model: model || '',
-        limit: '8',
-        excludeHandle: excludeHandle || '', // ✅ שולח ל-API
+        model: modelName,
+        limit: '10', 
+        excludeHandle: excludeHandle || '', 
       });
 
       const res = await fetch(`/api/shopify/related?${params.toString()}`);
       const json = await res.json();
       setItems(json.items || []);
     })();
-  }, [vendor, productType, model, excludeHandle]);
+  }, [partVendor, productType, compatibleModels, excludeHandle]);
 
   if (!items.length) return null;
 
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      // גלילה של רוחב כרטיסיה אחת בכל לחיצה
+      const scrollAmount = direction === 'next' ? -200 : 200; 
+      scrollRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
   return (
-    <div dir="rtl" className="space-y-3 mt-8">
+    <div dir="rtl" className="mt-8 border-t border-gray-100 pt-6">
       
-      {/* אזור הכותרת משולב עם הווידג'ט המינימליסטי */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-3 mb-4">
-        <h3 className="font-bold text-lg text-gray-900">מוצרים נוספים לדגם</h3>
-        
-        {/* העברת compact={true} כדי להציג את הגרסה הקטנה */}
-        <div className="w-full md:w-auto">
+      {/* פקודות CSS גלובליות להסתרת פס הגלילה רק לאזור הזה */}
+      <style jsx>{`
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
+
+      <div className="flex flex-col xl:flex-row xl:justify-between xl:items-end gap-3 mb-4">
+        <h3 className="font-bold text-xl text-gray-900">מוצרים נוספים לדגם</h3>
+        <div className="w-full xl:w-auto">
           <BatterySearchWidget compact={true} />
         </div>
       </div>
 
-      {/* הגריד של המוצרים */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-0.5">
-        {items.map((p) => {
-          const img = p.images?.edges?.[0]?.node?.url;
-          const price = p.variants?.edges?.[0]?.node?.price;
-          return (
-            <Link
-              key={p.id}
-              href={`/shop/${p.handle}`}
-              prefetch={false}
-              className="border rounded-lg overflow-hidden hover:shadow"
+      <div className="relative group">
+        
+        {/* חיצי הניווט (יוצגו רק בדסקטופ ורק אם יש מספיק מוצרים) */}
+        {items.length > 2 && (
+          <>
+            <button
+              onClick={() => scroll('prev')}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 translate-x-1/3 bg-white border border-gray-200 shadow-md p-1.5 rounded-full text-gray-500 hover:text-red-600 hidden group-hover:block transition-all hover:scale-110"
+              aria-label="הקודם"
             >
-              {img && <img src={img} alt={p.title} className="w-full h-32 object-cover" />}
-              <div className="p-2">
-                <div className="text-sm font-medium text-gray-900 ">{p.title}</div>
-                {price && (
-                  <div className="text-xs opacity-70 text-gray-900">
-                    {price.amount} {price.currencyCode}
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+            </button>
+            <button
+              onClick={() => scroll('next')}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 -translate-x-1/3 bg-white border border-gray-200 shadow-md p-1.5 rounded-full text-gray-500 hover:text-red-600 hidden group-hover:block transition-all hover:scale-110"
+              aria-label="הבא"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+            </button>
+          </>
+        )}
+
+        {/* מיכל הגלילה של הקרוסלה */}
+        <div
+          ref={scrollRef}
+          className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-4 hide-scrollbar"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          {items.map((p) => {
+            const img = p.images?.edges?.[0]?.node?.url;
+            const price = p.variants?.edges?.[0]?.node?.price;
+            return (
+              <Link
+                key={p.id}
+                href={`/shop/${p.handle}`}
+                prefetch={false}
+                // רוחב קבוע שמייצר את הגלילה: במובייל 160px (כך שהשלישי "מציץ"), בדסקטופ 180px
+                className="border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-shadow flex-shrink-0 snap-start bg-white w-[160px] md:w-[180px]"
+              >
+                {/* תמונה */}
+                {img ? (
+                  <div className="bg-gray-50 aspect-square w-full">
+                     <img src={img} alt={p.title} className="w-full h-full object-cover mix-blend-multiply hover:scale-105 transition-transform duration-300" />
                   </div>
+                ) : (
+                  <div className="bg-gray-50 aspect-square w-full flex items-center justify-center text-gray-300">אין תמונה</div>
                 )}
-              </div>
-            </Link>
-          );
-        })}
+                
+                {/* פרטים */}
+                <div className="p-3">
+                  <div className="text-sm font-bold text-gray-900 line-clamp-2 leading-snug">{p.title}</div>
+                  {price && (
+                    <div className="text-red-600 font-black mt-2 text-lg">
+                      {price.amount} <span className="text-sm">{price.currencyCode}</span>
+                    </div>
+                  )}
+                </div>
+              </Link>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
