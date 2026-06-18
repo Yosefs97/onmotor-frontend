@@ -7,7 +7,7 @@ import ShopLayoutInternal from '@/components/ShopLayoutInternal';
 import ProductGrid from '@/components/ProductGrid';
 import ProductGallery from '@/components/ProductGallery';
 import RelatedProducts from '@/components/RelatedProducts';
-import RelatedArticles from '@/components/RelatedArticles';
+//import RelatedArticles from '@/components/RelatedArticles';
 import WhatsAppButton from '@/components/WhatsAppButton';
 import AutoShopBreadcrumbs from '@/components/AutoShopBreadcrumbs';
 import CategorySidebar from '@/components/CategorySidebar';
@@ -207,14 +207,14 @@ ${productUrl}
       <div className="grid md:grid-cols-2 gap-8">
         
         {/* עמודה ימנית (ב-RTL): תמונות ובדסקטופ גם המוצרים הנוספים מתחתיהן */}
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 relative">
           <ProductGallery
             images={product.images?.edges}
             title={product.title}
             selectedImage={currentVariant?.image?.url}
           />
           
-          {/* מופיע מתחת לתמונה בדסקטופ בלבד */}
+          {/* 🔥 המוצרים הקשורים מוצגים מתחת לתמונה בדסקטופ (hidden md:block בקובץ RelatedProducts) 🔥 */}
           <div className="hidden md:block">
             <RelatedProducts
               partVendor={product.vendor}
@@ -343,11 +343,13 @@ ${productUrl}
             </div>
           )}
 
+          {/* אזור פעולות ראשי (עגלה, כמות, וואטסאפ) */}
           <div className="pt-5 mt-4 border-t border-gray-200 space-y-3">
             
             {showAddToCart ? (
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 
+                {/* בורר כמות + / - */}
                 <div className="flex items-center justify-between border border-gray-300 rounded-lg bg-white h-[50px] w-full sm:w-32 flex-shrink-0 shadow-sm">
                    <button 
                      onClick={increaseQty} 
@@ -376,6 +378,7 @@ ${productUrl}
                    </button>
                 </div>
 
+                {/* כפתור הוסף לעגלה */}
                 <button
                   onClick={addToCart}
                   disabled={adding || !currentVariant}
@@ -394,6 +397,7 @@ ${productUrl}
               </div>
             )}
 
+            {/* כפתור "צריך עזרה?" מתחת לעגלה */}
             <div className="w-full">
               <WhatsAppButton
                 message={whatsappMessage}
@@ -403,6 +407,7 @@ ${productUrl}
             
           </div>
 
+          {/* שורות המידע והחלונות הקופצים (משלוח, החזרות, אבטחה) */}
           <div className="mt-2">
             <ProductInfoModals />
           </div>
@@ -410,7 +415,7 @@ ${productUrl}
         </div>
       </div>
 
-      {/* מופיע מתחת להכל במובייל בלבד */}
+      {/* 🔥 המוצרים הקשורים מוצגים בסוף העמוד במובייל (md:hidden בקובץ RelatedProducts) 🔥 */}
       <div className="md:hidden mt-10">
         <RelatedProducts
           partVendor={product.vendor}
@@ -420,9 +425,9 @@ ${productUrl}
         />
       </div>
 
-      <RelatedArticles
+      {/*<RelatedArticles
         tags={[product.vendor, ...compatibleModels.map(m => m.modelName)].filter(Boolean)}
-      />
+      />*/}
 
     </ShopLayoutInternal>
   );
