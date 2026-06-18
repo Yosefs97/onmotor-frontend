@@ -2,7 +2,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import BatterySearchWidget from './BatterySearchWidget';
+//import BatterySearchWidget from './BatterySearchWidget';
 
 export default function RelatedProducts({ partVendor, productType, compatibleModels = [], excludeHandle }) {
   const [items, setItems] = useState([]);
@@ -35,9 +35,7 @@ export default function RelatedProducts({ partVendor, productType, compatibleMod
       <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-3 mb-4">
         <h3 className="font-bold text-lg text-gray-900">מוצרים נוספים שיתאימו</h3>
         
-        <div className="w-full md:w-auto">
-          <BatterySearchWidget compact={true} />
-        </div>
+        {/*<div className="w-full md:w-auto"><BatterySearchWidget compact={true} /></div>*/}
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-0.5">

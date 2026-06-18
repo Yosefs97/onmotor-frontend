@@ -157,7 +157,8 @@ export default function ProductPageInner({ type, product, items, collectionStats
         />
 
         <div className="space-y-4 text-gray-900">
-          {/* הכותרת עכשיו ללא כפתור השיתוף לידה */}
+          
+          {/* הכותרת ללא כפתור השיתוף (שעבר למטה) */}
           <h1 className="text-3xl font-bold">{product.title}</h1>
           
           <div
@@ -252,45 +253,49 @@ export default function ProductPageInner({ type, product, items, collectionStats
             </div>
           )}
 
-          {/* אזור הכפתורים והשיתוף עבר לכאן (תחתית המודעה) */}
-          <div className="pt-6 mt-6 border-t border-gray-100 space-y-4">
+          {/* 🔥 אזור הפעולות החדש והסימטרי */}
+          <div className="pt-6 mt-8 border-t border-gray-100">
             
-            {/* כפתורי פעולה (הוספה לעגלה או וואטסאפ לחסר במלאי) */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              {showAddToCart ? (
-                <button
-                  onClick={addToCart}
-                  disabled={adding || !currentVariant}
-                  className="w-full sm:w-auto bg-red-600 text-white px-8 py-3 rounded-lg hover:bg-red-700 transition shadow-lg font-bold text-lg flex items-center justify-center gap-2 flex-grow"
-                >
-                  {adding ? 'מוסיף...' : 'הוסף לעגלה'}
-                </button>
-              ) : (
-                <div className="w-full sm:w-auto flex-grow">
-                  <WhatsAppButton
-                    message={whatsappMessage}
-                    label={"נגמר המלאי – צור קשר לבירור"}
-                  />
-                </div>
-              )}
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               
-              {/* כפתור "צריך עזרה" קבוע תמיד */}
+              {/* 1. הוסף לעגלה */}
+              <div className="w-full md:flex-1">
+                {showAddToCart ? (
+                  <button
+                    onClick={addToCart}
+                    disabled={adding || !currentVariant}
+                    className="w-full min-h-[50px] bg-red-600 text-white px-4 py-3 rounded-lg hover:bg-red-700 transition shadow-md font-bold text-lg flex items-center justify-center gap-2"
+                  >
+                    {adding ? 'מוסיף...' : 'הוסף לעגלה'}
+                  </button>
+                ) : (
+                  <div className="w-full flex justify-center">
+                    <WhatsAppButton
+                      message={whatsappMessage}
+                      label={"נגמר המלאי – צור קשר לבירור"}
+                    />
+                  </div>
+                )}
+              </div>
+              
+              {/* 2. צור קשר / וואטסאפ */}
               {showAddToCart && (
-                 <div className="w-full sm:w-auto flex-grow">
+                 <div className="w-full md:flex-1 flex justify-center">
                    <WhatsAppButton
                      message={whatsappMessage}
                      label={"צריך עזרה? פנה אלינו"}
                    />
                  </div>
               )}
-            </div>
 
-            {/* אזור שיתוף המוצר בתחתית */}
-            <div className="flex justify-end pt-2">
-              <ArticleShareBottom label="שתף מוצר" />
-            </div>
+              {/* 3. שיתוף מוצר */}
+              <div className={`w-full ${showAddToCart ? 'md:flex-1' : ''} flex justify-center md:justify-end`}>
+                <ArticleShareBottom label="שתף מוצר" />
+              </div>
 
+            </div>
           </div>
+
         </div>
       </div>
 
