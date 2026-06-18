@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import Link from 'next/link'; // 👈 הוספנו ייבוא של Link
+import Link from 'next/link'; 
 import ShopLayoutInternal from '@/components/ShopLayoutInternal';
 import ProductGrid from '@/components/ProductGrid';
 import ProductGallery from '@/components/ProductGallery';
@@ -113,7 +113,7 @@ export default function ProductPageInner({ type, product, items, collectionStats
     }
   };
 
-  const whatsappMessage = `שלום, אני מעוניין במוצר "${product.title}"...`;
+  const whatsappMessage = `שלום, אני מעוניין במוצר "${product.title}" (מק"ט: ${currentVariant?.sku || 'N/A'}). אשמח לעזרה.`;
   const showAddToCart = currentVariant?.availableForSale && currentVariant?.quantityAvailable > 0;
   const handleOptionChange = (name, value) => setSelectedOptions(prev => ({ ...prev, [name]: value }));
 
@@ -157,10 +157,8 @@ export default function ProductPageInner({ type, product, items, collectionStats
         />
 
         <div className="space-y-4 text-gray-900">
-          <div className="flex justify-between items-start gap-4">
-            <h1 className="text-3xl font-bold">{product.title}</h1>
-            <ArticleShareBottom label="שתף מוצר" />
-          </div>
+          {/* הכותרת עכשיו ללא כפתור השיתוף לידה */}
+          <h1 className="text-3xl font-bold">{product.title}</h1>
           
           <div
             className="prose max-w-none text-gray-900"
@@ -223,7 +221,6 @@ export default function ProductPageInner({ type, product, items, collectionStats
             </div>
           )}
 
-          {/* 🔥 הפיכת הדגמים התואמים לכפתורים לחיצים */}
           {compatibleModels.length > 0 && (
             <div className="mt-4 pt-4 border-t border-gray-100">
               <span className="text-sm font-bold text-gray-800 block mb-3">תואם לדגמים:</span>
@@ -231,7 +228,6 @@ export default function ProductPageInner({ type, product, items, collectionStats
                 {compatibleModels.map((m, idx) => {
                   const imageUrl = m.tagCode ? modelImages[m.tagCode] : null;
                   
-                  // יצירת מבנה ה-URL לדף הדגם
                   const brandSlug = encodeURIComponent(m.brand);
                   const modelSlug = m.modelName.toLowerCase().replace(/\s+/g, '-');
                   
@@ -256,21 +252,44 @@ export default function ProductPageInner({ type, product, items, collectionStats
             </div>
           )}
 
-          <div className="pt-4">
-            {showAddToCart ? (
-               <button
-               onClick={addToCart}
-               disabled={adding || !currentVariant}
-               className="w-full md:w-auto bg-red-600 text-white px-8 py-3 rounded-lg hover:bg-red-700 transition shadow-lg font-bold text-lg flex items-center justify-center gap-2"
-             >
-               {adding ? 'מוסיף...' : 'הוסף לעגלה'}
-             </button>
-            ) : (
-              <WhatsAppButton
-                message={whatsappMessage}
-                label={currentVariant?.availableForSale ? "הזמנה / בירור מלאי" : "נגמר המלאי – צור קשר"}
-              />
-            )}
+          {/* אזור הכפתורים והשיתוף עבר לכאן (תחתית המודעה) */}
+          <div className="pt-6 mt-6 border-t border-gray-100 space-y-4">
+            
+            {/* כפתורי פעולה (הוספה לעגלה או וואטסאפ לחסר במלאי) */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              {showAddToCart ? (
+                <button
+                  onClick={addToCart}
+                  disabled={adding || !currentVariant}
+                  className="w-full sm:w-auto bg-red-600 text-white px-8 py-3 rounded-lg hover:bg-red-700 transition shadow-lg font-bold text-lg flex items-center justify-center gap-2 flex-grow"
+                >
+                  {adding ? 'מוסיף...' : 'הוסף לעגלה'}
+                </button>
+              ) : (
+                <div className="w-full sm:w-auto flex-grow">
+                  <WhatsAppButton
+                    message={whatsappMessage}
+                    label={"נגמר המלאי – צור קשר לבירור"}
+                  />
+                </div>
+              )}
+              
+              {/* כפתור "צריך עזרה" קבוע תמיד */}
+              {showAddToCart && (
+                 <div className="w-full sm:w-auto flex-grow">
+                   <WhatsAppButton
+                     message={whatsappMessage}
+                     label={"צריך עזרה? פנה אלינו"}
+                   />
+                 </div>
+              )}
+            </div>
+
+            {/* אזור שיתוף המוצר בתחתית */}
+            <div className="flex justify-end pt-2">
+              <ArticleShareBottom label="שתף מוצר" />
+            </div>
+
           </div>
         </div>
       </div>
