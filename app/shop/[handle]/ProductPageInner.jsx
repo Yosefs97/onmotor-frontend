@@ -1,7 +1,7 @@
 // /app/shop/[handle]/ProductPageInner.jsx
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link'; 
 import ShopLayoutInternal from '@/components/ShopLayoutInternal';
 import ProductGrid from '@/components/ProductGrid';
@@ -17,14 +17,12 @@ import { getProductYearRange, formatYearRange } from '@/lib/productYears';
 
 export default function ProductPageInner({ type, product, items, collectionStats, modelImages = {} }) {
   const [adding, setAdding] = useState(false);
-  const [buying, setBuying] = useState(false); // 👈 סטייט חדש לכפתור "לרכישה"
+  const [buying, setBuying] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState({});
   const [quantity, setQuantity] = useState(1);
   
-  // 🌟 סטייט להצגת הסרגל התחתון הדביק במובייל 🌟
   const [showStickyBar, setShowStickyBar] = useState(false);
 
-  // האזנה לגלילה: מציגים את הסרגל אחרי גלילה קלה למטה
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 350) {
@@ -150,7 +148,6 @@ export default function ProductPageInner({ type, product, items, collectionStats
   const yr = getProductYearRange(product);
   const yrText = formatYearRange(yr);
 
-  // הוספה רגילה לעגלה
   const addToCart = async () => {
     if (!currentVariant || quantity < 1) return;
     setAdding(true);
@@ -170,7 +167,6 @@ export default function ProductPageInner({ type, product, items, collectionStats
     }
   };
 
-  // 🔥 פעולת קנייה מהירה: מוסיפה לעגלה ומעבירה ישירות לדף ה-Checkout שלך 🔥
   const buyNow = async () => {
     if (!currentVariant || quantity < 1) return;
     setBuying(true);
@@ -182,7 +178,6 @@ export default function ProductPageInner({ type, product, items, collectionStats
       const json = await res.json();
       if (json.cart) {
         window.dispatchEvent(new Event('cartUpdated')); 
-        // העברה ישירה לעמוד התשלום
         window.location.href = '/shop/checkout';
       } else {
         alert('שגיאה בהעברה לתשלום');
@@ -417,22 +412,32 @@ ${productUrl}
                 </div>
 
                 <div className="flex gap-2 w-full">
-                  {/* כפתור הוספה לסל המקורי */}
+                  {/* 🔥 תוקן העיצוב כך שהטקסט יישאר לבן וברור בטעינה עם אנימציית ספינר */}
                   <button
                     onClick={addToCart}
                     disabled={adding || !currentVariant}
-                    className="flex-1 h-[50px] bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all shadow-md hover:shadow-lg font-bold text-base md:text-lg flex items-center justify-center gap-1.5"
+                    className="flex-1 h-[50px] bg-red-600 text-white disabled:bg-red-500 disabled:opacity-100 disabled:text-white rounded-lg hover:bg-red-700 transition-all shadow-md hover:shadow-lg font-bold text-base md:text-lg flex items-center justify-center gap-1.5"
                   >
-                    {adding ? 'מוסיף...' : 'הוספה לסל'}
+                    {adding ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        <span>מוסיף...</span>
+                      </>
+                    ) : 'הוספה לסל'}
                   </button>
 
-                  {/* כפתור קנייה מהירה (לרכישה) החדש */}
+                  {/* 🔥 תוקן העיצוב לטקסט ברור עם ספינר */}
                   <button
                     onClick={buyNow}
                     disabled={buying || !currentVariant}
-                    className="flex-1 h-[50px] bg-zinc-900 text-white rounded-lg hover:bg-black transition-all shadow-md hover:shadow-lg font-bold text-base md:text-lg flex items-center justify-center"
+                    className="flex-1 h-[50px] bg-zinc-900 text-white disabled:bg-zinc-700 disabled:opacity-100 disabled:text-white rounded-lg hover:bg-black transition-all shadow-md hover:shadow-lg font-bold text-base md:text-lg flex items-center justify-center gap-1.5"
                   >
-                    {buying ? 'מעבד...' : 'לרכישה'}
+                    {buying ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        <span>מעבד...</span>
+                      </>
+                    ) : 'לרכישה'}
                   </button>
                 </div>
 
@@ -462,7 +467,6 @@ ${productUrl}
         </div>
       </div>
 
-      {/* המוצרים הקשורים בסוף העמוד במובייל */}
       <div className="md:hidden mt-10 pb-20">
         <RelatedProducts
           partVendor={product.vendor}
@@ -477,7 +481,7 @@ ${productUrl}
       />
 
       {/* ========================================================= */}
-      {/* 🌟 סרגל תחתון דביק למובייל - גלוי רק בגלילה כלפי מטה 🌟 */}
+      {/* 🌟 סרגל תחתון דביק למובייל - גם כאן תוקנו הכפתורים 🌟 */}
       {/* ========================================================= */}
       <div 
         className={`md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] p-3 z-50 transition-transform duration-300 ease-in-out ${
@@ -491,17 +495,27 @@ ${productUrl}
               <button
                 onClick={buyNow}
                 disabled={buying || !currentVariant}
-                className="flex-1 h-[50px] bg-zinc-900 text-white rounded-xl hover:bg-black transition-all font-bold text-lg flex items-center justify-center"
+                className="flex-1 h-[50px] bg-zinc-900 text-white disabled:bg-zinc-700 disabled:opacity-100 disabled:text-white rounded-xl hover:bg-black transition-all font-bold text-lg flex items-center justify-center gap-1.5"
               >
-                {buying ? 'מעבד...' : 'לרכישה'}
+                {buying ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <span>מעבד...</span>
+                  </>
+                ) : 'לרכישה'}
               </button>
               
               <button
                 onClick={addToCart}
                 disabled={adding || !currentVariant}
-                className="flex-1 h-[50px] bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all font-bold text-lg flex items-center justify-center gap-2"
+                className="flex-1 h-[50px] bg-red-600 text-white disabled:bg-red-500 disabled:opacity-100 disabled:text-white rounded-xl hover:bg-red-700 transition-all font-bold text-lg flex items-center justify-center gap-1.5"
               >
-                {adding ? 'מוסיף...' : 'הוספה לסל'}
+                {adding ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <span>מוסיף...</span>
+                  </>
+                ) : 'הוספה לסל'}
               </button>
             </div>
           ) : (
