@@ -50,7 +50,7 @@ export default function ProductInfoModals() {
   const closeModal = () => setActiveModal(null);
 
   return (
-    <div className="flex flex-col gap-3 mt-5 border-t border-gray-100 pt-5">
+    <div className="flex flex-col gap-1 mt-1 border-t border-gray-100 pt-1">
       
       {/* 1. כפתור משלוחים */}
       <button 
