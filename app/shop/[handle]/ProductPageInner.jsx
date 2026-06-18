@@ -1,13 +1,13 @@
 // /app/shop/[handle]/ProductPageInner.jsx
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link'; 
 import ShopLayoutInternal from '@/components/ShopLayoutInternal';
 import ProductGrid from '@/components/ProductGrid';
 import ProductGallery from '@/components/ProductGallery';
 import RelatedProducts from '@/components/RelatedProducts';
-//import RelatedArticles from '@/components/RelatedArticles';
+import RelatedArticles from '@/components/RelatedArticles';
 import WhatsAppButton from '@/components/WhatsAppButton';
 import AutoShopBreadcrumbs from '@/components/AutoShopBreadcrumbs';
 import CategorySidebar from '@/components/CategorySidebar';
@@ -17,8 +17,25 @@ import { getProductYearRange, formatYearRange } from '@/lib/productYears';
 
 export default function ProductPageInner({ type, product, items, collectionStats, modelImages = {} }) {
   const [adding, setAdding] = useState(false);
+  const [buying, setBuying] = useState(false); // 👈 סטייט חדש לכפתור "לרכישה"
   const [selectedOptions, setSelectedOptions] = useState({});
   const [quantity, setQuantity] = useState(1);
+  
+  // 🌟 סטייט להצגת הסרגל התחתון הדביק במובייל 🌟
+  const [showStickyBar, setShowStickyBar] = useState(false);
+
+  // האזנה לגלילה: מציגים את הסרגל אחרי גלילה קלה למטה
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 350) {
+        setShowStickyBar(true);
+      } else {
+        setShowStickyBar(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const isSparePart = useMemo(() => {
     if (!product) return false;
@@ -133,6 +150,7 @@ export default function ProductPageInner({ type, product, items, collectionStats
   const yr = getProductYearRange(product);
   const yrText = formatYearRange(yr);
 
+  // הוספה רגילה לעגלה
   const addToCart = async () => {
     if (!currentVariant || quantity < 1) return;
     setAdding(true);
@@ -149,6 +167,31 @@ export default function ProductPageInner({ type, product, items, collectionStats
       alert('אירעה שגיאה');
     } finally {
       setAdding(false);
+    }
+  };
+
+  // 🔥 פעולת קנייה מהירה: מוסיפה לעגלה ומעבירה ישירות לדף ה-Checkout שלך 🔥
+  const buyNow = async () => {
+    if (!currentVariant || quantity < 1) return;
+    setBuying(true);
+    try {
+      const res = await fetch('/api/shopify/cart/add', {
+        method: 'POST',
+        body: JSON.stringify({ variantId: currentVariant.id, quantity: quantity }), 
+      });
+      const json = await res.json();
+      if (json.cart) {
+        window.dispatchEvent(new Event('cartUpdated')); 
+        // העברה ישירה לעמוד התשלום
+        window.location.href = '/shop/checkout';
+      } else {
+        alert('שגיאה בהעברה לתשלום');
+      }
+    } catch (error) {
+      console.error('Error in buy now:', error);
+      alert('אירעה שגיאה');
+    } finally {
+      setBuying(false);
     }
   };
 
@@ -206,7 +249,6 @@ ${productUrl}
 
       <div className="grid md:grid-cols-2 gap-8">
         
-        {/* עמודה ימנית (ב-RTL): תמונות ובדסקטופ גם המוצרים הנוספים מתחתיהן */}
         <div className="flex flex-col gap-6 relative">
           <ProductGallery
             images={product.images?.edges}
@@ -214,7 +256,6 @@ ${productUrl}
             selectedImage={currentVariant?.image?.url}
           />
           
-          {/* 🔥 המוצרים הקשורים מוצגים מתחת לתמונה בדסקטופ (hidden md:block בקובץ RelatedProducts) 🔥 */}
           <div className="hidden md:block">
             <RelatedProducts
               partVendor={product.vendor}
@@ -225,7 +266,6 @@ ${productUrl}
           </div>
         </div>
 
-        {/* עמודה שמאלית: פרטי המוצר */}
         <div className="space-y-4 text-gray-900">
           
           <div className="flex justify-between items-start">
@@ -343,13 +383,11 @@ ${productUrl}
             </div>
           )}
 
-          {/* אזור פעולות ראשי (עגלה, כמות, וואטסאפ) */}
           <div className="pt-5 mt-4 border-t border-gray-200 space-y-3">
             
             {showAddToCart ? (
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 
-                {/* בורר כמות + / - */}
                 <div className="flex items-center justify-between border border-gray-300 rounded-lg bg-white h-[50px] w-full sm:w-32 flex-shrink-0 shadow-sm">
                    <button 
                      onClick={increaseQty} 
@@ -378,15 +416,26 @@ ${productUrl}
                    </button>
                 </div>
 
-                {/* כפתור הוסף לעגלה */}
-                <button
-                  onClick={addToCart}
-                  disabled={adding || !currentVariant}
-                  className="w-full h-[50px] bg-red-600 text-white px-6 rounded-lg hover:bg-red-700 transition-all shadow-md hover:shadow-lg font-bold text-lg flex items-center justify-center gap-2 relative overflow-hidden"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-                  {adding ? 'מוסיף לעגלה...' : 'הוסף לעגלה'}
-                </button>
+                <div className="flex gap-2 w-full">
+                  {/* כפתור הוספה לסל המקורי */}
+                  <button
+                    onClick={addToCart}
+                    disabled={adding || !currentVariant}
+                    className="flex-1 h-[50px] bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all shadow-md hover:shadow-lg font-bold text-base md:text-lg flex items-center justify-center gap-1.5"
+                  >
+                    {adding ? 'מוסיף...' : 'הוספה לסל'}
+                  </button>
+
+                  {/* כפתור קנייה מהירה (לרכישה) החדש */}
+                  <button
+                    onClick={buyNow}
+                    disabled={buying || !currentVariant}
+                    className="flex-1 h-[50px] bg-zinc-900 text-white rounded-lg hover:bg-black transition-all shadow-md hover:shadow-lg font-bold text-base md:text-lg flex items-center justify-center"
+                  >
+                    {buying ? 'מעבד...' : 'לרכישה'}
+                  </button>
+                </div>
+
               </div>
             ) : (
               <div className="w-full">
@@ -397,7 +446,6 @@ ${productUrl}
               </div>
             )}
 
-            {/* כפתור "צריך עזרה?" מתחת לעגלה */}
             <div className="w-full">
               <WhatsAppButton
                 message={whatsappMessage}
@@ -407,7 +455,6 @@ ${productUrl}
             
           </div>
 
-          {/* שורות המידע והחלונות הקופצים (משלוח, החזרות, אבטחה) */}
           <div className="mt-2">
             <ProductInfoModals />
           </div>
@@ -415,8 +462,8 @@ ${productUrl}
         </div>
       </div>
 
-      {/* 🔥 המוצרים הקשורים מוצגים בסוף העמוד במובייל (md:hidden בקובץ RelatedProducts) 🔥 */}
-      <div className="md:hidden mt-10">
+      {/* המוצרים הקשורים בסוף העמוד במובייל */}
+      <div className="md:hidden mt-10 pb-20">
         <RelatedProducts
           partVendor={product.vendor}
           productType={product.productType}
@@ -425,9 +472,48 @@ ${productUrl}
         />
       </div>
 
-      {/*<RelatedArticles
+      <RelatedArticles
         tags={[product.vendor, ...compatibleModels.map(m => m.modelName)].filter(Boolean)}
-      />*/}
+      />
+
+      {/* ========================================================= */}
+      {/* 🌟 סרגל תחתון דביק למובייל - גלוי רק בגלילה כלפי מטה 🌟 */}
+      {/* ========================================================= */}
+      <div 
+        className={`md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] p-3 z-50 transition-transform duration-300 ease-in-out ${
+          showStickyBar ? 'translate-y-0' : 'translate-y-[150%]'
+        }`}
+        dir="rtl"
+      >
+        <div className="max-w-md mx-auto w-full">
+          {showAddToCart ? (
+            <div className="flex items-center gap-3">
+              <button
+                onClick={buyNow}
+                disabled={buying || !currentVariant}
+                className="flex-1 h-[50px] bg-zinc-900 text-white rounded-xl hover:bg-black transition-all font-bold text-lg flex items-center justify-center"
+              >
+                {buying ? 'מעבד...' : 'לרכישה'}
+              </button>
+              
+              <button
+                onClick={addToCart}
+                disabled={adding || !currentVariant}
+                className="flex-1 h-[50px] bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all font-bold text-lg flex items-center justify-center gap-2"
+              >
+                {adding ? 'מוסיף...' : 'הוספה לסל'}
+              </button>
+            </div>
+          ) : (
+             <div className="w-full">
+               <WhatsAppButton
+                 message={whatsappMessage}
+                 label={"אזל מהמלאי – לבירור בוואטסאפ"}
+               />
+             </div>
+          )}
+        </div>
+      </div>
 
     </ShopLayoutInternal>
   );
