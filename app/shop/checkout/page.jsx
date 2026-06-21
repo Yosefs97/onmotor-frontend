@@ -92,8 +92,8 @@ export default function CheckoutPage() {
       </div>
 
       {/* פרטי עגלה */}
-      <div className="border p-4 rounded bg-gray-50">
-        <h2 className="font-bold mb-2">סיכום הזמנה</h2>
+      <div className="border p-4 rounded bg-gray-500">
+        <h2 className="text-black font-bold mb-2">סיכום הזמנה</h2>
         {cart.map((c, i) => (
           <div key={i} className="flex justify-between text-sm py-1">
             <span>
