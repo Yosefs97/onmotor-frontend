@@ -60,10 +60,10 @@ export default function CheckoutPage() {
 
   return (
     <div dir="rtl" className="max-w-2xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold">סגירת הזמנה</h1>
+      <h1 className=" text-gray-100 text-2xl font-bold">סגירת הזמנה</h1>
 
       {/* פרטי הלקוח */}
-      <div className="space-y-2">
+      <div className=" text-gray-900 space-y-2">
         {["name", "email", "phone", "address"].map((field) => (
           <input
             key={field}
