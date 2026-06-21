@@ -25,38 +25,34 @@ async function sfFetch(query, variables = {}) {
 
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
-  const partVendor = searchParams.get('partVendor') || '';
-  const productType = searchParams.get('productType') || '';
-  const fitBrands = searchParams.get('fitBrands') || '';
-  const fitModels = searchParams.get('fitModels') || '';
+  
+  // מקבלים את רשימת התגיות ואת ההחרגה של המוצר הנוכחי
+  const tagsParam = searchParams.get('tags') || '';
   const excludeHandle = searchParams.get('excludeHandle') || '';
-  const first = parseInt(searchParams.get('limit') || '8', 10);
+  const first = parseInt(searchParams.get('limit') || '10', 10);
 
   const parts = [];
-  
-  if (partVendor) parts.push(`vendor:${JSON.stringify(partVendor)}`);
-  if (productType) parts.push(`product_type:${JSON.stringify(productType)}`);
 
-  // יצירת חיפוש דינמי לפי כל הדגמים שהמוצר מתאים להם (תנאי OR)
-  if (fitBrands && fitModels) {
-    const brandsArr = fitBrands.split(',');
-    const modelsArr = fitModels.split(',');
-    const modelQueries = [];
+  // בניית שאילתה דינמית מבוססת תגיות (חיבור ב-OR כדי להביא מוצרים עם תגיות חופפות)
+  if (tagsParam) {
+    const tagsArr = tagsParam.split(',').map(t => t.trim()).filter(Boolean);
     
-    for (let i = 0; i < brandsArr.length; i++) {
-      const b = brandsArr[i].trim();
-      const m = modelsArr[i] ? modelsArr[i].trim() : '';
-      if (b && m) {
-        // מחפשים כל תגית שמתחילה בחברה ובדגם הספציפי
-        modelQueries.push(`tag:"fit:${b}:${m}*"`);
-      }
-    }
-    if (modelQueries.length > 0) {
-      parts.push(`(${modelQueries.join(' OR ')})`);
+    if (tagsArr.length > 0) {
+      // נשתמש בעד 15 תגיות כדי לא לייצר שאילתה ארוכה וכבדה מדי לשופיפיי
+      const safeTags = tagsArr.slice(0, 15);
+      
+      // בונים לולאת OR: (tag:"A" OR tag:"B" OR tag:"C")
+      const tagQueries = safeTags.map(tag => `tag:${JSON.stringify(tag)}`);
+      parts.push(`(${tagQueries.join(' OR ')})`);
     }
   }
 
-  const queryStr = parts.filter(Boolean).join(' ');
+  // אם אין למוצר תגיות בכלל, אי אפשר למצוא מוצרים דומים. נחזיר רשימה ריקה.
+  if (parts.length === 0) {
+     return Response.json({ items: [] });
+  }
+
+  const queryStr = parts.join(' ');
 
   const query = `#graphql
     query Related($first: Int!, $query: String) {
@@ -79,14 +75,21 @@ export async function GET(req) {
     }
   `;
 
-  const { error, status, data } = await sfFetch(query, { first, query: queryStr || undefined });
+  // שולפים קצת יותר מוצרים מהנדרש (first + 2) כי אנחנו מסננים את המוצר הנוכחי בסוף 
+  // ורוצים לוודא שיישארו לנו מספיק מוצרים להציג בקרוסלה
+  const { error, status, data } = await sfFetch(query, { first: first + 2, query: queryStr });
+  
   if (error) return Response.json({ error }, { status });
 
   let items = data.data.products.edges.map((e) => e.node);
 
+  // מסננים החוצה את המוצר שעליו אנחנו נמצאים כרגע
   if (excludeHandle) {
     items = items.filter((p) => p.handle.toLowerCase() !== excludeHandle.toLowerCase());
   }
+
+  // חותכים חזרה בדיוק לכמות שביקשנו (first)
+  items = items.slice(0, first);
 
   return Response.json({ items });
 }
