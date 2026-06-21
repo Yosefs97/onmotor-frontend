@@ -14,16 +14,18 @@ export default function CheckoutPage() {
     address: "",
     notes: "",
   });
+  
   const [loading, setLoading] = useState(false);
+  const [isFetchingCart, setIsFetchingCart] = useState(true); // 👈 סטייט לבדיקה אם העגלה עדיין נטענת מהשרת
 
   useEffect(() => {
     const fetchCart = async () => {
       try {
-        const res = await fetch("/api/shopify/cart/get");
+        // 🔥 הוספנו את cache: 'no-store' כדי שהדפדפן תמיד יביא את העגלה המעודכנת ביותר ולא ישתמש בזיכרון הישן
+        const res = await fetch("/api/shopify/cart/get", { cache: "no-store" });
         const json = await res.json();
         
         if (json.cart) {
-          // שמירת רשימת המוצרים לתצוגה
           setCartItems(
             json.cart.lines?.edges.map((e) => ({
               id: e.node.id,
@@ -34,16 +36,16 @@ export default function CheckoutPage() {
             })) || []
           );
           
-          // 🔥 התיקון הקריטי: שמירת הקישור המקורי לתשלום של שופיפיי
           setCheckoutUrl(json.cart.checkoutUrl);
           
-          // שמירת הסכום הכולל
           if (json.cart.estimatedCost?.totalAmount) {
             setCartTotal(json.cart.estimatedCost.totalAmount);
           }
         }
       } catch (error) {
         console.error("Error fetching cart:", error);
+      } finally {
+        setIsFetchingCart(false); // סיימנו לטעון את העגלה
       }
     };
     fetchCart();
@@ -53,8 +55,6 @@ export default function CheckoutPage() {
     setLoading(true);
     
     try {
-      // 1. שליחת מיילים / שמירת פרטי הלקוח במסד הנתונים
-      // עטוף ב-try-catch כדי שגם אם שרת המיילים נופל, הלקוח עדיין יופנה לתשלום
       try {
         await fetch("/api/order", {
           method: "POST",
@@ -65,7 +65,6 @@ export default function CheckoutPage() {
         console.error("Error sending order email:", emailError);
       }
 
-      // 2. מעבר ישיר ל-Checkout המקורי והתקין של שופיפיי
       if (checkoutUrl) {
         window.location.href = checkoutUrl;
       } else {
@@ -78,6 +77,15 @@ export default function CheckoutPage() {
       setLoading(false);
     }
   };
+
+  if (isFetchingCart) {
+    return (
+      <div dir="rtl" className="max-w-2xl mx-auto space-y-6 px-4 pt-10 text-center">
+        <svg className="animate-spin h-10 w-10 text-red-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        <h2 className="text-xl font-bold text-gray-800">טוען את העגלה שלך...</h2>
+      </div>
+    );
+  }
 
   return (
     <div dir="rtl" className="max-w-2xl mx-auto space-y-6 px-4 pt-6">
@@ -113,18 +121,22 @@ export default function CheckoutPage() {
       <div className="border border-gray-200 p-5 rounded-lg bg-gray-50 shadow-sm">
         <h2 className="text-black font-bold mb-4 text-lg border-b pb-2">סיכום הזמנה</h2>
         
-        <div className="space-y-3 mb-4">
-          {cartItems.map((c, i) => (
-            <div key={i} className="flex justify-between items-start text-sm text-gray-800">
-              <span className="pe-4">
-                {c.title} <span className="text-gray-500">x{c.quantity}</span>
-              </span>
-              <span className="font-semibold whitespace-nowrap">
-                ₪{(c.price?.amount || 0) * c.quantity} {c.price?.currencyCode}
-              </span>
-            </div>
-          ))}
-        </div>
+        {cartItems.length === 0 ? (
+          <div className="text-gray-500 py-2">העגלה שלך ריקה.</div>
+        ) : (
+          <div className="space-y-3 mb-4">
+            {cartItems.map((c, i) => (
+              <div key={i} className="flex justify-between items-start text-sm text-gray-800">
+                <span className="pe-4">
+                  {c.title} <span className="text-gray-500">x{c.quantity}</span>
+                </span>
+                <span className="font-semibold whitespace-nowrap">
+                  ₪{(c.price?.amount || 0) * c.quantity} {c.price?.currencyCode}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
         
         <div className="flex justify-between items-center text-lg font-black text-red-600 border-t pt-3 mt-2">
           <span>סה"כ לתשלום:</span>
