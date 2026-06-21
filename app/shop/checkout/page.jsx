@@ -16,13 +16,22 @@ export default function CheckoutPage() {
   });
   
   const [loading, setLoading] = useState(false);
-  const [isFetchingCart, setIsFetchingCart] = useState(true); // 👈 סטייט לבדיקה אם העגלה עדיין נטענת מהשרת
+  const [isFetchingCart, setIsFetchingCart] = useState(true);
 
   useEffect(() => {
     const fetchCart = async () => {
       try {
-        // 🔥 הוספנו את cache: 'no-store' כדי שהדפדפן תמיד יביא את העגלה המעודכנת ביותר ולא ישתמש בזיכרון הישן
-        const res = await fetch("/api/shopify/cart/get", { cache: "no-store" });
+        // 🔥 התיקון: הוספת פרמטר זמן והדרים שמבטלים לחלוטין את ה-Cache
+        const timestamp = new Date().getTime();
+        const res = await fetch(`/api/shopify/cart/get?_t=${timestamp}`, { 
+            cache: "no-store",
+            headers: {
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0"
+            }
+        });
+        
         const json = await res.json();
         
         if (json.cart) {
@@ -45,7 +54,7 @@ export default function CheckoutPage() {
       } catch (error) {
         console.error("Error fetching cart:", error);
       } finally {
-        setIsFetchingCart(false); // סיימנו לטעון את העגלה
+        setIsFetchingCart(false);
       }
     };
     fetchCart();
@@ -78,17 +87,18 @@ export default function CheckoutPage() {
     }
   };
 
+  // תצוגת טעינה מונעת הופעה של "עגלה ריקה" לשבריר שנייה
   if (isFetchingCart) {
     return (
       <div dir="rtl" className="max-w-2xl mx-auto space-y-6 px-4 pt-10 text-center">
         <svg className="animate-spin h-10 w-10 text-red-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-        <h2 className="text-xl font-bold text-gray-800">טוען את העגלה שלך...</h2>
+        <h2 className="text-xl font-bold text-gray-800">מושך את נתוני העגלה...</h2>
       </div>
     );
   }
 
   return (
-    <div dir="rtl" className="max-w-2xl mx-auto space-y-6 px-4 pt-6">
+    <div dir="rtl" className="max-w-2xl mx-auto space-y-6 px-4 pt-6 pb-20">
       <h1 className="text-black text-2xl font-bold">סגירת הזמנה</h1>
 
       {/* פרטי הלקוח */}
