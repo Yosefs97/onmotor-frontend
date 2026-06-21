@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import BatterySearchWidget from './BatterySearchWidget';
 
-export default function RelatedProducts({ excludeHandle, productTags = [] }) {
+export default function RelatedProducts({ partVendor, productType, excludeHandle, productTags = [] }) {
   const [items, setItems] = useState([]);
   const scrollRef = useRef(null);
 
@@ -12,25 +12,27 @@ export default function RelatedProducts({ excludeHandle, productTags = [] }) {
     (async () => {
       const params = new URLSearchParams({
         limit: '10', 
-        excludeHandle: excludeHandle || '', 
+        excludeHandle: excludeHandle || '',
+        vendor: partVendor || '',       // למקרה גיבוי (אם אין תגיות fit)
+        productType: productType || '', // למקרה גיבוי (אם אין תגיות fit)
       });
 
-      // 🔥 סינון חכם: שולפים רק את התגיות שמתייחסות לדגמים (מתחילות ב-fit:) 🔥
-      const fitTags = productTags.filter(tag => tag.toLowerCase().startsWith('fit:'));
-      
+      // 🔥 סינון חכם של תגיות ההתאמה בלבד 🔥
+      // ניקח רק תגיות שמתחילות ב-"fit:" או מתארות דגם באופן ישיר
+      const fitTags = productTags.filter(tag => 
+        tag.toLowerCase().startsWith('fit:')
+      );
+
       if (fitTags.length > 0) {
-        // שולחים לשרת רק את תגיות ההתאמה כדי לקבל חלפים זהים לאותו אופנוע
+        // שלח רק את תגיות ההתאמה כדי לקבל תוצאות מדויקות לאותם אופנועים
         params.append('tags', fitTags.join(','));
-      } else if (productTags.length > 0) {
-        // גיבוי: אם אין תגיות דגם, נשתמש בתגיות הכלליות
-        params.append('tags', productTags.join(','));
       }
 
       const res = await fetch(`/api/shopify/related?${params.toString()}`);
       const json = await res.json();
       setItems(json.items || []);
     })();
-  }, [excludeHandle, productTags]);
+  }, [excludeHandle, productTags, partVendor, productType]);
 
   if (!items.length) return null;
 
