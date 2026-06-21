@@ -167,6 +167,7 @@ export default function ProductPageInner({ type, product, items, collectionStats
     }
   };
 
+  // 🔥 התיקון המנצח: מדלגים על עמוד ה-Checkout שלנו ושולחים ישירות לממשק הסליקה של שופיפיי
   const buyNow = async () => {
     if (!currentVariant || quantity < 1) return;
     setBuying(true);
@@ -176,16 +177,24 @@ export default function ProductPageInner({ type, product, items, collectionStats
         body: JSON.stringify({ variantId: currentVariant.id, quantity: quantity }), 
       });
       const json = await res.json();
+      
       if (json.cart) {
         window.dispatchEvent(new Event('cartUpdated')); 
-        window.location.href = '/shop/checkout';
+        
+        // אם לשופיפיי יש קישור סליקה מוכן, נשלח את הלקוח ישירות אליו (כמו שעשינו בעגלה)
+        if (json.cart.checkoutUrl) {
+          window.location.href = json.cart.checkoutUrl;
+        } else {
+          // רשת ביטחון: אם מסיבה כלשהי אין קישור, נעביר לדף העגלה הראשי
+          window.location.href = '/shop/cart';
+        }
       } else {
         alert('שגיאה בהעברה לתשלום');
+        setBuying(false);
       }
     } catch (error) {
       console.error('Error in buy now:', error);
       alert('אירעה שגיאה');
-    } finally {
       setBuying(false);
     }
   };
@@ -412,7 +421,6 @@ ${productUrl}
                 </div>
 
                 <div className="flex gap-2 w-full">
-                  {/* 🔥 תוקן העיצוב כך שהטקסט יישאר לבן וברור בטעינה עם אנימציית ספינר */}
                   <button
                     onClick={addToCart}
                     disabled={adding || !currentVariant}
@@ -426,7 +434,6 @@ ${productUrl}
                     ) : 'הוספה לסל'}
                   </button>
 
-                  {/* 🔥 תוקן העיצוב לטקסט ברור עם ספינר */}
                   <button
                     onClick={buyNow}
                     disabled={buying || !currentVariant}
@@ -481,7 +488,7 @@ ${productUrl}
       />
 
       {/* ========================================================= */}
-      {/* 🌟 סרגל תחתון דביק למובייל - גם כאן תוקנו הכפתורים 🌟 */}
+      {/* 🌟 סרגל תחתון דביק למובייל  🌟 */}
       {/* ========================================================= */}
       <div 
         className={`md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] p-3 z-50 transition-transform duration-300 ease-in-out ${
