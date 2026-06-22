@@ -64,9 +64,11 @@ export async function GET(req) {
   if (tagsParam) {
     const tagsArr = tagsParam.split(',').map(t => t.trim()).filter(Boolean);
     if (tagsArr.length > 0) {
-      // חובה להשתמש במרכאות כפולות סביב הערך כדי ששופיפיי יתייחס לרווחים כחלק מהתגית ולא יפצל אותם
+      // חובה להשתמש במרכאות כפולות סביב הערך כדי ששופיפיי יתייחס לרווחים כחלק מהתגית
       const tagQueries = tagsArr.slice(0, 15).map(tag => `tag:"${tag}"`);
-      const queryStr = `(${tagQueries.join(' OR ')})`;
+      
+      // הפיכת השאילתה ל-AND: דורש שכל התגיות יופיעו במוצרים הנוספים
+      const queryStr = `(${tagQueries.join(' AND ')})`;
       
       const { data, error } = await fetchProducts(queryStr);
       
@@ -82,8 +84,6 @@ export async function GET(req) {
   }
 
   // 🔥 2. מנגנון גיבוי (Fallback) חכם יותר 🔥
-  // אנחנו מפעילים את הגיבוי *רק* אם לא נשלחו בכלל תגיות התאמה (מוצר אוניברסלי ללא fit:)
-  // אם נשלחו תגיות fit, אנחנו מעדיפים להציג פחות מ-3 מוצרים מאשר להציג חלקים לאופנוע הלא נכון!
   if (items.length === 0 && !tagsParam) {
     const fallbackParts = [];
     
