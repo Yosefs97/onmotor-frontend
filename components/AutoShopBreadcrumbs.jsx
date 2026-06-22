@@ -29,7 +29,7 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
   const vendorParam = searchParams.get('vendor');
   const modelParam = searchParams.get('model');
 
-  // אובייקט הבסיס שתמיד יחזיר לעמוד הקוביות הראשי של החנות
+  // אובייקט הבסיס שתמיד יחזיר לעמוד הראשי של החנות
   const crumbs = [
     { label: <Store className="w-4 h-4" />, href: '/shop' }
   ];
@@ -68,10 +68,8 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
     // 🟥 מצב B: דף מוצר בודד
     // ---------------------------------------------------------
     else if (product) {
-      // חילוץ בטוח: מוודאים שתגיות הן באמת מערך ולא null או משהו אחר
       const tags = Array.isArray(product.tags) ? product.tags : [];
 
-      // חיפוש בטוח: מוודאים שמדובר במחרוזת טקסט לפני שמבצעים toLowerCase
       const foundModelTag = tags.find(t => typeof t === 'string' && t.toLowerCase().startsWith('model:'));
       const modelTag = foundModelTag ? foundModelTag.toLowerCase().replace('model:', '').trim() : null;
 
@@ -86,23 +84,33 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
         ? modelParam 
         : modelTag;
 
-      // 1. מסלול חלקי חילוף (אם יש דגם)
-      if (activeModel) {
+      // בדיקה חכמה: האם זה חלק חילוף? (לפי דגם, סוג מוצר, או תגית)
+      const isPart = activeModel || 
+                     (typeof product.productType === 'string' && product.productType.includes('חילוף')) || 
+                     categoryTag === 'parts' ||
+                     categoryTag === 'oem';
+
+      // 1. מסלול חלקי חילוף (תואם בדיוק לנתיבים שהצגת)
+      if (isPart) {
         crumbs.push({ label: 'חלקי חילוף', href: '/shop/parts' });
         
-        if (activeVendor) {
+        if (activeVendor && activeVendor.toLowerCase() !== 'unknown') {
+          const vendorSlug = toSlug(activeVendor);
           crumbs.push({ 
             label: String(activeVendor).toUpperCase(), 
-            href: `/shop/vendor/${toSlug(activeVendor)}` 
+            href: `/shop/vendor/${vendorSlug}` 
           });
-        }
 
-        crumbs.push({ 
-          label: String(activeModel).toUpperCase(), 
-          href: activeVendor ? `/shop/vendor/${toSlug(activeVendor)}/${toSlug(activeModel)}` : null 
-        });
+          if (activeModel) {
+            const modelSlug = toSlug(activeModel);
+            crumbs.push({ 
+              label: String(activeModel).toUpperCase(), 
+              href: `/shop/vendor/${vendorSlug}/${modelSlug}` 
+            });
+          }
+        }
       } 
-      // 2. מסלול ציוד ואביזרים (ללא דגם ספציפי)
+      // 2. מסלול ציוד ואביזרים (קולקציות)
       else {
         let currentCatHandle = null;
 
@@ -157,7 +165,6 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
         const rawVendor = segments[vendorIndex + 1];
         const rawModel = segments[vendorIndex + 2];
         
-        // פענוח בטוח של ה-URL
         const vName = rawVendor ? decodeURIComponent(rawVendor) : '';
         const mName = rawModel ? decodeURIComponent(rawModel) : '';
 
@@ -174,7 +181,6 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
       }
     }
   } catch (error) {
-    // במקרה שבו נתקלנו בקריסה לא צפויה של הפירורים, נדפיס לקונסול ופשוט נציג את פירור הבסיס בלי לקרוס!
     console.error("AutoShopBreadcrumbs Error:", error);
   }
 
