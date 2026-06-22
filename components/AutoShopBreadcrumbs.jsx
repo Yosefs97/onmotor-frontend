@@ -88,6 +88,7 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
       const foundCatTag = tags.find(t => typeof t === 'string' && t.toLowerCase().startsWith('cat:'));
       const categoryTag = foundCatTag ? foundCatTag.toLowerCase().replace('cat:', '').trim() : null;
       
+      // נותנים עדיפות לפרמטרים מה-URL (מאיפה המשתמש הגיע), אחרת לוקחים מהמוצר
       const activeVendor = (typeof vendorParam === 'string' && vendorParam) 
         ? vendorParam 
         : (typeof product.vendor === 'string' ? product.vendor : null);
@@ -96,7 +97,6 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
         ? modelParam 
         : modelNameFromTag;
 
-      // אם המודל הגיע מה-URL, נייצר לו סלאג רגיל. אם הוא הגיע מהתגית, נשתמש בסלאג המדויק שמוגדר בה
       const activeModelSlug = (typeof modelParam === 'string' && modelParam)
         ? toSlug(modelParam)
         : modelSlugFromTag;
