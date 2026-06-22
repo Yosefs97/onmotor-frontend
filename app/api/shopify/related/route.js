@@ -54,6 +54,7 @@ export async function GET(req) {
       }
     `;
     
+    // מביאים קצת יותר כדי לפצות על סינון עצמי מאוחר יותר
     return await sfFetch(query, { first: first + 5, query: queryStr });
   };
 
@@ -63,8 +64,8 @@ export async function GET(req) {
   if (tagsParam) {
     const tagsArr = tagsParam.split(',').map(t => t.trim()).filter(Boolean);
     if (tagsArr.length > 0) {
-      // יוצר שאילתה שדורשת שלמוצרים הנוספים תהיה לפחות אחת מתגיות ההתאמה האלו
-      const tagQueries = tagsArr.slice(0, 15).map(tag => `tag:'${tag}'`);
+      // חובה להשתמש במרכאות כפולות סביב הערך כדי ששופיפיי יתייחס לרווחים כחלק מהתגית ולא יפצל אותם
+      const tagQueries = tagsArr.slice(0, 15).map(tag => `tag:"${tag}"`);
       const queryStr = `(${tagQueries.join(' OR ')})`;
       
       const { data, error } = await fetchProducts(queryStr);
@@ -86,9 +87,9 @@ export async function GET(req) {
   if (items.length === 0 && !tagsParam) {
     const fallbackParts = [];
     
-    // ניתן עדיפות לסוג המוצר
-    if (productType) fallbackParts.push(`product_type:'${productType}'`);
-    if (vendor) fallbackParts.push(`vendor:'${vendor}'`);
+    // שימוש במרכאות כפולות גם כאן ליתר ביטחון
+    if (productType) fallbackParts.push(`product_type:"${productType}"`);
+    if (vendor) fallbackParts.push(`vendor:"${vendor}"`);
     
     if (fallbackParts.length > 0) {
       const fallbackQueryStr = fallbackParts.join(' AND ');
