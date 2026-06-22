@@ -54,17 +54,16 @@ export async function GET(req) {
       }
     `;
     
-    // מביאים קצת יותר כדי לפצות על סינון עצמי מאוחר יותר
     return await sfFetch(query, { first: first + 5, query: queryStr });
   };
 
   let items = [];
 
-  // 🔥 1. עדיפות עליונה: חיפוש מוצרים זהים לפי תגיות התאמה (fit:)
+  // 🔥 1. עדיפות עליונה: חיפוש חלקים שמתאימים בדיוק לאותו דגם אופנוע (לפי תגיות fit)
   if (tagsParam) {
     const tagsArr = tagsParam.split(',').map(t => t.trim()).filter(Boolean);
     if (tagsArr.length > 0) {
-      // יוצר שאילתה בטוחה בסגנון: (tag:'fit:KTM:RC 390' OR tag:'fit:KTM:DUKE 390')
+      // יוצר שאילתה שדורשת שלמוצרים הנוספים תהיה לפחות אחת מתגיות ההתאמה האלו
       const tagQueries = tagsArr.slice(0, 15).map(tag => `tag:'${tag}'`);
       const queryStr = `(${tagQueries.join(' OR ')})`;
       
@@ -76,33 +75,32 @@ export async function GET(req) {
     }
   }
 
-  // מסננים החוצה את המוצר הנוכחי (כדי שלא נציג אותו בקרוסלת מוצרים נוספים)
+  // מסננים החוצה את המוצר הנוכחי (כדי שלא נציג אותו בקרוסלה של עצמו)
   if (excludeHandle) {
     items = items.filter((p) => p.handle.toLowerCase() !== excludeHandle.toLowerCase());
   }
 
-  // 🔥 2. מנגנון גיבוי (Fallback) 🔥
-  // אם לא מצאנו מספיק מוצרים לפי תגיות (למשל, מדובר במוצר ללא תגיות fit, כמו קסדה)
-  // אנחנו מביאים מוצרים לפי אותו יצרן או סוג.
-  if (items.length < 3 && (vendor || productType)) {
+  // 🔥 2. מנגנון גיבוי (Fallback) חכם יותר 🔥
+  // אנחנו מפעילים את הגיבוי *רק* אם לא נשלחו בכלל תגיות התאמה (מוצר אוניברסלי ללא fit:)
+  // אם נשלחו תגיות fit, אנחנו מעדיפים להציג פחות מ-3 מוצרים מאשר להציג חלקים לאופנוע הלא נכון!
+  if (items.length === 0 && !tagsParam) {
     const fallbackParts = [];
-    if (vendor) fallbackParts.push(`vendor:'${vendor}'`);
+    
+    // ניתן עדיפות לסוג המוצר
     if (productType) fallbackParts.push(`product_type:'${productType}'`);
+    if (vendor) fallbackParts.push(`vendor:'${vendor}'`);
     
-    const fallbackQueryStr = fallbackParts.join(' AND ');
-    const { data, error } = await fetchProducts(fallbackQueryStr);
-    
-    if (!error && data?.data?.products?.edges) {
-      let fallbackItems = data.data.products.edges.map((e) => e.node);
-      if (excludeHandle) {
-        fallbackItems = fallbackItems.filter((p) => p.handle.toLowerCase() !== excludeHandle.toLowerCase());
+    if (fallbackParts.length > 0) {
+      const fallbackQueryStr = fallbackParts.join(' AND ');
+      const { data, error } = await fetchProducts(fallbackQueryStr);
+      
+      if (!error && data?.data?.products?.edges) {
+        let fallbackItems = data.data.products.edges.map((e) => e.node);
+        if (excludeHandle) {
+          fallbackItems = fallbackItems.filter((p) => p.handle.toLowerCase() !== excludeHandle.toLowerCase());
+        }
+        items = fallbackItems;
       }
-      
-      // משלבים תוצאות (אם היו) עם מוצרי הגיבוי ומוודאים שאין כפילויות של אותו מוצר
-      const mergedItems = [...items, ...fallbackItems];
-      const uniqueItems = Array.from(new Map(mergedItems.map(item => [item.id, item])).values());
-      
-      items = uniqueItems;
     }
   }
 
