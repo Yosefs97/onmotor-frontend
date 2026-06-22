@@ -70,8 +70,20 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
     else if (product) {
       const tags = Array.isArray(product.tags) ? product.tags : [];
 
-      const foundModelTag = tags.find(t => typeof t === 'string' && t.toLowerCase().startsWith('model:'));
-      const modelTag = foundModelTag ? foundModelTag.toLowerCase().replace('model:', '').trim() : null;
+      // חיפוש ועיבוד תגית מבוססת מבנה Fit
+      // דוגמה: fit:APRILIA:TUONO 1100:tuono1100v4
+      const foundFitTag = tags.find(t => typeof t === 'string' && t.toLowerCase().startsWith('fit:'));
+      let modelNameFromTag = null;
+      let modelSlugFromTag = null;
+
+      if (foundFitTag) {
+        const parts = foundFitTag.split(':');
+        if (parts.length >= 3) {
+          modelNameFromTag = parts[2].trim(); // TUONO 1100
+          // אם יש אינדקס 4 בפיצול (הסלאג), נשתמש בו. אחרת נייצר סלאג אוטומטי
+          modelSlugFromTag = parts[3] ? parts[3].trim().toLowerCase() : toSlug(modelNameFromTag);
+        }
+      }
 
       const foundCatTag = tags.find(t => typeof t === 'string' && t.toLowerCase().startsWith('cat:'));
       const categoryTag = foundCatTag ? foundCatTag.toLowerCase().replace('cat:', '').trim() : null;
@@ -80,17 +92,22 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
         ? vendorParam 
         : (typeof product.vendor === 'string' ? product.vendor : null);
         
-      const activeModel = (typeof modelParam === 'string' && modelParam) 
+      const activeModelName = (typeof modelParam === 'string' && modelParam) 
         ? modelParam 
-        : modelTag;
+        : modelNameFromTag;
 
-      // בדיקה חכמה: האם זה חלק חילוף? (לפי דגם, סוג מוצר, או תגית)
-      const isPart = activeModel || 
+      // אם המודל הגיע מה-URL, נייצר לו סלאג רגיל. אם הוא הגיע מהתגית, נשתמש בסלאג המדויק שמוגדר בה
+      const activeModelSlug = (typeof modelParam === 'string' && modelParam)
+        ? toSlug(modelParam)
+        : modelSlugFromTag;
+
+      // בדיקה חכמה: האם זה חלק חילוף?
+      const isPart = activeModelName || 
                      (typeof product.productType === 'string' && product.productType.includes('חילוף')) || 
                      categoryTag === 'parts' ||
                      categoryTag === 'oem';
 
-      // 1. מסלול חלקי חילוף (תואם בדיוק לנתיבים שהצגת)
+      // 1. מסלול חלקי חילוף
       if (isPart) {
         crumbs.push({ label: 'חלקי חילוף', href: '/shop/parts' });
         
@@ -101,16 +118,15 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
             href: `/shop/vendor/${vendorSlug}` 
           });
 
-          if (activeModel) {
-            const modelSlug = toSlug(activeModel);
+          if (activeModelName && activeModelSlug) {
             crumbs.push({ 
-              label: String(activeModel).toUpperCase(), 
-              href: `/shop/vendor/${vendorSlug}/${modelSlug}` 
+              label: String(activeModelName).toUpperCase(), 
+              href: `/shop/vendor/${vendorSlug}/${activeModelSlug}` 
             });
           }
         }
       } 
-      // 2. מסלול ציוד ואביזרים (קולקציות)
+      // 2. מסלול ציוד ואביזרים
       else {
         let currentCatHandle = null;
 
