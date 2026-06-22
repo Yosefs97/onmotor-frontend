@@ -27,6 +27,7 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
   const type = searchParams.get('type');
   const tag = searchParams.get('tag');
   const vendorParam = searchParams.get('vendor');
+  const modelParam = searchParams.get('model'); // משיכת הדגם מכתובת ה-URL
 
   // אובייקט הבסיס שתמיד יחזיר לעמוד הקוביות הראשי של החנות
   const crumbs = [
@@ -66,43 +67,40 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
   // 🟥 מצב B: דף מוצר בודד
   // ---------------------------------------------------------
   else if (product) {
-    // שינוי: הפיכה לאותיות קטנות למניעת באגים של Case Sensitivity
-    const modelTag = product.tags?.find(t => t.toLowerCase().startsWith('model:'));
+    // שליפה בטוחה של התגיות מתוך המוצר
+    const foundModelTag = product.tags?.find(t => t?.toLowerCase().startsWith('model:'));
+    const modelTag = foundModelTag ? foundModelTag.toLowerCase().replace('model:', '').trim() : null;
 
-    if (modelTag) {
-      // אם זה חלק חילוף, נוסיף את קטגוריית האב "חלקי חילוף" בדרך ליצרן ולדגם
+    const foundCatTag = product.tags?.find(t => t?.toLowerCase().startsWith('cat:'));
+    const categoryTag = foundCatTag ? foundCatTag.toLowerCase().replace('cat:', '').trim() : null;
+    
+    // עדיפות לפרמטרים מכתובת ה-URL כדי לשמור על הקשר הניווט, אחרת ניקח מהמוצר
+    const activeVendor = vendorParam || product.vendor;
+    const activeModel = modelParam || modelTag;
+
+    // 1. מסלול חלקי חילוף (אם יש דגם פעיל ב-URL או בתגיות המוצר)
+    if (activeModel) {
       crumbs.push({ label: 'חלקי חילוף', href: '/shop/parts' });
       
-      const vendorName = product.vendor;
-      const vendorSlug = toSlug(vendorName);
-
-      if (vendorName) {
+      if (activeVendor) {
         crumbs.push({ 
-          label: vendorName.toUpperCase(), 
-          href: `/shop/vendor/${vendorSlug}` 
+          label: activeVendor.toUpperCase(), 
+          href: `/shop/vendor/${toSlug(activeVendor)}` 
         });
       }
 
-      // שינוי: חילוץ הדגם עם התחשבות באותיות גדולות/קטנות
-      const modelName = modelTag.toLowerCase().replace('model:', '').trim();
-      const modelSlug = toSlug(modelName);
-
-      if (modelName) {
-        crumbs.push({ 
-          label: modelName.toUpperCase(), 
-          href: `/shop/vendor/${vendorSlug}/${modelSlug}` 
-        });
-      }
-
-    } else {
-      // שינוי: תמיכה בתגיות קטגוריה כמו Cat:road
-      const categoryTag = product.tags?.find(t => t.toLowerCase().startsWith('cat:'));
+      crumbs.push({ 
+        label: activeModel.toUpperCase(), 
+        href: activeVendor ? `/shop/vendor/${toSlug(activeVendor)}/${toSlug(activeModel)}` : null 
+      });
+    } 
+    // 2. מסלול ציוד ואביזרים (ללא דגם ספציפי)
+    else {
       let currentCatHandle = null;
 
       if (categoryTag) {
-        currentCatHandle = categoryTag.toLowerCase().replace('cat:', '').trim();
+        currentCatHandle = categoryTag;
         const catLabel = CATEGORY_NAMES[currentCatHandle] || currentCatHandle;
-        
         crumbs.push({ 
           label: catLabel, 
           href: `/shop/collection/${currentCatHandle}` 
@@ -110,17 +108,24 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
       }
 
       if (product.productType) {
-        // שינוי: הגדרת Fallback (כתובת ברירת מחדל לחיפוש כללי) אם לא נמצאה קטגוריה
-        let typeHref = `/shop?type=${encodeURIComponent(product.productType)}`;
+        let typeHref = currentCatHandle 
+          ? `/shop/collection/${currentCatHandle}?type=${encodeURIComponent(product.productType)}` 
+          : `/shop?type=${encodeURIComponent(product.productType)}`;
         
-        if (currentCatHandle) {
-          typeHref = `/shop/collection/${currentCatHandle}?type=${encodeURIComponent(product.productType)}`;
+        crumbs.push({ label: product.productType, href: typeHref });
+      }
+
+      // 🔴 תיקון: הוספת היצרן תמיד, גם אם זה לא חלק חילוף אלא קסדה או מעיל
+      if (activeVendor && activeVendor.toLowerCase() !== 'unknown') {
+        let vendorHref = currentCatHandle
+          ? `/shop/collection/${currentCatHandle}?vendor=${encodeURIComponent(activeVendor)}`
+          : `/shop?vendor=${encodeURIComponent(activeVendor)}`;
+          
+        if (product.productType) {
+          vendorHref += `&type=${encodeURIComponent(product.productType)}`;
         }
-        
-        crumbs.push({ 
-          label: product.productType, 
-          href: typeHref 
-        });
+
+        crumbs.push({ label: activeVendor.toUpperCase(), href: vendorHref });
       }
     }
 
@@ -134,14 +139,11 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
   else {
     const segments = pathname.split('/').filter(Boolean);
     
-    // בדיקה האם אנחנו בדיוק בתוך עמוד חלקי החילוף החדש
     if (segments.length === 2 && segments[0] === 'shop' && segments[1] === 'parts') {
       crumbs.push({ label: 'חלקי חילוף', href: null });
       pageTitle = 'חלקי חילוף';
     } 
-    // בדיקה האם אנחנו בתוך עמוד יצרן או דגם (למשל shop/vendor/ducati)
     else if (segments.includes('vendor')) {
-      // מוסיף את חלקי חילוף כשלב אמצעי בדרך
       crumbs.push({ label: 'חלקי חילוף', href: '/shop/parts' });
 
       const vendorIndex = segments.indexOf('vendor');
