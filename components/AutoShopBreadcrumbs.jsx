@@ -66,7 +66,8 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
   // 🟥 מצב B: דף מוצר בודד
   // ---------------------------------------------------------
   else if (product) {
-    const modelTag = product.tags?.find(t => t.startsWith('model:'));
+    // שינוי: הפיכה לאותיות קטנות למניעת באגים של Case Sensitivity
+    const modelTag = product.tags?.find(t => t.toLowerCase().startsWith('model:'));
 
     if (modelTag) {
       // אם זה חלק חילוף, נוסיף את קטגוריית האב "חלקי חילוף" בדרך ליצרן ולדגם
@@ -82,7 +83,8 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
         });
       }
 
-      const modelName = modelTag.replace('model:', '').trim();
+      // שינוי: חילוץ הדגם עם התחשבות באותיות גדולות/קטנות
+      const modelName = modelTag.toLowerCase().replace('model:', '').trim();
       const modelSlug = toSlug(modelName);
 
       if (modelName) {
@@ -93,11 +95,12 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
       }
 
     } else {
-      const categoryTag = product.tags?.find(t => t.startsWith('cat:'));
+      // שינוי: תמיכה בתגיות קטגוריה כמו Cat:road
+      const categoryTag = product.tags?.find(t => t.toLowerCase().startsWith('cat:'));
       let currentCatHandle = null;
 
       if (categoryTag) {
-        currentCatHandle = categoryTag.replace('cat:', '').trim();
+        currentCatHandle = categoryTag.toLowerCase().replace('cat:', '').trim();
         const catLabel = CATEGORY_NAMES[currentCatHandle] || currentCatHandle;
         
         crumbs.push({ 
@@ -107,10 +110,13 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
       }
 
       if (product.productType) {
-        let typeHref = null;
+        // שינוי: הגדרת Fallback (כתובת ברירת מחדל לחיפוש כללי) אם לא נמצאה קטגוריה
+        let typeHref = `/shop?type=${encodeURIComponent(product.productType)}`;
+        
         if (currentCatHandle) {
           typeHref = `/shop/collection/${currentCatHandle}?type=${encodeURIComponent(product.productType)}`;
         }
+        
         crumbs.push({ 
           label: product.productType, 
           href: typeHref 
