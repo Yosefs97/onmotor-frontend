@@ -7,7 +7,7 @@ import { ChevronLeft, Store } from 'lucide-react';
 import BatterySearchWidget from './BatterySearchWidget';
 
 const toSlug = (str) => {
-  if (!str) return '';
+  if (!str || typeof str !== 'string') return '';
   return str.trim().toLowerCase().replace(/\s+/g, '-');
 };
 
@@ -27,7 +27,7 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
   const type = searchParams.get('type');
   const tag = searchParams.get('tag');
   const vendorParam = searchParams.get('vendor');
-  const modelParam = searchParams.get('model'); // משיכת הדגם מכתובת ה-URL
+  const modelParam = searchParams.get('model');
 
   // אובייקט הבסיס שתמיד יחזיר לעמוד הקוביות הראשי של החנות
   const crumbs = [
@@ -36,131 +36,146 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
 
   let pageTitle = '';
 
-  // ---------------------------------------------------------
-  // 🟥 מצב A: אנחנו בתוך דף קולקציה/קטגוריה (ציוד כביש, שטח וכו')
-  // ---------------------------------------------------------
-  if (collection) {
-    const collectionUrl = `/shop/collection/${collection.handle}`;
-    crumbs.push({ label: collection.title, href: collectionUrl });
-    pageTitle = collection.title;
+  try {
+    // ---------------------------------------------------------
+    // 🟥 מצב A: אנחנו בתוך דף קולקציה/קטגוריה
+    // ---------------------------------------------------------
+    if (collection) {
+      const collectionUrl = `/shop/collection/${collection.handle || ''}`;
+      crumbs.push({ label: collection.title || 'קולקציה', href: collectionUrl });
+      pageTitle = collection.title || '';
 
-    if (type) {
-      const isLast = !tag && !vendorParam;
-      crumbs.push({ 
-        label: type, 
-        href: isLast ? null : `${collectionUrl}?type=${encodeURIComponent(type)}` 
-      });
-      pageTitle = type;
+      if (type) {
+        const isLast = !tag && !vendorParam;
+        crumbs.push({ 
+          label: type, 
+          href: isLast ? null : `${collectionUrl}?type=${encodeURIComponent(type)}` 
+        });
+        pageTitle = type;
+      }
+
+      if (tag) {
+        crumbs.push({ label: tag, href: null });
+        pageTitle = `${type || collection.title} - ${tag}`;
+      } 
+      else if (vendorParam) {
+        crumbs.push({ label: vendorParam, href: null });
+        pageTitle = `${pageTitle} - ${vendorParam}`;
+      }
     }
 
-    if (tag) {
-      crumbs.push({ label: tag, href: null });
-      pageTitle = `${type || collection.title} - ${tag}`;
-    } 
-    else if (vendorParam) {
-      crumbs.push({ label: vendorParam, href: null });
-      pageTitle = `${pageTitle} - ${vendorParam}`;
-    }
-  }
+    // ---------------------------------------------------------
+    // 🟥 מצב B: דף מוצר בודד
+    // ---------------------------------------------------------
+    else if (product) {
+      // חילוץ בטוח: מוודאים שתגיות הן באמת מערך ולא null או משהו אחר
+      const tags = Array.isArray(product.tags) ? product.tags : [];
 
-  // ---------------------------------------------------------
-  // 🟥 מצב B: דף מוצר בודד
-  // ---------------------------------------------------------
-  else if (product) {
-    // שליפה בטוחה של התגיות מתוך המוצר
-    const foundModelTag = product.tags?.find(t => t?.toLowerCase().startsWith('model:'));
-    const modelTag = foundModelTag ? foundModelTag.toLowerCase().replace('model:', '').trim() : null;
+      // חיפוש בטוח: מוודאים שמדובר במחרוזת טקסט לפני שמבצעים toLowerCase
+      const foundModelTag = tags.find(t => typeof t === 'string' && t.toLowerCase().startsWith('model:'));
+      const modelTag = foundModelTag ? foundModelTag.toLowerCase().replace('model:', '').trim() : null;
 
-    const foundCatTag = product.tags?.find(t => t?.toLowerCase().startsWith('cat:'));
-    const categoryTag = foundCatTag ? foundCatTag.toLowerCase().replace('cat:', '').trim() : null;
-    
-    // עדיפות לפרמטרים מכתובת ה-URL כדי לשמור על הקשר הניווט, אחרת ניקח מהמוצר
-    const activeVendor = vendorParam || product.vendor;
-    const activeModel = modelParam || modelTag;
-
-    // 1. מסלול חלקי חילוף (אם יש דגם פעיל ב-URL או בתגיות המוצר)
-    if (activeModel) {
-      crumbs.push({ label: 'חלקי חילוף', href: '/shop/parts' });
+      const foundCatTag = tags.find(t => typeof t === 'string' && t.toLowerCase().startsWith('cat:'));
+      const categoryTag = foundCatTag ? foundCatTag.toLowerCase().replace('cat:', '').trim() : null;
       
-      if (activeVendor) {
-        crumbs.push({ 
-          label: activeVendor.toUpperCase(), 
-          href: `/shop/vendor/${toSlug(activeVendor)}` 
-        });
-      }
-
-      crumbs.push({ 
-        label: activeModel.toUpperCase(), 
-        href: activeVendor ? `/shop/vendor/${toSlug(activeVendor)}/${toSlug(activeModel)}` : null 
-      });
-    } 
-    // 2. מסלול ציוד ואביזרים (ללא דגם ספציפי)
-    else {
-      let currentCatHandle = null;
-
-      if (categoryTag) {
-        currentCatHandle = categoryTag;
-        const catLabel = CATEGORY_NAMES[currentCatHandle] || currentCatHandle;
-        crumbs.push({ 
-          label: catLabel, 
-          href: `/shop/collection/${currentCatHandle}` 
-        });
-      }
-
-      if (product.productType) {
-        let typeHref = currentCatHandle 
-          ? `/shop/collection/${currentCatHandle}?type=${encodeURIComponent(product.productType)}` 
-          : `/shop?type=${encodeURIComponent(product.productType)}`;
+      const activeVendor = (typeof vendorParam === 'string' && vendorParam) 
+        ? vendorParam 
+        : (typeof product.vendor === 'string' ? product.vendor : null);
         
-        crumbs.push({ label: product.productType, href: typeHref });
-      }
+      const activeModel = (typeof modelParam === 'string' && modelParam) 
+        ? modelParam 
+        : modelTag;
 
-      // 🔴 תיקון: הוספת היצרן תמיד, גם אם זה לא חלק חילוף אלא קסדה או מעיל
-      if (activeVendor && activeVendor.toLowerCase() !== 'unknown') {
-        let vendorHref = currentCatHandle
-          ? `/shop/collection/${currentCatHandle}?vendor=${encodeURIComponent(activeVendor)}`
-          : `/shop?vendor=${encodeURIComponent(activeVendor)}`;
-          
-        if (product.productType) {
-          vendorHref += `&type=${encodeURIComponent(product.productType)}`;
+      // 1. מסלול חלקי חילוף (אם יש דגם)
+      if (activeModel) {
+        crumbs.push({ label: 'חלקי חילוף', href: '/shop/parts' });
+        
+        if (activeVendor) {
+          crumbs.push({ 
+            label: String(activeVendor).toUpperCase(), 
+            href: `/shop/vendor/${toSlug(activeVendor)}` 
+          });
         }
 
-        crumbs.push({ label: activeVendor.toUpperCase(), href: vendorHref });
+        crumbs.push({ 
+          label: String(activeModel).toUpperCase(), 
+          href: activeVendor ? `/shop/vendor/${toSlug(activeVendor)}/${toSlug(activeModel)}` : null 
+        });
+      } 
+      // 2. מסלול ציוד ואביזרים (ללא דגם ספציפי)
+      else {
+        let currentCatHandle = null;
+
+        if (categoryTag) {
+          currentCatHandle = categoryTag;
+          const catLabel = CATEGORY_NAMES[currentCatHandle] || currentCatHandle;
+          crumbs.push({ 
+            label: catLabel, 
+            href: `/shop/collection/${currentCatHandle}` 
+          });
+        }
+
+        if (product.productType && typeof product.productType === 'string') {
+          let typeHref = currentCatHandle 
+            ? `/shop/collection/${currentCatHandle}?type=${encodeURIComponent(product.productType)}` 
+            : `/shop?type=${encodeURIComponent(product.productType)}`;
+          
+          crumbs.push({ label: product.productType, href: typeHref });
+        }
+
+        if (activeVendor && activeVendor.toLowerCase() !== 'unknown') {
+          let vendorHref = currentCatHandle
+            ? `/shop/collection/${currentCatHandle}?vendor=${encodeURIComponent(activeVendor)}`
+            : `/shop?vendor=${encodeURIComponent(activeVendor)}`;
+            
+          if (product.productType && typeof product.productType === 'string') {
+            vendorHref += `&type=${encodeURIComponent(product.productType)}`;
+          }
+
+          crumbs.push({ label: String(activeVendor).toUpperCase(), href: vendorHref });
+        }
       }
+
+      crumbs.push({ label: product.title || '', href: null });
+      pageTitle = product.title || '';
     }
 
-    crumbs.push({ label: product.title, href: null });
-    pageTitle = product.title;
-  }
+    // ---------------------------------------------------------
+    // 🟥 מצב C: דפדוף ידני ב-URL (ללא דף מוצר)
+    // ---------------------------------------------------------
+    else {
+      const segments = (pathname || '').split('/').filter(Boolean);
+      
+      if (segments.length === 2 && segments[0] === 'shop' && segments[1] === 'parts') {
+        crumbs.push({ label: 'חלקי חילוף', href: null });
+        pageTitle = 'חלקי חילוף';
+      } 
+      else if (segments.includes('vendor')) {
+        crumbs.push({ label: 'חלקי חילוף', href: '/shop/parts' });
 
-  // ---------------------------------------------------------
-  // 🟥 מצב C: דפדוף ידני ב-URL של חלפים (ללא דף מוצר)
-  // ---------------------------------------------------------
-  else {
-    const segments = pathname.split('/').filter(Boolean);
-    
-    if (segments.length === 2 && segments[0] === 'shop' && segments[1] === 'parts') {
-      crumbs.push({ label: 'חלקי חילוף', href: null });
-      pageTitle = 'חלקי חילוף';
-    } 
-    else if (segments.includes('vendor')) {
-      crumbs.push({ label: 'חלקי חילוף', href: '/shop/parts' });
+        const vendorIndex = segments.indexOf('vendor');
+        const rawVendor = segments[vendorIndex + 1];
+        const rawModel = segments[vendorIndex + 2];
+        
+        // פענוח בטוח של ה-URL
+        const vName = rawVendor ? decodeURIComponent(rawVendor) : '';
+        const mName = rawModel ? decodeURIComponent(rawModel) : '';
 
-      const vendorIndex = segments.indexOf('vendor');
-      const vendorName = decodeURIComponent(segments[vendorIndex + 1] || '');
-      const modelName = decodeURIComponent(segments[vendorIndex + 2] || '');
-
-      if (vendorName) {
-        crumbs.push({ label: vendorName.toUpperCase(), href: `/shop/vendor/${segments[vendorIndex + 1]}` });
-        pageTitle = `דגמי ${vendorName}`;
+        if (vName) {
+          crumbs.push({ label: String(vName).toUpperCase(), href: `/shop/vendor/${rawVendor}` });
+          pageTitle = `דגמי ${vName}`;
+        }
+        if (mName) {
+          crumbs.push({ label: String(mName).toUpperCase(), href: null });
+          pageTitle = `חלקים ל-${vName} ${mName}`;
+        }
+      } else {
+        pageTitle = 'חנות';
       }
-      if (modelName) {
-        crumbs.push({ label: modelName.toUpperCase(), href: null });
-        pageTitle = `חלקים ל-${vendorName} ${modelName}`;
-      }
-    } else {
-      pageTitle = 'חנות';
     }
+  } catch (error) {
+    // במקרה שבו נתקלנו בקריסה לא צפויה של הפירורים, נדפיס לקונסול ופשוט נציג את פירור הבסיס בלי לקרוס!
+    console.error("AutoShopBreadcrumbs Error:", error);
   }
 
   const isBatteriesPage = 
