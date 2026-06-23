@@ -28,8 +28,6 @@ export async function GET(req) {
   
   const tagsParam = searchParams.get('tags') || '';
   const excludeHandle = searchParams.get('excludeHandle') || '';
-  const vendor = searchParams.get('vendor') || '';
-  const productType = searchParams.get('productType') || '';
   const first = parseInt(searchParams.get('limit') || '10', 10);
 
   const fetchProducts = async (queryStr) => {
@@ -54,21 +52,21 @@ export async function GET(req) {
       }
     `;
     
-    // מביאים קצת יותר כדי לפצות על סינון עצמי מאוחר יותר
+    // מביאים קצת יותר כדי לפצות על סינון המוצר הנוכחי
     return await sfFetch(query, { first: first + 5, query: queryStr });
   };
 
   let items = [];
 
-  // 🔥 1. עדיפות עליונה: חיפוש חלקים שמתאימים בדיוק לאותו דגם אופנוע (לפי תגיות fit)
+  // 1. משיכת מוצרים אך ורק לפי תגיות תואמות (שימוש ב-OR)
   if (tagsParam) {
     const tagsArr = tagsParam.split(',').map(t => t.trim()).filter(Boolean);
     if (tagsArr.length > 0) {
-      // חובה להשתמש במרכאות כפולות סביב הערך כדי ששופיפיי יתייחס לרווחים כחלק מהתגית
+      // עטיפת כל תגית במרכאות כפולות כדי ששופיפיי יתמודד נכון עם רווחים ונקודתיים
       const tagQueries = tagsArr.slice(0, 15).map(tag => `tag:"${tag}"`);
       
-      // הפיכת השאילתה ל-AND: דורש שכל התגיות יופיעו במוצרים הנוספים
-      const queryStr = `(${tagQueries.join(' AND ')})`;
+      // מחברים ב-OR - מספיקה תגית אחת זהה כדי שהמוצר ייחשב כקשור
+      const queryStr = `(${tagQueries.join(' OR ')})`;
       
       const { data, error } = await fetchProducts(queryStr);
       
@@ -78,34 +76,15 @@ export async function GET(req) {
     }
   }
 
-  // מסננים החוצה את המוצר הנוכחי (כדי שלא נציג אותו בקרוסלה של עצמו)
+  // 2. סינון המוצר הנוכחי מהרשימה כדי שלא יציג את עצמו
   if (excludeHandle) {
     items = items.filter((p) => p.handle.toLowerCase() !== excludeHandle.toLowerCase());
   }
 
-  // 🔥 2. מנגנון גיבוי (Fallback) חכם יותר 🔥
-  if (items.length === 0 && !tagsParam) {
-    const fallbackParts = [];
-    
-    // שימוש במרכאות כפולות גם כאן ליתר ביטחון
-    if (productType) fallbackParts.push(`product_type:"${productType}"`);
-    if (vendor) fallbackParts.push(`vendor:"${vendor}"`);
-    
-    if (fallbackParts.length > 0) {
-      const fallbackQueryStr = fallbackParts.join(' AND ');
-      const { data, error } = await fetchProducts(fallbackQueryStr);
-      
-      if (!error && data?.data?.products?.edges) {
-        let fallbackItems = data.data.products.edges.map((e) => e.node);
-        if (excludeHandle) {
-          fallbackItems = fallbackItems.filter((p) => p.handle.toLowerCase() !== excludeHandle.toLowerCase());
-        }
-        items = fallbackItems;
-      }
-    }
-  }
+  // כל מנגנוני הגיבוי (Fallback) לפי Vendor או ProductType הוסרו לחלוטין לבקשתך.
+  // אם אין תגיות תואמות, המערך יישאר ריק ולא יוצגו מוצרים סתם.
 
-  // חותכים חזרה בדיוק לכמות שביקשנו להציג (לדוגמה: 10)
+  // חיתוך למספר הפריטים המבוקש
   items = items.slice(0, first);
 
   return Response.json({ items });
