@@ -70,44 +70,57 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
     else if (product) {
       const tags = Array.isArray(product.tags) ? product.tags : [];
 
-      // חיפוש ועיבוד תגית מבוססת מבנה Fit
-      // דוגמה: fit:APRILIA:TUONO 1100:tuono1100v4
-      const foundFitTag = tags.find(t => typeof t === 'string' && t.toLowerCase().startsWith('fit:'));
-      let modelNameFromTag = null;
-      let modelSlugFromTag = null;
+      // 1. חילוץ כל תגיות ה-Fit למערך של אובייקטים
+      const fitModels = tags
+        .filter(t => typeof t === 'string' && t.toLowerCase().startsWith('fit:'))
+        .map(t => {
+          const parts = t.split(':');
+          return {
+            vendor: parts[1] ? parts[1].trim() : '',
+            name: parts[2] ? parts[2].trim() : '',
+            slug: parts[3] ? parts[3].trim().toLowerCase() : toSlug(parts[2] || '')
+          };
+        });
 
-      if (foundFitTag) {
-        const parts = foundFitTag.split(':');
-        if (parts.length >= 3) {
-          modelNameFromTag = parts[2].trim(); // TUONO 1100
-          // אם יש אינדקס 4 בפיצול (הסלאג), נשתמש בו. אחרת נייצר סלאג אוטומטי
-          modelSlugFromTag = parts[3] ? parts[3].trim().toLowerCase() : toSlug(modelNameFromTag);
+      let matchedModel = null;
+
+      // 2. אם המשתמש הגיע עם פרמטר דגם מה-URL, נחפש אותו מול כל התגיות
+      if (modelParam) {
+        const paramLower = modelParam.toLowerCase();
+        matchedModel = fitModels.find(m => 
+          m.slug === paramLower || m.name.toLowerCase() === paramLower
+        );
+        
+        // אם הדגם ב-URL לא נמצא בתגיות (למשל מוצר אוניברסלי), נייצר מודל גיבוי
+        if (!matchedModel) {
+          matchedModel = {
+            vendor: vendorParam || product.vendor,
+            name: decodeURIComponent(modelParam),
+            slug: toSlug(modelParam)
+          };
         }
+      }
+
+      // 3. אם אין פרמטר ב-URL (הגיע מגוגל למשל), נבחר את הדגם הראשון מהתגיות כברירת מחדל
+      if (!matchedModel && fitModels.length > 0) {
+        matchedModel = fitModels[0];
       }
 
       const foundCatTag = tags.find(t => typeof t === 'string' && t.toLowerCase().startsWith('cat:'));
       const categoryTag = foundCatTag ? foundCatTag.toLowerCase().replace('cat:', '').trim() : null;
       
-      // נותנים עדיפות לפרמטרים מה-URL (מאיפה המשתמש הגיע), אחרת לוקחים מהמוצר
+      // קביעת היצרן הסופי: קודם מה-URL, אחר כך מהמודל שנמצא, ובסוף מהמוצר עצמו
       const activeVendor = (typeof vendorParam === 'string' && vendorParam) 
         ? vendorParam 
-        : (typeof product.vendor === 'string' ? product.vendor : null);
-        
-      const activeModelName = (typeof modelParam === 'string' && modelParam) 
-        ? modelParam 
-        : modelNameFromTag;
-
-      const activeModelSlug = (typeof modelParam === 'string' && modelParam)
-        ? toSlug(modelParam)
-        : modelSlugFromTag;
+        : (matchedModel && matchedModel.vendor ? matchedModel.vendor : (typeof product.vendor === 'string' ? product.vendor : null));
 
       // בדיקה חכמה: האם זה חלק חילוף?
-      const isPart = activeModelName || 
+      const isPart = matchedModel || 
                      (typeof product.productType === 'string' && product.productType.includes('חילוף')) || 
                      categoryTag === 'parts' ||
                      categoryTag === 'oem';
 
-      // 1. מסלול חלקי חילוף
+      // מסלול חלקי חילוף
       if (isPart) {
         crumbs.push({ label: 'חלקי חילוף', href: '/shop/parts' });
         
@@ -118,15 +131,16 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
             href: `/shop/vendor/${vendorSlug}` 
           });
 
-          if (activeModelName && activeModelSlug) {
+          // הוספת הדגם עם ה-Slug המדויק!
+          if (matchedModel && matchedModel.name) {
             crumbs.push({ 
-              label: String(activeModelName).toUpperCase(), 
-              href: `/shop/vendor/${vendorSlug}/${activeModelSlug}` 
+              label: String(matchedModel.name).toUpperCase(), 
+              href: `/shop/vendor/${vendorSlug}/${matchedModel.slug}` 
             });
           }
         }
       } 
-      // 2. מסלול ציוד ואביזרים
+      // מסלול ציוד ואביזרים
       else {
         let currentCatHandle = null;
 
