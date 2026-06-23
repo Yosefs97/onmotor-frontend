@@ -3,7 +3,7 @@ import ProductPageInner from './ProductPageInner';
 import { fetchProduct } from '@/lib/shop/fetchProduct';
 import { fetchSearchResults } from '@/lib/shop/fetchSearch';
 import { fetchCollectionStats } from '@/lib/shop/fetchCollectionStats';
-import { fetchModelImages } from '@/lib/shop/fetchModelImages'; // 👇 הייבוא שהיה חסר!
+import { fetchModelImages } from '@/lib/shop/fetchModelImages';
 
 export const revalidate = 600;
 
@@ -69,7 +69,10 @@ export default async function ProductPage({ params, searchParams }) {
     Object.entries(resolvedSearchParams || {}).map(([k, v]) => [k, String(v)])
   );
   
-  const queryKeys = Object.keys(filters).filter(key => !['fbclid', 'utm_source', 'utm_medium', 'gclid', '_rsc'].includes(key));
+  // 🔥 התיקון הקריטי: מתעלמים מ-vendor ו-model כדי לא לבלבל את העמוד למצב חיפוש
+  const queryKeys = Object.keys(filters).filter(key => 
+    !['fbclid', 'utm_source', 'utm_medium', 'gclid', '_rsc', 'vendor', 'model'].includes(key)
+  );
   const isSearch = queryKeys.length > 0;
 
   if (isSearch) {
@@ -110,7 +113,6 @@ export default async function ProductPage({ params, searchParams }) {
       }
   }
 
-  // 👇 משיכת מילון התמונות מהשרת כדי שהלוגואים יופיעו בעמוד המוצר
   const modelImages = await fetchModelImages();
 
   return (
@@ -118,7 +120,7 @@ export default async function ProductPage({ params, searchParams }) {
       type="product" 
       product={product} 
       collectionStats={collectionStats || { types: [], vendors: [], tags: [], handle: 'all' }} 
-      modelImages={modelImages} // העברת התמונות פנימה!
+      modelImages={modelImages} 
     />
   );
 }
