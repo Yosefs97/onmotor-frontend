@@ -261,11 +261,9 @@ ${productUrl}
           />
           
           <div className="hidden md:block">
-            <RelatedProducts
-              partVendor={product.vendor}
-              productType={product.productType}
-              compatibleModels={compatibleModels}
-              excludeHandle={product.handle}
+            <RelatedProducts 
+              excludeHandle={product.handle} 
+              productTags={product.tags} // חובה לוודא שהשורה הזו קיימת!
             />
           </div>
         </div>
