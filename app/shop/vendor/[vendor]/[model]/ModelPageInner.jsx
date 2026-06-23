@@ -24,9 +24,7 @@ export default function ModelPageInner({ items, vendor, model }) {
     }
   };
 
-  // מפענחים את ה-URL params ומנקים אותם לתצוגה חלקה
   const decodedVendor = decodeURIComponent(vendor).replace(/-/g, ' ');
-  // ה-model כבר מגיע נקי מקובץ השרת, רק מוודאים פענוח למקרה של עברית
   const decodedModel = decodeURIComponent(model);
 
   return (
@@ -42,7 +40,12 @@ export default function ModelPageInner({ items, vendor, model }) {
       />
 
       <div ref={containerRef}>
-        <ProductGrid products={items.slice(0, visibleCount)} />
+        {/* 🌟 מעבירים לגריד את ה-vendor וה-model כדי שיצרף אותם ללינקים של המוצרים */}
+        <ProductGrid 
+          products={items.slice(0, visibleCount)} 
+          currentVendor={vendor}
+          currentModel={model}
+        />
       </div>
 
       {visibleCount < items.length && (

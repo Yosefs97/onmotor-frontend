@@ -3,7 +3,14 @@
 import Link from 'next/link';
 import { getYearRangeFromMetafields, formatYearRange } from '@/lib/productYears';
 
-export default function ProductGrid({ products = [], loading = false, onLoadMore, hasMore = false }) {
+export default function ProductGrid({ 
+  products = [], 
+  loading = false, 
+  onLoadMore, 
+  hasMore = false,
+  currentVendor = '', // 🌟 קבלת היצרן הנוכחי מהעמוד
+  currentModel = ''   // 🌟 קבלת הדגם הנוכחי מהעמוד
+}) {
   return (
     <div dir="rtl" className="space-y-4">
       {loading && <div>טוען...</div>}
@@ -15,10 +22,16 @@ export default function ProductGrid({ products = [], loading = false, onLoadMore
           const yr = getYearRangeFromMetafields(p.metafields);
           const yrText = formatYearRange(yr);
 
+          // 🌟 בניית הפרמטרים השקטים עבור פירורי הלחם של עמוד המוצר
+          const queryParams = new URLSearchParams();
+          if (currentVendor) queryParams.set('vendor', currentVendor);
+          if (currentModel) queryParams.set('model', currentModel);
+          const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+
           return (
             <Link
               key={p.id}
-              href={`/shop/${p.handle}`}
+              href={`/shop/${p.handle}${queryString}`} // 🌟 הזרקת הקונטקסט לקישור
               prefetch={false}
               data-name={p.title}
               className="border rounded-lg overflow-hidden hover:shadow transition"

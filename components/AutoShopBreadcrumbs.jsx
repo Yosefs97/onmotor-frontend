@@ -29,7 +29,6 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
   const vendorParam = searchParams.get('vendor');
   const modelParam = searchParams.get('model');
 
-  // אובייקט הבסיס שתמיד יחזיר לעמוד הראשי של החנות
   const crumbs = [
     { label: <Store className="w-4 h-4" />, href: '/shop' }
   ];
@@ -37,9 +36,6 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
   let pageTitle = '';
 
   try {
-    // ---------------------------------------------------------
-    // 🟥 מצב A: אנחנו בתוך דף קולקציה/קטגוריה
-    // ---------------------------------------------------------
     if (collection) {
       const collectionUrl = `/shop/collection/${collection.handle || ''}`;
       crumbs.push({ label: collection.title || 'קולקציה', href: collectionUrl });
@@ -63,14 +59,9 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
         pageTitle = `${pageTitle} - ${vendorParam}`;
       }
     }
-
-    // ---------------------------------------------------------
-    // 🟥 מצב B: דף מוצר בודד
-    // ---------------------------------------------------------
     else if (product) {
       const tags = Array.isArray(product.tags) ? product.tags : [];
 
-      // 1. חילוץ כל תגיות ה-Fit למערך של אובייקטים
       const fitModels = tags
         .filter(t => typeof t === 'string' && t.toLowerCase().startsWith('fit:'))
         .map(t => {
@@ -84,24 +75,26 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
 
       let matchedModel = null;
 
-      // 2. אם המשתמש הגיע עם פרמטר דגם מה-URL, נחפש אותו מול כל התגיות
+      // 🌟 השוואה מנורמלת ומדויקת בין ה-URL לתגיות ה-Fit ללא קשר למקפים/רווחים
       if (modelParam) {
-        const paramLower = modelParam.toLowerCase();
-        matchedModel = fitModels.find(m => 
-          m.slug === paramLower || m.name.toLowerCase() === paramLower
-        );
+        const cleanParamModel = decodeURIComponent(modelParam).toLowerCase().replace(/[^a-z0-9]/g, '');
         
-        // אם הדגם ב-URL לא נמצא בתגיות (למשל מוצר אוניברסלי), נייצר מודל גיבוי
+        matchedModel = fitModels.find(m => {
+          const cleanTagName = m.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+          const cleanTagSlug = m.slug.toLowerCase().replace(/[^a-z0-9]/g, '');
+          return cleanTagSlug === cleanParamModel || cleanTagName === cleanParamModel;
+        });
+        
         if (!matchedModel) {
           matchedModel = {
-            vendor: vendorParam || product.vendor,
-            name: decodeURIComponent(modelParam),
+            vendor: vendorParam ? decodeURIComponent(vendorParam) : product.vendor,
+            name: decodeURIComponent(modelParam).replace(/-/g, ' '),
             slug: toSlug(modelParam)
           };
         }
       }
 
-      // 3. אם אין פרמטר ב-URL (הגיע מגוגל למשל), נבחר את הדגם הראשון מהתגיות כברירת מחדל
+      // הגדרת ברירת מחדל אם נכנסו ישירות למוצר ללא קשר לדגם (למשל מגוגל)
       if (!matchedModel && fitModels.length > 0) {
         matchedModel = fitModels[0];
       }
@@ -109,18 +102,15 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
       const foundCatTag = tags.find(t => typeof t === 'string' && t.toLowerCase().startsWith('cat:'));
       const categoryTag = foundCatTag ? foundCatTag.toLowerCase().replace('cat:', '').trim() : null;
       
-      // קביעת היצרן הסופי: קודם מה-URL, אחר כך מהמודל שנמצא, ובסוף מהמוצר עצמו
-      const activeVendor = (typeof vendorParam === 'string' && vendorParam) 
-        ? vendorParam 
-        : (matchedModel && matchedModel.vendor ? matchedModel.vendor : (typeof product.vendor === 'string' ? product.vendor : null));
+      const activeVendor = (vendorParam) 
+        ? decodeURIComponent(vendorParam) 
+        : (matchedModel && matchedModel.vendor ? matchedModel.vendor : product.vendor);
 
-      // בדיקה חכמה: האם זה חלק חילוף?
       const isPart = matchedModel || 
                      (typeof product.productType === 'string' && product.productType.includes('חילוף')) || 
                      categoryTag === 'parts' ||
                      categoryTag === 'oem';
 
-      // מסלול חלקי חילוף
       if (isPart) {
         crumbs.push({ label: 'חלקי חילוף', href: '/shop/parts' });
         
@@ -131,16 +121,14 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
             href: `/shop/vendor/${vendorSlug}` 
           });
 
-          // הוספת הדגם עם ה-Slug המדויק!
           if (matchedModel && matchedModel.name) {
             crumbs.push({ 
               label: String(matchedModel.name).toUpperCase(), 
-              href: `/shop/vendor/${vendorSlug}/${matchedModel.slug}` 
+              href: `/shop/vendor/${vendorSlug}/${toSlug(matchedModel.name)}` 
             });
           }
         }
       } 
-      // מסלול ציוד ואביזרים
       else {
         let currentCatHandle = null;
 
@@ -177,10 +165,6 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
       crumbs.push({ label: product.title || '', href: null });
       pageTitle = product.title || '';
     }
-
-    // ---------------------------------------------------------
-    // 🟥 מצב C: דפדוף ידני ב-URL (ללא דף מוצר)
-    // ---------------------------------------------------------
     else {
       const segments = (pathname || '').split('/').filter(Boolean);
       
@@ -195,8 +179,8 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
         const rawVendor = segments[vendorIndex + 1];
         const rawModel = segments[vendorIndex + 2];
         
-        const vName = rawVendor ? decodeURIComponent(rawVendor) : '';
-        const mName = rawModel ? decodeURIComponent(rawModel) : '';
+        const vName = rawVendor ? decodeURIComponent(rawVendor).replace(/-/g, ' ') : '';
+        const mName = rawModel ? decodeURIComponent(rawModel).replace(/-/g, ' ') : '';
 
         if (vName) {
           crumbs.push({ label: String(vName).toUpperCase(), href: `/shop/vendor/${rawVendor}` });
