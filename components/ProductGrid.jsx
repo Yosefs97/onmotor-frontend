@@ -1,9 +1,17 @@
 // /components/ProductGrid.jsx
 'use client';
 import Link from 'next/link';
+import { useParams, useSearchParams } from 'next/navigation'; // 👈 1. ייבוא ההוקים לקריאת ה-URL
 import { getYearRangeFromMetafields, formatYearRange } from '@/lib/productYears';
 
 export default function ProductGrid({ products = [], loading = false, onLoadMore, hasMore = false }) {
+  // 👈 2. שליפת ההקשר הנוכחי מהנתיב (Vendor ו-Model)
+  const params = useParams();
+  const searchParams = useSearchParams();
+  
+  const currentVendor = params?.vendor || searchParams?.get('vendor');
+  const currentModel = params?.model || searchParams?.get('model');
+
   return (
     <div dir="rtl" className="space-y-4">
       {loading && <div>טוען...</div>}
@@ -15,10 +23,20 @@ export default function ProductGrid({ products = [], loading = false, onLoadMore
           const yr = getYearRangeFromMetafields(p.metafields);
           const yrText = formatYearRange(yr);
 
+          // 👈 3. בניית הלינק החכם ש"סוחב" איתו את ההקשר
+          const baseUrl = `/shop/${p.handle}`;
+          const urlParams = new URLSearchParams();
+          
+          if (currentVendor) urlParams.append('vendor', currentVendor);
+          if (currentModel) urlParams.append('model', currentModel);
+          
+          const queryString = urlParams.toString();
+          const productUrl = queryString ? `${baseUrl}?${queryString}` : baseUrl;
+
           return (
             <Link
               key={p.id}
-              href={`/shop/${p.handle}`}
+              href={productUrl} // 👈 4. שימוש בלינק המשודרג
               prefetch={false}
               data-name={p.title}
               className="border rounded-lg overflow-hidden hover:shadow transition"
