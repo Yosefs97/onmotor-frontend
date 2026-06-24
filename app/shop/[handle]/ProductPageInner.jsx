@@ -260,7 +260,7 @@ ${productUrl}
             selectedImage={currentVariant?.image?.url}
           />
           
-          <div className="hidden md:block">
+          <div className="w-full mt-2">
             <RelatedProducts 
               excludeHandle={product.handle} 
               productTags={product.tags} // חובה לוודא שהשורה הזו קיימת!
