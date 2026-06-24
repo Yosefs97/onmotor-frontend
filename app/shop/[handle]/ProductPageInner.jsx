@@ -167,7 +167,6 @@ export default function ProductPageInner({ type, product, items, collectionStats
     }
   };
 
-  // 🔥 התיקון המנצח: מדלגים על עמוד ה-Checkout שלנו ושולחים ישירות לממשק הסליקה של שופיפיי
   const buyNow = async () => {
     if (!currentVariant || quantity < 1) return;
     setBuying(true);
@@ -181,11 +180,9 @@ export default function ProductPageInner({ type, product, items, collectionStats
       if (json.cart) {
         window.dispatchEvent(new Event('cartUpdated')); 
         
-        // אם לשופיפיי יש קישור סליקה מוכן, נשלח את הלקוח ישירות אליו (כמו שעשינו בעגלה)
         if (json.cart.checkoutUrl) {
           window.location.href = json.cart.checkoutUrl;
         } else {
-          // רשת ביטחון: אם מסיבה כלשהי אין קישור, נעביר לדף העגלה הראשי
           window.location.href = '/shop/cart';
         }
       } else {
@@ -253,17 +250,17 @@ ${productUrl}
 
       <div className="grid md:grid-cols-2 gap-8">
         
-        <div className="flex flex-col gap-6 relative">
+        <div className="flex flex-col gap-4 relative">
           <ProductGallery
             images={product.images?.edges}
             title={product.title}
             selectedImage={currentVariant?.image?.url}
           />
           
-          <div className="hidden md:block">
+          <div className="hidden md:block w-full mt-2">
             <RelatedProducts 
               excludeHandle={product.handle} 
-              productTags={product.tags} // חובה לוודא שהשורה הזו קיימת!
+              productTags={product.tags} 
             />
           </div>
         </div>
@@ -468,23 +465,21 @@ ${productUrl}
           <div className="mt-2">
             <ProductInfoModals />
           </div>
-          {/* יוצג אך ורק במובייל - מתחת למודלים (ללא מרווח מוגזם) */}
-          <div className="md:hidden w-full mt-1 pb-1">
-            <RelatedProducts 
-              excludeHandle={product.handle} 
-              productTags={product.tags}
-            />
-          </div>
+
         </div>
+      </div>
+
+      <div className="md:hidden w-full mt-8 pb-24">
+        <RelatedProducts 
+          excludeHandle={product.handle} 
+          productTags={product.tags}
+        />
       </div>
 
       <RelatedArticles
         tags={[product.vendor, ...compatibleModels.map(m => m.modelName)].filter(Boolean)}
       />
 
-      {/* ========================================================= */}
-      {/* 🌟 סרגל תחתון דביק למובייל  🌟 */}
-      {/* ========================================================= */}
       <div 
         className={`md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] p-3 z-50 transition-transform duration-300 ease-in-out ${
           showStickyBar ? 'translate-y-0' : 'translate-y-[150%]'
