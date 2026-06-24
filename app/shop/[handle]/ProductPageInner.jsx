@@ -260,7 +260,7 @@ ${productUrl}
             selectedImage={currentVariant?.image?.url}
           />
           
-          <div className="w-full mt-2">
+          <div className="hidden md:block">
             <RelatedProducts 
               excludeHandle={product.handle} 
               productTags={product.tags} // חובה לוודא שהשורה הזו קיימת!
@@ -468,7 +468,13 @@ ${productUrl}
           <div className="mt-2">
             <ProductInfoModals />
           </div>
-
+          {/* יוצג אך ורק במובייל - מתחת למודלים (ללא מרווח מוגזם) */}
+          <div className="md:hidden w-full mt-1 pb-1">
+            <RelatedProducts 
+              excludeHandle={product.handle} 
+              productTags={product.tags}
+            />
+          </div>
         </div>
       </div>
 
