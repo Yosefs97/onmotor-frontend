@@ -260,12 +260,12 @@ ${productUrl}
             selectedImage={currentVariant?.image?.url}
           />
           
-          <div className="hidden md:block">
+          
             <RelatedProducts 
               excludeHandle={product.handle} 
               productTags={product.tags} // חובה לוודא שהשורה הזו קיימת!
             />
-          </div>
+          
         </div>
 
         <div className="space-y-4 text-gray-900">
@@ -470,15 +470,6 @@ ${productUrl}
           </div>
 
         </div>
-      </div>
-
-      <div className="mt-1 pb-2">
-        <RelatedProducts
-          partVendor={product.vendor}
-          productType={product.productType}
-          compatibleModels={compatibleModels}
-          excludeHandle={product.handle}
-        />
       </div>
 
       <RelatedArticles
