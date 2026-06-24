@@ -472,7 +472,7 @@ ${productUrl}
         </div>
       </div>
 
-      <div className="md:hidden mt-10 pb-20">
+      <div className="mt-10 pb-20">
         <RelatedProducts
           partVendor={product.vendor}
           productType={product.productType}
