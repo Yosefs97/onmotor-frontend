@@ -115,12 +115,43 @@ export default async function ProductPage({ params, searchParams }) {
 
   const modelImages = await fetchModelImages();
 
+  // ⭐️ בניית אובייקט ה-Schema עבור גוגל ⭐️
+  const cleanDescription = product.descriptionHtml 
+    ? product.descriptionHtml.replace(/<[^>]*>?/gm, '').substring(0, 160) 
+    : 'מוצר חדש במגזין OnMotor';
+
+  const productUrl = `https://www.onmotormedia.com/shop/${handle}`;
+  const imageUrl = product.featuredImage?.url || product.images?.edges?.[0]?.node?.url || 'https://www.onmotormedia.com/full_Logo_v2.jpg';
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.title,
+    image: [imageUrl],
+    description: cleanDescription,
+    url: productUrl,
+    offers: {
+      '@type': 'Offer',
+      availability: product.availableForSale ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      priceCurrency: 'ILS',
+      price: product.priceRange?.minVariantPrice?.amount || '0',
+      url: productUrl
+    }
+  };
+
   return (
-    <ProductPageInner 
-      type="product" 
-      product={product} 
-      collectionStats={collectionStats || { types: [], vendors: [], tags: [], handle: 'all' }} 
-      modelImages={modelImages} 
-    />
+    <>
+      {/* הזרקת ה-Schema לתוך ה-HTML */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <ProductPageInner 
+        type="product" 
+        product={product} 
+        collectionStats={collectionStats || { types: [], vendors: [], tags: [], handle: 'all' }} 
+        modelImages={modelImages} 
+      />
+    </>
   );
 }
