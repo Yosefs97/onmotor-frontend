@@ -31,7 +31,7 @@ function AccordionItem({ title, children }) {
           open ? 'max-h-[1000px] p-4' : 'max-h-0'
         }`}
       >
-        <div className="text-gray-900 text-m leading-relaxed">{children}</div>
+        <div className="text-gray-900 text-m leading-relaxed space-y-2">{children}</div>
       </div>
     </div>
   );
@@ -68,51 +68,64 @@ export default function ShopInfoAccordion() {
   return (
     <section className="mt-10 border rounded-lg bg-white shadow-md overflow-hidden">
       <AccordionItem title="משלוחים">
-        <p> משלוח רגיל תוך 2-5 ימי עסקים מרגע הטיפול בהזמנה.</p>
-        <p> משלוח עם שליח עד הבית - 35 ₪, או חינם בקנייה מעל 299 ₪.</p>
+        <ul className="list-disc list-inside space-y-1">
+          <li>זמן טיפול בהזמנה: עד 2 ימי עסקים.</li>
+          <li>זמן אספקה (משלוח רגיל): 2-5 ימי עסקים מרגע יציאת המשלוח.</li>
+          <li>עלות משלוח עם שליח עד הבית: 35 ₪.</li>
+          <li><strong>משלוח חינם</strong> בהזמנות מעל 299 ₪.</li>
+        </ul>
       </AccordionItem>
 
-      <AccordionItem title="החזרות / החלפות">
+      <AccordionItem title="החזרות והחלפות">
         <p>
-          החזרות והחלפות יתקבלו על כל סוגי החלקים למעט חלקים חשמליים, עד 48 שעות מרגע הרכישה
-          ובתנאי שלא נעשה שימוש בחלק.
+          בהתאם לחוק הגנת הצרכן (עסקת מכר מרחוק), ניתן לבטל עסקה ולהחזיר מוצרים תוך <strong>14 ימים</strong> מיום קבלת המוצר.
         </p>
+        <ul className="list-disc list-inside space-y-1 mt-2">
+          <li>ההחזרה תתאפשר אך ורק למוצרים שלא נעשה בהם שימוש והם נמצאים באריזתם המקורית.</li>
+          <li><strong>חלקים חשמליים:</strong> לא ניתן להחזיר חלק חשמלי שחובר לחשמל או הותקן בכלי (בשל סכנת קצר/נזק בלתי הפיך). החזרה תתאפשר רק אם המוצר סגור באריזתו.</li>
+          <li>ביטול עסקה כרוך בדמי ביטול כדין בשיעור של 5% ממחיר המוצר או 100 ₪ (הנמוך מביניהם).</li>
+        </ul>
       </AccordionItem>
 
       <AccordionItem title="אחריות">
-        <p>כל המוצרים מגיעים עם אחריות בהתאם לסוג החלק.</p>
+        <p>אנו עומדים מאחורי איכות החלקים שאנו מספקים. עם זאת, תחום החלפים דורש מקצועיות בהתקנה:</p>
+        <ul className="list-disc list-inside space-y-1 mt-2">
+          <li><strong>חלקים חדשים:</strong> כוללים אחריות יצרן/יבואן בהתאם לסוג החלק.</li>
+          <li><strong>חלקים מפירוק (משומשים):</strong> נבדקו בקפידה ונמכרים עם אחריות מוגבלת להרכבה ותקינות ראשונית, אלא אם צוין אחרת.</li>
+          <li><strong>שימו לב:</strong> האחריות תקפה <u>אך ורק</u> אם החלק הותקן על ידי מוסך מורשה כדין (יש להציג חשבונית התקנה ממוסך במקרה של תביעת אחריות). האחריות אינה מכסה נזק שנגרם מהתקנה לקויה או שימוש בלתי סביר.</li>
+        </ul>
       </AccordionItem>
 
       <AccordionItem title="קצת עלינו">
         <p>
-          ב־OnMotor Parts אנחנו מתמחים בשיווק חלקי חילוף לאופנועים וקטנועים - חדשים ומשומשים, כולל חלקים שמגיעים מפירוק.
+          ב־<strong>OnMotor Parts</strong> אנחנו מתמחים בשיווק חלקי חילוף לאופנועים וקטנועים - חדשים ומשומשים, כולל חלקים מפירוק באיכות גבוהה.
         </p>
         <p>
-          אנחנו עובדים עם מוסכים שאנחנו מכירים וסומכים עליהם, ומקבצים מהם חלקים שעברו בדיקה ואישור לפני מכירה.
+          אנחנו עובדים בשיתוף פעולה הדוק עם מוסכים שאנחנו מכירים וסומכים עליהם. כל חלק שמגיע מפירוק עובר בדיקה מקיפה ואישור מקצועי לפני שהוא מגיע אליכם, כדי להבטיח נסיעה בטוחה וראש שקט.
         </p>
       </AccordionItem>
 
-      <AccordionItem title="שאלות נפוצות">
-        <p><strong>מתי המוצר מגיע אלי?</strong> בדרך כלל תוך 5-2 ימי עסקים.</p>
-        <p><strong>יש החזרות/החלפות?</strong> כן, בהתאם למדיניות המפורטת מעלה.</p>
-        <p>
-          <strong>האם בטוח לרכוש אצלכם?</strong> האתר מאובטח ברמת האבטחה הגבוהה ביותר.
-        </p>
-
+      <AccordionItem title="שאלות נפוצות (FAQ)">
+        <p><strong>מתי המוצר מגיע אליי?</strong><br/> לרוב תוך 2-5 ימי עסקים מרגע סיום הטיפול בהזמנה.</p>
+        <p><strong>האם אפשר להחזיר או להחליף מוצר?</strong><br/> בהחלט. ניתן להחזיר מוצר שלא נעשה בו שימוש תוך 14 ימים, בהתאם למדיניות ההחזרות.</p>
+        <p><strong>האם בטוח לרכוש אצלכם באתר?</strong><br/> האתר מאובטח ברמת האבטחה הגבוהה ביותר וללא פשרות.</p>
+        
         {/* כפתור מידע על אבטחה */}
-        <SecurityInfo />
+        <div className="my-3">
+          <SecurityInfo />
+        </div>
 
-        <p><strong>האם ניתן לאסוף?</strong> כן, בתיאום מראש בלבד.</p>
+        <p><strong>האם ניתן לאסוף את ההזמנה עצמאית?</strong><br/> כן, בתיאום מראש בלבד.</p>
 
         {/* כפתור וואטסאפ */}
         <a
-          href="https://wa.me/972506129664" // ✅ מספר שלך
+          href="https://wa.me/972506129664"
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-3 inline-flex items-center gap-2 bg-[#e60000] text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-red-700 transition"
+          className="mt-4 inline-flex items-center gap-2 bg-[#e60000] text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-red-700 transition"
         >
           <MessageCircle className="w-5 h-5" />
-          לתיאום איסוף או כל שאלה נוספת אנחנו זמינים בוואטסאפ
+          לתיאום איסוף או כל שאלה נוספת, אנחנו בוואטסאפ
         </a>
       </AccordionItem>
     </section>
