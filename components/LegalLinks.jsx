@@ -4,19 +4,51 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 
-export default function LegalLinks({ layout = 'horizontal', isMobile = false, onLinkClick }) {
+export default function LegalLinks({ layout = 'horizontal', isMobile = false, onLinkClick, isShop = false }) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const links = [
-    { href: '/about', label: 'אודות' }, // ✅ הוספתי את דף האודות כאן
+  // הפרדה בין קישורי המגזין לקישורי החנות
+  const magazineLinks = [
+    { href: '/about', label: 'אודות המדיה' },
     { href: '/PrivacyPolicy', label: 'מדיניות פרטיות' },
     { href: '/TermsOfService', label: 'תנאי שימוש' },
     { href: '/accessibility', label: 'הצהרת נגישות' },
     { href: '/data-deletion-instructions', label: 'מחיקת נתונים' },
   ];
 
-  // ✅ תצוגת מחשב (אופקית)
+  const shopLinks = [
+    { href: '/shop/shipping', label: 'מדיניות משלוחים' },
+    { href: '/shop/returns', label: 'החזרות והחלפות' },
+    { href: '/shop/terms', label: 'תקנון החנות' },
+    { href: '/shop/privacy', label: 'מדיניות פרטיות חנות' },
+    { href: '/shop/accessibility', label: 'הצהרת נגישות' },
+  ];
+
+  const links = isShop ? shopLinks : magazineLinks;
+
+  // ✅ תצוגת חנות (עיצוב רשימה אנכית מקובל לחנויות) או תצוגת מחשב אופקית למגזין
   if (!isMobile || layout === 'horizontal') {
+    if (isShop) {
+      // בחנות נרצה להציג את זה כרשימה נקייה ואינטואיטיבית ולא כ"כפתורים" בולטים מדי
+      return (
+        <ul className="space-y-2.5 text-right">
+          {links.map((link) => (
+            <li key={link.href}>
+              <Link
+                href={link.href}
+                prefetch={false}
+                onClick={onLinkClick}
+                className="text-sm text-gray-400 hover:text-[#e60000] transition duration-200"
+              >
+                {link.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      );
+    }
+
+    // תצוגת כפתורי המגזין המקוריים שלך
     return (
       <div className="flex justify-center gap-4 mt-4 flex-wrap">
         {links.map((link) => (
@@ -34,14 +66,14 @@ export default function LegalLinks({ layout = 'horizontal', isMobile = false, on
     );
   }
 
-  // ✅ תצוגת מובייל (נפתח מתחת להרשמה)
+  // ✅ תצוגת מובייל (תפריט נפתח קורדון)
   return (
     <div className="w-full mt-4 text-right">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center justify-between w-full text-sm font-bold bg-white border border-gray-300 px-3 py-2.5 rounded-md shadow-sm hover:bg-gray-50 text-gray-800"
       >
-        אודות ומדיניות
+        {isShop ? 'מידע משפטי ושירות לקוחות' : 'אודות ומדיניות'}
         {isOpen ? <FaChevronUp className="text-[#e60000]" /> : <FaChevronDown />}
       </button>
 
