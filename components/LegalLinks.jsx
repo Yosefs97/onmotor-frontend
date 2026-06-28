@@ -3,100 +3,104 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import ShopPolicyModals from '@/components/ShopPolicyModals'; // ייבוא המודלים שבנינו
 
 export default function LegalLinks({ layout = 'horizontal', isMobile = false, onLinkClick, isShop = false }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [activeModal, setActiveModal] = useState(null); // 'shipping' | 'returns' | 'warranty' | 'security'
 
-  // הפרדה בין קישורי המגזין לקישורי החנות
   const magazineLinks = [
-    { href: '/about', label: 'אודות המדיה' },
-    { href: '/PrivacyPolicy', label: 'מדיניות פרטיות' },
-    { href: '/TermsOfService', label: 'תנאי שימוש' },
-    { href: '/accessibility', label: 'הצהרת נגישות' },
-    { href: '/data-deletion-instructions', label: 'מחיקת נתונים' },
+    { href: '/about', label: 'אודות', isModal: false },
+    { href: '/PrivacyPolicy', label: 'מדיניות פרטיות', isModal: false },
+    { href: '/TermsOfService', label: 'תנאי שימוש', isModal: false },
+    { href: '/accessibility', label: 'הצהרת נגישות', isModal: false },
+    { href: '/data-deletion-instructions', label: 'מחיקת נתונים', isModal: false },
   ];
 
+  // רשימת החנות המשולבת (חלק מודלים, חלק עמודים רשמיים)
   const shopLinks = [
-    { href: '/shop/shipping', label: 'מדיניות משלוחים' },
-    { href: '/shop/returns', label: 'החזרות והחלפות' },
-    { href: '/shop/terms', label: 'תקנון החנות' },
-    { href: '/shop/privacy', label: 'מדיניות פרטיות חנות' },
-    { href: '/shop/accessibility', label: 'הצהרת נגישות' },
+    { id: 'shipping', label: 'מדיניות משלוחים', isModal: true },
+    { id: 'returns', label: 'החזרות והחלפות', isModal: true },
+    { id: 'warranty', label: 'אחריות על חלפים', isModal: true },
+    { id: 'security', label: 'אבטחת תשלומים', isModal: true },
+    { href: '/shop/terms', label: 'תקנון החנות', isModal: false },
+    { href: '/shop/privacy', label: 'מדיניות פרטיות', isModal: false },
+    { href: '/shop/accessibility', label: 'הצהרת נגישות', isModal: false },
   ];
 
   const links = isShop ? shopLinks : magazineLinks;
 
-  // ✅ תצוגת חנות (עיצוב רשימה אנכית מקובל לחנויות) או תצוגת מחשב אופקית למגזין
-  if (!isMobile || layout === 'horizontal') {
-    if (isShop) {
-      // בחנות נרצה להציג את זה כרשימה נקייה ואינטואיטיבית ולא כ"כפתורים" בולטים מדי
-      return (
-        <ul className="space-y-2.5 text-right">
-          {links.map((link) => (
-            <li key={link.href}>
-              <Link
-                href={link.href}
-                prefetch={false}
-                onClick={onLinkClick}
-                className="text-sm text-gray-400 hover:text-[#e60000] transition duration-200"
-              >
+  const handleModalOpen = (id) => {
+    setActiveModal(id);
+    setIsOpen(false); // סוגר את האקורדיון במובייל אם היה פתוח
+    if (onLinkClick) onLinkClick();
+  };
+
+  return (
+    <>
+      {/* רינדור המודלים ברקע - יקפצו רק כש-activeModal מקבל ערך */}
+      <ShopPolicyModals activeModal={activeModal} onClose={() => setActiveModal(null)} />
+
+      {/* תצוגת מחשב / רשימה אנכית לחנות */}
+      {(!isMobile || layout === 'horizontal') ? (
+        isShop ? (
+          <ul className="space-y-2.5 text-right">
+            {links.map((item) => (
+              <li key={item.id || item.href}>
+                {item.isModal ? (
+                  <button
+                    onClick={() => handleModalOpen(item.id)}
+                    className="text-sm text-gray-400 hover:text-[#e60000] transition duration-200 bg-transparent border-none p-0 cursor-pointer font-normal"
+                  >
+                    {item.label}
+                  </button>
+                ) : (
+                  <Link href={item.href} className="text-sm text-gray-400 hover:text-[#e60000] transition duration-200 block">
+                    {item.label}
+                  </Link>
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="flex justify-center gap-4 mt-4 flex-wrap">
+            {links.map((link) => (
+              <Link key={link.href} href={link.href} className="px-4 py-1.5 border-2 border-[#e60000] text-[#e60000] font-bold rounded-md hover:bg-[#e60000] hover:text-white transition text-sm shadow-sm">
                 {link.label}
               </Link>
-            </li>
-          ))}
-        </ul>
-      );
-    }
-
-    // תצוגת כפתורי המגזין המקוריים שלך
-    return (
-      <div className="flex justify-center gap-4 mt-4 flex-wrap">
-        {links.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            prefetch={false}
-            onClick={onLinkClick}
-            className="px-4 py-1.5 border-2 border-[#e60000] text-[#e60000] font-bold rounded-md hover:bg-[#e60000] hover:text-white transition text-sm shadow-sm"
+            ))}
+          </div>
+        )
+      ) : (
+        /* תצוגת מובייל נפתחת */
+        <div className="w-full mt-4 text-right">
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="flex items-center justify-between w-full text-sm font-bold bg-white border border-gray-300 px-3 py-2.5 rounded-md shadow-sm text-gray-800"
           >
-            {link.label}
-          </Link>
-        ))}
-      </div>
-    );
-  }
+            {isShop ? 'מידע משפטי ושירות לקוחות' : 'אודות ומדיניות'}
+            {isOpen ? <FaChevronUp className="text-[#e60000]" /> : <FaChevronDown />}
+          </button>
 
-  // ✅ תצוגת מובייל (תפריט נפתח קורדון)
-  return (
-    <div className="w-full mt-4 text-right">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between w-full text-sm font-bold bg-white border border-gray-300 px-3 py-2.5 rounded-md shadow-sm hover:bg-gray-50 text-gray-800"
-      >
-        {isShop ? 'מידע משפטי ושירות לקוחות' : 'אודות ומדיניות'}
-        {isOpen ? <FaChevronUp className="text-[#e60000]" /> : <FaChevronDown />}
-      </button>
-
-      <div
-        className={`transition-all duration-500 ease-in-out overflow-hidden ${
-          isOpen ? 'max-h-80 mt-2 opacity-100' : 'max-h-0 opacity-0'
-        }`}
-      >
-        {links.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            prefetch={false}
-            onClick={() => {
-              setIsOpen(false);
-              if (onLinkClick) onLinkClick();
-            }}
-            className="block text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-md px-3 py-2 my-1 hover:bg-[#e60000] hover:text-white hover:border-[#e60000] transition"
-          >
-            {link.label}
-          </Link>
-        ))}
-      </div>
-    </div>
+          <div className={`transition-all duration-500 overflow-hidden ${isOpen ? 'max-h-96 mt-2 opacity-100' : 'max-h-0 opacity-0'}`}>
+            {links.map((item) => (
+              item.isModal ? (
+                <button
+                  key={item.id}
+                  onClick={() => handleModalOpen(item.id)}
+                  className="block w-full text-right text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-md px-3 py-2 my-1 hover:bg-[#e60000] hover:text-white transition"
+                >
+                  {item.label}
+                </button>
+              ) : (
+                <Link key={item.href} href={item.href} onClick={() => setIsOpen(false)} className="block text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-md px-3 py-2 my-1 hover:bg-[#e60000] hover:text-white transition">
+                  {item.label}
+                </Link>
+              )
+            ))}
+          </div>
+        </div>
+      )}
+    </>
   );
 }
