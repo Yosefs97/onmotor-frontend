@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
-import ShopPolicyModals from '@/components/ShopPolicyModals'; // ייבוא המודלים שבנינו
+import ShopPolicyModals from '@/components/ShopPolicyModals';
 
 export default function LegalLinks({ layout = 'horizontal', isMobile = false, onLinkClick, isShop = false }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,7 +17,7 @@ export default function LegalLinks({ layout = 'horizontal', isMobile = false, on
     { href: '/data-deletion-instructions', label: 'מחיקת נתונים', isModal: false },
   ];
 
-  // רשימת החנות המשולבת (חלק מודלים, חלק עמודים רשמיים)
+  // רשימת החנות המשולבת
   const shopLinks = [
     { id: 'shipping', label: 'מדיניות משלוחים', isModal: true },
     { id: 'returns', label: 'החזרות והחלפות', isModal: true },
@@ -32,16 +32,14 @@ export default function LegalLinks({ layout = 'horizontal', isMobile = false, on
 
   const handleModalOpen = (id) => {
     setActiveModal(id);
-    setIsOpen(false); // סוגר את האקורדיון במובייל אם היה פתוח
+    setIsOpen(false); // סוגר את האקורדיון במובייל
     if (onLinkClick) onLinkClick();
   };
 
   return (
     <>
-      {/* רינדור המודלים ברקע - יקפצו רק כש-activeModal מקבל ערך */}
       <ShopPolicyModals activeModal={activeModal} onClose={() => setActiveModal(null)} />
 
-      {/* תצוגת מחשב / רשימה אנכית לחנות */}
       {(!isMobile || layout === 'horizontal') ? (
         isShop ? (
           <ul className="space-y-2.5 text-right">
@@ -55,7 +53,12 @@ export default function LegalLinks({ layout = 'horizontal', isMobile = false, on
                     {item.label}
                   </button>
                 ) : (
-                  <Link href={item.href} className="text-sm text-gray-400 hover:text-[#e60000] transition duration-200 block">
+                  <Link 
+                    href={item.href} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-gray-400 hover:text-[#e60000] transition duration-200 block"
+                  >
                     {item.label}
                   </Link>
                 )}
@@ -65,14 +68,20 @@ export default function LegalLinks({ layout = 'horizontal', isMobile = false, on
         ) : (
           <div className="flex justify-center gap-4 mt-4 flex-wrap">
             {links.map((link) => (
-              <Link key={link.href} href={link.href} className="px-4 py-1.5 border-2 border-[#e60000] text-[#e60000] font-bold rounded-md hover:bg-[#e60000] hover:text-white transition text-sm shadow-sm">
+              <Link 
+                key={link.href} 
+                href={link.href} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="px-4 py-1.5 border-2 border-[#e60000] text-[#e60000] font-bold rounded-md hover:bg-[#e60000] hover:text-white transition text-sm shadow-sm"
+              >
                 {link.label}
               </Link>
             ))}
           </div>
         )
       ) : (
-        /* תצוגת מובייל נפתחת */
+        /* תצוגת מובייל */
         <div className="w-full mt-4 text-right">
           <button
             onClick={() => setIsOpen(!isOpen)}
@@ -93,7 +102,14 @@ export default function LegalLinks({ layout = 'horizontal', isMobile = false, on
                   {item.label}
                 </button>
               ) : (
-                <Link key={item.href} href={item.href} onClick={() => setIsOpen(false)} className="block text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-md px-3 py-2 my-1 hover:bg-[#e60000] hover:text-white transition">
+                <Link 
+                  key={item.href} 
+                  href={item.href} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  onClick={() => setIsOpen(false)} 
+                  className="block text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-md px-3 py-2 my-1 hover:bg-[#e60000] hover:text-white transition"
+                >
                   {item.label}
                 </Link>
               )
