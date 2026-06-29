@@ -44,11 +44,14 @@ function buildLiveQuery(q) {
   // הוספתי * (כוכבית) בסוף כל שדה כדי לאפשר Autocomplete
   return `(` +
     `title:${JSON.stringify(norm)}* OR ` +
+    `title:${JSON.stringify(noSpace)}* OR ` +
+    `body:${JSON.stringify(norm)}* OR ` +           // <--- חיפוש בתיאור המוצר עם רווחים
+    `body:${JSON.stringify(noSpace)}* OR ` +         // <--- חיפוש בתיאור המוצר ללא רווחים
     `sku:${JSON.stringify(norm)}* OR ` +
     `sku:${JSON.stringify(noSpace)}* OR ` +
+    `variants.sku:${JSON.stringify(norm)}* OR ` +    // <--- חיפוש עמוק ברמת הוריאציה
     `tag:${JSON.stringify(norm)}* OR ` +
-    `product_type:${JSON.stringify(norm)}* OR ` +
-    `title:${JSON.stringify(noSpace)}*` +
+    `product_type:${JSON.stringify(norm)}*` +
   `)`;
 }
 
