@@ -1,4 +1,4 @@
-// קובץ קיים: /app/api/shopify/product/[handle]/route.js
+// /app/api/shopify/product/[handle]/route.js
 import { sfFetch } from '@/lib/shopify'; // 👈 זה השינוי הקריטי! אנחנו מייבאים מבחוץ
 
 export const runtime = "nodejs";
@@ -16,6 +16,13 @@ export async function GET(_req, { params }) {
         id
         title
         handle
+        availableForSale # ⭐️ תוספת קריטית: זמינות מלאי כללית בשביל גוגל
+        priceRange {     # ⭐️ תוספת קריטית: טווח מחירים כדי שהמחיר לא יופיע כ-0 בגוגל
+          minVariantPrice {
+            amount
+            currencyCode
+          }
+        }
         descriptionHtml
         vendor
         productType
