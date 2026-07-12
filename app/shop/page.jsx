@@ -19,7 +19,7 @@ export default async function ShopPage() {
         {/* כותרת מבצע משלוח חינם */}
         <div className="text-center w-full mt-1">
           <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight bg-gray-50 py-3 px-6 rounded-xl inline-block border border-gray-200 shadow-sm">
-            משלוח חינם עד הבית בכל רכישה מעל <span className="text-[#e60000]">₪299</span>
+            משלוח חינם עד הבית בכל רכישה מעל <span className="text-[#e60000]">₪499</span>
           </h1>
         </div>
 

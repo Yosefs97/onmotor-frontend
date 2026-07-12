@@ -62,7 +62,7 @@ export default function ProductInfoModals() {
       >
         <div className="flex items-center gap-3">
           <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600 group-hover:text-red-600 transition-colors flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 18H3c-.6 0-1-.4-1-1V7c0-.6.4-1 1-1h10c.6 0 1 .4 1 1v11"/><path d="M14 9h4l4 4v4c0 .6-.4 1-1 1h-2"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>
-          <span className="font-semibold text-gray-800 text-sm md:text-base leading-tight">משלוח מהיר עד 5 ימי עסקים! חינם מעל 299₪</span>
+          <span className="font-semibold text-gray-800 text-sm md:text-base leading-tight">משלוח מהיר עד 5 ימי עסקים! חינם מעל 499₪</span>
         </div>
         <svg className="w-5 h-5 text-gray-400 group-hover:text-red-600 transition-colors flex-shrink-0 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
       </button>
@@ -99,8 +99,8 @@ export default function ProductInfoModals() {
         
         <h4 className="font-bold text-gray-900 mt-4 sm:mt-6 border-b pb-1">עלויות משלוחים:</h4>
         <ul className="list-disc list-inside space-y-1.5 mt-2 text-sm sm:text-base pr-1">
-          <li><strong>משלוח חינם</strong> עד הבית באמצעות שליח בקנייה מעל 299 ₪.</li>
-          <li>בקנייה מתחת ל-299 ₪, עלות המשלוח הינה 35 ₪.</li>
+          <li><strong>משלוח חינם</strong> עד הבית באמצעות שליח בקנייה מעל 499 ₪.</li>
+          <li>בקנייה מתחת ל-499 ₪, עלות המשלוח הינה 39 ₪.</li>
           <li>החלפות מידה עם שליח יתבצעו <strong>ללא עלות</strong> (לאחר פניית הלקוח לחנות ותיאום).</li>
         </ul>
 
