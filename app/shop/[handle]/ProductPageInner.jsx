@@ -7,7 +7,6 @@ import ShopLayoutInternal from '@/components/ShopLayoutInternal';
 import ProductGrid from '@/components/ProductGrid';
 import ProductGallery from '@/components/ProductGallery';
 import RelatedProducts from '@/components/RelatedProducts';
-import RelatedArticles from '@/components/RelatedArticles';
 import WhatsAppButton from '@/components/WhatsAppButton';
 import AutoShopBreadcrumbs from '@/components/AutoShopBreadcrumbs';
 import CategorySidebar from '@/components/CategorySidebar';
@@ -475,10 +474,6 @@ ${productUrl}
           productTags={product.tags}
         />
       </div>
-
-      <RelatedArticles
-        tags={[product.vendor, ...compatibleModels.map(m => m.modelName)].filter(Boolean)}
-      />
 
       <div 
         className={`md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] p-3 z-50 transition-transform duration-300 ease-in-out ${
