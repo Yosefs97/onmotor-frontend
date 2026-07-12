@@ -52,7 +52,7 @@ export default function ShopPolicyModals({ activeModal, onClose }) {
         <ul className="list-disc list-inside space-y-1.5 pr-1">
           <li>זמן טיפול והכנת הזמנה: עד 2 ימי עסקים.</li>
           <li>זמן אספקה עם שליח עד הבית: <strong>2-5 ימי עסקים</strong> מרגע יציאת המשלוח.</li>
-          <li>עלות משלוח: 35 ₪ | <strong>משלוח חינם</strong> בהזמנות מעל 499 ₪.</li>
+          <li>עלות משלוח: 39 ₪ | <strong>משלוח חינם</strong> בהזמנות מעל 499 ₪.</li>
           <li>לאזורים חריגים/מרוחקים זמן האספקה עשוי להתארך עד 10 ימי עסקים.</li>
           <li>איסוף עצמי זמין בתיאום מראש בלבד ללא עלות.</li>
         </ul>
