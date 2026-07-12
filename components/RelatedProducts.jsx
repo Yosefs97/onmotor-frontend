@@ -5,11 +5,10 @@ import Link from 'next/link';
 import BatterySearchWidget from './BatterySearchWidget';
 
 export default function RelatedProducts({ partVendor, productType, excludeHandle, productTags = [] }) {
-  // 🛑 השבתת חירום - עוצר את ריצת הקומפוננטה
-  return null;
   const [items, setItems] = useState([]);
   const scrollRef = useRef(null);
 
+  // התיקון: הופכים את המערך למחרוזת כדי ש-React לא ייכנס ללולאה אינסופית
   const tagsDependency = productTags.join(',');
 
   useEffect(() => {
