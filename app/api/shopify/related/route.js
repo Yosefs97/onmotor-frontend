@@ -14,7 +14,7 @@ async function sfFetch(query, variables = {}) {
       'X-Shopify-Storefront-Access-Token': token,
     },
     body: JSON.stringify({ query, variables }),
-    cache: 'no-store',
+    next: { revalidate: 60 },
   });
   const json = await res.json();
   if (!res.ok || json.errors) {
