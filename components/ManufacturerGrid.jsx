@@ -72,6 +72,7 @@ export default function ManufacturerGrid({ manufacturers }) {
             <ScrollSearchBar 
                 placeholder="חפש יצרן או החלק שמאלה" 
                 containerRef={containerRef} 
+                manufacturers={manufacturers}
             />
          </div>
          
