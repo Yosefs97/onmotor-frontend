@@ -32,7 +32,7 @@ export default function ModelPageInner({ items, vendor, model }) {
     id: item.id || item.handle,
     title: item.title, // בשופיפיי שם המוצר נשמר בדר"כ תחת title
     // 👇 תעדכן את הנתיב הזה כך שיתאים לכתובת עמוד המוצר שלך בחנות
-    href: `/shop/products/${item.handle}` 
+    href: `/shop/${item.handle}` 
   }));
 
   return (
