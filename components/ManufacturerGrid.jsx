@@ -63,6 +63,13 @@ export default function ManufacturerGrid({ manufacturers }) {
   if (!manufacturers.length)
     return <p className="text-center py-8">לא נמצאו יצרנים</p>;
 
+  // 👇 הוספנו את יצירת המערך המותאם לחיפוש עם הקישור (href)
+  const searchOptions = manufacturers.map((m) => ({
+    id: m.id || m.handle,
+    title: m.title,
+    href: `/shop/vendor/${m.handle}`
+  }));
+
   return (
     <div>
       {/* 👇 2. עיטוף שורת החיפוש והכפתור באותה שורה */}
@@ -72,7 +79,7 @@ export default function ManufacturerGrid({ manufacturers }) {
             <ScrollSearchBar 
                 placeholder="חפש יצרן או החלק שמאלה" 
                 containerRef={containerRef} 
-                manufacturers={manufacturers}
+                manufacturers={searchOptions} /* 👈 העברנו את המערך החדש במקום manufacturers הרגיל */
             />
          </div>
          
