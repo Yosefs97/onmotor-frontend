@@ -45,7 +45,7 @@ export default function ModelPageInner({ items, vendor, model }) {
       <ScrollSearchBar
         placeholder={`חפש חלק בדגם ${decodedVendor} ${decodedModel}`}
         containerRef={containerRef}
-        {/* 👇 2. מעבירים את מערך המוצרים שיצרנו אל התפריט הנפתח */}
+        
         manufacturers={searchOptions}
       />
 
