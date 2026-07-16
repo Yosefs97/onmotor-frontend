@@ -2,6 +2,8 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { Plus, Minus, MessageCircle, Shield } from 'lucide-react';
+// ייבוא קומפוננטת ההמלצות. ודא שהקובץ Testimonials.jsx קיים באותה תיקייה.
+import Testimonials from './Testimonials'; 
 
 function AccordionItem({ title, children }) {
   const [open, setOpen] = useState(false);
@@ -9,6 +11,7 @@ function AccordionItem({ title, children }) {
 
   useEffect(() => {
     if (open && contentRef.current) {
+      // גלילה עדינה אל הפריט שנפתח
       contentRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, [open]);
@@ -26,9 +29,10 @@ function AccordionItem({ title, children }) {
           <Plus className="w-7 h-7 text-[#e60000]" />
         )}
       </button>
+      {/* אנימציית פתיחה/סגירה. max-h גבוה מספיק כדי להכיל את הגובה של הטאב הכי ארוך */}
       <div
         className={`overflow-hidden transition-all duration-300 ${
-          open ? 'max-h-[1000px] p-4' : 'max-h-0'
+          open ? 'max-h-[2000px] p-4' : 'max-h-0'
         }`}
       >
         <div className="text-gray-900 text-m leading-relaxed space-y-2">{children}</div>
@@ -67,6 +71,12 @@ function SecurityInfo() {
 export default function ShopInfoAccordion() {
   return (
     <section className="mt-10 border rounded-lg bg-white shadow-md overflow-hidden">
+      {/* טאב חדש: לקוחות מרוצים */}
+      <AccordionItem title="לקוחות מרוצים">
+        {/* קריאה לקומפוננטה המציגה את הקרוסלה */}
+        <Testimonials />
+      </AccordionItem>
+
       <AccordionItem title="משלוחים">
         <ul className="list-disc list-inside space-y-1">
           <li>זמן טיפול בהזמנה: עד 2 ימי עסקים.</li>
@@ -91,7 +101,7 @@ export default function ShopInfoAccordion() {
         <p>אנו עומדים מאחורי איכות החלקים שאנו מספקים. עם זאת, תחום החלפים דורש מקצועיות בהתקנה:</p>
         <ul className="list-disc list-inside space-y-1 mt-2">
           <li><strong>חלקים חדשים:</strong> כוללים אחריות יצרן/יבואן בהתאם לסוג החלק.</li>
-          <li><strong>חלקים מפירוק (משומשים):</strong> נבדקו בקפידה ונמכרים עם אחריות מוגבלת להרכבה ותקינות ראשונית, אלא אם צוין אחרת.</li>
+          <li><strong>חלקים מפירוק (משומשים):</strong> נבדקו בקפידה ונמכרים עם אחריות מוגבלת להרכבה ותקינותראשונית, אלא אם צוין אחרת.</li>
           <li><strong>שימו לב:</strong> האחריות תקפה <u>אך ורק</u> אם החלק הותקן על ידי מוסך מורשה כדין (יש להציג חשבונית התקנה ממוסך במקרה של תביעת אחריות). האחריות אינה מכסה נזק שנגרם מהתקנה לקויה או שימוש בלתי סביר.</li>
         </ul>
       </AccordionItem>
