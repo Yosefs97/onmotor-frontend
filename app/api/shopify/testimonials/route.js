@@ -65,7 +65,7 @@ export async function GET() {
         altText = field.reference?.image?.altText || 'המלצת לקוח';
       }
       // חילוץ הטקסט (שים לב לשנות את 'text' למפתח שהגדרת בשופיפיי עבור ה-Single line text)
-      if (field.key === 'text') { 
+      if (field.key === 'customer_name') { 
         text = field.value || '';
       }
     });
