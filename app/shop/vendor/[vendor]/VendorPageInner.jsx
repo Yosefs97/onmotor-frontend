@@ -55,6 +55,7 @@ export default function VendorPageInner({ vendor, models }) {
   const searchOptions = models.map((m) => ({
     id: m.handle || m.name, // מונע שגיאות key בתוך רכיב החיפוש
     title: m.name,          // רכיב החיפוש מחפש את המאפיין title
+    href: `/shop/vendor/${vendor}/${m.handle}`
   }));
 
   return (

@@ -2,11 +2,16 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+// 👇 1. נייבא את הראוטר של Next.js
+import { useRouter } from 'next/navigation'; 
 
 export default function ScrollSearchBar({ placeholder, containerRef, manufacturers = [] }) {
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef(null);
+  
+  // 👇 2. נגדיר את הראוטר
+  const router = useRouter(); 
 
   const highlightClasses = [
     'ring-2',
@@ -16,34 +21,30 @@ export default function ScrollSearchBar({ placeholder, containerRef, manufacture
     'duration-300'
   ];
 
+  // (ה-useEffect של הגלילה והסימון נשאר בדיוק אותו דבר)
   useEffect(() => {
     if (!containerRef?.current) return;
-
     const items = Array.from(containerRef.current.querySelectorAll('[data-name]'));
-
-    // מנקים קודם
     items.forEach((el) => el.classList.remove(...highlightClasses));
-
     if (!query) return;
 
-    const lowerQ = query.toLowerCase();
+    const lowerQ = query.toLowerCase().trim();
     let firstMatch = null;
 
     items.forEach((el) => {
       const name = el.dataset.name.toLowerCase();
-      // 👇 שינוי 1: שימוש ב-includes במקום startsWith בסימון קופסאות
       if (name.includes(lowerQ)) {
         el.classList.add(...highlightClasses);
         if (!firstMatch) firstMatch = el;
       }
     });
 
-    // Scroll לראשון
     if (firstMatch) {
       firstMatch.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
     }
   }, [query]);
 
+  // (ה-useEffect של סגירת התפריט נשאר אותו דבר)
   useEffect(() => {
     function handleClickOutside(event) {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
@@ -54,10 +55,14 @@ export default function ScrollSearchBar({ placeholder, containerRef, manufacture
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // 👇 שינוי 2: שימוש ב-includes במקום startsWith בתפריט הנפתח
-  const filteredOptions = manufacturers.filter((m) =>
-    m.title.toLowerCase().includes(query.toLowerCase())
-  );
+  // 👇 3. חיפוש חכם וגמיש יותר: מפרקים את החיפוש למילים נפרדות 
+  // כך שגם אם יש רווחים כפולים או שהוקלד "125 exc" זה עדיין ימצא!
+  const queryWords = query.toLowerCase().trim().split(/\s+/);
+  const filteredOptions = manufacturers.filter((m) => {
+    const titleLower = m.title.toLowerCase();
+    // בודק שכל המילים שהוקלדו נמצאות בתוך השם
+    return queryWords.every((word) => titleLower.includes(word));
+  });
 
   return (
     <div className="relative flex flex-col justify-center mb-4 w-54" ref={wrapperRef}>
@@ -79,8 +84,13 @@ export default function ScrollSearchBar({ placeholder, containerRef, manufacture
             <li
               key={m.id}
               onClick={() => {
-                setQuery(m.title);
+                setQuery(m.title); // משאיר את הפעולה הזו כדי שהטקסט ישתנה (ויפעיל גלילה)
                 setIsOpen(false);
+                
+                // 👇 4. מנווט לכתובת של הדגם/יצרן!
+                if (m.href) {
+                  router.push(m.href);
+                }
               }}
               className="px-3 py-2 text-sm text-gray-800 cursor-pointer hover:bg-red-50 hover:text-[#e60000] transition-colors"
             >
@@ -90,7 +100,6 @@ export default function ScrollSearchBar({ placeholder, containerRef, manufacture
         </ul>
       )}
 
-      {/* 👇 שינוי 3: טקסט כללי ודינמי יותר כשאין תוצאות */}
       {isOpen && query && filteredOptions.length === 0 && (
         <div className="absolute top-full left-0 right-0 mt-1 p-3 bg-white border border-gray-200 rounded shadow-lg z-50 text-sm text-gray-500 text-center">
           לא נמצאו תוצאות
