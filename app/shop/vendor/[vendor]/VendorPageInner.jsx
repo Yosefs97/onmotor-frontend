@@ -51,6 +51,12 @@ export default function VendorPageInner({ vendor, models }) {
     };
   }, [hasScrolled]);
 
+  // 👇 השינוי שלנו: מתאימים את מערך הדגמים למבנה שרכיב החיפוש מצפה לקבל
+  const searchOptions = models.map((m) => ({
+    id: m.handle || m.name, // מונע שגיאות key בתוך רכיב החיפוש
+    title: m.name,          // רכיב החיפוש מחפש את המאפיין title
+  }));
+
   return (
     <ShopLayoutInternal>
       
@@ -63,6 +69,8 @@ export default function VendorPageInner({ vendor, models }) {
       <ScrollSearchBar
         placeholder={`החלק שמאלה או חפש דגם ${decodedVendor}`}
         containerRef={containerRef}
+        
+        manufacturers={searchOptions} 
       />
 
       {/* 📌 רשימת הדגמים */}
