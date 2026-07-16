@@ -27,6 +27,14 @@ export default function ModelPageInner({ items, vendor, model }) {
   const decodedVendor = decodeURIComponent(vendor).replace(/-/g, ' ');
   const decodedModel = decodeURIComponent(model);
 
+  // 👇 1. יוצרים את רשימת החיפוש מתוך כלל המוצרים (items)
+  const searchOptions = items.map((item) => ({
+    id: item.id || item.handle,
+    title: item.title, // בשופיפיי שם המוצר נשמר בדר"כ תחת title
+    // 👇 תעדכן את הנתיב הזה כך שיתאים לכתובת עמוד המוצר שלך בחנות
+    href: `/shop/products/${item.handle}` 
+  }));
+
   return (
     <ShopLayoutInternal>
       
@@ -37,6 +45,8 @@ export default function ModelPageInner({ items, vendor, model }) {
       <ScrollSearchBar
         placeholder={`חפש חלק בדגם ${decodedVendor} ${decodedModel}`}
         containerRef={containerRef}
+        {/* 👇 2. מעבירים את מערך המוצרים שיצרנו אל התפריט הנפתח */}
+        manufacturers={searchOptions}
       />
 
       <div ref={containerRef}>
