@@ -74,7 +74,7 @@ export default function Testimonials() {
             
             {testimonial.text && (
               /* שורה 82 המעודכנת למטה - מודגש, ירוק-זית ב-Light mode, וירוק בהיר ב-Dark mode */
-              <div className="p-3 text-center text-sm font-bold text-green-700 dark:text-green-400 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
+              <div className="p-3 text-center text-m font-bold text-green-700 dark:text-green-400 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
                 {testimonial.text}
               </div>
             )}
