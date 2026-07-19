@@ -52,8 +52,8 @@ export default function AccessibilityPage() {
               
               <div className="space-y-2 font-medium">
                 <p><strong>פרטי רכז/ת נגישות:</strong></p>
-                <p>שם: [יש להכניס את שמך כאן]</p>
-                <p>טלפון / וואטסאפ: <a href="https://wa.me/972506129664" dir="ltr" className="text-red-600 hover:underline">052-230-4604</a></p>
+                <p>שם: [יוסף סבג]</p>
+                <p>טלפון / וואטסאפ: <a href="https://wa.me/972506129664" dir="ltr" className="text-red-600 hover:underline">050-612-9664</a></p>
                 <p>דוא"ל: <a href="mailto:onmotorparts@gmail.com" className="text-red-600 hover:underline">onmotorparts@gmail.com</a></p>
               </div>
             </section>
