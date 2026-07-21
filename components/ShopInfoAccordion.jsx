@@ -82,7 +82,7 @@ export default function ShopInfoAccordion() {
           <li>זמן טיפול בהזמנה: עד 2 ימי עסקים.</li>
           <li>זמן אספקה (משלוח רגיל): 2-5 ימי עסקים מרגע יציאת המשלוח.</li>
           <li>עלות משלוח עם שליח עד הבית: 39 ₪.</li>
-          <li><strong>משלוח חינם</strong> בהזמנות מעל 499 ₪.</li>
+          <li><strong>משלוח חינם</strong> בהזמנות מעל 499 ₪ (לא כולל חלקי חילוף).</li>
         </ul>
       </AccordionItem>
 

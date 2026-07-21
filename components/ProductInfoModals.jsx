@@ -99,7 +99,7 @@ export default function ProductInfoModals() {
         
         <h4 className="font-bold text-gray-900 mt-4 sm:mt-6 border-b pb-1">עלויות משלוחים:</h4>
         <ul className="list-disc list-inside space-y-1.5 mt-2 text-sm sm:text-base pr-1">
-          <li><strong>משלוח חינם</strong> עד הבית באמצעות שליח בקנייה מעל 499 ₪.</li>
+          <li><strong>משלוח חינם</strong> (לא כולל חלקי חילוף)  עד הבית באמצעות שליח בקנייה מעל 499 ₪.</li>
           <li>בקנייה מתחת ל-499 ₪, עלות המשלוח הינה 39 ₪.</li>
           <li>החלפות מידה עם שליח יתבצעו <strong>ללא עלות</strong> (לאחר פניית הלקוח לחנות ותיאום).</li>
         </ul>
