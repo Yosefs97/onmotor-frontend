@@ -23,6 +23,12 @@ export async function GET(_req, { params }) {
             currencyCode
           }
         }
+        compareAtPriceRange { # ⭐️ תוספת: מחיר מקורי ברמת המוצר
+          minVariantPrice {
+            amount
+            currencyCode
+          }
+        }
         descriptionHtml
         vendor
         productType
@@ -44,6 +50,7 @@ export async function GET(_req, { params }) {
               availableForSale
               quantityAvailable
               price { amount currencyCode }
+              compareAtPrice { amount currencyCode } # ⭐️ תוספת: מחיר מקורי ברמת הוריאציה
               image { url altText }
               selectedOptions { name value }
             }

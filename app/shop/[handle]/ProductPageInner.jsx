@@ -1,4 +1,4 @@
-// /app/shop/[handle]/ProductPageInner.jsx
+//app\shop\[handle]\ProductPageInner.jsx
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -319,8 +319,22 @@ ${productUrl}
           {currentVariant && (
             <div className="text-sm border-y border-gray-100 py-3 my-3 bg-gray-50/50 px-4 rounded-xl flex flex-col gap-1">
               
-              <div className="text-3xl font-black text-red-600 flex items-center gap-2 mb-1">
-                {currentVariant.price.amount} <span className="text-xl font-bold">{currentVariant.price.currencyCode}</span>
+              {/* תצוגת מחירים כולל מחיר מחוק */}
+              <div className="flex flex-col mb-2">
+                
+                {/* הצגת מחיר המקור (המחוק) אם קיים והוא גבוה מהמחיר הרגיל */}
+                {currentVariant.compareAtPrice?.amount && 
+                 parseFloat(currentVariant.compareAtPrice.amount) > parseFloat(currentVariant.price.amount) && (
+                  <div className="text-lg text-gray-400 line-through font-medium">
+                    {currentVariant.compareAtPrice.amount} {currentVariant.compareAtPrice.currencyCode}
+                  </div>
+                )}
+                
+                {/* המחיר העדכני (הזול) */}
+                <div className="text-3xl font-black text-red-600 flex items-center gap-2">
+                  {currentVariant.price.amount} <span className="text-xl font-bold">{currentVariant.price.currencyCode}</span>
+                </div>
+                
               </div>
               
               <div className="flex flex-col gap-1 text-gray-600">
