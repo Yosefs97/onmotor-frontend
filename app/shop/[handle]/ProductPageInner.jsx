@@ -326,13 +326,13 @@ ${productUrl}
                 {currentVariant.compareAtPrice?.amount && 
                  parseFloat(currentVariant.compareAtPrice.amount) > parseFloat(currentVariant.price.amount) && (
                   <div className="text-lg text-gray-400 line-through font-medium">
-                    {currentVariant.compareAtPrice.amount} {currentVariant.compareAtPrice.currencyCode}
+                    {currentVariant.compareAtPrice.amount} {currentVariant.compareAtPrice.currencyCode === 'ILS' ? '₪' : currentVariant.compareAtPrice.currencyCode}
                   </div>
                 )}
                 
                 {/* המחיר העדכני (הזול) */}
                 <div className="text-3xl font-black text-red-600 flex items-center gap-2">
-                  {currentVariant.price.amount} <span className="text-xl font-bold">{currentVariant.price.currencyCode}</span>
+                  {currentVariant.price.amount} <span className="text-xl font-bold">{currentVariant.price.currencyCode === 'ILS' ? '₪' : currentVariant.price.currencyCode}</span>
                 </div>
                 
               </div>
