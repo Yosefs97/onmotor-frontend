@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 export default function CheckoutPage() {
   const [cartItems, setCartItems] = useState([]);
   const [checkoutUrl, setCheckoutUrl] = useState("");
-  const [cartTotal, setCartTotal] = useState({ amount: 0, currencyCode: "ILS" });
+  const [cartTotal, setCartTotal] = useState({ amount: 0, currencyCode: "₪" });
   
   const [customer, setCustomer] = useState({
     name: "",

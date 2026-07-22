@@ -133,7 +133,7 @@ export default async function ProductPage({ params, searchParams }) {
     offers: {
       '@type': 'Offer',
       availability: product.availableForSale ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-      priceCurrency: 'ILS',
+      priceCurrency: '₪',
       price: product.priceRange?.minVariantPrice?.amount || '0',
       url: productUrl
     }
