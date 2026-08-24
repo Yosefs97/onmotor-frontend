@@ -86,7 +86,7 @@ export default function Header() {
   return (
     // שינוי קריטי כאן: הסרתי את 'fixed' והשארתי רק 'sticky'
     // זה מונע מהתוכן מתחת לקפוץ בטעינה
-    <header className="sticky top-0 z-50 bg-black text-[#C0C0C0] h-[80px] w-full flex flex-row-reverse items-center justify-between px-2 md:px-6 py-2 shadow-md border-b border-gray-800">
+    <header className="sticky top-0 z-50 h-[80px] w-full flex flex-row-reverse items-center justify-between px-2 md:px-6 py-2 bg-om-header text-om-chrome font-display shadow-header border-b border-om-steel relative after:content-[''] after:absolute after:inset-x-0 after:bottom-0 after:h-[2px] after:bg-gradient-to-l after:from-om-ember after:via-om-blaze after:to-om-blood">
       <div
         ref={containerRef}
         className="flex flex-row-reverse items-center gap-2 min-w-0 cursor-pointer"
@@ -100,27 +100,26 @@ export default function Header() {
           ref={logoRef}
           src="/OnMotorLogonoback.png"
           alt="OnMotor Logo"
-          className="w-20 shrink-0 z-50"
+          className="w-20 shrink-0 z-50 drop-shadow-[0_0_18px_rgba(255,59,0,0.45)]"
           dir="rtl"
         />
 
         <div className="truncate overflow-visible">
           <h1
             dir="ltr"
-            className="text-2xl lg:text-4xl font-bold whitespace-nowrap z-50 flex"
+            className="text-2xl lg:text-4xl font-black tracking-tightish whitespace-nowrap z-50 flex"
           >
             {logoText.map((part, i) => (
               <span
                 key={i}
                 ref={(el) => (lettersRef.current[i] = el)}
-                // הוספתי opacity-0 כדי להסתיר אותם עד שהאנימציה תתחיל (מונע הבהוב)
-                className={`inline-block opacity-0 ${part.red ? 'text-[#e60000]' : ''}`}
+                className={`inline-block opacity-0 ${part.red ? 'text-om-ember' : 'text-white'}`}
               >
                 {part.char}
               </span>
             ))}
           </h1>
-          <p className="text-xs lg:text-sm font-bold text-right whitespace-nowrap truncate">
+          <p className="text-[10px] lg:text-xs font-bold tracking-racing uppercase text-om-mist text-right whitespace-nowrap truncate">
             איפה שמנוע וגלגלים פוגשים מדיה
           </p>
         </div>

@@ -57,16 +57,18 @@ export default async function HomePage() {
 
   return (
     <PageContainer title="דף הבית" breadcrumbs={[]}>
-      <MainGridContentDesktop articles={articles} />
+      <div className="bg-om-void text-om-chrome -mx-1 sm:-mx-4">
+        <MainGridContentDesktop articles={articles} />
 
-      <h1 className="text-2xl font-bold text-[#e60000] px-4 mt-4">
-        OnMotor Media - מגזין אופנועים ישראלי
-      </h1>
+        <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tightish text-white px-4 mt-8">
+          OnMotor Media - מגזין אופנועים ישראלי
+        </h1>
 
-      <p className="px-4 mt-2 mb-4 text-gray-700">
-        מגזין אופנועים בישראל - חדשות, סקירות, מבחני דרכים, ציוד, טיפים
-        לקהילת הרוכבים התוססת בישראל.
-      </p>
+        <p className="px-4 mt-3 mb-8 text-om-mist font-medium leading-relaxed">
+          מגזין אופנועים בישראל - חדשות, סקירות, מבחני דרכים, ציוד, טיפים
+          לקהילת הרוכבים התוססת בישראל.
+        </p>
+      </div>
     </PageContainer>
   );
 }
