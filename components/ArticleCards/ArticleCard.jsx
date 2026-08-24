@@ -66,14 +66,14 @@ export default function ArticleCard({ article, size = 'small' }) {
     : 'h-full min-h-[170px] md:min-h-[220px]';
 
   const titleSize = isHero
-    ? 'text-4xl sm:text-5xl md:text-7xl lg:text-8xl'
+    ? 'text-4xl sm:text-5xl md:text-5xl lg:text-6xl'
     : isLarge
-    ? 'text-2xl md:text-5xl lg:text-6xl'
+    ? 'text-2xl md:text-3xl lg:text-4xl'
     : isMedium
-    ? 'text-xl md:text-3xl lg:text-4xl'
-    : 'text-sm md:text-lg lg:text-xl';
+    ? 'text-xl md:text-2xl lg:text-3xl'
+    : 'text-sm md:text-base lg:text-lg';
 
-  const descSize = isHero ? 'text-base md:text-xl lg:text-2xl' : isLarge ? 'text-sm md:text-lg' : 'text-xs md:text-sm';
+  const descSize = isHero ? 'text-base md:text-lg' : isLarge ? 'text-sm md:text-base' : 'text-xs md:text-sm';
   const paddingSize = isHero ? 'p-5 md:p-10' : isLarge ? 'p-4 md:p-6' : 'p-3 md:p-4';
   const categoryLabel = labelMap[article.category] || article.category || '';
 
