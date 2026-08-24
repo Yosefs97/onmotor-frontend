@@ -134,7 +134,7 @@ export default function ArticleCard({ article, size = 'small' }) {
           )}
 
           <h3
-            className={`${titleSize} font-black uppercase leading-[1.12] tracking-tightish transition-all duration-300 bg-om-void/40 box-decoration-clone px-1 md:bg-transparent md:px-0`}
+            className={`${titleSize} font-black uppercase leading-tight tracking-tightish transition-all duration-300 bg-om-void/40 box-decoration-clone px-1 md:bg-transparent md:px-0`}
           >
             {article.title || article.headline}
           </h3>
