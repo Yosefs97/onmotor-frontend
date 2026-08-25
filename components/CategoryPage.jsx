@@ -54,21 +54,16 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
   useEffect(() => {
     async function fetchArticles() {
       try {
-        // ✅ תיקון קריטי 1: הגדלת הכמות ל-100
-        // ✅ תיקון קריטי 2: מיון מהשרת (sort=date:desc) כדי לוודא שמקבלים את החדשות ביותר
         let url = `${API_URL}/api/articles?populate=*&pagination[limit]=100&sort=date:desc`;
 
-        // ✅ סינון לפי קטגוריה ראשית
         if (categoryKey) {
           url += `&filters[category][$eq]=${categoryKey}`;
         }
 
-        // ✅ תיקון קריטי 3: ביטול Cache כדי לראות שינויים מיד
         const res = await fetch(url, { cache: 'no-store' });
         const json = await res.json();
         let data = json.data || [];
 
-        // ✅ סינון בצד הלקוח לפי תת־קטגוריה
         if (subcategoryKey) {
           data = data.filter((a) => {
             const sub = a.subcategory;
@@ -79,7 +74,6 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
           });
         }
 
-        // ✅ סינון לפי Values
         if (guideSubKey) {
           data = data.filter((a) => {
             const vals = a.Values;
@@ -90,38 +84,33 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
           });
         }
 
-        // ✅ מיפוי כתבות עם לוגיקת תמונה אחידה ולינקים בעברית
         const mapped = data.map((a) => {
           let mainImage = PLACEHOLDER_IMG;
           let mainImageAlt = a.title || 'תמונה ראשית';
 
-          const attrs = a.attributes || a; // ליתר ביטחון, למרות שבגרסה הזו זה כנראה שטוח
+          const attrs = a.attributes || a;
 
-          // 1️⃣ גלריה
           const galleryItem = attrs.gallery?.[0];
           if (galleryItem?.url) {
             mainImage = resolveImageUrl(galleryItem.url);
             mainImageAlt = galleryItem.alternativeText || mainImageAlt;
           }
-          // 2️⃣ תמונה ראשית
           else if (attrs.image?.url) {
             mainImage = resolveImageUrl(attrs.image.url);
             mainImageAlt = attrs.image.alternativeText || mainImageAlt;
           }
-          // 3️⃣ external_media_links
           else if (Array.isArray(attrs.external_media_links) && attrs.external_media_links.length > 0) {
             const validLinks = attrs.external_media_links.filter(
               (l) => typeof l === 'string' && l.startsWith('http')
             );
             if (validLinks.length > 1) {
-              mainImage = validLinks[1].trim(); // השני
+              mainImage = validLinks[1].trim();
             } else if (validLinks.length > 0) {
-              mainImage = validLinks[0].trim(); // הראשון
+              mainImage = validLinks[0].trim();
             }
             mainImageAlt = 'תמונה ראשית מהמדיה החיצונית';
           }
 
-          // ✅ שימוש ב-href אם קיים
           const correctSlug = attrs.href || attrs.slug;
 
           return {
@@ -140,7 +129,6 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
             description: attrs.description,
             headline: attrs.headline || attrs.title,
             subdescription: attrs.subdescription,
-            // ✅ יצירת הלינק עם העברית
             href: `/articles/${correctSlug}`,
             tags: attrs.tags || [],
             date: attrs.date || '',
@@ -148,7 +136,6 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
           };
         });
 
-        // ✅ מיון נוסף בצד לקוח (למרות שהשרת כבר מיין, זה ליתר ביטחון)
         const sorted = mapped.sort((a, b) => {
           const aDateTime = new Date(`${a.date}T${a.time}`);
           const bDateTime = new Date(`${b.date}T${b.time}`);
@@ -168,24 +155,25 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] w-full">
+      // 👇 הוספנו את צבעי הרקע הכהים ואת הטקסט המעוצב כמו בדף הראשי
+      <div className="flex flex-col items-center justify-center min-h-[400px] w-full bg-om-void">
         <div className="animate-pulse">
           <img 
             src="/OnMotorLogonoback.png" 
             alt="Loading..." 
-            className="h-24 w-auto object-contain" // שנה את h-24 כדי לשלוט בגודל
+            className="h-24 w-auto object-contain"
           />
         </div>
-        <p className="mt-4 text-gray-500 animate-bounce">טוען כתבות...</p>
+        <p className="mt-4 text-om-ember font-black tracking-racing uppercase animate-bounce">טוען כתבות...</p>
       </div>
     );
   }
 
   if (articles.length === 0) {
-    return <p className="text-center text-gray-500">אין עדיין כתבות בקטגוריה זו</p>;
+    // 👇 עיצוב הטקסט במקרה של 0 כתבות זהה לדף הראשי
+    return <p className="text-center text-om-mist bg-om-void py-16 font-bold tracking-racing uppercase">אין עדיין כתבות בקטגוריה זו</p>;
   }
 
-  // ✅ לוגיקת קיבוץ
   const grouped =
     guideSubKey
       ? { [guideSubKey]: articles }
@@ -205,7 +193,8 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
     subcategoryKey !== null || guideSubKey !== null || Object.keys(grouped).length === 1;
 
   return (
-    <div className="max-w-screen-xl mx-auto px-0">
+    // 👇 הוספנו bg-om-void ו-text-om-chrome כדי שהעמוד יהיה כהה
+    <div className="max-w-screen-xl mx-auto px-0 bg-om-void text-om-chrome min-h-screen">
       <div className="flex flex-col gap-0" dir="rtl">
         {!subcategoryKey && !guideSubKey && shouldShowMainTitle && (
           <SectionWithHeader
@@ -216,7 +205,8 @@ export default function CategoryPage({ categoryKey = ' ', subcategoryKey = null,
         )}
 
         {Object.entries(grouped).map(([subKey, subArticles]) => (
-          <div key={subKey} className="bg-white shadow">
+          // 👇 מחקנו את bg-white shadow ובמקומו הוספנו מרווחים נקיים שמתאימים לעיצוב הכהה
+          <div key={subKey} className="space-y-0">
             {!guideSubKey && Object.keys(grouped).length > 1 && (
               <SectionWithHeader
                 title={labelMap[subKey] || subKey}
