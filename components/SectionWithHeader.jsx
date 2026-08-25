@@ -1,4 +1,4 @@
-//components\SectionWithHeader.jsx
+// components/SectionWithHeader.jsx
 'use client';
 import Link from 'next/link';
 import { labelMap, linkLabelMap } from '@/utils/labelMap'; // ✅ ייבוא מרוכז
@@ -7,15 +7,18 @@ export default function SectionWithHeader({ title, href = '#', variant = 'home',
   const titleHeb = labelMap[title] || title;
   const linkLabel = linkLabelMap[title] || 'לכל הכתבות';
 
-  let containerClass = 'relative flex justify-between items-center px-4 py-2';
-  let titleClass = 'text-lg font-bold transition duration-300';
+  // 👇 ריווח ועיצוב בסיסי שמתאים לתצוגה החדשה
+  let containerClass = 'relative flex justify-between items-center px-4 py-3 max-w-screen-xl mx-auto';
+  let titleClass = 'font-black uppercase tracking-tightish transition-colors duration-300';
 
   if (variant === 'main') {
-    containerClass += ' border-b-4 border-[#e60000] bg-transparent max-w-screen-xl mx-auto';
-    titleClass += ' text-black text-2xl md:text-3xl';
+    // 🔴 עיצוב לכותרת ראשית (ללא רקע מלא, רק קו תחתון מודגש)
+    containerClass += ' border-b-2 border-om-ember bg-transparent mb-4';
+    titleClass += ' text-white text-3xl md:text-5xl';
   } else {
-    containerClass += ' bg-[#E5E5E5] border border-red-600 rounded max-w-screen-xl mx-auto';
-    titleClass += ' text-gray-800 text-xl';
+    // 🔘 עיצוב לקטגוריות משניות (פס כהה, כמו בדף הראשי)
+    containerClass += ' bg-om-asphalt border-y border-om-steel';
+    titleClass += ' text-white text-2xl md:text-3xl';
   }
 
   return (
@@ -27,13 +30,20 @@ export default function SectionWithHeader({ title, href = '#', variant = 'home',
         backgroundPosition: 'center',
       }}
     >
-      {backgroundImage && <div className="absolute inset-0 bg-black/50 z-0 rounded" />}
+      {backgroundImage && <div className="absolute inset-0 bg-om-void/80 z-0" />}
+      
       <div className="relative z-10 w-full flex justify-between items-center">
         <Link href={href} prefetch={false}> 
-          <h2 className={`${titleClass} cursor-pointer hover:text-red-600`}>{titleHeb}</h2>
+          <h2 className={`${titleClass} cursor-pointer hover:text-om-ember`}>{titleHeb}</h2>
         </Link>
-        {href &&  variant !== 'main' && (
-          <Link href={href} className="text-sm text-red-600 hover:underline" prefetch={false}>
+        
+        {href && variant !== 'main' && (
+          // 👇 הלינק עודכן לעיצוב ה-Racing של האתר עם הצבעים הנכונים
+          <Link 
+            href={href} 
+            className="text-[10px] md:text-xs font-black tracking-racing uppercase text-om-ember hover:text-om-blaze transition-colors duration-300" 
+            prefetch={false}
+          >
             {linkLabel}
           </Link>
         )}
