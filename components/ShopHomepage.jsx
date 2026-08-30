@@ -66,7 +66,9 @@ export default function ShopHomepage({ categories = [], products = [] }) {
             <span className="block text-[#ff3b3b]">במקום אחד.</span>
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-zinc-300 sm:text-xl">
-            לכביש, לשטח וליומיום: חלפים, ציוד רכיבה ושדרוגים לרוכב ולאופנוע. מוצאים מהר, מזמינים בביטחון, וחוזרים לרכוב.
+            חלקי חילוף, ציוד רכיבה - כביש ושטח.
+הכל במקום אחד.
+
           </p>
           <div className="mt-5 flex flex-wrap gap-2 text-xs font-extrabold text-zinc-100 sm:text-sm">
             {['כביש', 'שטח', 'עיר', 'ציוד לרוכב', 'חלפים'].map((label) => (
