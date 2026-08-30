@@ -62,7 +62,7 @@ export default function ShopHomepage({ categories = [], products = [] }) {
             OnMotor Parts · עונת 2026
           </span>
           <h1 className="max-w-xl text-4xl font-black leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
-            לכל סגנון רכיבה.
+          הכל לרוכב ולרוכבת,
             <span className="block text-[#ff3b3b]">במקום אחד.</span>
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-zinc-300 sm:text-xl">
