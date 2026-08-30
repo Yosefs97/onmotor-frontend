@@ -14,6 +14,7 @@ function ShopLayoutInternalContent({
   product = null, 
   customSidebar = null, 
   hideSidebar = false,
+  showInfo = true,
   menuItems = [],
   categories = [] 
 }) {
@@ -113,7 +114,7 @@ function ShopLayoutInternalContent({
 
       <div className={`${hideSidebar ? 'md:col-span-4' : 'md:col-span-3'} space-y-6`}>
         {children}
-        <ShopInfoAccordion />
+        {showInfo && <ShopInfoAccordion />}
       </div>
     </div>
   );
