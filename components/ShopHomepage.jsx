@@ -1,6 +1,7 @@
 //components\ShopHomepage.jsx
 import Link from 'next/link';
 import { ArrowLeft, Check, Search, ShieldCheck, Truck } from 'lucide-react';
+import ShopHeroVideo from '@/components/ShopHeroVideo';
 
 function formatPrice(product) {
   const price = product.priceRange?.minVariantPrice;
@@ -48,23 +49,12 @@ function ProductCard({ product, priority = false }) {
 }
 
 export default function ShopHomepage({ categories = [], products = [] }) {
-  const heroProduct = products[0];
   const featuredProducts = products.slice(0, 4);
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-14 px-4 pb-8 pt-3 sm:px-6 lg:px-8" dir="rtl">
       <section className="relative isolate overflow-hidden rounded-3xl bg-zinc-950 px-6 py-10 text-white shadow-2xl sm:px-10 sm:py-14 lg:min-h-[450px] lg:px-14">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_85%_15%,rgba(230,0,0,0.55),transparent_28%),radial-gradient(circle_at_10%_90%,rgba(86,18,18,0.55),transparent_38%)]" />
-        {heroProduct?.featuredImage?.url && (
-          <div className="pointer-events-none absolute inset-y-0 left-0 hidden w-[48%] lg:block">
-            <img
-              src={heroProduct.featuredImage.url}
-              alt=""
-              className="h-full w-full object-cover opacity-80 [mask-image:linear-gradient(to_left,black_55%,transparent)]"
-            />
-            <div className="absolute inset-0 bg-gradient-to-l from-transparent via-zinc-950/20 to-zinc-950" />
-          </div>
-        )}
+        <ShopHeroVideo />
 
         <div className="relative z-10 max-w-2xl">
           <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-bold text-zinc-100 backdrop-blur">
@@ -72,12 +62,17 @@ export default function ShopHomepage({ categories = [], products = [] }) {
             OnMotor Parts · עונת 2026
           </span>
           <h1 className="max-w-xl text-4xl font-black leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
-            כל מה שהאופנוע שלך צריך.
+            לכל סגנון רכיבה.
             <span className="block text-[#ff3b3b]">במקום אחד.</span>
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-zinc-300 sm:text-xl">
-            חלפים, ציוד רכיבה ושדרוגים שנבחרו לרוכבים שמבינים עניין. מוצאים מהר, מזמינים בביטחון, וחוזרים לכביש.
+            לכביש, לשטח וליומיום: חלפים, ציוד רכיבה ושדרוגים לרוכב ולאופנוע. מוצאים מהר, מזמינים בביטחון, וחוזרים לרכוב.
           </p>
+          <div className="mt-5 flex flex-wrap gap-2 text-xs font-extrabold text-zinc-100 sm:text-sm">
+            {['כביש', 'שטח', 'עיר', 'ציוד לרוכב', 'חלפים'].map((label) => (
+              <span key={label} className="rounded-full border border-white/20 bg-black/30 px-3 py-1.5 backdrop-blur">{label}</span>
+            ))}
+          </div>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link href="#featured-products" className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#e60000] px-6 py-3.5 text-base font-extrabold text-white transition hover:bg-red-700">
               לראות מוצרים מומלצים <ArrowLeft className="h-5 w-5" />
