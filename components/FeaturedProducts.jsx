@@ -67,7 +67,11 @@ export default function FeaturedProducts({
 
   // 2. סינון לפי יצרן (אם ביקשת בדף של יצרן ספציפי)
   if (targetVendor) {
-    displayProducts = displayProducts.filter((product) => product.vendor === targetVendor);
+    displayProducts = displayProducts.filter((product) => {
+      if (!product.vendor) return false;
+      // הופכים את שני הצדדים לאותיות קטנות כדי שההשוואה תמיד תצליח
+      return product.vendor.toLowerCase() === targetVendor.toLowerCase();
+    });
   }
 
   // 3. ערבוב רנדומלי (אם ביקשת בדף כללי)
