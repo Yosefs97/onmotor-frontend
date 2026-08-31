@@ -52,7 +52,7 @@ export default function ShopHomepage({ categories = [], products = [] }) {
   const featuredProducts = products.slice(0, 4);
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-14 px-4 pb-8 pt-3 sm:px-6 lg:px-8" dir="rtl">
+    <div className="mx-auto w-full max-w-7xl space-y-4 px-4 pb-8 pt-3 sm:px-6 lg:px-8" dir="rtl">
       <section className="relative isolate overflow-hidden rounded-3xl bg-zinc-950 px-6 py-10 text-white shadow-2xl sm:px-10 sm:py-14 lg:min-h-[450px] lg:px-14">
         <ShopHeroVideo />
 
