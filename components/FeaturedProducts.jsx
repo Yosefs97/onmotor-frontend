@@ -4,18 +4,41 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
 export function formatPrice(product) {
-  const price = product.priceRange?.minVariantPrice;
-  if (!price?.amount) return null;
+  // חיפוש המחיר במספר מבנים נפוצים ב-Shopify / API
+  let amount = 
+    product.priceRange?.minVariantPrice?.amount || // מבנה GraphQL רגיל
+    product.price || // מבנה פשוט ממנוע החיפוש
+    product.variants?.edges?.[0]?.node?.price?.amount; // מבנה מקולקציות
+
+  let currency = 
+    product.priceRange?.minVariantPrice?.currencyCode || 
+    product.variants?.edges?.[0]?.node?.price?.currencyCode || 
+    'ILS';
+
+  if (!amount) return null;
 
   return new Intl.NumberFormat('he-IL', {
     style: 'currency',
-    currency: price.currencyCode || 'ILS',
+    currency: currency,
     maximumFractionDigits: 0,
-  }).format(Number(price.amount));
+  }).format(Number(amount));
 }
 
 export function ProductCard({ product, priority = false }) {
   const price = formatPrice(product);
+
+  // חיפוש התמונה במספר מבנים אפשריים כדי למנוע תמונות שבורות
+  const imageUrl = 
+    product.featuredImage?.url || 
+    product.image || 
+    product.images?.edges?.[0]?.node?.url || 
+    (Array.isArray(product.images) && product.images[0]?.url) || 
+    '';
+
+  const imageAlt = 
+    product.featuredImage?.altText || 
+    product.images?.edges?.[0]?.node?.altText || 
+    product.title;
 
   return (
     <Link
@@ -23,12 +46,18 @@ export function ProductCard({ product, priority = false }) {
       className="group flex h-full flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-red-200 hover:shadow-xl"
     >
       <div className="relative aspect-square overflow-hidden bg-zinc-100">
-        <img
-          src={product.featuredImage?.url}
-          alt={product.featuredImage?.altText || product.title}
-          loading={priority ? 'eager' : 'lazy'}
-          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-        />
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={imageAlt}
+            loading={priority ? 'eager' : 'lazy'}
+            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-zinc-200 text-zinc-400 text-xs">
+            אין תמונה
+          </div>
+        )}
         <span className="absolute right-3 top-3 rounded-full bg-black/75 px-3 py-1 text-xs font-bold text-white backdrop-blur">
           {product.vendor || 'מומלץ'}
         </span>
@@ -49,9 +78,9 @@ export function ProductCard({ product, priority = false }) {
 
 export default function FeaturedProducts({ 
   products = [], 
-  targetTag, // סינון לפי תגית (אופציונלי)
-  targetVendor, // סינון לפי יצרן (אופציונלי)
-  randomize = false, // האם לערבב רנדומלית? (אופציונלי)
+  targetTag, 
+  targetVendor, 
+  randomize = false, 
   title = 'מוצרים שכדאי להכיר עכשיו',
   subtitle = 'נבחרו בשבילך',
   linkUrl = '/shop/parts',
@@ -60,29 +89,27 @@ export default function FeaturedProducts({
 }) {
   let displayProducts = [...products];
 
-  // 1. סינון לפי תגית (אם ביקשת)
+  // סינון לפי תגית
   if (targetTag) {
     displayProducts = displayProducts.filter((product) => product.tags?.includes(targetTag));
   }
 
-  // 2. סינון לפי יצרן (אם ביקשת בדף של יצרן ספציפי)
+  // סינון לפי יצרן (ללא רגישות לאותיות גדולות/קטנות)
   if (targetVendor) {
     displayProducts = displayProducts.filter((product) => {
       if (!product.vendor) return false;
-      // הופכים את שני הצדדים לאותיות קטנות כדי שההשוואה תמיד תצליח
       return product.vendor.toLowerCase() === targetVendor.toLowerCase();
     });
   }
 
-  // 3. ערבוב רנדומלי (אם ביקשת בדף כללי)
+  // ערבוב רנדומלי
   if (randomize) {
     displayProducts = displayProducts.sort(() => Math.random() - 0.5);
   }
 
-  // 4. חיתוך לכמות המבוקשת (למשל 4)
+  // חיתוך לכמות מבוקשת
   displayProducts = displayProducts.slice(0, limit);
 
-  // 🔴 חכם: אם אחרי כל הסינונים אין מוצרים - אל תציג את הבלוק בכלל!
   if (displayProducts.length === 0) return null;
 
   return (
@@ -101,7 +128,7 @@ export default function FeaturedProducts({
 
       <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
         {displayProducts.map((product, index) => (
-          <ProductCard key={product.id} product={product} priority={index < 2} />
+          <ProductCard key={product.id || index} product={product} priority={index < 2} />
         ))}
       </div>
     </section>
