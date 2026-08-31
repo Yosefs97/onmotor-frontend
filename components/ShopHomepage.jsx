@@ -134,9 +134,17 @@ export default function ShopHomepage({ categories = [], products = [] }) {
           </div>
           <Link href="/shop/parts" className="font-bold text-zinc-700 hover:text-[#e60000]">לאיתור חלף לפי יצרן ודגם</Link>
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        
+        {/* השינוי מתחיל כאן: הוספנו flex, overflow-x-auto לגלילה, והחזרנו ל-grid ב-sm */}
+        <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-4 sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0 lg:grid-cols-3">
           {categories.map((category) => (
-            <Link key={category.handle} href={category.href} className="group relative min-h-44 overflow-hidden rounded-2xl bg-zinc-900 p-5 text-white">
+            
+            /* הוספנו w-[80%] ו-shrink-0 למובייל, וביטלנו אותם ב-sm */
+            <Link 
+              key={category.handle} 
+              href={category.href} 
+              className="group relative min-h-44 w-[80%] shrink-0 snap-center overflow-hidden rounded-2xl bg-zinc-900 p-5 text-white sm:w-auto sm:shrink"
+            >
               {category.image && (
                 <img src={category.image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-55 transition duration-500 group-hover:scale-105 group-hover:opacity-70" />
               )}
@@ -146,6 +154,7 @@ export default function ShopHomepage({ categories = [], products = [] }) {
                 <span className="mt-2 inline-flex items-center gap-1 text-sm font-bold text-zinc-200 transition group-hover:text-[#ff5a5a]">לגלות מוצרים <ArrowLeft className="h-4 w-4" /></span>
               </div>
             </Link>
+            
           ))}
         </div>
       </section>
