@@ -5,7 +5,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { gsap } from 'gsap';
 import { useSwipeable } from 'react-swipeable';
-import { MessageCircle, User } from 'lucide-react';
+import { MessageCircle, User } from 'lucide-react'; 
+import ShopInfoAccordion from './ShopInfoAccordion'; // השורה שהייתה חסרה!
 
 export default function ShopMobileMenu({ categories = [] }) {
   const [isOpen, setIsOpen] = useState(false);
