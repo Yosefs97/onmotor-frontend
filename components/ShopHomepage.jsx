@@ -36,7 +36,6 @@ function ProductCard({ product, priority = false }) {
       <div className="flex flex-1 flex-col p-4">
         <h3 className="min-h-12 text-base font-extrabold leading-snug text-zinc-900">{product.title}</h3>
         
-        {/* השינוי בוצע כאן: החלפנו את mt-3 ב- mt-auto והוספנו pt-3 לרווח מלמעלה */}
         <div className="mt-auto flex items-end justify-between gap-3 pt-3">
           <span className="text-lg font-black text-[#e60000]">{price || 'לפרטים'}</span>
           <span className="inline-flex items-center gap-1 text-sm font-bold text-zinc-700 transition group-hover:text-[#e60000]">
@@ -52,8 +51,10 @@ export default function ShopHomepage({ categories = [], products = [] }) {
   const featuredProducts = products.slice(0, 4);
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-4 px-4 pb-8 pt-3 sm:px-6 lg:px-8" dir="rtl">
-      <section className="relative isolate overflow-hidden rounded-3xl bg-zinc-950 px-6 py-10 text-white shadow-2xl sm:px-10 sm:py-14 lg:min-h-[450px] lg:px-14">
+    <div className="mx-auto w-full max-w-7xl space-y-14 px-0 pb-8 pt-0 sm:px-6 sm:pt-3 lg:px-8" dir="rtl">
+      
+      {/* סקשן הירו - מקצה לקצה במובייל */}
+      <section className="relative isolate overflow-hidden rounded-none bg-zinc-950 px-6 py-10 text-white shadow-2xl sm:rounded-3xl sm:px-10 sm:py-14 lg:min-h-[450px] lg:px-14">
         <ShopHeroVideo />
 
         <div className="relative z-10 max-w-2xl">
@@ -66,9 +67,7 @@ export default function ShopHomepage({ categories = [], products = [] }) {
             <span className="block text-[#ff3b3b]">במקום אחד.</span>
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-zinc-300 sm:text-xl">
-            חלקי חילוף, ציוד רכיבה - כביש ושטח.
-הכל במקום אחד.
-
+            חלקי חילוף, ציוד רכיבה - כביש ושטח. הכל במקום אחד.
           </p>
           <div className="mt-5 flex flex-wrap gap-2 text-xs font-extrabold text-zinc-100 sm:text-sm">
             {['כביש', 'שטח', 'עיר', 'ציוד לרוכב', 'חלפים'].map((label) => (
@@ -87,47 +86,55 @@ export default function ShopHomepage({ categories = [], products = [] }) {
         </div>
       </section>
 
-      <section className="grid gap-px overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-200 sm:grid-cols-3">
-        <div className="flex items-center gap-3 bg-white px-5 py-4">
-          <Truck className="h-6 w-6 shrink-0 text-[#e60000]" />
-          <p className="text-sm font-bold text-zinc-800">משלוח חינם מעל ₪499 <span className="font-normal text-zinc-500">למעט חלקי חילוף</span></p>
-        </div>
-        <div className="flex items-center gap-3 bg-white px-5 py-4">
-          <ShieldCheck className="h-6 w-6 shrink-0 text-[#e60000]" />
-          <p className="text-sm font-bold text-zinc-800">תשלום מאובטח וקנייה בראש שקט</p>
-        </div>
-        <div className="flex items-center gap-3 bg-white px-5 py-4">
-          <Check className="h-6 w-6 shrink-0 text-[#e60000]" />
-          <p className="text-sm font-bold text-zinc-800">חלפים חדשים ומשומשים שנבדקו</p>
-        </div>
-      </section>
-
-      <section id="featured-products" className="scroll-mt-28">
-        <div className="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
-          <div>
-            <p className="text-sm font-black tracking-wider text-[#e60000]">נבחרו בשבילך</p>
-            <h2 className="mt-1 text-3xl font-black text-zinc-950 sm:text-4xl">מוצרים שכדאי להכיר עכשיו</h2>
+      {/* עטיפה פנימית שמצמידה את בלוק ההטבות למוצרים המומלצים */}
+      <div className="space-y-4">
+        
+        {/* בלוק אבטחה ומשלוחים - מקצה לקצה במובייל */}
+        <section className="grid gap-px overflow-hidden rounded-none border-y border-zinc-200 bg-zinc-200 sm:grid-cols-3 sm:rounded-2xl sm:border-x">
+          <div className="flex items-center gap-3 bg-white px-5 py-4">
+            <Truck className="h-6 w-6 shrink-0 text-[#e60000]" />
+            <p className="text-sm font-bold text-zinc-800">משלוח חינם מעל ₪499 <span className="font-normal text-zinc-500">למעט חלקי חילוף</span></p>
           </div>
-          <Link href="/shop/parts" className="inline-flex items-center gap-1 font-bold text-zinc-700 hover:text-[#e60000]">
-            לכל החלפים <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </div>
-
-        {featuredProducts.length > 0 ? (
-          <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
-            {featuredProducts.map((product, index) => (
-              <ProductCard key={product.id} product={product} priority={index < 2} />
-            ))}
+          <div className="flex items-center gap-3 bg-white px-5 py-4">
+            <ShieldCheck className="h-6 w-6 shrink-0 text-[#e60000]" />
+            <p className="text-sm font-bold text-zinc-800">תשלום מאובטח וקנייה בראש שקט</p>
           </div>
-        ) : (
-          <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-8 text-center text-zinc-600">
-            המוצרים המומלצים יופיעו כאן מיד לאחר שהקטלוג זמין.
+          <div className="flex items-center gap-3 bg-white px-5 py-4">
+            <Check className="h-6 w-6 shrink-0 text-[#e60000]" />
+            <p className="text-sm font-bold text-zinc-800">חלפים חדשים ומשומשים שנבדקו</p>
           </div>
-        )}
-      </section>
+        </section>
 
-      <section className="overflow-hidden rounded-3xl bg-zinc-100 p-6 sm:p-9">
-        <div className="mb-7 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        {/* מוצרים מומלצים - עם ריווח צד במובייל כדי שלא ייגעו בקצוות המסך */}
+        <section id="featured-products" className="scroll-mt-28 px-4 sm:px-0">
+          <div className="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+            <div>
+              <p className="text-sm font-black tracking-wider text-[#e60000]">נבחרו בשבילך</p>
+              <h2 className="mt-1 text-3xl font-black text-zinc-950 sm:text-4xl">מוצרים שכדאי להכיר עכשיו</h2>
+            </div>
+            <Link href="/shop/parts" className="inline-flex items-center gap-1 font-bold text-zinc-700 hover:text-[#e60000]">
+              לכל החלפים <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </div>
+
+          {featuredProducts.length > 0 ? (
+            <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+              {featuredProducts.map((product, index) => (
+                <ProductCard key={product.id} product={product} priority={index < 2} />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-8 text-center text-zinc-600">
+              המוצרים המומלצים יופיעו כאן מיד לאחר שהקטלוג זמין.
+            </div>
+          )}
+        </section>
+
+      </div>
+
+      {/* סקשן קטגוריות - רקע מקצה לקצה במובייל, קוביות מרובעות בגלילה */}
+      <section className="overflow-hidden rounded-none bg-zinc-100 py-6 sm:rounded-3xl sm:p-9">
+        <div className="mb-7 flex flex-col gap-2 px-4 sm:flex-row sm:items-end sm:justify-between sm:px-0">
           <div>
             <p className="text-sm font-black tracking-wider text-[#e60000]">התחילו מכאן</p>
             <h2 className="mt-1 text-3xl font-black text-zinc-950">בחרו את מה שמתאים לכם</h2>
@@ -135,29 +142,30 @@ export default function ShopHomepage({ categories = [], products = [] }) {
           <Link href="/shop/parts" className="font-bold text-zinc-700 hover:text-[#e60000]">לאיתור חלף לפי יצרן ודגם</Link>
         </div>
         
-        {/* השינוי מתחיל כאן: הוספנו flex, overflow-x-auto לגלילה, והחזרנו ל-grid ב-sm */}
-        <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-4 sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0 lg:grid-cols-3">
+        <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory px-4 pb-4 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3">
           {categories.map((category) => (
             
-            /* הוספנו w-[80%] ו-shrink-0 למובייל, וביטלנו אותם ב-sm */
             <Link 
               key={category.handle} 
               href={category.href} 
-              className="group relative min-h-44 w-[80%] shrink-0 snap-center overflow-hidden rounded-2xl bg-zinc-900 p-5 text-white sm:w-auto sm:shrink"
+              className="group relative flex w-[60%] shrink-0 snap-center flex-col justify-end aspect-square overflow-hidden rounded-2xl bg-zinc-900 p-5 text-white sm:w-auto sm:shrink sm:aspect-auto sm:min-h-44"
             >
               {category.image && (
                 <img src={category.image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-55 transition duration-500 group-hover:scale-105 group-hover:opacity-70" />
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/10" />
               <div className="relative flex h-full flex-col justify-end">
-                <h3 className="text-2xl font-black">{category.title}</h3>
-                <span className="mt-2 inline-flex items-center gap-1 text-sm font-bold text-zinc-200 transition group-hover:text-[#ff5a5a]">לגלות מוצרים <ArrowLeft className="h-4 w-4" /></span>
+                <h3 className="text-xl font-black sm:text-2xl">{category.title}</h3>
+                <span className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-zinc-200 transition group-hover:text-[#ff5a5a] sm:text-sm">
+                  לגלות מוצרים <ArrowLeft className="h-4 w-4" />
+                </span>
               </div>
             </Link>
             
           ))}
         </div>
       </section>
+      
     </div>
   );
 }
