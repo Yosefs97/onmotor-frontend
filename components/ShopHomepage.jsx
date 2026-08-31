@@ -51,7 +51,7 @@ export default function ShopHomepage({ categories = [], products = [] }) {
   const featuredProducts = products.slice(0, 4);
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-14 px-0 pb-8 pt-0 sm:px-6 sm:pt-3 lg:px-8" dir="rtl">
+    <div className="mx-auto w-full max-w-7xl space-y-4 px-0 pb-8 pt-0 sm:px-6 sm:pt-3 lg:px-8" dir="rtl">
       
       {/* סקשן הירו - מקצה לקצה במובייל */}
       <section className="relative isolate overflow-hidden rounded-none bg-zinc-950 px-6 py-10 text-white shadow-2xl sm:rounded-3xl sm:px-10 sm:py-14 lg:min-h-[450px] lg:px-14">
