@@ -14,7 +14,6 @@ export function formatPrice(product) {
   }).format(Number(price.amount));
 }
 
-// ייצאנו גם את כרטיסיית המוצר כדי שתוכל להשתמש בה גם מחוץ לבלוק הזה אם תצטרך בעתיד
 export function ProductCard({ product, priority = false }) {
   const price = formatPrice(product);
 
@@ -31,7 +30,7 @@ export function ProductCard({ product, priority = false }) {
           className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
         />
         <span className="absolute right-3 top-3 rounded-full bg-black/75 px-3 py-1 text-xs font-bold text-white backdrop-blur">
-          {product.vendor || 'מבצע'}
+          {product.vendor || 'מומלץ'}
         </span>
       </div>
       <div className="flex flex-1 flex-col p-4">
@@ -50,21 +49,40 @@ export function ProductCard({ product, priority = false }) {
 
 export default function FeaturedProducts({ 
   products = [], 
-  targetTag = 'מבצע', // התגית שלפיה נסנן (ברירת מחדל: "מבצע")
+  targetTag, // סינון לפי תגית (אופציונלי)
+  targetVendor, // סינון לפי יצרן (אופציונלי)
+  randomize = false, // האם לערבב רנדומלית? (אופציונלי)
   title = 'מוצרים שכדאי להכיר עכשיו',
   subtitle = 'נבחרו בשבילך',
   linkUrl = '/shop/parts',
   linkText = 'לכל החלפים',
   limit = 4 
 }) {
-  // סינון: לוקחים רק את המוצרים שיש להם את התגית המבוקשת, וחותכים לפי הכמות (limit)
-  const filteredProducts = products.filter((product) => {
-    if (!product.tags) return false;
-    return product.tags.includes(targetTag);
-  }).slice(0, limit);
+  let displayProducts = [...products];
+
+  // 1. סינון לפי תגית (אם ביקשת)
+  if (targetTag) {
+    displayProducts = displayProducts.filter((product) => product.tags?.includes(targetTag));
+  }
+
+  // 2. סינון לפי יצרן (אם ביקשת בדף של יצרן ספציפי)
+  if (targetVendor) {
+    displayProducts = displayProducts.filter((product) => product.vendor === targetVendor);
+  }
+
+  // 3. ערבוב רנדומלי (אם ביקשת בדף כללי)
+  if (randomize) {
+    displayProducts = displayProducts.sort(() => Math.random() - 0.5);
+  }
+
+  // 4. חיתוך לכמות המבוקשת (למשל 4)
+  displayProducts = displayProducts.slice(0, limit);
+
+  // 🔴 חכם: אם אחרי כל הסינונים אין מוצרים - אל תציג את הבלוק בכלל!
+  if (displayProducts.length === 0) return null;
 
   return (
-    <section className="scroll-mt-28 px-4 sm:px-0 w-full">
+    <section className="scroll-mt-28 w-full">
       <div className="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
         <div>
           <p className="text-sm font-black tracking-wider text-[#e60000]">{subtitle}</p>
@@ -77,17 +95,11 @@ export default function FeaturedProducts({
         )}
       </div>
 
-      {filteredProducts.length > 0 ? (
-        <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
-          {filteredProducts.map((product, index) => (
-            <ProductCard key={product.id} product={product} priority={index < 2} />
-          ))}
-        </div>
-      ) : (
-        <div className="rounded-2xl border border-dashed border-zinc-300 bg-white p-8 text-center text-zinc-600">
-          מוצרים עם התגית "{targetTag}" יופיעו כאן.
-        </div>
-      )}
+      <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+        {displayProducts.map((product, index) => (
+          <ProductCard key={product.id} product={product} priority={index < 2} />
+        ))}
+      </div>
     </section>
   );
 }

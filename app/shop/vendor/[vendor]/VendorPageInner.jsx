@@ -7,8 +7,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import ScrollSearchBar from '@/components/ScrollSearchBar';
 import AutoShopBreadcrumbs from '@/components/AutoShopBreadcrumbs';
+import FeaturedProducts from '@/components/FeaturedProducts'; // 👈 ייבוא הבלוק
 
-export default function VendorPageInner({ vendor, models }) {
+// 👇 שים לב: הוספנו את products כפרופ (prop) לפונקציה
+export default function VendorPageInner({ vendor, models, products = [] }) {
   const containerRef = useRef(null);
   const animationRef = useRef(null);
   const [hasScrolled, setHasScrolled] = useState(false);
@@ -51,30 +53,25 @@ export default function VendorPageInner({ vendor, models }) {
     };
   }, [hasScrolled]);
 
-  // 👇 השינוי שלנו: מתאימים את מערך הדגמים למבנה שרכיב החיפוש מצפה לקבל
   const searchOptions = models.map((m) => ({
-    id: m.handle || m.name, // מונע שגיאות key בתוך רכיב החיפוש
-    title: m.name,          // רכיב החיפוש מחפש את המאפיין title
+    id: m.handle || m.name, 
+    title: m.name,          
     href: `/shop/vendor/${vendor}/${m.handle}`
   }));
 
   return (
     <ShopLayoutInternal>
       
-      {/* מיקום הפירורים: מעבירים יצרן בלבד */}
       <div className="px-2 md:px-0 mt-2">
          <AutoShopBreadcrumbs filters={{ vendor: decodedVendor }} />
       </div>
 
-      {/* 🔍 שורת חיפוש */}
       <ScrollSearchBar
         placeholder={`החלק שמאלה או חפש דגם ${decodedVendor}`}
         containerRef={containerRef}
-        
         manufacturers={searchOptions} 
       />
 
-      {/* 📌 רשימת הדגמים */}
       <div
         ref={containerRef}
         className="scroll-container flex overflow-x-scroll space-x-1 pb-2 px-2 snap-x snap-mandatory scroll-smooth"
@@ -84,7 +81,7 @@ export default function VendorPageInner({ vendor, models }) {
             key={m.name}
             href={`/shop/vendor/${vendor}/${m.handle}`}
             prefetch={false}
-            data-name={m.name} // ✅ התיקון: נוסף המאפיין הזה כדי שהחיפוש יעבוד
+            data-name={m.name}
             className="min-w-[160px] flex-shrink-0 border rounded-lg p-4 shadow hover:shadow-lg transition snap-start bg-white"
           >
             {m.image && (
@@ -103,6 +100,19 @@ export default function VendorPageInner({ vendor, models }) {
           </Link>
         ))}
       </div>
+
+      {/* 🌟 הוספנו כאן את הבלוק ששולף רק את מוצרי היצרן הנוכחי 🌟 */}
+      <div className="mt-8 px-2 md:px-0">
+        <FeaturedProducts 
+          products={products} 
+          targetVendor={decodedVendor} // 👈 פה הקסם: רק מוצרים של היצרן הזה!
+          title={`מוצרים נבחרים של ${decodedVendor}`}
+          subtitle="המלצות יצרן"
+          linkUrl={`/shop/parts`} // אפשר להפנות לדף חיפוש כללי
+          linkText="חזרה לכל היצרנים"
+        />
+      </div>
+
     </ShopLayoutInternal>
   );
 }
