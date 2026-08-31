@@ -4,21 +4,22 @@ export const dynamic = 'force-dynamic';
 import ShopLayoutInternal from '@/components/ShopLayoutInternal';
 import ManufacturerGrid from '@/components/ManufacturerGrid';
 import AutoShopBreadcrumbs from '@/components/AutoShopBreadcrumbs'; 
-import FeaturedProducts from '@/components/FeaturedProducts'; // יבוא בלוק המוצרים
+import FeaturedProducts from '@/components/FeaturedProducts'; // יבוא הקומפוננטה שיצרנו
 
 import { fetchManufacturers } from '@/lib/shop/fetchManufacturers';
 import { fetchCategoryList } from '@/lib/shop/fetchCategoryList';
 import { fetchMenu } from '@/lib/shopify/fetchMenu'; 
-// חשוב: ודא שהנתיב הזה תואם לפונקציית שליפת המוצרים בפרויקט שלך
-import { fetchProducts } from '@/lib/shopify/fetchProducts'; // או נתיב רלוונטי אחר אצלך
+
+// 👇 הנה הייבוא הנכון שמצאנו!
+import { fetchHomepageProducts } from '@/lib/shop/fetchHomepageProducts'; 
 
 export default async function PartsPage() {
-  // הוספנו את שליפת המוצרים במקביל לשאר הבקשות כדי לא לפגוע במהירות
+  // מושכים את כל הנתונים יחד (כולל המוצרים)
   const [manufacturers, categories, menuItems, products] = await Promise.all([
     fetchManufacturers(),
     fetchCategoryList(),
     fetchMenu('mega-menu-1'),
-    fetchProducts({ limit: 50 }) // שלוף כמות מספקת של מוצרים כדי שיהיה ממה לסנן לפי תגית
+    fetchHomepageProducts() // 👈 קוראים לפונקציה האמיתית שלך
   ]);
 
   return (
@@ -34,18 +35,18 @@ export default async function PartsPage() {
           <h1 className="text-2xl md:text-3xl font-bold mb-6 px-2 text-gray-800">
             איתור חלפים לפי יצרן
           </h1>
-          {/* מנוע חיפוש היצרנים (הלוגואים והגלילה שבתמונה) */}
+          {/* מנוע חיפוש היצרנים (הלוגואים) */}
           <ManufacturerGrid manufacturers={manufacturers} />
         </div>
 
-        {/* שילוב בלוק המוצרים המומלצים/מבצעים מתחת ליצרנים */}
+        {/* 🌟 הוספנו כאן את הבלוק החדש 🌟 */}
         <div className="mt-12 w-full px-2 md:px-4">
           <FeaturedProducts 
-            products={products} 
-            targetTag="מבצע" // התגית שלפיה המוצרים יסוננו
+            products={products || []} 
+            targetTag="מבצע" // שנה את זה לתגית שתרצה לסנן לפיה
             title="מוצרים שכדאי להכיר עכשיו"
             subtitle="המלצות חמות"
-            linkUrl="/shop" // לאן יפנה הקישור (התאם לפי הצורך)
+            linkUrl="/shop"
             linkText="לכל המוצרים"
           />
         </div>
