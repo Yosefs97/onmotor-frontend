@@ -3,7 +3,7 @@ import VendorPageInner from './VendorPageInner';
 import { fetchVendorModels } from '@/lib/shop/fetchVendorModels';
 
 // 👇 1. נשנה את הייבוא לפונקציה ששולפת מוצרים כלליים מהחנות (התאם את הנתיב והשם למה שיש אצלך בפרויקט)
-import { fetchProducts } from '@/lib/shopify/fetchProducts'; 
+import { fetchProducts } from '@/lib/shop/fetchProducts'; 
 
 export const revalidate = 600;
 
