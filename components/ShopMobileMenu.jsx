@@ -5,8 +5,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { gsap } from 'gsap';
 import { useSwipeable } from 'react-swipeable';
-import { MessageCircle, User } from 'lucide-react'; // הוספנו את User
-import ShopInfoAccordion from './ShopInfoAccordion';
+import { MessageCircle, User } from 'lucide-react';
 
 export default function ShopMobileMenu({ categories = [] }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -94,7 +93,7 @@ export default function ShopMobileMenu({ categories = [] }) {
           {/* ⚙️ גוף התפריט הנגלל */}
           <div className="flex-1 overflow-y-auto px-4 py-6 space-y-8">
             
-            {/* 🌟 כפתור לאזור האישי (חדש) 🌟 */}
+            {/* 🌟 כפתור לאזור האישי */}
             <Link 
               href="/shop/account" 
               onClick={closeMenu}
@@ -109,7 +108,7 @@ export default function ShopMobileMenu({ categories = [] }) {
               </div>
             </Link>
 
-            {/* 1. קטגוריות החנות (בתצוגה אנכית נוחה למובייל) */}
+            {/* 1. קטגוריות החנות */}
             <section>
               <h3 className="text-sm font-bold text-gray-400 mb-3 uppercase tracking-wider">קטגוריות</h3>
               <div className="flex flex-col gap-1">
@@ -123,10 +122,21 @@ export default function ShopMobileMenu({ categories = [] }) {
                     {cat.title}
                   </Link>
                 ))}
+                
+                {/* 🔴 שורת המגזין החדשה */}
+                <a 
+                  href="https://www.onmotormedia.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={closeMenu}
+                  className="py-3 text-lg font-bold text-[#e60000] border-b border-gray-100 hover:text-red-700 transition-colors"
+                >
+                  למגזין
+                </a>
               </div>
             </section>
 
-            {/* 2. מידע על החנות (האקורדיון שלך) */}
+            {/* 2. מידע על החנות */}
             <section>
               <h3 className="text-sm font-bold text-gray-400 mb-3 uppercase tracking-wider">מידע שימושי</h3>
               <div className="border border-gray-200 rounded-lg shadow-sm">
