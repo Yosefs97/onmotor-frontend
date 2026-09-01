@@ -22,7 +22,7 @@ export default async function VendorPage({ params, searchParams }) {
   const [models, products] = await Promise.all([
     fetchVendorModels({ vendor, filters }).catch(() => []),
     // שולחים לחיפוש את המשתנה עם האותיות הגדולות
-    fetchSearchResults({ fitBrand: vendor }).catch((err) => {
+    fetchSearchResults({ q: vendor }).catch((err) => {
       console.error(`Failed to fetch products for vendor ${vendor}:`, err);
       return [];
     })
