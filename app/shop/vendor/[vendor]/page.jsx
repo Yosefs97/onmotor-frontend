@@ -1,7 +1,6 @@
 // /app/shop/vendor/[vendor]/page.jsx
 import VendorPageInner from './VendorPageInner';
 import { fetchVendorModels } from '@/lib/shop/fetchVendorModels';
-// 👇 ייבאנו את פונקציית החיפוש שמצאת!
 import { fetchSearchResults } from '@/lib/shop/fetchSearch';
 
 export const revalidate = 600;
@@ -16,18 +15,20 @@ export default async function VendorPage({ params, searchParams }) {
     Object.entries(resolvedSearchParams || {}).map(([k, v]) => [k, String(v)])
   );
 
-  // 📌 שולפים את הדגמים, ובמקביל מחפשים מוצרים של היצרן הזה!
+  // 🛡️ רשת ביטחון: אם בקשה אחת נכשלת, היא תחזיר מערך ריק במקום להפיל את כל העמוד
   const [models, products] = await Promise.all([
-    fetchVendorModels({ vendor, filters }),
-    // מעבירים את שם היצרן לפונקציית החיפוש:
-    fetchSearchResults({ vendor: vendor }) 
+    fetchVendorModels({ vendor, filters }).catch(() => []),
+    fetchSearchResults({ vendor: vendor }).catch((err) => {
+      console.error(`Failed to fetch products for vendor ${vendor}:`, err);
+      return []; 
+    }) 
   ]);
 
   return (
     <VendorPageInner
       vendor={vendor}
       models={models}
-      products={products} // עכשיו נעביר את תוצאות החיפוש האמיתיות!
+      products={products}
     />
   );
 }
