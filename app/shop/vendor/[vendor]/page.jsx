@@ -15,10 +15,14 @@ export default async function VendorPage({ params, searchParams }) {
     Object.entries(resolvedSearchParams || {}).map(([k, v]) => [k, String(v)])
   );
 
+  // הופכים את היצרן לאותיות גדולות כדי שיתאים לפורמט ב-Shopify (למשל: GASGAS)
+  const exactVendorMatch = vendor.toUpperCase();
+
   // 🛡️ רשת ביטחון: אם בקשה אחת נכשלת, היא תחזיר מערך ריק במקום להפיל את כל העמוד
   const [models, products] = await Promise.all([
     fetchVendorModels({ vendor, filters }).catch(() => []),
-    fetchSearchResults({ vendor: vendor }).catch((err) => {
+    // שולחים לחיפוש את המשתנה עם האותיות הגדולות
+    fetchSearchResults({ vendor: exactVendorMatch }).catch((err) => {
       console.error(`Failed to fetch products for vendor ${vendor}:`, err);
       return []; 
     }) 
