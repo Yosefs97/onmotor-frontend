@@ -57,8 +57,12 @@ function buildQueryString({ q, partVendor, fitBrand, fitModel, year, tag, sku, c
 
   // 🔥 התיקון הסופי מול שופיפיי: חיפוש טקסט כללי ללא הגבלת "tag:" הנוקשה
   if (fitBrand && !fitModel) {
-    const cleanBrand = fitBrand.replace(/[^a-zA-Z0-9]/g, ''); // מנקה מקפים (Gas-Gas -> GasGas)
-    parts.push(`(${fitBrand} OR ${cleanBrand})`);
+    const normalizedBrand = fitBrand
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '');
+
+    parts.push(`tag:fit\\:${normalizedBrand}*`);
   }
 
   if (fitBrand && fitModel) {
@@ -176,7 +180,7 @@ export async function GET(req) {
     .map((e) => ({ cursor: e.cursor, ...e.node }))
     .filter((prod) => {
       const mf = {};
-      (prod.metafields || []).forEach((m) => {
+      (prod.metafields || []).filter(Boolean).forEach((m) => {
         mf[m.key] = parseInt(m.value, 10);
       });
       const from = mf.year_from || 0;
