@@ -4,11 +4,10 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
 export function formatPrice(product) {
-  // חיפוש המחיר במספר מבנים נפוצים ב-Shopify / API
   let amount = 
-    product.priceRange?.minVariantPrice?.amount || // מבנה GraphQL רגיל
-    product.price || // מבנה פשוט ממנוע החיפוש
-    product.variants?.edges?.[0]?.node?.price?.amount; // מבנה מקולקציות
+    product.priceRange?.minVariantPrice?.amount || 
+    product.price || 
+    product.variants?.edges?.[0]?.node?.price?.amount; 
 
   let currency = 
     product.priceRange?.minVariantPrice?.currencyCode || 
@@ -28,7 +27,6 @@ export function ProductCard({ product, priority = false }) {
   if (!product) return null;
   const price = formatPrice(product);
 
-  // חיפוש התמונה במספר מבנים אפשריים כדי למנוע תמונות שבורות
   const imageUrl = 
     product.featuredImage?.url || 
     product.image || 
@@ -90,25 +88,35 @@ export default function FeaturedProducts({
 }) {
   let displayProducts = [...products];
 
-  // סינון לפי תגית
+  // סינון לפי תגית ישירה (למשל "מבצע")
   if (targetTag) {
     displayProducts = displayProducts.filter((product) => product.tags?.includes(targetTag));
   }
 
-  // סינון לפי יצרן (ללא רגישות לאותיות גדולות/קטנות)
+  // סינון חכם לפי יצרן (בודק גם את שדה ה-Vendor וגם את התגיות)
   if (targetVendor) {
+    // מנקים את שם היצרן המבוקש מרווחים והופכים לאותיות קטנות
+    const cleanTargetVendor = targetVendor.toLowerCase().replace(/\s+/g, '');
+
     displayProducts = displayProducts.filter((product) => {
-      if (!product.vendor) return false;
-      return product.vendor.toLowerCase() === targetVendor.toLowerCase();
+      // 1. בדיקה בשדה ה-vendor המקורי
+      const cleanProductVendor = product.vendor ? product.vendor.toLowerCase().replace(/\s+/g, '') : '';
+      const matchInVendor = cleanProductVendor.includes(cleanTargetVendor);
+
+      // 2. בדיקה בתוך התגיות (למצוא תגיות כמו fit:Husqvarna)
+      const matchInTags = product.tags ? product.tags.some(tag => {
+        return tag.toLowerCase().replace(/\s+/g, '').includes(cleanTargetVendor);
+      }) : false;
+
+      // אם יש התאמה באחד מהם - המוצר בפנים
+      return matchInVendor || matchInTags;
     });
   }
 
-  // ערבוב רנדומלי
   if (randomize) {
     displayProducts = displayProducts.sort(() => Math.random() - 0.5);
   }
 
-  // חיתוך לכמות מבוקשת
   displayProducts = displayProducts.slice(0, limit);
 
   if (displayProducts.length === 0) return null;
