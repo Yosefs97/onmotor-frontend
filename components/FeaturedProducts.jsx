@@ -25,6 +25,7 @@ export function formatPrice(product) {
 }
 
 export function ProductCard({ product, priority = false }) {
+  if (!product) return null;
   const price = formatPrice(product);
 
   // חיפוש התמונה במספר מבנים אפשריים כדי למנוע תמונות שבורות
