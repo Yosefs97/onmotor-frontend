@@ -36,10 +36,10 @@ function ProductCard({ product, priority = false }) {
       <div className="flex flex-1 flex-col p-4">
         <h3 className="min-h-12 text-base font-extrabold leading-snug text-zinc-900">{product.title}</h3>
         
-        <div className="mt-auto flex items-end justify-between gap-3 pt-3">
+        <div className="mt-auto flex items-end justify-between gap-3 pt-3 mt-auto">
           <span className="text-lg font-black text-[#e60000]">{price || 'לפרטים'}</span>
           <span className="inline-flex items-center gap-1 text-sm font-bold text-zinc-700 transition group-hover:text-[#e60000]">
-            למוצר <ArrowLeft className="h-3 w-4" />
+            למוצר <ArrowLeft className="h-4 w-4" />
           </span>
         </div>
       </div>
