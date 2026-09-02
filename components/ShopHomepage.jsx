@@ -39,7 +39,7 @@ function ProductCard({ product, priority = false }) {
         <div className="mt-auto flex items-end justify-between gap-3 pt-3">
           <span className="text-lg font-black text-[#e60000]">{price || 'לפרטים'}</span>
           <span className="inline-flex items-center gap-1 text-sm font-bold text-zinc-700 transition group-hover:text-[#e60000]">
-            למוצר <ArrowLeft className="h-4 w-4" />
+            למוצר <ArrowLeft className="h-3 w-4" />
           </span>
         </div>
       </div>
