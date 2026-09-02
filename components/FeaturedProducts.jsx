@@ -44,7 +44,7 @@ export function ProductCard({ product, priority = false }) {
       href={`/shop/${product.handle}`}
       className="group flex h-full flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-red-200 hover:shadow-xl"
     >
-      <div className="relative aspect-square overflow-hidden bg-zinc-100">
+      <div className="relative aspect-square w-full shrink-0 overflow-hidden bg-zinc-100">
         {imageUrl ? (
           <img
             src={imageUrl}
@@ -61,10 +61,16 @@ export function ProductCard({ product, priority = false }) {
           {product.vendor || 'מומלץ'}
         </span>
       </div>
-      <div className="flex flex-1 flex-col p-4">
-        <h3 className="min-h-12 text-base font-extrabold leading-snug text-zinc-900">{product.title}</h3>
+      
+      <div className="flex flex-1 flex-col justify-between p-4">
+        <h3 
+          className="min-h-12 text-base font-extrabold leading-snug text-zinc-900 line-clamp-2"
+          title={product.title}
+        >
+          {product.title}
+        </h3>
         
-        <div className="mt-auto flex items-end justify-between gap-3 pt-3">
+        <div className="mt-auto flex items-center justify-between gap-3 pt-3">
           <span className="text-lg font-black text-[#e60000]">{price || 'לפרטים'}</span>
           <span className="inline-flex items-center gap-1 text-sm font-bold text-zinc-700 transition group-hover:text-[#e60000]">
             למוצר <ArrowLeft className="h-4 w-4" />
