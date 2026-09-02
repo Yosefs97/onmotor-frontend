@@ -150,7 +150,7 @@ export default function ShopHomepage({ categories = [], products = [] }) {
           <Link href="/shop/parts" className="font-bold text-zinc-700 hover:text-[#e60000]">לאיתור חלף לפי יצרן ודגם</Link>
         </div>
         
-        <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory px-4 pb-4 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3">
+        <div className="flex gap-1 overflow-x-auto snap-x snap-mandatory px-4 pb-4 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3">
           {categories.map((category) => (
             
             <Link 
