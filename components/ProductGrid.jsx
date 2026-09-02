@@ -1,7 +1,7 @@
 // /components/ProductGrid.jsx
 'use client';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react'; // 🌟 הוספתי את החץ לעיצוב האחיד
+import { ArrowLeft } from 'lucide-react';
 import { getYearRangeFromMetafields, formatYearRange } from '@/lib/productYears';
 
 export default function ProductGrid({ 
@@ -9,14 +9,13 @@ export default function ProductGrid({
   loading = false, 
   onLoadMore, 
   hasMore = false,
-  currentVendor = '', // 🌟 קבלת היצרן הנוכחי מהעמוד
-  currentModel = ''   // 🌟 קבלת הדגם הנוכחי מהעמוד
+  currentVendor = '',
+  currentModel = ''
 }) {
   return (
     <div dir="rtl" className="space-y-6">
       {loading && <div className="text-center font-bold text-zinc-500 py-4">טוען מוצרים...</div>}
       
-      {/* 🌟 שיניתי את הרווחים מ gap-0.5 לריווחים התקניים של האתר (gap-3 sm:gap-5) */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
         {products.map((p) => {
           const img = p.images?.edges?.[0]?.node?.url;
@@ -25,7 +24,6 @@ export default function ProductGrid({
           const yr = getYearRangeFromMetafields(p.metafields);
           const yrText = formatYearRange(yr);
 
-          // 🌟 בניית הפרמטרים השקטים עבור פירורי הלחם של עמוד המוצר
           const queryParams = new URLSearchParams();
           if (currentVendor) queryParams.set('vendor', currentVendor);
           if (currentModel) queryParams.set('model', currentModel);
@@ -34,7 +32,7 @@ export default function ProductGrid({
           return (
             <Link
               key={p.id}
-              href={`/shop/${p.handle}${queryString}`} // 🌟 הזרקת הקונטקסט לקישור
+              href={`/shop/${p.handle}${queryString}`}
               prefetch={false}
               data-name={p.title}
               className="group flex h-full flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-red-200 hover:shadow-xl"
@@ -53,15 +51,15 @@ export default function ProductGrid({
                 )}
               </div>
               
-              <div className="flex flex-1 flex-col justify-between p-4">
+              {/* הקטנו את הריווח הפנימי במובייל ל-p-3 */}
+              <div className="flex flex-1 flex-col justify-between p-3 sm:p-4">
                 <div>
                   <h3 
-                    className="min-h-12 text-base font-extrabold leading-snug text-zinc-900 line-clamp-2"
+                    className="min-h-12 text-sm sm:text-base font-extrabold leading-snug text-zinc-900 line-clamp-2"
                     title={p.title}
                   >
                     {p.title}
                   </h3>
-                  {/* 🌟 הצגת השנים מתחת לכותרת בצורה משתלבת ואלגנטית */}
                   {yrText && (
                     <div className="mt-1.5 text-xs font-bold text-zinc-500">
                       שנים: {yrText}
@@ -69,17 +67,19 @@ export default function ProductGrid({
                   )}
                 </div>
                 
-                {/* 🌟 שורת המחיר הממורכזת והתחתונה בדיוק כמו בקומפוננטות האחרות */}
-                <div className="mt-auto flex items-center justify-between gap-3 pt-3">
+                {/* הקטנו את המרווח הפנימי ל-gap-1.5 במובייל */}
+                <div className="mt-auto flex items-center justify-between gap-1.5 sm:gap-3 pt-3 overflow-hidden">
                   {price ? (
-                    <span className="text-lg font-black text-[#e60000]">
+                    /* הוספנו whitespace-nowrap כדי למנוע את שבירת סמל השקל לשורה חדשה */
+                    <span className="text-base sm:text-lg font-black text-[#e60000] whitespace-nowrap">
                       {price.amount} {price.currencyCode === 'ILS' ? '₪' : price.currencyCode}
                     </span>
                   ) : (
-                    <span className="text-lg font-black text-[#e60000]">לפרטים</span>
+                    <span className="text-base sm:text-lg font-black text-[#e60000] whitespace-nowrap">לפרטים</span>
                   )}
-                  <span className="inline-flex items-center gap-1 text-sm font-bold text-zinc-700 transition group-hover:text-[#e60000]">
-                    למוצר <ArrowLeft className="h-4 w-4" />
+                  {/* הגדרנו shrink-0 כדי שהחלק הזה לא יימעך */}
+                  <span className="inline-flex shrink-0 items-center gap-1 text-xs sm:text-sm font-bold text-zinc-700 transition group-hover:text-[#e60000] whitespace-nowrap">
+                    למוצר <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />
                   </span>
                 </div>
               </div>
@@ -88,7 +88,6 @@ export default function ProductGrid({
         })}
       </div>
       
-      {/* 🌟 שדרוג הנראות של כפתור 'טען עוד' שיתאים לסגנון הכפתורים הכללי */}
       {hasMore && (
         <div className="flex justify-center pt-6">
           <button 
