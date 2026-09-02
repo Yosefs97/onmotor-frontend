@@ -1,4 +1,4 @@
-//components\ShopHomepage.jsx
+// components/ShopHomepage.jsx
 import Link from 'next/link';
 import { ArrowLeft, Check, Search, ShieldCheck, Truck } from 'lucide-react';
 import ShopHeroVideo from '@/components/ShopHeroVideo';
@@ -69,11 +69,19 @@ export default function ShopHomepage({ categories = [], products = [] }) {
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-zinc-300 sm:text-xl">
             חלקי חילוף, ציוד רכיבה - כביש ושטח. הכל במקום אחד.
           </p>
+          
           <div className="mt-5 flex flex-wrap gap-2 text-xs font-extrabold text-zinc-100 sm:text-sm">
-            {['כביש', 'שטח', 'עיר', 'ציוד לרוכב', 'חלפים'].map((label) => (
-              <span key={label} className="rounded-full border border-white/20 bg-black/30 px-3 py-1.5 backdrop-blur">{label}</span>
+            {categories.map((category) => (
+              <Link 
+                key={category.handle || category.title} 
+                href={category.href || `/collections/${category.handle}`}
+                className="rounded-full border border-white/20 bg-black/30 px-3 py-1.5 backdrop-blur transition hover:bg-[#e60000] hover:border-[#e60000]"
+              >
+                {category.title}
+              </Link>
             ))}
           </div>
+
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link href="#featured-products" className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#e60000] px-6 py-3.5 text-base font-extrabold text-white transition hover:bg-red-700">
               לראות מוצרים מומלצים <ArrowLeft className="h-5 w-5" />
