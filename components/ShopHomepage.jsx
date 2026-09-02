@@ -22,7 +22,8 @@ function ProductCard({ product, priority = false }) {
       href={`/shop/${product.handle}`}
       className="group flex h-full flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-red-200 hover:shadow-xl"
     >
-      <div className="relative aspect-square overflow-hidden bg-zinc-100">
+      {/* הוספנו shrink-0 כדי שהתמונה תמיד תישאר ריבועית ולא תתכווץ */}
+      <div className="relative aspect-square w-full shrink-0 overflow-hidden bg-zinc-100">
         <img
           src={product.featuredImage.url}
           alt={product.featuredImage.altText || product.title}
@@ -33,10 +34,20 @@ function ProductCard({ product, priority = false }) {
           {product.vendor || 'מומלץ'}
         </span>
       </div>
-      <div className="flex flex-1 flex-col p-4">
-        <h3 className="min-h-12 text-base font-extrabold leading-snug text-zinc-900">{product.title}</h3>
+      
+      {/* הוספנו justify-between לפיזור מדויק בין הכותרת למחיר */}
+      <div className="flex flex-1 flex-col justify-between p-4">
         
-        <div className="mt-auto flex items-end justify-between gap-3 pt-3 mt-auto">
+        {/* הוספנו line-clamp-2 כדי למנוע גלישה ל-3 שורות שתשבור את העיצוב */}
+        <h3 
+          className="min-h-12 text-base font-extrabold leading-snug text-zinc-900 line-clamp-2"
+          title={product.title}
+        >
+          {product.title}
+        </h3>
+        
+        {/* שינינו ל-items-center ליישור הכתב, והורדנו כפילות של mt-auto */}
+        <div className="mt-auto flex items-center justify-between gap-3 pt-3">
           <span className="text-lg font-black text-[#e60000]">{price || 'לפרטים'}</span>
           <span className="inline-flex items-center gap-1 text-sm font-bold text-zinc-700 transition group-hover:text-[#e60000]">
             למוצר <ArrowLeft className="h-4 w-4" />
@@ -53,7 +64,7 @@ export default function ShopHomepage({ categories = [], products = [] }) {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-4 px-0 pb-8 pt-0 sm:px-6 sm:pt-3 lg:px-8" dir="rtl">
       
-      {/* סקשן הירו - מקצה לקצה במובייל */}
+      {/* סקשן הירו */}
       <section className="relative isolate overflow-hidden rounded-none bg-zinc-950 px-6 py-10 text-white shadow-2xl sm:rounded-3xl sm:px-10 sm:py-14 lg:min-h-[450px] lg:px-14">
         <ShopHeroVideo />
 
@@ -94,10 +105,8 @@ export default function ShopHomepage({ categories = [], products = [] }) {
         </div>
       </section>
 
-      {/* עטיפה פנימית שמצמידה את בלוק ההטבות למוצרים המומלצים */}
+      {/* בלוק אבטחה ומשלוחים */}
       <div className="space-y-4">
-        
-        {/* בלוק אבטחה ומשלוחים - מקצה לקצה במובייל */}
         <section className="grid gap-px overflow-hidden rounded-none border-y border-zinc-200 bg-zinc-200 sm:grid-cols-3 sm:rounded-2xl sm:border-x">
           <div className="flex items-center gap-3 bg-white px-5 py-4">
             <Truck className="h-6 w-6 shrink-0 text-[#e60000]" />
@@ -113,7 +122,7 @@ export default function ShopHomepage({ categories = [], products = [] }) {
           </div>
         </section>
 
-        {/* מוצרים מומלצים - עם ריווח צד במובייל כדי שלא ייגעו בקצוות המסך */}
+        {/* מוצרים מומלצים */}
         <section id="featured-products" className="scroll-mt-28 px-4 sm:px-0">
           <div className="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
             <div>
@@ -137,10 +146,9 @@ export default function ShopHomepage({ categories = [], products = [] }) {
             </div>
           )}
         </section>
-
       </div>
 
-      {/* סקשן קטגוריות - רקע מקצה לקצה במובייל, קוביות מרובעות בגלילה */}
+      {/* סקשן קטגוריות */}
       <section className="overflow-hidden rounded-none bg-zinc-100 py-6 sm:rounded-3xl sm:p-9">
         <div className="mb-7 flex flex-col gap-2 px-4 sm:flex-row sm:items-end sm:justify-between sm:px-0">
           <div>
@@ -150,9 +158,8 @@ export default function ShopHomepage({ categories = [], products = [] }) {
           <Link href="/shop/parts" className="font-bold text-zinc-700 hover:text-[#e60000]">לאיתור חלף לפי יצרן ודגם</Link>
         </div>
         
-        <div className="flex gap-1 overflow-x-auto snap-x snap-mandatory px-4 pb-4 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3">
+        <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory px-4 pb-4 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3">
           {categories.map((category) => (
-            
             <Link 
               key={category.handle} 
               href={category.href} 
@@ -169,7 +176,6 @@ export default function ShopHomepage({ categories = [], products = [] }) {
                 </span>
               </div>
             </Link>
-            
           ))}
         </div>
       </section>
