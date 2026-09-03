@@ -16,7 +16,7 @@ export default function CategoryGrid({ categories = [] }) {
 
   return (
     <section className="overflow-hidden rounded-none bg-white py-8 sm:rounded-3xl sm:py-12">
-      <div className="mb-6 flex flex-col gap-2 px-4 sm:flex-row sm:items-end sm:justify-between sm:px-0">
+      <div className="mb-6 flex flex-col gap-1 px-4 sm:flex-row sm:items-end sm:justify-between sm:px-0">
         <div>
           <p className="text-sm font-black tracking-wider text-[#e60000]">התחילו מכאן</p>
           <h2 className="mt-1 text-2xl font-black text-zinc-950 sm:text-3xl">בחרו את מה שמתאים לכם</h2>
@@ -31,7 +31,7 @@ export default function CategoryGrid({ categories = [] }) {
         1. lg:grid-cols-4 - 4 עמודות במסך גדול (מקטין כל קוביה)
         2. sm:grid-cols-3 - 3 עמודות במסך בינוני (טאבלט)
       */}
-      <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory px-4 pb-4 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
+      <div className="flex gap-1 overflow-x-auto snap-x snap-mandatory px-4 pb-4 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
         {categories.map((category) => {
           const videoUrl = categoryVideos[category.handle];
 
@@ -45,7 +45,7 @@ export default function CategoryGrid({ categories = [] }) {
                 aspect-square במובייל
                 sm:h-[220px] - גובה קבוע וקומפקטי במחשב 
               */
-              className="group relative flex w-[55%] shrink-0 snap-center flex-col justify-end overflow-hidden rounded-2xl bg-zinc-900 p-4 text-white sm:w-auto sm:shrink sm:h-[220px] aspect-square sm:aspect-auto shadow-sm hover:shadow-xl transition-all duration-300"
+              className="group relative flex w-[45%] shrink-0 snap-center flex-col justify-end overflow-hidden rounded-2xl bg-zinc-900 p-4 text-white sm:w-auto sm:shrink sm:h-[220px] aspect-square sm:aspect-auto shadow-sm hover:shadow-xl transition-all duration-300"
             >
               {videoUrl ? (
                 <video
