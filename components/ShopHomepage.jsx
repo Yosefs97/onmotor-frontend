@@ -1,13 +1,12 @@
 // components/ShopHomepage.jsx
 import Link from 'next/link';
-import { ArrowLeft, Check, Search, ShieldCheck, Truck } from 'lucide-react';
+import { ArrowLeft, Search } from 'lucide-react'; // הורדנו אייקונים מיותרים שעברו ל-TrustBar
 import ShopHeroVideo from '@/components/ShopHeroVideo';
 import CategoryGrid from '@/components/CategoryGrid';
-import FeaturedProducts from '@/components/FeaturedProducts'; // הוספת הייבוא של המוצרים המומלצים
+import FeaturedProducts from '@/components/FeaturedProducts';
+import TrustBar from '@/components/TrustBar'; // ייבוא של בר האבטחה והמשלוחים החדש
 
 export default function ShopHomepage({ categories = [], products = [] }) {
-  // הסרנו את formatPrice ואת ProductCard כי הם מנוהלים כעת בתוך FeaturedProducts
-
   return (
     <div className="mx-auto w-full max-w-7xl space-y-4 px-0 pb-8 pt-0 sm:px-6 sm:pt-3 lg:px-8" dir="rtl">
       
@@ -52,24 +51,9 @@ export default function ShopHomepage({ categories = [], products = [] }) {
         </div>
       </section>
 
-      {/* בלוק אבטחה ומשלוחים */}
+      {/* אזור התוכן המרכזי: משלוחים + מוצרים מומלצים */}
       <div className="space-y-4">
-        <section className="grid gap-px overflow-hidden rounded-none border-y border-zinc-200 bg-zinc-200 sm:grid-cols-3 sm:rounded-2xl sm:border-x">
-          <div className="flex items-center gap-3 bg-white px-5 py-4">
-            <Truck className="h-6 w-6 shrink-0 text-[#e60000]" />
-            <p className="text-sm font-bold text-zinc-800">משלוח חינם מעל ₪499 <span className="font-normal text-zinc-500">למעט חלקי חילוף</span></p>
-          </div>
-          <div className="flex items-center gap-3 bg-white px-5 py-4">
-            <ShieldCheck className="h-6 w-6 shrink-0 text-[#e60000]" />
-            <p className="text-sm font-bold text-zinc-800">תשלום מאובטח וקנייה בראש שקט</p>
-          </div>
-          <div className="flex items-center gap-3 bg-white px-5 py-4">
-            <Check className="h-6 w-6 shrink-0 text-[#e60000]" />
-            <p className="text-sm font-bold text-zinc-800">חלפים חדשים ומשומשים שנבדקו</p>
-          </div>
-        </section>
-
-        {/* קריאה לקומפוננטת מוצרים מומלצים החיצונית */}
+        <TrustBar />
         <FeaturedProducts products={products} limit={4} />
       </div>
 
