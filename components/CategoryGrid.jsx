@@ -10,7 +10,7 @@ const categoryVideos = {
   parts: '/videos/cat-parts.webm',
   road: '/videos/cat-street.webm',
   offroad: '/videos/cat-offroad.webm',
-  oils: '/videos/cat-oils.webm',
+  oils: '/videos/cat-oil.webm',
   tires: '/videos/cat-tires.webm',
   battery: '/videos/cat-batteries.webm',
 };
