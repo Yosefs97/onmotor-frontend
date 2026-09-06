@@ -23,7 +23,6 @@ export function formatPrice(product) {
   }).format(Number(amount));
 }
 
-// הוספנו את className לפרופס כדי שנוכל לשלוט ברוחב הכרטיסייה מבחוץ
 export function ProductCard({ product, priority = false, className = '' }) {
   if (!product) return null;
   const price = formatPrice(product);
@@ -43,7 +42,6 @@ export function ProductCard({ product, priority = false, className = '' }) {
   return (
     <Link
       href={`/shop/${product.handle}`}
-      // איחוד המחלקות הקבועות עם המחלקות שמועברות מבחוץ
       className={`group flex h-full flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-red-200 hover:shadow-xl ${className}`}
     >
       <div className="relative aspect-square w-full shrink-0 overflow-hidden bg-zinc-100">
@@ -64,18 +62,23 @@ export function ProductCard({ product, priority = false, className = '' }) {
         </span>
       </div>
       
-      <div className="flex flex-1 flex-col justify-between p-4">
+      {/* ריווח פנימי עדין יותר במובייל (p-3) */}
+      <div className="flex flex-1 flex-col justify-between p-3 sm:p-4">
         <h3 
-          className="min-h-12 text-base font-extrabold leading-snug text-zinc-900 line-clamp-2"
+          // טקסט קטן יותר במובייל (text-sm)
+          className="min-h-10 sm:min-h-12 text-sm sm:text-base font-extrabold leading-snug text-zinc-900 line-clamp-2"
           title={product.title}
         >
           {product.title}
         </h3>
         
-        <div className="mt-auto flex items-center justify-between gap-3 pt-3">
-          <span className="text-lg font-black text-[#e60000]">{price || 'לפרטים'}</span>
-          <span className="inline-flex items-center gap-1 text-sm font-bold text-zinc-700 transition group-hover:text-[#e60000]">
-            למוצר <ArrowLeft className="h-4 w-4" />
+        {/* מרווחים מוקטנים בין המחיר לכפתור במובייל (gap-1.5) */}
+        <div className="mt-auto flex items-center justify-between gap-1.5 sm:gap-3 pt-3 overflow-hidden">
+          <span className="text-base sm:text-lg font-black text-[#e60000] whitespace-nowrap">
+            {price || 'לפרטים'}
+          </span>
+          <span className="inline-flex shrink-0 items-center gap-1 text-xs sm:text-sm font-bold text-zinc-700 transition group-hover:text-[#e60000] whitespace-nowrap">
+            למוצר <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />
           </span>
         </div>
       </div>
@@ -92,16 +95,14 @@ export default function FeaturedProducts({
   subtitle = 'נבחרו בשבילך',
   linkUrl = '/shop/parts',
   linkText = 'לכל החלפים',
-  limit = 10 // שונה ל-10 מוצרים כברירת מחדל
+  limit = 10 
 }) {
   let displayProducts = [...products];
 
-  // סינון לפי תגית ישירה (למשל "מבצע")
   if (targetTag) {
     displayProducts = displayProducts.filter((product) => product.tags?.includes(targetTag));
   }
 
-  // סינון חכם לפי יצרן (בודק גם את שדה ה-Vendor וגם את התגיות)
   if (targetVendor) {
     const cleanTargetVendor = targetVendor.toLowerCase().replace(/\s+/g, '');
 
@@ -139,19 +140,15 @@ export default function FeaturedProducts({
         )}
       </div>
 
-      {/* 
-        השינוי המרכזי כאן: 
-        במובייל - תצוגת flex עם גלילה אופקית (overflow-x-auto) והסתרת פס הגלילה.
-        במחשב (sm ומעלה) - חוזר להיות grid רגיל.
-      */}
-      <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-6 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:pb-0 lg:grid-cols-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      {/* הקטנו את הרווח בין הכרטיסיות במובייל ל-gap-3 */}
+      <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-6 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:pb-0 lg:grid-cols-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {displayProducts.map((product, index) => (
           <ProductCard 
             key={product.id || index} 
             product={product} 
             priority={index < 2} 
-            // במובייל רוחב קבוע של 75% כדי לאפשר גלילה, במחשב מתכווץ אוטומטית לתוך הגריד
-            className="w-[75%] shrink-0 snap-start sm:w-auto sm:shrink"
+            // שינינו ל-55% כדי שהכרטיסיות יהיו הרבה יותר עדינות במובייל
+            className="w-[55%] shrink-0 snap-start sm:w-auto sm:shrink"
           />
         ))}
       </div>
