@@ -23,7 +23,8 @@ export function formatPrice(product) {
   }).format(Number(amount));
 }
 
-export function ProductCard({ product, priority = false }) {
+// הוספנו את className לפרופס כדי שנוכל לשלוט ברוחב הכרטיסייה מבחוץ
+export function ProductCard({ product, priority = false, className = '' }) {
   if (!product) return null;
   const price = formatPrice(product);
 
@@ -42,7 +43,8 @@ export function ProductCard({ product, priority = false }) {
   return (
     <Link
       href={`/shop/${product.handle}`}
-      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-red-200 hover:shadow-xl"
+      // איחוד המחלקות הקבועות עם המחלקות שמועברות מבחוץ
+      className={`group flex h-full flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-red-200 hover:shadow-xl ${className}`}
     >
       <div className="relative aspect-square w-full shrink-0 overflow-hidden bg-zinc-100">
         {imageUrl ? (
@@ -90,7 +92,7 @@ export default function FeaturedProducts({
   subtitle = 'נבחרו בשבילך',
   linkUrl = '/shop/parts',
   linkText = 'לכל החלפים',
-  limit = 4 
+  limit = 10 // שונה ל-10 מוצרים כברירת מחדל
 }) {
   let displayProducts = [...products];
 
@@ -101,20 +103,16 @@ export default function FeaturedProducts({
 
   // סינון חכם לפי יצרן (בודק גם את שדה ה-Vendor וגם את התגיות)
   if (targetVendor) {
-    // מנקים את שם היצרן המבוקש מרווחים והופכים לאותיות קטנות
     const cleanTargetVendor = targetVendor.toLowerCase().replace(/\s+/g, '');
 
     displayProducts = displayProducts.filter((product) => {
-      // 1. בדיקה בשדה ה-vendor המקורי
       const cleanProductVendor = product.vendor ? product.vendor.toLowerCase().replace(/\s+/g, '') : '';
       const matchInVendor = cleanProductVendor.includes(cleanTargetVendor);
 
-      // 2. בדיקה בתוך התגיות (למצוא תגיות כמו fit:Husqvarna)
       const matchInTags = product.tags ? product.tags.some(tag => {
         return tag.toLowerCase().replace(/\s+/g, '').includes(cleanTargetVendor);
       }) : false;
 
-      // אם יש התאמה באחד מהם - המוצר בפנים
       return matchInVendor || matchInTags;
     });
   }
@@ -141,9 +139,20 @@ export default function FeaturedProducts({
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+      {/* 
+        השינוי המרכזי כאן: 
+        במובייל - תצוגת flex עם גלילה אופקית (overflow-x-auto) והסתרת פס הגלילה.
+        במחשב (sm ומעלה) - חוזר להיות grid רגיל.
+      */}
+      <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-6 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:pb-0 lg:grid-cols-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {displayProducts.map((product, index) => (
-          <ProductCard key={product.id || index} product={product} priority={index < 2} />
+          <ProductCard 
+            key={product.id || index} 
+            product={product} 
+            priority={index < 2} 
+            // במובייל רוחב קבוע של 75% כדי לאפשר גלילה, במחשב מתכווץ אוטומטית לתוך הגריד
+            className="w-[75%] shrink-0 snap-start sm:w-auto sm:shrink"
+          />
         ))}
       </div>
     </section>
