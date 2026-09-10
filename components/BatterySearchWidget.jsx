@@ -36,6 +36,72 @@ export default function BatterySearchWidget({ compact = false }) {
       model: 'PLFP-14BR',
       replacement: 'YT7B-BS, YT9B-BS, YT14B-BS, YT12B-BS, YTZ10S, 12N12A-4A-1, YTX14AH-BS',
       productUrl: '/shop/poweroad-lithium-lifepo4-plfp-14br'
+    },
+    // --- מוצרים חדשים שהתווספו ---
+    {
+      model: 'PLFP-14BL',
+      replacement: '12N10-3A-2, 12N14-3A, YB10L-A2, YB10L-B, YB12AL-A/A2, YB14L-A1/2, YB16AL-A2, YTX14AHL-BS',
+      productUrl: '/shop/poweroad-lithium-lifepo4-plfp-14bl'
+    },
+    {
+      model: 'PLFP-18R',
+      replacement: 'YTX16-BS, YTX16-BS-1, YB16B-A/A1, HYB16A-AB, YB16-B, YB16-B-CX, YB16C-B, YB18-A',
+      productUrl: '/shop/poweroad-lithium-lifepo4-plfp-18r'
+    },
+    {
+      model: 'PLFP-20R',
+      replacement: 'YTX20H-BS, YTX20CH-BS, GYZ16, Y50-N18A-A',
+      productUrl: '/shop/poweroad-lithium-lifepo4-plfp-20r'
+    },
+    {
+      model: 'PLFP-30R',
+      replacement: 'YHD-12H, Y60-N24-A, 53034',
+      productUrl: '/shop/poweroad-lithium-lifepo4-plfp-30r'
+    },
+    {
+      model: 'PLFE-8V',
+      replacement: 'YTZ-8V',
+      productUrl: '/shop/poweroad-lithium-lifepo4-plfe-8v'
+    },
+    {
+      model: 'LP7',
+      replacement: 'YTX4L, YTZ7S, YTX5L, YTZ8V, YTX7L',
+      productUrl: '/shop/liyon-battery-lp7'
+    },
+    {
+      model: 'LP16',
+      replacement: 'YTZ10S, YT12S, YTZ14S, YTX14, YTX20H',
+      productUrl: '/shop/liyon-battery-lp16'
+    },
+    {
+      model: 'PLFP-30L',
+      replacement: '12N24-3, 12N24-3A, Y60-N24AL-B',
+      productUrl: '/shop/poweroad-lithium-lifepo4-plfp-30l'
+    },
+    {
+      model: 'PLFP-20L',
+      replacement: 'YTX20L-BS, YTX20HL-BS, YTX24HL-BS, Y50-N18L-A-CX, Y50-N18L-A, Y50-N18L-A2, Y50-N18L-A3, Y50-N18L-AT',
+      productUrl: '/shop/poweroad-lithium-lifepo4-plfp-20l'
+    },
+    {
+      model: 'PLFP-9R',
+      replacement: '12N9-4B-1, YB9-B, YTX7A-BS, YTX9-BS',
+      productUrl: '/shop/poweroad-lithium-lifepo4-plfp-9r'
+    },
+    {
+      model: 'PLFP-14R',
+      replacement: 'YTX12-BS, YTX12A-BS, YTX14-BS, YTX14H-BS, YTZ12S, YTZ14S, KMX14-BS',
+      productUrl: '/shop/poweroad-lithium-lifepo4-plfp-14r'
+    },
+    {
+      model: 'PLFP-7L',
+      replacement: '12N5-3B, 12N7-3B, 12N7A-3A, YB5L-B, YB6.5L-B, YB7L-B, YB4L-A/B, YTX4L-BS, YTX5L-BS, YTX7L-BS, YTZ5S, YTZ7S',
+      productUrl: '/shop/poweroad-lithium-lifepo4-plfp-7l'
+    },
+    {
+      model: 'PLFP-14BR',
+      replacement: 'YT7B-BS, YT9B-BS, YT14B-BS, YT12B-BS, YTZ10S, 12N12A-4A-1, YTX14AH-BS',
+      productUrl: '/shop/poweroad-lithium-lifepo4-plfp-14br'
     }
   ];
 
