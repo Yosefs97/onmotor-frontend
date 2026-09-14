@@ -2,17 +2,17 @@
 import { renderToStream, Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
 import React from 'react';
 
-// משיכת פונט עברי משרתי Early Access היציבים של גוגל 
+// משיכת פונט עברי משרת CDN ייעודי (JSDelivr) שלא חוסם בקשות Vercel
 Font.register({
-  family: 'OpenSansHebrew',
+  family: 'Assistant',
   fonts: [
-    { src: 'https://themes.googleusercontent.com/static/fonts/earlyaccess/opensanshebrew/v14/OpenSansHebrew-Regular.ttf' },
-    { src: 'https://themes.googleusercontent.com/static/fonts/earlyaccess/opensanshebrew/v14/OpenSansHebrew-Bold.ttf', fontWeight: 'bold' }
+    { src: 'https://cdn.jsdelivr.net/gh/googlefonts/assistant@main/fonts/ttf/Assistant-Regular.ttf' },
+    { src: 'https://cdn.jsdelivr.net/gh/googlefonts/assistant@main/fonts/ttf/Assistant-Bold.ttf', fontWeight: 'bold' }
   ]
 });
 
 const styles = StyleSheet.create({
-  page: { padding: 40, fontFamily: 'OpenSansHebrew', fontSize: 12, backgroundColor: '#faf8f5', direction: 'rtl' },
+  page: { padding: 40, fontFamily: 'Assistant', fontSize: 12, backgroundColor: '#faf8f5', direction: 'rtl' },
   header: { flexDirection: 'row-reverse', justifyContent: 'space-between', borderBottomWidth: 3, borderBottomColor: '#d9534f', paddingBottom: 15, marginBottom: 25 },
   headerRight: { alignItems: 'flex-start' },
   headerLeft: { alignItems: 'flex-end' },
