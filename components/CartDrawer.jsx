@@ -1,6 +1,7 @@
-// /components/CartDrawer.jsx
+// components/CartDrawer.jsx
 "use client";
 import { useState, useEffect } from "react";
+import Link from "next/link"; // הוספת הייבוא של Link
 
 export default function CartDrawer({ open, onClose }) {
   const [cart, setCart] = useState(null);
@@ -57,13 +58,14 @@ export default function CartDrawer({ open, onClose }) {
                 {cart.estimatedCost.totalAmount.currencyCode}
               </span>
             </div>
-            <a
-              href={cart.checkoutUrl}
-              target="_blank"
-              className="block bg-green-600 text-white text-center py-2 mt-2 rounded-md"
+            {/* השינוי כאן: הפניה לעמוד ה-Checkout הפנימי שלנו במקום הכתובת של שופיפיי */}
+            <Link
+              href="/shop/checkout"
+              onClick={onClose}
+              className="block bg-green-600 text-white text-center py-2 mt-2 rounded-md hover:bg-green-700 transition"
             >
               לתשלום
-            </a>
+            </Link>
           </div>
         )}
       </div>

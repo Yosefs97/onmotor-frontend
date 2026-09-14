@@ -1,4 +1,4 @@
-// /app/shop/cart/page.jsx
+// app/shop/cart/page.jsx
 'use client';
 export const dynamic = 'force-dynamic';
 
@@ -7,17 +7,16 @@ import { useEffect, useState } from 'react';
 import ShopSidebar from '@/components/ShopSidebar';
 import MobileShopFilterBar from '@/components/MobileShopFilterBar';
 import ProductGrid from '@/components/ProductGrid';
-import ShopInfoAccordion from '@/components/ShopInfoAccordion'; // ✅ חדש
+import ShopInfoAccordion from '@/components/ShopInfoAccordion';
 
 export default function CartPage() {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // חיפוש מוצרים
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [pageInfo, setPageInfo] = useState({ hasNextPage: false, endCursor: null });
-  const [activeFilters, setActiveFilters] = useState({}); // ✅ שמירת פילטרים נוכחיים
+  const [activeFilters, setActiveFilters] = useState({});
 
   useEffect(() => {
     fetchCart();
@@ -51,10 +50,9 @@ export default function CartPage() {
     window.dispatchEvent(new Event('cartUpdated'));
   };
 
-  // חיפוש בפועל (GET עם query string)
   const handleFilterChange = async (filters) => {
     setLoadingProducts(true);
-    setActiveFilters(filters); // ✅ שמירת הפילטרים
+    setActiveFilters(filters);
     try {
       const params = new URLSearchParams({ ...filters, limit: '24' });
       const res = await fetch(`/api/shopify/search?${params.toString()}`);
@@ -70,7 +68,6 @@ export default function CartPage() {
     }
   };
 
-  // ✅ כותרת דינמית לפי פילטרים (כולל יצרן + דגם)
   const getDynamicTitle = () => {
     if (activeFilters.vendor && activeFilters.model) {
       return `מוצרים נוספים עבור ${activeFilters.vendor} ${activeFilters.model}`;
@@ -91,7 +88,6 @@ export default function CartPage() {
 
   return (
     <div dir="rtl" className="space-y-6">
-      {/* 🔗 פירורי לחם */}
       <nav className="text-sm text-gray-600">
         <ol className="flex gap-2">
           <li><Link href="/shop" className="hover:underline">חנות</Link></li>
@@ -101,14 +97,11 @@ export default function CartPage() {
       </nav>
 
       <div className="grid md:grid-cols-4 gap-6">
-        {/* 🔍 מנוע סינון בצד ימין – רק בדסקטופ */}
         <aside className="hidden md:block md:col-span-1">
           <ShopSidebar onFilterChange={handleFilterChange} />
         </aside>
 
-        {/* 🛒 עגלה + מוצרים */}
         <main className="md:col-span-3 space-y-1">
-          {/* 🔍 כפתור סינון צף – רק במובייל */}
           <div className="md:hidden">
             <MobileShopFilterBar onFilterChange={handleFilterChange} />
           </div>
@@ -140,7 +133,6 @@ export default function CartPage() {
                     <div className="text-sm text-gray-600">כמות: {node.quantity}</div>
                   </div>
 
-                  {/* 🔢 כפתורי כמות */}
                   <div className="flex border rounded-md overflow-hidden text-gray-900">
                     <button
                       onClick={() => updateQuantity(node.id, node.quantity - 1)}
@@ -157,7 +149,6 @@ export default function CartPage() {
                     </button>
                   </div>
 
-                  {/* ❌ כפתור הסרה */}
                   <button
                     onClick={() => removeItem(node.id)}
                     className="text-red-600 hover:underline ml-2"
@@ -167,24 +158,22 @@ export default function CartPage() {
                 </div>
               ))}
 
-              {/* סה״כ ותשלום */}
               <div className="flex items-center justify-between border-t pt-4">
                 <div className="text-xl font-bold text-gray-900">
                   סה"כ: {cart.estimatedCost.totalAmount.amount}{' '}
                   {cart.estimatedCost.totalAmount.currencyCode}
                 </div>
-                <a
-                  href={cart.checkoutUrl}
-                  target="_blank"
-                  className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition"
+                {/* כאן התיקון: הפניה לעמוד ה-Checkout שלנו במקום לשופיפיי */}
+                <Link
+                  href="/shop/checkout"
+                  className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition text-center inline-block"
                 >
                   לתשלום
-                </a>
+                </Link>
               </div>
             </div>
           )}
 
-          {/* תוצאות חיפוש */}
           {loadingProducts && <div>טוען מוצרים...</div>}
           {products.length > 0 && (
             <section className="mt-10">
@@ -198,7 +187,6 @@ export default function CartPage() {
             </section>
           )}
 
-          {/* 📦 מידע נוסף (משלוחים / אחריות / החזרות) */}
           <ShopInfoAccordion />
         </main>
       </div>
