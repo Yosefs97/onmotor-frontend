@@ -37,9 +37,9 @@ export async function POST(req) {
     });
 
     // 5. שליחת מייל למנהל החנות
-    if (process.env.ADMIN_EMAIL) {
+    if (process.env.SITE_ADMIN_EMAIL) {
       await sendMail({
-        to: process.env.ADMIN_EMAIL,
+        to: process.env.SITE_ADMIN_EMAIL,
         subject: `📦 הזמנה חדשה ${orderNumber} – ${customer.name}`,
         html,
         attachments
