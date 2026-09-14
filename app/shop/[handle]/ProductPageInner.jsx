@@ -1,8 +1,9 @@
-//app\shop\[handle]\ProductPageInner.jsx
+// app/shop/[handle]/ProductPageInner.jsx
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link'; 
+import { useRouter } from 'next/navigation'; // הוספת חבילת ניתוב
 import ShopLayoutInternal from '@/components/ShopLayoutInternal';
 import ProductGrid from '@/components/ProductGrid';
 import ProductGallery from '@/components/ProductGallery';
@@ -15,6 +16,7 @@ import ProductInfoModals from '@/components/ProductInfoModals';
 import { getProductYearRange, formatYearRange } from '@/lib/productYears';
 
 export default function ProductPageInner({ type, product, items, collectionStats, modelImages = {} }) {
+  const router = useRouter(); // אתחול הראוטר
   const [adding, setAdding] = useState(false);
   const [buying, setBuying] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState({});
@@ -178,12 +180,8 @@ export default function ProductPageInner({ type, product, items, collectionStats
       
       if (json.cart) {
         window.dispatchEvent(new Event('cartUpdated')); 
-        
-        if (json.cart.checkoutUrl) {
-          window.location.href = json.cart.checkoutUrl;
-        } else {
-          window.location.href = '/shop/cart';
-        }
+        // שינוי כאן: הפניה לעמוד התשלום המותאם שלנו במקום לשופיפיי
+        router.push('/shop/checkout');
       } else {
         alert('שגיאה בהעברה לתשלום');
         setBuying(false);
