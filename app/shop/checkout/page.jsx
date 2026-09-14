@@ -103,7 +103,16 @@ export default function CheckoutPage() {
       const data = await res.json();
 
       if (data.success) {
+        // 1. מחיקה אגרסיבית של עוגיית העגלה ישירות מהדפדפן של הלקוח
+        document.cookie = "cartId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        
+        // 2. עדכון כל רכיבי הריאקט שמאזינים לעגלה (כמו מגירת העגלה הצדדית)
         window.dispatchEvent(new Event('cartUpdated'));
+        
+        // 3. אילוץ Next.js לרענן את זיכרון המטמון של השרת (כדי לאפס את האייקון בהדר)
+        router.refresh();
+        
+        // 4. מעבר לעמוד התודה
         router.push(`/shop/thank-you?order=${data.orderNumber.replace('#', '')}`);
       } else {
         alert("שגיאה ביצירת ההזמנה: " + (data.error || "נסה שוב מאוחר יותר"));
