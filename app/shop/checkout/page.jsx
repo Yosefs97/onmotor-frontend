@@ -20,7 +20,6 @@ export default function CheckoutPage() {
   const [isFetchingCart, setIsFetchingCart] = useState(true);
 
   useEffect(() => {
-    // 1. משיכת נתוני לקוח מחובר (אם קיים) כדי למלא אוטומטית את הטופס
     const fetchCustomer = async () => {
       try {
         const res = await fetch('/api/shopify/customer/get');
@@ -45,7 +44,6 @@ export default function CheckoutPage() {
       }
     };
 
-    // 2. משיכת עגלת הקניות
     const fetchCart = async () => {
       try {
         const timestamp = new Date().getTime();
@@ -66,7 +64,8 @@ export default function CheckoutPage() {
               id: e.node.id,
               title: e.node.merchandise.product.title,
               quantity: e.node.quantity,
-              price: e.node.cost?.totalAmount || e.node.estimatedCost?.totalAmount,
+              // התיקון כאן: משיכת מחיר היחידה הספציפי שביקשנו משופיפיי
+              price: e.node.cost?.amountPerQuantity || { amount: 0, currencyCode: 'ILS' },
               variantId: e.node.merchandise.id,
             })) || []
           );

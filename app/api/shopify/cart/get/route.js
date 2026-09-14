@@ -1,4 +1,4 @@
-// /app/api/shopify/cart/get/route.js
+// app/api/shopify/cart/get/route.js
 export const runtime = "nodejs";
 
 import { sfFetch } from "../../checkout/route";
@@ -19,6 +19,12 @@ export async function GET(req) {
             node {
               id
               quantity
+              cost {
+                amountPerQuantity {
+                  amount
+                  currencyCode
+                }
+              }
               merchandise {
                 ... on ProductVariant {
                   id
@@ -38,5 +44,5 @@ export async function GET(req) {
   `;
 
   const { data } = await sfFetch(query, { id: cartId });
-  return Response.json({ cart: data.data.cart });
+  return Response.json({ cart: data?.data?.cart });
 }
