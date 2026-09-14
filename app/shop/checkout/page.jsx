@@ -8,13 +8,21 @@ export default function CheckoutPage() {
   const [cartTotal, setCartTotal] = useState({ amount: 0, currencyCode: "₪" });
   const router = useRouter();
   
+  // פיצול הכתובת לשדות נפרדים
   const [customer, setCustomer] = useState({
     name: "",
     email: "",
     phone: "",
-    address: "",
+    city: "",
+    street: "",
+    house: "",
+    apartment: "",
     notes: "",
   });
+  
+  // רשימות להשלמה אוטומטית מהמאגר הממשלתי
+  const [citiesList, setCitiesList] = useState([]);
+  const [streetsList, setStreetsList] = useState([]);
   
   const [loading, setLoading] = useState(false);
   const [isFetchingCart, setIsFetchingCart] = useState(true);
@@ -34,9 +42,8 @@ export default function CheckoutPage() {
             name: `${cust.firstName || ''} ${cust.lastName || ''}`.trim(),
             email: cust.email || "",
             phone: cust.phone || "",
-            address: defaultAddr 
-              ? `${defaultAddr.address1 || ''}, ${defaultAddr.city || ''}`.trim() 
-              : "",
+            // אם יש לו כתובת שמורה, ננסה לשים את העיר מראש
+            city: defaultAddr?.city || "",
           }));
         }
       } catch (error) {
@@ -64,7 +71,6 @@ export default function CheckoutPage() {
               id: e.node.id,
               title: e.node.merchandise.product.title,
               quantity: e.node.quantity,
-              // משיכת מחיר היחידה הספציפי שביקשנו משופיפיי
               price: e.node.cost?.amountPerQuantity || { amount: 0, currencyCode: 'ILS' },
               variantId: e.node.merchandise.id,
             })) || []
@@ -85,33 +91,81 @@ export default function CheckoutPage() {
     fetchCart();
   }, []);
 
+  // --- פונקציות חיפוש מול המאגר הממשלתי (data.gov.il) --- //
+  
+  const handleCityChange = async (e) => {
+    const val = e.target.value;
+    // איפוס רחוב כשמחליפים עיר
+    setCustomer(prev => ({ ...prev, city: val, street: '' }));
+    
+    // חיפוש רק אם הוקלדו לפחות 2 אותיות
+    if (val.length < 2) {
+        setCitiesList([]);
+        return;
+    }
+    
+    try {
+        const res = await fetch(`https://data.gov.il/api/3/action/datastore_search?resource_id=5c78e9fa-c2e2-4771-93ff-7f400a12f7ba&q=${val}&limit=15`);
+        const data = await res.json();
+        // משיכת שם היישוב וסינון כפילויות או "לא רשום"
+        const results = data.result.records.map(r => r['שם_ישוב'].trim()).filter(c => c !== 'לא רשום');
+        setCitiesList([...new Set(results)]);
+    } catch(err) {
+        console.error("שגיאה במשיכת ערים:", err);
+    }
+  };
+
+  const handleStreetChange = async (e) => {
+    const val = e.target.value;
+    setCustomer(prev => ({ ...prev, street: val }));
+    
+    if (val.length < 2 || !customer.city) {
+        setStreetsList([]);
+        return;
+    }
+    
+    try {
+        // חיפוש שמשלב את העיר והרחוב כדי למצוא תוצאות מדויקות
+        const res = await fetch(`https://data.gov.il/api/3/action/datastore_search?resource_id=a7296d1a-f8c9-4b70-96c2-6ebb4352f8e3&q=${customer.city} ${val}&limit=15`);
+        const data = await res.json();
+        const results = data.result.records.map(r => r['שם_רחוב'].trim());
+        setStreetsList([...new Set(results)]);
+    } catch(err) {
+        console.error("שגיאה במשיכת רחובות:", err);
+    }
+  };
+
+  // --- סיום הזמנה --- //
+
   const handleOrder = async () => {
-    if (!customer.name || !customer.email || !customer.phone || !customer.address) {
-        alert("נא למלא את כל שדות החובה (שם, אימייל, טלפון, כתובת).");
+    if (!customer.name || !customer.email || !customer.phone || !customer.city || !customer.street || !customer.house) {
+        alert("נא למלא את כל שדות החובה (שם, אימייל, טלפון, עיר, רחוב ומספר בית).");
         return;
     }
 
     setLoading(true);
     
+    // חיבור הכתובת למחרוזת אחת עבור שופיפיי והמייל
+    const fullAddress = `${customer.street} ${customer.house}${customer.apartment ? ', דירה ' + customer.apartment : ''}, ${customer.city}`;
+    
+    const payloadCustomer = {
+        ...customer,
+        address: fullAddress
+    };
+
     try {
       const res = await fetch("/api/order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ customer, cart: cartItems }),
+        body: JSON.stringify({ customer: payloadCustomer, cart: cartItems }),
       });
       
       const data = await res.json();
 
       if (data.success) {
-        // 1. ניסיון מחיקה מקומית של העוגייה (לגיבוי)
         document.cookie = "cartId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        
-        // 2. איפוס הסטייט המקומי באותו רגע
         setCartItems([]);
         window.dispatchEvent(new Event('cartUpdated'));
-        
-        // 3. הפתרון המוחלט: מעבר עמוד קשיח! 
-        // מרוקן את הזיכרון של Next.js וטוען את עמוד התודה מאפס בלי העגלה
         window.location.href = `/shop/thank-you?order=${data.orderNumber.replace('#', '')}`;
       } else {
         alert("שגיאה ביצירת ההזמנה: " + (data.error || "נסה שוב מאוחר יותר"));
@@ -138,25 +192,87 @@ export default function CheckoutPage() {
       <h1 className="text-black text-2xl font-bold">סגירת הזמנה</h1>
 
       <div className="text-black space-y-3">
-        {["name", "email", "phone", "address"].map((field) => (
-          <input
-            key={field}
-            placeholder={
-              field === "name" ? "שם מלא *" : 
-              field === "email" ? "אימייל *" : 
-              field === "phone" ? "טלפון *" : 
-              "כתובת מלאה למשלוח *"
-            }
+        {/* פרטים אישיים */}
+        <input
+            placeholder="שם מלא *"
             className="border border-gray-300 w-full p-3 rounded-lg focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all"
-            value={customer[field]}
-            onChange={(e) =>
-              setCustomer({ ...customer, [field]: e.target.value })
-            }
-          />
-        ))}
+            value={customer.name}
+            onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
+        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <input
+                placeholder="אימייל *"
+                type="email"
+                className="border border-gray-300 w-full p-3 rounded-lg focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all"
+                value={customer.email}
+                onChange={(e) => setCustomer({ ...customer, email: e.target.value })}
+            />
+            <input
+                placeholder="טלפון *"
+                type="tel"
+                className="border border-gray-300 w-full p-3 rounded-lg focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all"
+                value={customer.phone}
+                onChange={(e) => setCustomer({ ...customer, phone: e.target.value })}
+            />
+        </div>
+
+        {/* --- אזור הכתובת החדש --- */}
+        <div className="grid grid-cols-2 gap-3 mt-4">
+            
+            {/* עיר עם חיפוש מובנה */}
+            <div className="col-span-2 sm:col-span-1">
+                <input
+                    list="cities-list"
+                    placeholder="עיר / יישוב *"
+                    autoComplete="off"
+                    className="border border-gray-300 w-full p-3 rounded-lg focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all"
+                    value={customer.city}
+                    onChange={handleCityChange}
+                />
+                <datalist id="cities-list">
+                    {citiesList.map((c, i) => <option key={i} value={c} />)}
+                </datalist>
+            </div>
+
+            {/* רחוב עם חיפוש מובנה */}
+            <div className="col-span-2 sm:col-span-1">
+                <input
+                    list="streets-list"
+                    placeholder="רחוב *"
+                    autoComplete="off"
+                    disabled={!customer.city}
+                    className="border border-gray-300 w-full p-3 rounded-lg focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    value={customer.street}
+                    onChange={handleStreetChange}
+                />
+                <datalist id="streets-list">
+                    {streetsList.map((s, i) => <option key={i} value={s} />)}
+                </datalist>
+            </div>
+
+            {/* מספר בית ודירה */}
+            <div className="col-span-1">
+                <input
+                    placeholder="מספר בית *"
+                    className="border border-gray-300 w-full p-3 rounded-lg focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all"
+                    value={customer.house}
+                    onChange={(e) => setCustomer({ ...customer, house: e.target.value })}
+                />
+            </div>
+            <div className="col-span-1">
+                <input
+                    placeholder="דירה (אופציונלי)"
+                    className="border border-gray-300 w-full p-3 rounded-lg focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all"
+                    value={customer.apartment}
+                    onChange={(e) => setCustomer({ ...customer, apartment: e.target.value })}
+                />
+            </div>
+        </div>
+        {/* --- סוף אזור הכתובת --- */}
+
         <textarea
           placeholder="הערות להזמנה או לשליח (אופציונלי)"
-          className="border border-gray-300 w-full p-3 rounded-lg h-24 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all"
+          className="border border-gray-300 w-full p-3 rounded-lg h-24 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all mt-2"
           value={customer.notes}
           onChange={(e) => setCustomer({ ...customer, notes: e.target.value })}
         />
