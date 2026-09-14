@@ -52,7 +52,7 @@ export function buildOrderEmail(customer, cart, orderNumber) {
     customer.name,
     `✅ הזמנתך התקבלה – ${orderNumber} – OnMotor Parts`,
     `
-      <p>שלום ${customer.name},</p>
+      <p>חשבון מייל: ${customer.email},</p>
       <p>תודה על הזמנתך! מספר ההזמנה שלך הוא <strong>${orderNumber}</strong>.</p>
       <p>מצורף למייל זה סיכום ההזמנה שלך (PDF).</p>
       <p>להלן פרטי ההזמנה:</p>
