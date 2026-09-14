@@ -145,13 +145,8 @@ export default function CheckoutPage() {
 
     setLoading(true);
     
-    // חיבור הכתובת למחרוזת אחת עבור שופיפיי והמייל
     const fullAddress = `${customer.street} ${customer.house}${customer.apartment ? ', דירה ' + customer.apartment : ''}, ${customer.city}`;
-    
-    const payloadCustomer = {
-        ...customer,
-        address: fullAddress
-    };
+    const payloadCustomer = { ...customer, address: fullAddress };
 
     try {
       const res = await fetch("/api/order", {
@@ -163,9 +158,18 @@ export default function CheckoutPage() {
       const data = await res.json();
 
       if (data.success) {
+        // 1. מחיקת עוגיית שופיפיי (לגיבוי)
         document.cookie = "cartId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        
+        // 2. התיקון הקריטי: מחיקת העגלה מה-LocalStorage של CartContext!
+        localStorage.removeItem("cart");
+        
+        // 3. איפוס ממשק
         setCartItems([]);
         window.dispatchEvent(new Event('cartUpdated'));
+        window.dispatchEvent(new Event('storage')); // מעדכן את הקונטקסט מיד
+        
+        // 4. מעבר עמוד קשיח
         window.location.href = `/shop/thank-you?order=${data.orderNumber.replace('#', '')}`;
       } else {
         alert("שגיאה ביצירת ההזמנה: " + (data.error || "נסה שוב מאוחר יותר"));
