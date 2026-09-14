@@ -3,7 +3,7 @@ import { sendMail } from "@/utils/mailer";
 import { buildOrderEmail } from "@/utils/orderEmailTemplate";
 import { createShopifyOrder } from "@/lib/shopifyAdmin";
 import { generateReceiptPdf } from "@/utils/generatePdf";
-import { cookies } from "next/headers";
+import { NextResponse } from "next/server"; // הוספנו את זה!
 
 export async function POST(req) {
   try {
@@ -13,7 +13,7 @@ export async function POST(req) {
     console.log("📥 נתוני הזמנה התקבלו בשרת:", { customer, cartLength: cart?.length });
 
     if (!customer?.email || !cart?.length) {
-      return Response.json({ error: "Missing fields" }, { status: 400 });
+      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
     // 1. יצירת ההזמנה בשופיפיי
@@ -23,10 +23,10 @@ export async function POST(req) {
       console.log("✅ הזמנה נוצרה בשופיפיי בהצלחה:", orderNumber);
     } catch (shopifyErr) {
       console.error("❌ שגיאה ביצירת הזמנה בשופיפיי:", shopifyErr.message);
-      return Response.json({ error: "Shopify Error: " + shopifyErr.message }, { status: 500 });
+      return NextResponse.json({ error: "Shopify Error: " + shopifyErr.message }, { status: 500 });
     }
 
-    // 2. יצירת ה-PDF (בתוך בלוק הגנה)
+    // 2. יצירת ה-PDF
     let pdfBuffer = null;
     let attachments = [];
     try {
@@ -36,7 +36,6 @@ export async function POST(req) {
         content: pdfBuffer,
         contentType: 'application/pdf'
       }];
-      console.log("✅ קובץ PDF נוצר בהצלחה");
     } catch (pdfErr) {
       console.error("❌ שגיאה ביצירת ה-PDF (המייל ישלח ללא הקובץ):", pdfErr);
     }
@@ -52,7 +51,6 @@ export async function POST(req) {
         html,
         attachments
       });
-      console.log("📧 מייל נשלח בהצלחה ללקוח:", customer.email);
     } catch (mailErr) {
       console.error("❌ שגיאה בשליחת מייל ללקוח:", mailErr);
     }
@@ -66,23 +64,25 @@ export async function POST(req) {
           html,
           attachments
         });
-        console.log("📧 מייל ניהול נשלח בהצלחה למנהל:", process.env.ADMIN_EMAIL);
       } catch (adminMailErr) {
         console.error("❌ שגיאה בשליחת מייל למנהל:", adminMailErr);
       }
     }
 
-    // 6. מחיקת מזהה העגלה
-    // 6. מחיקת מזהה העגלה
-    try {
-      cookies().delete('cartId');
-    } catch (cookieErr) {
-      console.error("⚠️ אזהרה במחיקת עוגיית עגלה:", cookieErr);
-    }
+    // 6. הריגת העגלה באגרסיביות דרך NextResponse
+    const response = NextResponse.json({ success: true, orderNumber });
+    
+    response.cookies.set({
+      name: 'cartId',
+      value: '',
+      maxAge: 0,
+      path: '/',
+      expires: new Date(0)
+    });
 
-    return Response.json({ success: true, orderNumber });
+    return response;
   } catch (err) {
     console.error("❌ שגיאת מערכת כללית בהזמנה:", err);
-    return Response.json({ error: "Order processing failed: " + err.message }, { status: 500 });
+    return NextResponse.json({ error: "Order processing failed: " + err.message }, { status: 500 });
   }
 }

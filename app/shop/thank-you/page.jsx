@@ -2,11 +2,19 @@
 "use client";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 
 function ThankYouContent() {
   const searchParams = useSearchParams();
   const orderNumber = searchParams.get("order");
+
+  useEffect(() => {
+    // וידוא הריגה: ברגע שנוחתים בעמוד התודה, מוחקים כל זכר לעגלה
+    document.cookie = "cartId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    localStorage.removeItem("cart");
+    // מודיע להדר (Header) שהעגלה התרוקנה כדי שהמספר יתאפס ל-0
+    window.dispatchEvent(new Event("cartUpdated"));
+  }, []);
 
   return (
     <div dir="rtl" className="max-w-2xl mx-auto text-center py-20 px-4">
@@ -18,7 +26,7 @@ function ThankYouContent() {
         הזמנה מספר <strong>#{orderNumber}</strong> התקבלה בהצלחה במערכת.
       </p>
       <p className="text-gray-600 mb-8">
-        שלחנו אליך עותק של סיכום ההזמנה (PDF) לאימייל. ניצור איתך קשר בהקדם לתיאום המשלוח והשלמת התשלום.
+        שלחנו אליך עותק של סיכום ההזמנה לאימייל. ניצור איתך קשר בהקדם לתיאום המשלוח והשלמת התשלום.
       </p>
       <Link 
         href="/shop" 
