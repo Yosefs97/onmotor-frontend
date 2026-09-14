@@ -2,17 +2,17 @@
 import { renderToStream, Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
 import React from 'react';
 
-// משיכת גופן עברי כדי שהטקסט יוצג מימין לשמאל בצורה חלקה
+// משיכת גופן עברי מהמאגר היציב והרשמי של גוגל (Google Fonts Repository)
 Font.register({
-  family: 'Assistant',
+  family: 'Rubik',
   fonts: [
-    { src: 'https://github.com/googlefonts/assistant/raw/main/fonts/ttf/Assistant-Regular.ttf' },
-    { src: 'https://github.com/googlefonts/assistant/raw/main/fonts/ttf/Assistant-Bold.ttf', fontWeight: 'bold' }
+    { src: 'https://raw.githubusercontent.com/google/fonts/main/ofl/rubik/static/Rubik-Regular.ttf' },
+    { src: 'https://raw.githubusercontent.com/google/fonts/main/ofl/rubik/static/Rubik-Bold.ttf', fontWeight: 'bold' }
   ]
 });
 
 const styles = StyleSheet.create({
-  page: { padding: 40, fontFamily: 'Assistant', fontSize: 12, backgroundColor: '#faf8f5', direction: 'rtl' },
+  page: { padding: 40, fontFamily: 'Rubik', fontSize: 12, backgroundColor: '#faf8f5', direction: 'rtl' },
   header: { flexDirection: 'row-reverse', justifyContent: 'space-between', borderBottomWidth: 3, borderBottomColor: '#d9534f', paddingBottom: 15, marginBottom: 25 },
   headerRight: { alignItems: 'flex-start' },
   headerLeft: { alignItems: 'flex-end' },
