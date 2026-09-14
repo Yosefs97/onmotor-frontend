@@ -17,6 +17,9 @@ export async function sendMail({ to, subject, html, attachments = [] }) {
     to,
     subject,
     html,
-    attachments, // תמיכה בקבצים מצורפים
+    attachments, 
   });
 }
+
+// ייצוא נוסף כדי לתמוך בקבצים הישנים שלך שמחפשים את השם sendEmail
+export const sendEmail = sendMail;
