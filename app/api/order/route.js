@@ -74,7 +74,12 @@ export async function POST(req) {
 
     // 6. מחיקת מזהה העגלה
     try {
-      cookies().delete('cartId');
+      cookies().set({
+        name: 'cartId',
+        value: '',
+        expires: new Date(0), // פג תוקף מיידי
+        path: '/', // מחיל את המחיקה על כל האתר
+      });
     } catch (cookieErr) {
       console.error("⚠️ אזהרה במחיקת עוגיית עגלה:", cookieErr);
     }

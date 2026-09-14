@@ -20,10 +20,15 @@ export default function CartPage() {
 
   useEffect(() => {
     fetchCart();
+    
+    // האזנה לאירועי רענון עגלה כדי להתעדכן מיד
+    window.addEventListener('cartUpdated', fetchCart);
+    return () => window.removeEventListener('cartUpdated', fetchCart);
   }, []);
 
   const fetchCart = async () => {
-    const res = await fetch('/api/shopify/cart/get');
+    // הוספת Timestamp כדי למנוע מהדפדפן להציג עגלה ישנה מהקאש
+    const res = await fetch(`/api/shopify/cart/get?_t=${Date.now()}`, { cache: 'no-store' });
     const json = await res.json();
     setCart(json.cart);
     setLoading(false);
@@ -108,7 +113,7 @@ export default function CartPage() {
 
           <h1 className="text-2xl font-bold text-gray-900">עגלה</h1>
 
-          {!cart || cart.lines.edges.length === 0 ? (
+          {!cart || cart.lines?.edges?.length === 0 ? (
             <div className="text-gray-500 font-medium text-center py-4">העגלה ריקה</div>
           ) : (
             <div className="space-y-4">
@@ -131,6 +136,12 @@ export default function CartPage() {
                       {node.merchandise.product.title}
                     </Link>
                     <div className="text-sm text-gray-600">כמות: {node.quantity}</div>
+                    {/* הוספת המחיר ליחידה */}
+                    {node.cost?.amountPerQuantity && (
+                      <div className="text-sm font-bold text-gray-900 mt-1">
+                        מחיר יחידה: ₪{node.cost.amountPerQuantity.amount}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex border rounded-md overflow-hidden text-gray-900">
@@ -160,10 +171,9 @@ export default function CartPage() {
 
               <div className="flex items-center justify-between border-t pt-4">
                 <div className="text-xl font-bold text-gray-900">
-                  סה"כ: {cart.estimatedCost.totalAmount.amount}{' '}
-                  {cart.estimatedCost.totalAmount.currencyCode}
+                  סה"כ: {cart.estimatedCost?.totalAmount?.amount}{' '}
+                  {cart.estimatedCost?.totalAmount?.currencyCode}
                 </div>
-                {/* כאן התיקון: הפניה לעמוד ה-Checkout שלנו במקום לשופיפיי */}
                 <Link
                   href="/shop/checkout"
                   className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition text-center inline-block"
