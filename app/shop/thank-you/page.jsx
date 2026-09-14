@@ -2,8 +2,9 @@
 "use client";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function ThankYouPage() {
+function ThankYouContent() {
   const searchParams = useSearchParams();
   const orderNumber = searchParams.get("order");
 
@@ -26,5 +27,13 @@ export default function ThankYouPage() {
         חזרה לחנות
       </Link>
     </div>
+  );
+}
+
+export default function ThankYouPage() {
+  return (
+    <Suspense fallback={<div dir="rtl" className="text-center py-20 font-bold">טוען פרטי הזמנה...</div>}>
+      <ThankYouContent />
+    </Suspense>
   );
 }
