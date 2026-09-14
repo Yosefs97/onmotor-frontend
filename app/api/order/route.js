@@ -1,7 +1,8 @@
-// /app/api/order/route.js
+// app/api/order/route.js
 import { sendMail } from "@/utils/mailer";
 import { buildOrderEmail } from "@/utils/orderEmailTemplate";
 import { createShopifyOrder } from "@/lib/shopifyAdmin";
+import { generateReceiptPdf } from "@/utils/generatePdf";
 import { cookies } from "next/headers";
 
 export async function POST(req) {
@@ -15,7 +16,7 @@ export async function POST(req) {
       return Response.json({ error: "Missing fields" }, { status: 400 });
     }
 
-    // 1. יצירת ההזמנה בשופיפיי (Admin API)
+    // 1. יצירת ההזמנה בשופיפיי
     let orderNumber;
     try {
       orderNumber = await createShopifyOrder(customer, cart);
@@ -25,28 +26,45 @@ export async function POST(req) {
       return Response.json({ error: "Shopify Error: " + shopifyErr.message }, { status: 500 });
     }
 
-    // 2. בניית המייל המעוצב בעברית מלאה
+    // 2. יצירת ה-PDF (בתוך בלוק הגנה)
+    let pdfBuffer = null;
+    let attachments = [];
+    try {
+      pdfBuffer = await generateReceiptPdf(orderNumber, customer, cart);
+      attachments = [{
+        filename: `OnMotor_Order_${orderNumber.replace('#', '')}.pdf`,
+        content: pdfBuffer,
+        contentType: 'application/pdf'
+      }];
+      console.log("✅ קובץ PDF נוצר בהצלחה");
+    } catch (pdfErr) {
+      console.error("❌ שגיאה ביצירת ה-PDF (המייל ישלח ללא הקובץ):", pdfErr);
+    }
+
+    // 3. בניית המייל המעוצב
     const html = buildOrderEmail(customer, cart, orderNumber);
 
-    // 3. שליחת מייל ללקוח
+    // 4. שליחת מייל ללקוח
     try {
       await sendMail({
         to: customer.email,
         subject: `✅ הזמנתך התקבלה – ${orderNumber} – OnMotor Parts`,
-        html
+        html,
+        attachments
       });
       console.log("📧 מייל נשלח בהצלחה ללקוח:", customer.email);
     } catch (mailErr) {
       console.error("❌ שגיאה בשליחת מייל ללקוח:", mailErr);
     }
 
-    // 4. שליחת מייל למנהל החנות
+    // 5. שליחת מייל למנהל החנות
     if (process.env.ADMIN_EMAIL) {
       try {
         await sendMail({
           to: process.env.ADMIN_EMAIL,
           subject: `📦 הזמנה חדשה ${orderNumber} – ${customer.name}`,
-          html
+          html,
+          attachments
         });
         console.log("📧 מייל ניהול נשלח בהצלחה למנהל:", process.env.ADMIN_EMAIL);
       } catch (adminMailErr) {
@@ -54,7 +72,7 @@ export async function POST(req) {
       }
     }
 
-    // 5. מחיקת מזהה העגלה כדי לאפס את העגלה בצד הלקוח
+    // 6. מחיקת מזהה העגלה
     try {
       cookies().delete('cartId');
     } catch (cookieErr) {

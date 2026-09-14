@@ -2,17 +2,17 @@
 import { renderToStream, Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
 import React from 'react';
 
-// משיכת גופן עברי מהמאגר היציב והרשמי של גוגל (Google Fonts Repository)
+// משיכת פונט עברי משרתי Early Access היציבים של גוגל 
 Font.register({
-  family: 'Rubik',
+  family: 'OpenSansHebrew',
   fonts: [
-    { src: 'https://raw.githubusercontent.com/google/fonts/main/ofl/rubik/static/Rubik-Regular.ttf' },
-    { src: 'https://raw.githubusercontent.com/google/fonts/main/ofl/rubik/static/Rubik-Bold.ttf', fontWeight: 'bold' }
+    { src: 'https://themes.googleusercontent.com/static/fonts/earlyaccess/opensanshebrew/v14/OpenSansHebrew-Regular.ttf' },
+    { src: 'https://themes.googleusercontent.com/static/fonts/earlyaccess/opensanshebrew/v14/OpenSansHebrew-Bold.ttf', fontWeight: 'bold' }
   ]
 });
 
 const styles = StyleSheet.create({
-  page: { padding: 40, fontFamily: 'Rubik', fontSize: 12, backgroundColor: '#faf8f5', direction: 'rtl' },
+  page: { padding: 40, fontFamily: 'OpenSansHebrew', fontSize: 12, backgroundColor: '#faf8f5', direction: 'rtl' },
   header: { flexDirection: 'row-reverse', justifyContent: 'space-between', borderBottomWidth: 3, borderBottomColor: '#d9534f', paddingBottom: 15, marginBottom: 25 },
   headerRight: { alignItems: 'flex-start' },
   headerLeft: { alignItems: 'flex-end' },
@@ -44,7 +44,6 @@ const ReceiptDocument = ({ orderNumber, customer, cartItems, subTotal, vat, tota
   <Document>
     <Page size="A4" style={styles.page}>
       
-      {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerRight}>
           <Text style={styles.title}>OnMotor Media</Text>
@@ -56,7 +55,6 @@ const ReceiptDocument = ({ orderNumber, customer, cartItems, subTotal, vat, tota
         </View>
       </View>
 
-      {/* Customer Info */}
       <Text style={styles.sectionTitle}>פרטי הלקוח</Text>
       <View style={styles.customerDetails}>
         <Text style={styles.customerText}>לכבוד: {customer.name}</Text>
@@ -66,7 +64,6 @@ const ReceiptDocument = ({ orderNumber, customer, cartItems, subTotal, vat, tota
         <Text style={styles.customerText}>כתובת: {customer.address}</Text>
       </View>
 
-      {/* Items Table */}
       <Text style={styles.sectionTitle}>פירוט פריטים ושירותים</Text>
       <View style={styles.table}>
         <View style={styles.tableHeader}>
@@ -85,7 +82,6 @@ const ReceiptDocument = ({ orderNumber, customer, cartItems, subTotal, vat, tota
         ))}
       </View>
 
-      {/* Summary */}
       <View style={styles.summaryWrapper}>
         <View style={styles.summaryTable}>
           <View style={styles.summaryRow}>
@@ -103,7 +99,6 @@ const ReceiptDocument = ({ orderNumber, customer, cartItems, subTotal, vat, tota
         </View>
       </View>
 
-      {/* Notes & Digital Signature */}
       <View style={styles.notes}>
         <Text style={{ fontWeight: 'bold', fontSize: 10, color: '#555' }}>הערות ותנאים:</Text>
         <Text style={styles.notesText}>תקופת האחריות למוצר תעבורה תהיה עפ"י הנחיית היצרן ולא תפחת מ-3 חודשים או 6,000 ק"מ, לפי המוקדם.</Text>
@@ -120,7 +115,6 @@ export async function generateReceiptPdf(orderNumber, customer, cartItems) {
   const subTotal = (total / 1.17).toFixed(2);
   const dateStr = new Date().toLocaleDateString('he-IL', { year: 'numeric', month: 'long', day: 'numeric' });
 
-  // המרה של הקומפוננטה ל-Stream
   const stream = await renderToStream(
     <ReceiptDocument
       orderNumber={orderNumber}
@@ -133,7 +127,6 @@ export async function generateReceiptPdf(orderNumber, customer, cartItems) {
     />
   );
 
-  // המרת ה-Stream ל-Buffer כדי לשלוח במייל
   return new Promise((resolve, reject) => {
     const buffers = [];
     stream.on('data', (data) => buffers.push(data));
