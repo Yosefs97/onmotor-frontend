@@ -64,7 +64,7 @@ export default function CheckoutPage() {
               id: e.node.id,
               title: e.node.merchandise.product.title,
               quantity: e.node.quantity,
-              // התיקון כאן: משיכת מחיר היחידה הספציפי שביקשנו משופיפיי
+              // משיכת מחיר היחידה הספציפי שביקשנו משופיפיי
               price: e.node.cost?.amountPerQuantity || { amount: 0, currencyCode: 'ILS' },
               variantId: e.node.merchandise.id,
             })) || []
@@ -103,24 +103,23 @@ export default function CheckoutPage() {
       const data = await res.json();
 
       if (data.success) {
-        // 1. מחיקה אגרסיבית של עוגיית העגלה ישירות מהדפדפן של הלקוח
+        // 1. ניסיון מחיקה מקומית של העוגייה (לגיבוי)
         document.cookie = "cartId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         
-        // 2. עדכון כל רכיבי הריאקט שמאזינים לעגלה (כמו מגירת העגלה הצדדית)
+        // 2. איפוס הסטייט המקומי באותו רגע
+        setCartItems([]);
         window.dispatchEvent(new Event('cartUpdated'));
         
-        // 3. אילוץ Next.js לרענן את זיכרון המטמון של השרת (כדי לאפס את האייקון בהדר)
-        router.refresh();
-        
-        // 4. מעבר לעמוד התודה
-        router.push(`/shop/thank-you?order=${data.orderNumber.replace('#', '')}`);
+        // 3. הפתרון המוחלט: מעבר עמוד קשיח! 
+        // מרוקן את הזיכרון של Next.js וטוען את עמוד התודה מאפס בלי העגלה
+        window.location.href = `/shop/thank-you?order=${data.orderNumber.replace('#', '')}`;
       } else {
         alert("שגיאה ביצירת ההזמנה: " + (data.error || "נסה שוב מאוחר יותר"));
+        setLoading(false);
       }
     } catch (error) {
       console.error("Checkout error:", error);
       alert("אירעה שגיאה. אנא נסה שוב.");
-    } finally {
       setLoading(false);
     }
   };
