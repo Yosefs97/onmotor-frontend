@@ -1,9 +1,9 @@
-// /utils/orderEmailTemplate.js
+// utils/orderEmailTemplate.js
 import { buildEmailTemplate } from "./emailTemplate.js";
 
-export function buildOrderEmail(customer, cart) {
+export function buildOrderEmail(customer, cart, orderNumber) {
   const total = cart.reduce(
-    (sum, item) => sum + item.price.amount * item.quantity,
+    (sum, item) => sum + (item.price?.amount || 0) * item.quantity,
     0
   );
 
@@ -23,7 +23,7 @@ export function buildOrderEmail(customer, cart) {
           <tr>
             <td style="padding:8px; border:1px solid #ddd;">${i.title}</td>
             <td style="padding:8px; border:1px solid #ddd;">${i.quantity}</td>
-            <td style="padding:8px; border:1px solid #ddd;">₪${i.price.amount}</td>
+            <td style="padding:8px; border:1px solid #ddd;">₪${i.price?.amount || 0}</td>
           </tr>
         `
           )
@@ -50,13 +50,15 @@ export function buildOrderEmail(customer, cart) {
 
   return buildEmailTemplate(
     customer.name,
-    "✅ הזמנתך התקבלה – OnMotor Parts",
+    `✅ הזמנתך התקבלה – ${orderNumber} – OnMotor Parts`,
     `
       <p>שלום ${customer.name},</p>
-      <p>תודה על הזמנתך! להלן פרטי ההזמנה:</p>
+      <p>תודה על הזמנתך! מספר ההזמנה שלך הוא <strong>${orderNumber}</strong>.</p>
+      <p>מצורף למייל זה סיכום ההזמנה שלך (PDF).</p>
+      <p>להלן פרטי ההזמנה:</p>
       ${itemsHtml}
       ${customerHtml}
-      <p style="margin-top:20px; font-size:14px; color:#666;">נעדכן אותך ברגע שהמשלוח בדרך 🚚</p>
+      <p style="margin-top:20px; font-size:14px; color:#666;">ניצור איתך קשר בהקדם להשלמת התשלום ולתיאום המשלוח 🚚</p>
     `
   );
 }
