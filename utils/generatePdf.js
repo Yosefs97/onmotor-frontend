@@ -11,9 +11,9 @@ Font.register({
   ]
 });
 
-// פונקציית קסם שמונעת התהפכות של מספרים וסימני פיסוק בתוך משפטים בעברית
-const RtlText = ({ text, style }) => (
-  <View style={{ flexDirection: 'row-reverse', flexWrap: 'wrap', justifyContent: 'flex-start' }}>
+// פונקציית הקסם - הוספנו תמיכה במרכוז (centered)
+const RtlText = ({ text, style, centered }) => (
+  <View style={{ flexDirection: 'row-reverse', flexWrap: 'wrap', justifyContent: centered ? 'center' : 'flex-start' }}>
     {String(text).split(' ').map((word, index) => (
       <Text key={index} style={style}>{word} </Text>
     ))}
@@ -23,27 +23,26 @@ const RtlText = ({ text, style }) => (
 const styles = StyleSheet.create({
   page: { padding: 40, fontFamily: 'Assistant', fontSize: 12, backgroundColor: '#faf8f5', position: 'relative' },
   
-  // --- הגדרות סימן המים (Watermark) המפוצל --- //
+  // --- הגדרות סימן המים (Watermark) --- //
   watermarkContainer: { 
     position: 'absolute', 
     top: -20, 
     left: -20, 
     right: -20, 
     bottom: -20, 
-    flexDirection: 'row', // מאפשר לאלמנטים לזרום
-    flexWrap: 'wrap', // שובר שורה כשהמקום נגמר (יוצר רשת)
+    flexDirection: 'row', 
+    flexWrap: 'wrap', 
     justifyContent: 'center', 
     alignItems: 'center', 
     zIndex: -1, 
-    overflow: 'hidden' // מוודא שזה לא חורג מהדף
+    overflow: 'hidden' 
   },
   watermarkImage: { 
-    width: 140, // גודל מוקטן כדי שייכנסו הרבה כאלו
-    margin: 25, // רווח נשימה בין לוגו ללוגו
-    opacity: 0.05, // שקיפות עדינה מאוד 
-    transform: 'rotate(-35deg)' // סיבוב אלכסוני לכולם
+    width: 140, 
+    margin: 25, 
+    opacity: 0.05, 
+    transform: 'rotate(-35deg)' 
   },
-  // ------------------------------------ //
 
   // הדר
   header: { flexDirection: 'row-reverse', justifyContent: 'space-between', borderBottomWidth: 3, borderBottomColor: '#d9534f', paddingBottom: 15, marginBottom: 25 },
@@ -72,13 +71,13 @@ const styles = StyleSheet.create({
   customerColon: { fontSize: 11, color: '#2b2b2b', marginHorizontal: 2 },
   customerValue: { fontSize: 11, color: '#2b2b2b' },
   
-  // טבלה
+  // טבלה - שינוי ליישור ממורכז (center)
   table: { width: '100%', marginTop: 15 },
   tableHeader: { flexDirection: 'row-reverse', backgroundColor: '#2b2b2b', padding: 8 },
-  tableHeaderText: { color: 'white', fontWeight: 'bold', fontSize: 10, textAlign: 'right' },
-  tableRow: { flexDirection: 'row-reverse', borderBottomWidth: 1, borderBottomColor: '#e0e0e0', padding: 8, backgroundColor: '#ffffff' },
-  col3: { width: '40%', paddingRight: 5, alignItems: 'flex-start' }, 
-  col1: { width: '20%', textAlign: 'right', paddingRight: 5 },
+  tableHeaderText: { color: 'white', fontWeight: 'bold', fontSize: 10, textAlign: 'center' }, // שונה למרכז
+  tableRow: { flexDirection: 'row-reverse', borderBottomWidth: 1, borderBottomColor: '#e0e0e0', padding: 8, backgroundColor: '#ffffff', alignItems: 'center' },
+  col3: { width: '40%', textAlign: 'center' }, // שונה למרכז
+  col1: { width: '20%', textAlign: 'center' }, // שונה למרכז
   
   // סיכום מחירון
   summaryWrapper: { flexDirection: 'row-reverse', justifyContent: 'flex-start', marginTop: 15 },
@@ -105,13 +104,12 @@ const ReceiptDocument = ({ orderNumber, customer, cartItems, subTotal, vat, tota
   <Document>
     <Page size="A4" style={styles.page}>
       
-      {/* -- רשת סימני המים על פני כל המסמך -- */}
+      {/* -- רשת סימני המים -- */}
       <View style={styles.watermarkContainer}>
-        {/* מייצר מערך של 40 פריטים כדי למלא את הדף בלוגואים */}
         {Array.from({ length: 40 }).map((_, i) => (
           <Image 
             key={i} 
-            src="https://onmotormedia.com/shop_logo_order.png" 
+            src="https://www.onmotormedia.com/wp-content/uploads/2023/06/onmotor-logo.png" 
             style={styles.watermarkImage} 
           />
         ))}
@@ -196,15 +194,16 @@ const ReceiptDocument = ({ orderNumber, customer, cartItems, subTotal, vat, tota
       <Text style={styles.sectionTitle}>פירוט פריטים ושירותים</Text>
       <View style={styles.table}>
         <View style={styles.tableHeader}>
-          <Text style={[styles.tableHeaderText, styles.col3, { alignItems: 'flex-end' }]}>פירוט</Text>
+          <Text style={[styles.tableHeaderText, styles.col3]}>פירוט</Text>
           <Text style={[styles.tableHeaderText, styles.col1]}>כמות</Text>
           <Text style={[styles.tableHeaderText, styles.col1]}>מחיר יחידה</Text>
           <Text style={[styles.tableHeaderText, styles.col1]}>סה"כ</Text>
         </View>
         {cartItems.map((item, i) => (
           <View style={styles.tableRow} key={i}>
-            <View style={styles.col3}>
-              <RtlText text={item.title} style={{ fontSize: 10, color: '#2b2b2b' }} />
+            {/* מיכל ממורכז לשם המוצר */}
+            <View style={[styles.col3, { alignItems: 'center' }]}>
+              <RtlText centered={true} text={item.title} style={{ fontSize: 10, color: '#2b2b2b', textAlign: 'center' }} />
             </View>
             <Text style={styles.col1}>{item.quantity}</Text>
             <Text style={styles.col1}>{item.price?.amount || 0} ₪</Text>
