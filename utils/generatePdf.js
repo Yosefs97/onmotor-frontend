@@ -1,8 +1,8 @@
 // utils/generatePdf.jsx
-import { renderToStream, Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
+import { renderToBuffer, Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
 import React from 'react';
 
-// משיכת פונט עברי משרת CDN ייעודי (JSDelivr) שלא חוסם בקשות Vercel
+// משיכת פונט עברי 
 Font.register({
   family: 'Assistant',
   fonts: [
@@ -115,7 +115,8 @@ export async function generateReceiptPdf(orderNumber, customer, cartItems) {
   const subTotal = (total / 1.17).toFixed(2);
   const dateStr = new Date().toLocaleDateString('he-IL', { year: 'numeric', month: 'long', day: 'numeric' });
 
-  const stream = await renderToStream(
+  // הפקודה שונתה ל-renderToBuffer שעובדת מעולה בסביבת השרתים של Vercel
+  const buffer = await renderToBuffer(
     <ReceiptDocument
       orderNumber={orderNumber}
       customer={customer}
@@ -127,10 +128,5 @@ export async function generateReceiptPdf(orderNumber, customer, cartItems) {
     />
   );
 
-  return new Promise((resolve, reject) => {
-    const buffers = [];
-    stream.on('data', (data) => buffers.push(data));
-    stream.on('end', () => resolve(Buffer.concat(buffers)));
-    stream.on('error', reject);
-  });
+  return buffer;
 }
