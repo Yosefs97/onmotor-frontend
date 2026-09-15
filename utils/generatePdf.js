@@ -2,12 +2,12 @@
 import { renderToBuffer, Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
 import React from 'react';
 
-// משיכת פונט עברי 
+// משיכת פונט עברי ישירות מהמאגר המקורי של יוצר הפונט (hafontia)
 Font.register({
   family: 'Assistant',
   fonts: [
-    { src: 'https://cdn.jsdelivr.net/gh/googlefonts/assistant@main/fonts/ttf/Assistant-Regular.ttf' },
-    { src: 'https://cdn.jsdelivr.net/gh/googlefonts/assistant@main/fonts/ttf/Assistant-Bold.ttf', fontWeight: 'bold' }
+    { src: 'https://cdn.jsdelivr.net/gh/hafontia/Assistant@master/Fonts/TTF/Assistant-Regular.ttf' },
+    { src: 'https://cdn.jsdelivr.net/gh/hafontia/Assistant@master/Fonts/TTF/Assistant-Bold.ttf', fontWeight: 'bold' }
   ]
 });
 
