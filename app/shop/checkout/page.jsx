@@ -8,7 +8,7 @@ export default function CheckoutPage() {
   const [cartTotal, setCartTotal] = useState({ amount: 0, currencyCode: "₪" });
   const router = useRouter();
   
-  // פיצול הכתובת לשדות נפרדים
+  // פיצול הכתובת לשדות נפרדים + הוספת שדה Honeypot לבוטים (websiteURL)
   const [customer, setCustomer] = useState({
     name: "",
     email: "",
@@ -18,9 +18,9 @@ export default function CheckoutPage() {
     house: "",
     apartment: "",
     notes: "",
+    websiteURL: "", // מלכודת דבש!
   });
   
-  // רשימות להשלמה אוטומטית מהמאגר הממשלתי
   const [citiesList, setCitiesList] = useState([]);
   const [streetsList, setStreetsList] = useState([]);
   
@@ -42,7 +42,6 @@ export default function CheckoutPage() {
             name: `${cust.firstName || ''} ${cust.lastName || ''}`.trim(),
             email: cust.email || "",
             phone: cust.phone || "",
-            // אם יש לו כתובת שמורה, ננסה לשים את העיר מראש
             city: defaultAddr?.city || "",
           }));
         }
@@ -91,24 +90,21 @@ export default function CheckoutPage() {
     fetchCart();
   }, []);
 
-  // --- פונקציות חיפוש מול המאגר הממשלתי (data.gov.il) --- //
-  
   const handleCityChange = async (e) => {
     const val = e.target.value;
-    // איפוס רחוב כשמחליפים עיר
     setCustomer(prev => ({ ...prev, city: val, street: '' }));
     
-    // חיפוש רק אם הוקלדו לפחות 2 אותיות
-    if (val.length < 2) {
+    if (val.length < 1) {
         setCitiesList([]);
         return;
     }
     
     try {
-        const res = await fetch(`https://data.gov.il/api/3/action/datastore_search?resource_id=5c78e9fa-c2e2-4771-93ff-7f400a12f7ba&q=${val}&limit=15`);
+        const res = await fetch(`https://data.gov.il/api/3/action/datastore_search?resource_id=5c78e9fa-c2e2-4771-93ff-7f400a12f7ba&q=${val}&limit=100`);
         const data = await res.json();
-        // משיכת שם היישוב וסינון כפילויות או "לא רשום"
-        const results = data.result.records.map(r => r['שם_ישוב'].trim()).filter(c => c !== 'לא רשום');
+        const results = data.result.records
+            .map(r => r['שם_ישוב'].trim())
+            .filter(c => c !== 'לא רשום' && c.startsWith(val));
         setCitiesList([...new Set(results)]);
     } catch(err) {
         console.error("שגיאה במשיכת ערים:", err);
@@ -119,23 +115,22 @@ export default function CheckoutPage() {
     const val = e.target.value;
     setCustomer(prev => ({ ...prev, street: val }));
     
-    if (val.length < 2 || !customer.city) {
+    if (val.length < 1 || !customer.city) {
         setStreetsList([]);
         return;
     }
     
     try {
-        // חיפוש שמשלב את העיר והרחוב כדי למצוא תוצאות מדויקות
-        const res = await fetch(`https://data.gov.il/api/3/action/datastore_search?resource_id=a7296d1a-f8c9-4b70-96c2-6ebb4352f8e3&q=${customer.city} ${val}&limit=15`);
+        const res = await fetch(`https://data.gov.il/api/3/action/datastore_search?resource_id=a7296d1a-f8c9-4b70-96c2-6ebb4352f8e3&q=${customer.city} ${val}&limit=100`);
         const data = await res.json();
-        const results = data.result.records.map(r => r['שם_רחוב'].trim());
+        const results = data.result.records
+            .map(r => r['שם_רחוב'].trim())
+            .filter(s => s.startsWith(val));
         setStreetsList([...new Set(results)]);
     } catch(err) {
         console.error("שגיאה במשיכת רחובות:", err);
     }
   };
-
-  // --- סיום הזמנה --- //
 
   const handleOrder = async () => {
     if (!customer.name || !customer.email || !customer.phone || !customer.city || !customer.street || !customer.house) {
@@ -158,18 +153,12 @@ export default function CheckoutPage() {
       const data = await res.json();
 
       if (data.success) {
-        // 1. מחיקת עוגיית שופיפיי (לגיבוי)
         document.cookie = "cartId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        
-        // 2. התיקון הקריטי: מחיקת העגלה מה-LocalStorage של CartContext!
         localStorage.removeItem("cart");
-        
-        // 3. איפוס ממשק
         setCartItems([]);
         window.dispatchEvent(new Event('cartUpdated'));
-        window.dispatchEvent(new Event('storage')); // מעדכן את הקונטקסט מיד
+        window.dispatchEvent(new Event('storage')); 
         
-        // 4. מעבר עמוד קשיח
         window.location.href = `/shop/thank-you?order=${data.orderNumber.replace('#', '')}`;
       } else {
         alert("שגיאה ביצירת ההזמנה: " + (data.error || "נסה שוב מאוחר יותר"));
@@ -196,7 +185,18 @@ export default function CheckoutPage() {
       <h1 className="text-black text-2xl font-bold">סגירת הזמנה</h1>
 
       <div className="text-black space-y-3">
-        {/* פרטים אישיים */}
+        {/* --- מלכודת דבש לבוטים --- */}
+        <input
+            type="text"
+            name="websiteURL"
+            style={{ display: 'none' }}
+            tabIndex="-1"
+            autoComplete="off"
+            value={customer.websiteURL}
+            onChange={(e) => setCustomer({ ...customer, websiteURL: e.target.value })}
+        />
+        {/* ------------------------- */}
+        
         <input
             placeholder="שם מלא *"
             className="border border-gray-300 w-full p-3 rounded-lg focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all"
@@ -220,10 +220,7 @@ export default function CheckoutPage() {
             />
         </div>
 
-        {/* --- אזור הכתובת החדש --- */}
         <div className="grid grid-cols-2 gap-3 mt-4">
-            
-            {/* עיר עם חיפוש מובנה */}
             <div className="col-span-2 sm:col-span-1">
                 <input
                     list="cities-list"
@@ -238,7 +235,6 @@ export default function CheckoutPage() {
                 </datalist>
             </div>
 
-            {/* רחוב עם חיפוש מובנה */}
             <div className="col-span-2 sm:col-span-1">
                 <input
                     list="streets-list"
@@ -254,7 +250,6 @@ export default function CheckoutPage() {
                 </datalist>
             </div>
 
-            {/* מספר בית ודירה */}
             <div className="col-span-1">
                 <input
                     placeholder="מספר בית *"
@@ -272,7 +267,6 @@ export default function CheckoutPage() {
                 />
             </div>
         </div>
-        {/* --- סוף אזור הכתובת --- */}
 
         <textarea
           placeholder="הערות להזמנה או לשליח (אופציונלי)"

@@ -12,6 +12,12 @@ export async function POST(req) {
 
     console.log("📥 נתוני הזמנה התקבלו בשרת:", { customer, cartLength: cart?.length });
 
+    // הגנת Honeypot - אם הבוט מילא את השדה הנסתר, חוסמים את הפעולה בשקט
+    if (customer?.websiteURL && customer.websiteURL !== "") {
+        console.warn("🛡️ בוט נתפס במלכודת הדבש! חוסם בקשה.");
+        return NextResponse.json({ success: true, orderNumber: "B0T-CATCH" });
+    }
+
     if (!customer?.email || !cart?.length) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
@@ -28,7 +34,7 @@ export async function POST(req) {
     // 2. יצירת ה-PDF עם תפיסת השגיאה!
     let pdfBuffer = null;
     let attachments = [];
-    let pdfDebugError = null; // משתנה שומר את השגיאה
+    let pdfDebugError = null; 
 
     try {
       pdfBuffer = await generateReceiptPdf(orderNumber, customer, cart);
@@ -39,14 +45,13 @@ export async function POST(req) {
       }];
     } catch (pdfErr) {
       console.error("❌ שגיאה ביצירת ה-PDF:", pdfErr);
-      pdfDebugError = pdfErr.message || String(pdfErr); // שומרים את הטקסט המדויק של השגיאה
+      pdfDebugError = pdfErr.message || String(pdfErr);
     }
 
     // 3. בניית המיילים המעוצבים (לקוח מול מנהל)
     const customerHtml = buildOrderEmail(customer, cart, orderNumber);
     let adminHtml = customerHtml;
 
-    // אם הייתה שגיאה ב-PDF, נזריק אותה לתחתית המייל של מנהל החנות בלבד!
     if (pdfDebugError) {
       adminHtml += `
       <div dir="ltr" style="margin-top: 40px; padding: 20px; background-color: #ffefef; border: 2px solid #ff4444; border-radius: 8px; font-family: monospace;">
@@ -68,14 +73,14 @@ export async function POST(req) {
       console.error("❌ שגיאה בשליחת מייל ללקוח:", mailErr);
     }
 
-    // 5. שליחת מייל למנהל החנות (כולל קופסת השגיאה אם קיימת)
+    // 5. שליחת מייל למנהל החנות 
     if (process.env.ADMIN_EMAIL) {
       try {
         await sendMail({
           to: process.env.ADMIN_EMAIL,
           subject: `📦 הזמנה חדשה ${orderNumber} – ${customer.name}`,
           html: adminHtml,
-          attachments // אם ה-PDF נוצר, הוא יצורף. אם לא, יצורף מערך ריק.
+          attachments 
         });
       } catch (adminMailErr) {
         console.error("❌ שגיאה בשליחת מייל למנהל:", adminMailErr);
