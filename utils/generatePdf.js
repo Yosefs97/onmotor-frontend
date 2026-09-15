@@ -1,5 +1,5 @@
 // utils/generatePdf.jsx
-import { renderToBuffer, Document, Page, Text, View, StyleSheet, Font, Link } from '@react-pdf/renderer';
+import { renderToBuffer, Document, Page, Text, View, StyleSheet, Font, Link, Image } from '@react-pdf/renderer';
 import React from 'react';
 
 // משיכת פונט עברי מהמאגר המקורי
@@ -21,8 +21,30 @@ const RtlText = ({ text, style }) => (
 );
 
 const styles = StyleSheet.create({
-  page: { padding: 40, fontFamily: 'Assistant', fontSize: 12, backgroundColor: '#faf8f5' },
+  page: { padding: 40, fontFamily: 'Assistant', fontSize: 12, backgroundColor: '#faf8f5', position: 'relative' },
   
+  // --- הגדרות סימן המים (Watermark) המפוצל --- //
+  watermarkContainer: { 
+    position: 'absolute', 
+    top: -20, 
+    left: -20, 
+    right: -20, 
+    bottom: -20, 
+    flexDirection: 'row', // מאפשר לאלמנטים לזרום
+    flexWrap: 'wrap', // שובר שורה כשהמקום נגמר (יוצר רשת)
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    zIndex: -1, 
+    overflow: 'hidden' // מוודא שזה לא חורג מהדף
+  },
+  watermarkImage: { 
+    width: 140, // גודל מוקטן כדי שייכנסו הרבה כאלו
+    margin: 25, // רווח נשימה בין לוגו ללוגו
+    opacity: 0.05, // שקיפות עדינה מאוד 
+    transform: 'rotate(-35deg)' // סיבוב אלכסוני לכולם
+  },
+  // ------------------------------------ //
+
   // הדר
   header: { flexDirection: 'row-reverse', justifyContent: 'space-between', borderBottomWidth: 3, borderBottomColor: '#d9534f', paddingBottom: 15, marginBottom: 25 },
   
@@ -55,7 +77,7 @@ const styles = StyleSheet.create({
   tableHeader: { flexDirection: 'row-reverse', backgroundColor: '#2b2b2b', padding: 8 },
   tableHeaderText: { color: 'white', fontWeight: 'bold', fontSize: 10, textAlign: 'right' },
   tableRow: { flexDirection: 'row-reverse', borderBottomWidth: 1, borderBottomColor: '#e0e0e0', padding: 8, backgroundColor: '#ffffff' },
-  col3: { width: '40%', paddingRight: 5, alignItems: 'flex-start' }, // יישור כותרת הפריט
+  col3: { width: '40%', paddingRight: 5, alignItems: 'flex-start' }, 
   col1: { width: '20%', textAlign: 'right', paddingRight: 5 },
   
   // סיכום מחירון
@@ -83,6 +105,18 @@ const ReceiptDocument = ({ orderNumber, customer, cartItems, subTotal, vat, tota
   <Document>
     <Page size="A4" style={styles.page}>
       
+      {/* -- רשת סימני המים על פני כל המסמך -- */}
+      <View style={styles.watermarkContainer}>
+        {/* מייצר מערך של 40 פריטים כדי למלא את הדף בלוגואים */}
+        {Array.from({ length: 40 }).map((_, i) => (
+          <Image 
+            key={i} 
+            src="https://onmotormedia.com/shop_logo_order.png" 
+            style={styles.watermarkImage} 
+          />
+        ))}
+      </View>
+      
       {/* 1. הדר */}
       <View style={styles.header}>
         <View style={styles.headerTitleContainer}>
@@ -90,7 +124,6 @@ const ReceiptDocument = ({ orderNumber, customer, cartItems, subTotal, vat, tota
           <View style={styles.dateRow}>
             <Text style={styles.date}>תאריך מסמך</Text>
             <Text style={styles.date}>:</Text>
-            {/* שימוש ברכיב הקסם לתאריך */}
             <RtlText text={dateStr} style={[styles.date, { marginRight: 3 }]} />
           </View>
         </View>
@@ -108,14 +141,12 @@ const ReceiptDocument = ({ orderNumber, customer, cartItems, subTotal, vat, tota
           <View style={styles.mixedRow}>
             <Text style={styles.subtitleLabel}>מספר עוסק / שותפות</Text>
             <Text style={styles.subtitleColon}>:</Text>
-            {/* שימוש ברכיב הקסם למספר עוסק */}
             <RtlText text="558641379 מ.א. / ס.ת 44 20" style={styles.subtitleValue} />
           </View>
 
           <View style={styles.mixedRow}>
             <Text style={styles.subtitleLabel}>כתובת</Text>
             <Text style={styles.subtitleColon}>:</Text>
-            {/* שימוש ברכיב הקסם לכתובת החברה */}
             <RtlText text="הלוחמים 15, בני ברק, מיקוד 5131017" style={styles.subtitleValue} />
           </View>
 
@@ -173,7 +204,6 @@ const ReceiptDocument = ({ orderNumber, customer, cartItems, subTotal, vat, tota
         {cartItems.map((item, i) => (
           <View style={styles.tableRow} key={i}>
             <View style={styles.col3}>
-               {/* שימוש ברכיב הקסם לכותרת המוצר (כדי שמספרים כמו KTM 1090 לא יתהפכו) */}
               <RtlText text={item.title} style={{ fontSize: 10, color: '#2b2b2b' }} />
             </View>
             <Text style={styles.col1}>{item.quantity}</Text>
