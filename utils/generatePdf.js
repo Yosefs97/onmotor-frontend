@@ -151,7 +151,16 @@ const ReceiptDocument = ({ orderNumber, customer, cartItems, subTotal, vat, tota
           <View style={styles.mixedRow}>
             <Text style={styles.subtitleLabel}>טלפון</Text>
             <Text style={styles.subtitleColon}>:</Text>
-            <Text style={styles.subtitleValue}>054-6957197</Text>
+            <Text style={styles.subtitleValue}>052-2304604</Text>
+          </View>
+
+          {/* שורת הוואטסאפ החדשה */}
+          <View style={styles.mixedRow}>
+            <Text style={styles.subtitleLabel}>וואטסאפ</Text>
+            <Text style={styles.subtitleColon}>:</Text>
+            <Link src="https://wa.me/message/EAMFCK7SFV4BN1" style={styles.linkText}>
+              לחץ כאן לשליחת הודעה
+            </Link>
           </View>
 
           <View style={styles.mixedRow}>
@@ -164,7 +173,7 @@ const ReceiptDocument = ({ orderNumber, customer, cartItems, subTotal, vat, tota
             <Text style={styles.subtitleLabel}>אתר</Text>
             <Text style={styles.subtitleColon}>:</Text>
             <Link src="https://www.onmotormedia.com/shop" style={styles.linkText}>
-              https://www.onmotormedia.com/shop
+              לחץ כאן למעבר לחנות
             </Link>
           </View>
         </View>
