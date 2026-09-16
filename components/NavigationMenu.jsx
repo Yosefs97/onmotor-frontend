@@ -95,22 +95,19 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
         className={
           mobile
             ? "flex flex-col gap-2 text-2xl text-right"
-            : "flex gap-2 text-lm font-semibold"
+            : "flex items-center gap-2 text-lm font-semibold"
         }
       >
         {menus.map((menu, index) => {
           const hasLinks = menu.links && menu.links.length > 0;
-          const isOnMotorParts = menu.title === 'OnMotor Parts';
+          // שינוי הלוגיקה: זיהוי הכפתור המיוחד לפי השם החדש
+          const isShopButton = menu.title === 'לחנות לחץ כאן';
 
           const handleClick = () => {
-            if (mobile && hasLinks && !isOnMotorParts) {
+            if (mobile && hasLinks && !isShopButton) {
               toggleMenu(index);
-            } else if (isOnMotorParts) {
-              // פתיחת OnMotor Parts בחלון חדש
-              window.open(menu.path, '_blank', 'noopener,noreferrer');
-              onClose();
             } else {
-              // ניווט רגיל באותו חלון לשאר הקישורים
+              // ניווט רגיל באותו חלון לחנות ולשאר הקישורים
               onClose();
               router.push(menu.path);
             }
@@ -119,21 +116,23 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
           return (
             <div
               key={index}
-              className={`relative ${!mobile ? "group" : ""}`}
+              className={`relative ${!mobile ? "group flex items-center h-full" : ""}`}
               ref={(el) => (menuRefs.current[index] = el)}
             >
               <button
                 onClick={handleClick}
-                className={`flex items-center gap-1 w-full px-2 py-1 text-lm font-semibold text-right
+                // יישור מושלם (items-center) ושינוי צבעים חלק (transition-colors)
+                className={`flex items-center gap-1 w-full px-2 py-1 text-lm font-semibold text-right transition-colors duration-200
                   ${
-                    isOnMotorParts
-                      ? "text-[#e60000] font-bold animate-parts-bounce"
-                      : "hover:text-[#e60000]"
+                    isShopButton
+                      ? "text-[#e60000] hover:text-white" // אדום קבוע, לבן בריחוף
+                      : "hover:text-[#e60000]" // רגיל, אדום בריחוף
                   }`}
               >
-                <span className="flex-1">{menu.title}</span>
-                {hasLinks && (!mobile || !isOnMotorParts) && (
-                  <span className="text-xl">
+                <span className="whitespace-nowrap pt-[2px]">{menu.title}</span>
+                {hasLinks && (!mobile || !isShopButton) && (
+                  // הקטנת החץ ל-text-xs כדי שלא ישבור את הגובה של שאר הכפתורים
+                  <span className="text-xs opacity-80 pt-[4px] ml-1">
                     {mobile ? (openIndex === index ? "▲" : "▼") : "▼"}
                   </span>
                 )}
@@ -142,7 +141,7 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
               {/* dropdown */}
               {hasLinks && (
                 mobile ? (
-                  !isOnMotorParts && (
+                  !isShopButton && (
                     <div
                       className={`flex flex-col gap-1 mt-4 pr-4 text-lm ${
                         openIndex === index ? "block" : "hidden"
@@ -200,7 +199,7 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
                     </div>
                   )
                 ) : (
-                  <div className="absolute right-0 w-56 bg-black shadow-lg rounded p-2 z-[9999] text-right hidden group-hover:flex flex-col">
+                  <div className="absolute top-[100%] right-0 w-56 bg-black shadow-lg rounded p-2 z-[9999] text-right hidden group-hover:flex flex-col">
                     {menu.links.map((link, idx) => {
                       const hasSubLinks =
                         link.links && link.links.length > 0;
@@ -221,7 +220,7 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
                           </Link>
 
                           {hasSubLinks && (
-                            <div className="absolute top-full right-0 w-54 bg-black shadow-lg rounded p-2 z-[9999] text-right hidden group-hover/sub:flex flex-col">
+                            <div className="absolute top-0 right-full w-54 bg-black shadow-lg rounded p-2 z-[9999] text-right hidden group-hover/sub:flex flex-col">
                               {link.links.map((sublink, sIdx) => (
                                 <Link
                                   key={sIdx}
