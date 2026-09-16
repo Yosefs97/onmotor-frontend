@@ -125,7 +125,7 @@ export default function NavigationMenu({ mobile = false, onClose = () => {} }) {
                 className={`flex items-center gap-1 w-full px-2 py-1 text-lm font-semibold text-right transition-colors duration-200
                   ${
                     isShopButton
-                      ? "text-[#e60000] hover:text-white" // אדום קבוע, לבן בריחוף
+                      ? "text-[#e60000] font-bold hover:text-white" // אדום קבוע, לבן בריחוף
                       : "hover:text-[#e60000]" // רגיל, אדום בריחוף
                   }`}
               >
