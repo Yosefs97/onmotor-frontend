@@ -85,7 +85,7 @@ export default function BatterySearchWidget({ compact = false }) {
       });
     });
     return Array.from(uniqueReplacements).sort();
-  }, [tableData]);
+  }, []);
 
   const handleSearch = () => {
     if (selectedModel) {
@@ -101,7 +101,6 @@ export default function BatterySearchWidget({ compact = false }) {
     }
   };
 
-  // מזהה ייחודי לרשימה כדי לחבר בין ה-input ל-datalist
   const datalistId = "battery-models-list";
 
   // === תצוגה מינימליסטית (עבור דף מוצרים קשורים) ===
@@ -112,7 +111,7 @@ export default function BatterySearchWidget({ compact = false }) {
         <input 
           type="text"
           list={datalistId}
-          placeholder="חפש או בחר דגם..."
+          placeholder="בחר דגם..."
           className="py-1 px-2 text-sm text-gray-700 border border-gray-300 rounded focus:ring-1 focus:ring-red-600 focus:outline-none flex-grow md:w-48 bg-white"
           value={selectedModel}
           onChange={(e) => setSelectedModel(e.target.value)}
@@ -132,7 +131,7 @@ export default function BatterySearchWidget({ compact = false }) {
     );
   }
 
-  // === התצוגה המלאה ===
+  // === התצוגה המלאה (הקוד שלך) ===
   return (
     <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-lg shadow-sm my-6 border border-gray-200">
       <h2 className="text-center font-bold text-xl mb-4 text-gray-800">מצא את המצבר לאופנוע שלך</h2>
@@ -143,7 +142,7 @@ export default function BatterySearchWidget({ compact = false }) {
           id="replacementInput"
           type="text"
           list={datalistId}
-          placeholder="חפש או בחר דגם..."
+          placeholder="בחר דגם..."
           className="p-2 border border-gray-300 rounded-md w-full md:w-64 text-gray-700 focus:ring-2 focus:ring-red-600 focus:outline-none bg-white"
           value={selectedModel}
           onChange={(e) => setSelectedModel(e.target.value)}
