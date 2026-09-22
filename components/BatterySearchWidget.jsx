@@ -1,7 +1,84 @@
 // /components/BatterySearchWidget.jsx
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
+
+// רכיב פנימי ששומר על העיצוב שלך אבל מאפשר הקלדה וחיפוש
+function SearchableSelect({ options, value, onChange, placeholder, inputClassName, containerClassName }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const wrapperRef = useRef(null);
+
+  // סגירת הרשימה בעת לחיצה מחוץ לאזור
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // סינון האופציות לפי מה שהוקלד
+  const filteredOptions = options.filter(opt =>
+    opt.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // מה שמוצג בשדה: אם פתוח מציגים את טקסט החיפוש, אחרת את הערך שנבחר
+  const displayValue = isOpen ? searchTerm : (value || '');
+
+  return (
+    <div ref={wrapperRef} className={`relative ${containerClassName}`}>
+      <input
+        type="text"
+        className={`${inputClassName} w-full pl-8 bg-white cursor-text transition-none`}
+        placeholder={placeholder}
+        value={displayValue}
+        onChange={(e) => {
+          setSearchTerm(e.target.value);
+          setIsOpen(true);
+        }}
+        onClick={() => {
+          setSearchTerm(''); // מנקה את טקסט החיפוש כדי שיהיה נוח להקליד מחדש
+          setIsOpen(true);
+        }}
+      />
+      
+      {/* חץ קטן כמו ב-Select רגיל (ממוקם בצד שמאל עבור עברית RTL) */}
+      <div className="absolute inset-y-0 left-2 flex items-center pointer-events-none">
+        <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
+
+      {/* תפריט התוצאות הקופץ */}
+      {isOpen && (
+        <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto text-gray-700 m-0 p-0 list-none">
+          {filteredOptions.length > 0 ? (
+            filteredOptions.map(option => (
+              <li
+                key={option}
+                className="cursor-pointer select-none py-2 px-3 hover:bg-gray-100 text-sm transition-colors text-right"
+                onMouseDown={(e) => {
+                  e.preventDefault(); // מונע איבוד פוקוס לפני הבחירה
+                  onChange(option);
+                  setIsOpen(false);
+                }}
+              >
+                {option}
+              </li>
+            ))
+          ) : (
+            <li className="py-2 px-3 text-gray-500 text-sm text-right">
+              לא נמצאו תוצאות
+            </li>
+          )}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 export default function BatterySearchWidget({ compact = false }) {
   const [selectedModel, setSelectedModel] = useState('');
@@ -94,33 +171,27 @@ export default function BatterySearchWidget({ compact = false }) {
         // מפנה לעמוד המוצר
         window.location.href = product.productUrl; 
       } else {
-        alert('אנא בחר דגם מצבר חוקי מהרשימה.');
+        alert('אנא בחר דגם מצבר מהרשימה.');
       }
     } else {
       alert('אנא בחר דגם מצבר מהרשימה.');
     }
   };
 
-  const datalistId = "battery-models-list";
-
   // === תצוגה מינימליסטית (עבור דף מוצרים קשורים) ===
   if (compact) {
     return (
       <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 shadow-sm w-full md:w-auto">
         <span className="text-sm font-bold text-gray-700 whitespace-nowrap">התאמת מצבר:</span>
-        <input 
-          type="text"
-          list={datalistId}
-          placeholder="בחר דגם..."
-          className="py-1 px-2 text-sm text-gray-700 border border-gray-300 rounded focus:ring-1 focus:ring-red-600 focus:outline-none flex-grow md:w-48 bg-white"
+        <SearchableSelect
+          options={options}
           value={selectedModel}
-          onChange={(e) => setSelectedModel(e.target.value)}
+          onChange={setSelectedModel}
+          placeholder="בחר דגם..."
+          // העיצוב המקורי שלך לתצוגה המינימלית פוצל לכאן:
+          inputClassName="py-1 px-2 text-sm text-gray-700 border border-gray-300 rounded focus:ring-1 focus:ring-red-600 focus:outline-none"
+          containerClassName="flex-grow md:w-48"
         />
-        <datalist id={datalistId}>
-          {options.map(option => (
-            <option key={option} value={option} />
-          ))}
-        </datalist>
         <button 
           onClick={handleSearch}
           className="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm transition-colors"
@@ -131,27 +202,22 @@ export default function BatterySearchWidget({ compact = false }) {
     );
   }
 
-  // === התצוגה המלאה (הקוד שלך) ===
+  // === התצוגה המלאה ===
   return (
     <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-lg shadow-sm my-6 border border-gray-200">
       <h2 className="text-center font-bold text-xl mb-4 text-gray-800">מצא את המצבר לאופנוע שלך</h2>
       
       <div className="flex flex-col md:flex-row justify-center items-center gap-4">
-        <label htmlFor="replacementInput" className="font-bold text-gray-700">המצבר הנוכחי שלך</label>
-        <input 
-          id="replacementInput"
-          type="text"
-          list={datalistId}
-          placeholder="בחר דגם..."
-          className="p-2 border border-gray-300 rounded-md w-full md:w-64 text-gray-700 focus:ring-2 focus:ring-red-600 focus:outline-none bg-white"
+        <label htmlFor="replacementDropdown" className="font-bold text-gray-700">המצבר הנוכחי שלך</label>
+        <SearchableSelect
+          options={options}
           value={selectedModel}
-          onChange={(e) => setSelectedModel(e.target.value)}
+          onChange={setSelectedModel}
+          placeholder="בחר דגם..."
+          // העיצוב המקורי שלך לתצוגה המלאה פוצל לכאן:
+          inputClassName="p-2 border border-gray-300 rounded-md text-gray-700 focus:ring-2 focus:ring-red-600 focus:outline-none"
+          containerClassName="w-full md:w-64"
         />
-        <datalist id={datalistId}>
-          {options.map(option => (
-            <option key={option} value={option} />
-          ))}
-        </datalist>
         
         <button 
           onClick={handleSearch}
