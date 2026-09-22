@@ -62,17 +62,14 @@ export function ProductCard({ product, priority = false, className = '' }) {
         </span>
       </div>
       
-      {/* ריווח פנימי עדין יותר במובייל (p-3) */}
       <div className="flex flex-1 flex-col justify-between p-3 sm:p-4">
         <h3 
-          // טקסט קטן יותר במובייל (text-sm)
           className="min-h-10 sm:min-h-12 text-sm sm:text-base font-extrabold leading-snug text-zinc-900 line-clamp-2"
           title={product.title}
         >
           {product.title}
         </h3>
         
-        {/* מרווחים מוקטנים בין המחיר לכפתור במובייל (gap-1.5) */}
         <div className="mt-auto flex items-center justify-between gap-1.5 sm:gap-3 pt-3 overflow-hidden">
           <span className="text-base sm:text-lg font-black text-[#e60000] whitespace-nowrap">
             {price || 'לפרטים'}
@@ -95,7 +92,7 @@ export default function FeaturedProducts({
   subtitle = 'נבחרו בשבילך',
   linkUrl = '/shop/parts',
   linkText = 'לכל החלפים',
-  limit = 15 // שונה מ-10 ל-15
+  limit = 15 
 }) {
   let displayProducts = [...products];
 
@@ -140,15 +137,15 @@ export default function FeaturedProducts({
         )}
       </div>
 
-      {/* הוסר הגריד במסכים גדולים, הושאר flex עם גלילה לכל המסכים (sm:gap-5) */}
-      <div className="flex gap-3 sm:gap-5 overflow-x-auto snap-x snap-mandatory pb-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      {/* הקטנו את הרווח בין הכרטיסיות ל-gap-3 באופן גורף לכל המסכים */}
+      <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {displayProducts.map((product, index) => (
           <ProductCard 
             key={product.id || index} 
             product={product} 
             priority={index < 2} 
-            // מחלקה חדשה: shrink-0 נשאר לכל המסכים, מוגדר רוחב ספציפי (באחוזים) בהתאם לגודל המסך
-            className="w-[55%] sm:w-[35%] md:w-[28%] lg:w-[22%] xl:w-[18%] shrink-0 snap-start"
+            // הגדלנו את אחוזי הרוחב לכל מסך כדי שהכרטיסיה תתפוס יותר מקום
+            className="w-[65%] sm:w-[45%] md:w-[32%] lg:w-[26%] xl:w-[22%] shrink-0 snap-start"
           />
         ))}
       </div>
