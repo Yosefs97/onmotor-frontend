@@ -85,7 +85,7 @@ export default function BatterySearchWidget({ compact = false }) {
       });
     });
     return Array.from(uniqueReplacements).sort();
-  }, []);
+  }, [tableData]);
 
   const handleSearch = () => {
     if (selectedModel) {
@@ -93,27 +93,35 @@ export default function BatterySearchWidget({ compact = false }) {
       if (product) {
         // מפנה לעמוד המוצר
         window.location.href = product.productUrl; 
+      } else {
+        alert('אנא בחר דגם מצבר חוקי מהרשימה.');
       }
     } else {
       alert('אנא בחר דגם מצבר מהרשימה.');
     }
   };
 
+  // מזהה ייחודי לרשימה כדי לחבר בין ה-input ל-datalist
+  const datalistId = "battery-models-list";
+
   // === תצוגה מינימליסטית (עבור דף מוצרים קשורים) ===
   if (compact) {
     return (
       <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 shadow-sm w-full md:w-auto">
         <span className="text-sm font-bold text-gray-700 whitespace-nowrap">התאמת מצבר:</span>
-        <select 
-          className="py-1 px-2 text-sm text-gray-700 border border-gray-300 rounded focus:ring-1 focus:ring-red-600 focus:outline-none flex-grow md:w-48"
+        <input 
+          type="text"
+          list={datalistId}
+          placeholder="חפש או בחר דגם..."
+          className="py-1 px-2 text-sm text-gray-700 border border-gray-300 rounded focus:ring-1 focus:ring-red-600 focus:outline-none flex-grow md:w-48 bg-white"
           value={selectedModel}
           onChange={(e) => setSelectedModel(e.target.value)}
-        >
-          <option value="">בחר דגם...</option>
+        />
+        <datalist id={datalistId}>
           {options.map(option => (
-            <option key={option} value={option}>{option}</option>
+            <option key={option} value={option} />
           ))}
-        </select>
+        </datalist>
         <button 
           onClick={handleSearch}
           className="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm transition-colors"
@@ -124,24 +132,27 @@ export default function BatterySearchWidget({ compact = false }) {
     );
   }
 
-  // === התצוגה המלאה (הקוד שלך) ===
+  // === התצוגה המלאה ===
   return (
     <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-6 rounded-lg shadow-sm my-6 border border-gray-200">
       <h2 className="text-center font-bold text-xl mb-4 text-gray-800">מצא את המצבר לאופנוע שלך</h2>
       
       <div className="flex flex-col md:flex-row justify-center items-center gap-4">
-        <label htmlFor="replacementDropdown" className="font-bold text-gray-700">המצבר הנוכחי שלך</label>
-        <select 
-          id="replacementDropdown"
-          className="p-2 border border-gray-300 rounded-md w-full md:w-64 text-gray-700 focus:ring-2 focus:ring-red-600 focus:outline-none"
+        <label htmlFor="replacementInput" className="font-bold text-gray-700">המצבר הנוכחי שלך</label>
+        <input 
+          id="replacementInput"
+          type="text"
+          list={datalistId}
+          placeholder="חפש או בחר דגם..."
+          className="p-2 border border-gray-300 rounded-md w-full md:w-64 text-gray-700 focus:ring-2 focus:ring-red-600 focus:outline-none bg-white"
           value={selectedModel}
           onChange={(e) => setSelectedModel(e.target.value)}
-        >
-          <option value="">בחר דגם...</option>
+        />
+        <datalist id={datalistId}>
           {options.map(option => (
-            <option key={option} value={option}>{option}</option>
+            <option key={option} value={option} />
           ))}
-        </select>
+        </datalist>
         
         <button 
           onClick={handleSearch}
