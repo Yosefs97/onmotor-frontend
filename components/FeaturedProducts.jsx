@@ -95,7 +95,7 @@ export default function FeaturedProducts({
   subtitle = 'נבחרו בשבילך',
   linkUrl = '/shop/parts',
   linkText = 'לכל החלפים',
-  limit = 10 
+  limit = 15 // שונה מ-10 ל-15
 }) {
   let displayProducts = [...products];
 
@@ -140,15 +140,15 @@ export default function FeaturedProducts({
         )}
       </div>
 
-      {/* הקטנו את הרווח בין הכרטיסיות במובייל ל-gap-3 */}
-      <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-6 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:pb-0 lg:grid-cols-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      {/* הוסר הגריד במסכים גדולים, הושאר flex עם גלילה לכל המסכים (sm:gap-5) */}
+      <div className="flex gap-3 sm:gap-5 overflow-x-auto snap-x snap-mandatory pb-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {displayProducts.map((product, index) => (
           <ProductCard 
             key={product.id || index} 
             product={product} 
             priority={index < 2} 
-            // שינינו ל-55% כדי שהכרטיסיות יהיו הרבה יותר עדינות במובייל
-            className="w-[55%] shrink-0 snap-start sm:w-auto sm:shrink"
+            // מחלקה חדשה: shrink-0 נשאר לכל המסכים, מוגדר רוחב ספציפי (באחוזים) בהתאם לגודל המסך
+            className="w-[55%] sm:w-[35%] md:w-[28%] lg:w-[22%] xl:w-[18%] shrink-0 snap-start"
           />
         ))}
       </div>
