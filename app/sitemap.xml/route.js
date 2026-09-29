@@ -1,5 +1,7 @@
 // app/sitemap.xml/route.js
-export const dynamic = 'force-dynamic';
+
+// מרנדר מחדש את ה-Sitemap כל שעה (3600 שניות) במקום בכל בקשה לשיפור ביצועים ודירוג
+export const revalidate = 3600;
 
 export async function GET() {
   const SITE_URL = "https://www.onmotormedia.com";
@@ -68,8 +70,7 @@ export async function GET() {
   let articles = [];
   try {
     const res = await fetch(
-      `${API_URL}/api/articles?fields=slug,href,updatedAt&pagination[pageSize]=1000&sort=updatedAt:desc`, 
-      { cache: "no-store" }
+      `${API_URL}/api/articles?fields=slug,href,updatedAt&pagination[pageSize]=1000&sort=updatedAt:desc`
     );
     const json = await res.json();
     if (json.data && Array.isArray(json.data)) {
@@ -120,15 +121,13 @@ export async function GET() {
           body: JSON.stringify({
             query,
             variables: { cursor }
-          }),
-          cache: "no-store"
+          })
         });
 
         const json = await res.json();
         
         if (json.data && json.data.products) {
           const fetchedProducts = json.data.products.edges.map(({ node }) => ({
-            // מתאים לנתיב /app/shop/[handle]/page.jsx
             url: `${SITE_URL}/shop/${encodeURIComponent(node.handle)}`,
             lastmod: node.updatedAt || new Date().toISOString(),
           }));
@@ -154,10 +153,10 @@ export async function GET() {
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls
   .map(
-    u => `<url>
-  <loc>${u.url}</loc>
-  <lastmod>${u.lastmod}</lastmod>
-</url>`
+    u => `  <url>
+    <loc>${u.url}</loc>
+    <lastmod>${u.lastmod}</lastmod>
+  </url>`
   )
   .join("\n")}
 </urlset>`;
