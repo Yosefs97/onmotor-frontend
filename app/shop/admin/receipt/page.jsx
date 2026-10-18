@@ -1,4 +1,3 @@
-// app/admin/receipt/page.jsx
 "use client";
 import { useState } from "react";
 
@@ -24,6 +23,13 @@ export default function AdminReceiptPage() {
     const newItems = [...items];
     newItems[index][field] = value;
     setItems(newItems);
+  };
+
+  // הפונקציה החדשה להסרת שורת פריט
+  const handleRemoveItem = (indexToRemove) => {
+    // לא נאפשר למחוק אם יש רק שורה אחת בטופס
+    if (items.length === 1) return;
+    setItems(items.filter((_, index) => index !== indexToRemove));
   };
 
   const handleSend = async () => {
@@ -61,8 +67,8 @@ export default function AdminReceiptPage() {
       const data = await res.json();
       if (data.success) {
         alert("🎉 הקבלה נשלחה בהצלחה ללקוח!");
-        // איפוס הטופס
         setFormData({ ...formData, receiptNumber: "", orderNumber: "" });
+        setItems([{ title: "", quantity: 1, price: "" }]); // איפוס גם של שורות הפריטים
       } else {
         alert("שגיאה: " + data.error);
       }
@@ -73,7 +79,7 @@ export default function AdminReceiptPage() {
   };
 
   return (
-    <div dir="rtl" className="max-w-3xl mx-auto p-6 bg-white shadow-lg mt-10 rounded-xl">
+    <div dir="rtl" className="max-w-3xl mx-auto p-6 bg-white shadow-lg mt-10 rounded-xl text-black">
       <h1 className="text-2xl font-bold text-red-600 mb-6 border-b pb-2">מערכת הפקת קבלות - OnMotor Parts</h1>
       
       <div className="grid grid-cols-2 gap-4 mb-6">
@@ -100,11 +106,22 @@ export default function AdminReceiptPage() {
       {items.map((item, index) => (
         <div key={index} className="flex gap-2 mb-2 items-center">
           <input placeholder="שם הפריט *" className="border p-2 rounded flex-1" value={item.title} onChange={e => handleItemChange(index, "title", e.target.value)} />
-          <input placeholder="כמות" type="number" min="1" className="border p-2 rounded w-20" value={item.quantity} onChange={e => handleItemChange(index, "quantity", e.target.value)} />
+          <input placeholder="כמות" type="number" min="1" className="border p-2 rounded w-20 text-center" value={item.quantity} onChange={e => handleItemChange(index, "quantity", e.target.value)} />
           <input placeholder="מחיר יחידה (₪) *" type="number" className="border p-2 rounded w-32" value={item.price} onChange={e => handleItemChange(index, "price", e.target.value)} />
+          
+          {/* כפתור ההסרה (פח אשפה) - מופיע רק אם יש יותר מפריט אחד */}
+          {items.length > 1 && (
+            <button 
+              onClick={() => handleRemoveItem(index)} 
+              className="text-red-500 hover:text-red-700 p-2 text-xl transition-colors"
+              title="הסר פריט"
+            >
+              🗑️
+            </button>
+          )}
         </div>
       ))}
-      <button onClick={handleAddItem} className="text-sm text-blue-600 mb-8 font-semibold">+ הוסף פריט נוסף לקבלה</button>
+      <button onClick={handleAddItem} className="text-sm text-blue-600 mb-8 font-semibold hover:text-blue-800 transition-colors">+ הוסף פריט נוסף לקבלה</button>
 
       <button onClick={handleSend} disabled={loading} className="w-full bg-red-600 text-white font-bold py-4 rounded-lg hover:bg-red-700 transition disabled:bg-gray-400">
         {loading ? "מייצר ושולח קבלה..." : "הפק קבלה ושלח ללקוח"}
