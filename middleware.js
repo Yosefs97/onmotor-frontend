@@ -12,12 +12,12 @@ export function middleware(req) {
     const authValue = basicAuth.split(' ')[1];
     const [user, pwd] = atob(authValue).split(':');
 
-    // הגדרה קשיחה ובטוחה שעוקפת את המשתנים של Vercel זמנית
-    const validUser = 'admin';
-    const validPass = '123456';
+    // משיכת הנתונים המאובטחים מ-Vercel
+    const validUser = process.env.ADMIN_USER;
+    const validPass = process.env.ADMIN_PASSWORD;
 
-    // נוודא שאין רווחים בטעות בהקלדה
-    if (user.trim() === validUser && pwd.trim() === validPass) {
+    // מוודא שהמשתנים קיימים ושהמשתמש הקליד אותם נכון (ללא רווחים)
+    if (validUser && validPass && user.trim() === validUser && pwd.trim() === validPass) {
       return NextResponse.next();
     }
   }
