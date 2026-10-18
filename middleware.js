@@ -2,7 +2,8 @@
 import { NextResponse } from 'next/server';
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  // עדכנו את ה-matcher כך שיגן גם על /shop/admin וגם על /admin רגיל
+  matcher: ['/admin/:path*', '/shop/admin/:path*'],
 };
 
 export function middleware(req) {
