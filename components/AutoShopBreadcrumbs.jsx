@@ -1,4 +1,3 @@
-// /components/AutoShopBreadcrumbs.jsx
 'use client';
 
 import Link from 'next/link';
@@ -17,7 +16,9 @@ const CATEGORY_NAMES = {
   'oem': 'חלקים מקוריים',
   'tires': 'צמיגים',
   'helmets': 'קסדות',
-  'accessories': 'אביזרים'
+  'accessories': 'אביזרים',
+  'oils': 'שמנים ונוזלים', // 👈 התווסף למילון
+  'batteries': 'מצברים'    // 👈 התווסף למילון
 };
 
 export default function AutoShopBreadcrumbs({ product = null, collection = null }) {
@@ -75,7 +76,7 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
 
       let matchedModel = null;
 
-      // 🌟 השוואה מנורמלת ומדויקת בין ה-URL לתגיות ה-Fit ללא קשר למקפים/רווחים
+      // 🌟 השוואה מנורמלת ומדויקת בין ה-URL לתגיות
       if (modelParam) {
         const cleanParamModel = decodeURIComponent(modelParam).toLowerCase().replace(/[^a-z0-9]/g, '');
         
@@ -94,7 +95,7 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
         }
       }
 
-      // הגדרת ברירת מחדל אם נכנסו ישירות למוצר ללא קשר לדגם (למשל מגוגל)
+      // הגדרת ברירת מחדל אם נכנסו ישירות למוצר ללא קשר לדגם
       if (!matchedModel && fitModels.length > 0) {
         matchedModel = fitModels[0];
       }
@@ -130,10 +131,22 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
         }
       } 
       else {
-        let currentCatHandle = null;
+        // 🌟 הלוגיקה החכמה החדשה למוצרים שאינם חלקי חילוף 🌟
+        let currentCatHandle = categoryTag;
 
-        if (categoryTag) {
-          currentCatHandle = categoryTag;
+        // אם אין תגית קטגוריה, ננסה להבין אותה מסוג המוצר
+        if (!currentCatHandle && product.productType && typeof product.productType === 'string') {
+          const pType = product.productType;
+          if (pType.includes('ניקוי') || pType.includes('תחזוקה') || pType.includes('שמנים') || pType.includes('נוזל')) {
+            currentCatHandle = 'oils';
+          } else if (pType.includes('צמיג')) {
+            currentCatHandle = 'tires';
+          } else if (pType.includes('מצבר')) {
+            currentCatHandle = 'batteries';
+          }
+        }
+
+        if (currentCatHandle) {
           const catLabel = CATEGORY_NAMES[currentCatHandle] || currentCatHandle;
           crumbs.push({ 
             label: catLabel, 
