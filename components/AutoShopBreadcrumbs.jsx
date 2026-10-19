@@ -137,8 +137,8 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
         // אם אין תגית קטגוריה, ננסה להבין אותה מסוג המוצר
         if (!currentCatHandle && product.productType && typeof product.productType === 'string') {
           const pType = product.productType;
-          // 👈 התיקון כאן: מזהה את המילה 'שמן' במקום 'שמנים' בלבד
-          if (pType.includes('ניקוי') || pType.includes('תחזוקה') || pType.includes('שמן') || pType.includes('נוזל')) {
+          // 👇 התיקון כאן: חיפוש של 'תחזוק' (שיתפוס גם 'תחזוקת') והוספנו 'פילטר'
+          if (pType.includes('ניקוי') || pType.includes('תחזוק') || pType.includes('שמן') || pType.includes('נוזל') || pType.includes('פילטר')) {
             currentCatHandle = 'oils';
           } else if (pType.includes('צמיג')) {
             currentCatHandle = 'tires';
