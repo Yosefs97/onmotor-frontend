@@ -42,8 +42,8 @@ export default async function PartsPage() {
             randomize={true} // 👈 הקסם פה: מערבב מוצרים שונים בכל רענון
             title="חלפים שונים שכדאי להכיר"
             subtitle="מכל היצרנים"
-            linkUrl="/shop/collection/all"
-            linkText="לכל המוצרים"
+            linkUrl="/shop/collection/all?type=חלקי%20חילוף"
+            linkText="לכל החלפים"
           />
         </div>
 

@@ -90,8 +90,8 @@ export default function FeaturedProducts({
   randomize = false, 
   title = 'מוצרים שכדאי להכיר עכשיו',
   subtitle = 'נבחרו בשבילך',
-  linkUrl = '/shop/collection/all?type=חלקי%20חילוף',
-  linkText = 'לכל החלפים',
+  linkUrl = '/shop/collection/all',
+  linkText = 'לכל המוצרים',
   limit = 15 
 }) {
   let displayProducts = [...products];
