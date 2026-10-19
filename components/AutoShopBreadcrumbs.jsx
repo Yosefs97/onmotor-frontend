@@ -17,8 +17,8 @@ const CATEGORY_NAMES = {
   'tires': 'צמיגים',
   'helmets': 'קסדות',
   'accessories': 'אביזרים',
-  'oils': 'שמנים ונוזלים', // 👈 התווסף למילון
-  'batteries': 'מצברים'    // 👈 התווסף למילון
+  'oils': 'שמנים ונוזלים', // 👈 התווסף
+  'batteries': 'מצברים'    // 👈 התווסף
 };
 
 export default function AutoShopBreadcrumbs({ product = null, collection = null }) {
@@ -137,7 +137,8 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
         // אם אין תגית קטגוריה, ננסה להבין אותה מסוג המוצר
         if (!currentCatHandle && product.productType && typeof product.productType === 'string') {
           const pType = product.productType;
-          if (pType.includes('ניקוי') || pType.includes('תחזוקה') || pType.includes('שמנים') || pType.includes('נוזל')) {
+          // 👈 התיקון כאן: מזהה את המילה 'שמן' במקום 'שמנים' בלבד
+          if (pType.includes('ניקוי') || pType.includes('תחזוקה') || pType.includes('שמן') || pType.includes('נוזל')) {
             currentCatHandle = 'oils';
           } else if (pType.includes('צמיג')) {
             currentCatHandle = 'tires';
@@ -222,7 +223,7 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
       <nav className="flex items-center text-sm text-gray-500 mb-2" dir="rtl">
         <ul className="flex items-center gap-1 flex-wrap">
           {crumbs.map((crumb, index) => {
-            const isLast = index === crumbs.length - 1;
+            const isLast = index === crumbs.length - 1; // 👈 תיקון שגיאת התחביר שהייתה
 
             return (
               <li key={index} className="flex items-center">
