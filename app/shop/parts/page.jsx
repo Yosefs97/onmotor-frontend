@@ -9,21 +9,15 @@ import FeaturedProducts from '@/components/FeaturedProducts';
 import { fetchManufacturers } from '@/lib/shop/fetchManufacturers';
 import { fetchCategoryList } from '@/lib/shop/fetchCategoryList';
 import { fetchMenu } from '@/lib/shopify/fetchMenu'; 
-
-// 🌟 ייבוא הפונקציה הנכונה שיודעת לשלוף קולקציות!
-import { fetchCollection } from '@/lib/shop/fetchCollection'; 
+import { fetchHomepageProducts } from '@/lib/shop/fetchHomepageProducts'; 
 
 export default async function PartsPage() {
-  // אנחנו שולפים את קולקציית 'parts' במקום את עמוד הבית
-  const [manufacturers, categories, menuItems, collectionData] = await Promise.all([
+  const [manufacturers, categories, menuItems, products] = await Promise.all([
     fetchManufacturers(),
     fetchCategoryList(),
     fetchMenu('mega-menu-1'),
-    fetchCollection({ handle: 'parts' }) // 👈 כאן אנחנו קוראים לקולקציית החלפים
+    fetchHomepageProducts() 
   ]);
-
-  // מחלצים את המוצרים מתוך המידע שחזר מהקולקציה (אם לא חזר כלום, נשים מערך ריק)
-  const partsProducts = collectionData?.products || [];
 
   return (
     <ShopLayoutInternal menuItems={menuItems} categories={categories}>
@@ -41,14 +35,15 @@ export default async function PartsPage() {
           <ManufacturerGrid manufacturers={manufacturers} />
         </div>
 
-        {/* 🌟 עכשיו הקומפוננטה מקבלת אך ורק חלקי חילוף ישירות מהקולקציה */}
+        {/* 🌟 הבלוק עודכן: כעת מציג מוצרים שונים מכלל היצרנים באופן רנדומלי */}
         <div className="mt-12 w-full px-2 md:px-4">
           <FeaturedProducts 
-            products={partsProducts} // 👈 מעבירים את מוצרי קולקציית parts
-            randomize={true} 
+            products={products || []} 
+            
+            randomize={true} // 👈 הקסם פה: מערבב מוצרים שונים בכל רענון
             title="חלפים שונים שכדאי להכיר"
             subtitle="מכל היצרנים"
-            linkUrl="/shop/collection/parts" // 👈 עדכנתי את הלינק שיוביל לקולקציה עצמה
+            linkUrl="/shop/collection/all?type=חלקי%20חילוף"
             linkText="לכל החלפים"
           />
         </div>
