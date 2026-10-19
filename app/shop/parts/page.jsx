@@ -12,12 +12,20 @@ import { fetchMenu } from '@/lib/shopify/fetchMenu';
 import { fetchHomepageProducts } from '@/lib/shop/fetchHomepageProducts'; 
 
 export default async function PartsPage() {
-  const [manufacturers, categories, menuItems, products] = await Promise.all([
+  const [manufacturers, categories, menuItems, allProducts] = await Promise.all([
     fetchManufacturers(),
     fetchCategoryList(),
     fetchMenu('mega-menu-1'),
     fetchHomepageProducts() 
   ]);
+
+  // 🌟 הסינון החכם שלנו: 
+  // מחפש מוצרים שהסוג שלהם הוא חלקי חילוף, או שיש להם תגית מתאימה.
+  const partsOnlyProducts = allProducts?.filter(product => {
+    const isPartType = product.productType === 'חלקי חילוף';
+    const hasPartTag = product.tags?.includes('חלקי חילוף') || product.tags?.includes('parts');
+    return isPartType || hasPartTag;
+  }) || [];
 
   return (
     <ShopLayoutInternal menuItems={menuItems} categories={categories}>
@@ -35,12 +43,11 @@ export default async function PartsPage() {
           <ManufacturerGrid manufacturers={manufacturers} />
         </div>
 
-        {/* 🌟 הבלוק עודכן: כעת מציג מוצרים שונים מכלל היצרנים באופן רנדומלי */}
+        {/* 🌟 עכשיו אנחנו פשוט מעבירים לקומפוננטה רק את החלפים המסוננים */}
         <div className="mt-12 w-full px-2 md:px-4">
           <FeaturedProducts 
-            products={products || []} 
-            targetTag="חלקי חילוף" // 👈 הוספנו את זה! עכשיו הוא יסנן רק חלפים
-            randomize={true} // 👈 הקסם פה: מערבב מוצרים שונים בכל רענון
+            products={partsOnlyProducts} // 👈 שינינו כאן! מעביר רק חלפים נטו
+            randomize={true} 
             title="חלפים שונים שכדאי להכיר"
             subtitle="מכל היצרנים"
             linkUrl="/shop/collection/all?type=חלקי%20חילוף"
