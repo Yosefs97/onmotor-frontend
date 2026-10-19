@@ -39,6 +39,7 @@ export default async function PartsPage() {
         <div className="mt-12 w-full px-2 md:px-4">
           <FeaturedProducts 
             products={products || []} 
+            targetTag="חלקי חילוף" // 👈 הוספנו את זה! עכשיו הוא יסנן רק חלפים
             randomize={true} // 👈 הקסם פה: מערבב מוצרים שונים בכל רענון
             title="חלפים שונים שכדאי להכיר"
             subtitle="מכל היצרנים"
