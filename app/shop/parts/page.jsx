@@ -9,23 +9,21 @@ import FeaturedProducts from '@/components/FeaturedProducts';
 import { fetchManufacturers } from '@/lib/shop/fetchManufacturers';
 import { fetchCategoryList } from '@/lib/shop/fetchCategoryList';
 import { fetchMenu } from '@/lib/shopify/fetchMenu'; 
-import { fetchHomepageProducts } from '@/lib/shop/fetchHomepageProducts'; 
+
+// 🌟 ייבוא הפונקציה הנכונה שיודעת לשלוף קולקציות!
+import { fetchCollection } from '@/lib/shop/fetchCollection'; 
 
 export default async function PartsPage() {
-  const [manufacturers, categories, menuItems, allProducts] = await Promise.all([
+  // אנחנו שולפים את קולקציית 'parts' במקום את עמוד הבית
+  const [manufacturers, categories, menuItems, collectionData] = await Promise.all([
     fetchManufacturers(),
     fetchCategoryList(),
     fetchMenu('mega-menu-1'),
-    fetchHomepageProducts() 
+    fetchCollection({ handle: 'parts' }) // 👈 כאן אנחנו קוראים לקולקציית החלפים
   ]);
 
-  // 🌟 הסינון החכם שלנו: 
-  // מחפש מוצרים שהסוג שלהם הוא חלקי חילוף, או שיש להם תגית מתאימה.
-  const partsOnlyProducts = allProducts?.filter(product => {
-    const isPartType = product.productType === 'חלקי חילוף';
-    const hasPartTag = product.tags?.includes('חלקי חילוף') || product.tags?.includes('parts');
-    return isPartType || hasPartTag;
-  }) || [];
+  // מחלצים את המוצרים מתוך המידע שחזר מהקולקציה (אם לא חזר כלום, נשים מערך ריק)
+  const partsProducts = collectionData?.products || [];
 
   return (
     <ShopLayoutInternal menuItems={menuItems} categories={categories}>
@@ -43,14 +41,14 @@ export default async function PartsPage() {
           <ManufacturerGrid manufacturers={manufacturers} />
         </div>
 
-        {/* 🌟 עכשיו אנחנו פשוט מעבירים לקומפוננטה רק את החלפים המסוננים */}
+        {/* 🌟 עכשיו הקומפוננטה מקבלת אך ורק חלקי חילוף ישירות מהקולקציה */}
         <div className="mt-12 w-full px-2 md:px-4">
           <FeaturedProducts 
-            products={partsOnlyProducts} // 👈 שינינו כאן! מעביר רק חלפים נטו
+            products={partsProducts} // 👈 מעבירים את מוצרי קולקציית parts
             randomize={true} 
             title="חלפים שונים שכדאי להכיר"
             subtitle="מכל היצרנים"
-            linkUrl="/shop/collection/all?type=חלקי%20חילוף"
+            linkUrl="/shop/collection/parts" // 👈 עדכנתי את הלינק שיוביל לקולקציה עצמה
             linkText="לכל החלפים"
           />
         </div>
