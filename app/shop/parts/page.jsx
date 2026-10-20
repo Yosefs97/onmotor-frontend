@@ -18,7 +18,7 @@ export default async function PartsPage() {
   const [manufacturers, categories, menuItems, collectionData] = await Promise.all([
     fetchManufacturers(),
     fetchCategoryList(),
-    fetchMenu('mega-menu-1'),
+    fetchMenu('main-menu-new'),
     fetchCollection({ handle: 'parts' }) // 👈 כאן אנחנו קוראים לקולקציית החלפים
   ]);
 

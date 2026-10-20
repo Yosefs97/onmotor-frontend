@@ -37,7 +37,7 @@ export const metadata = {
 
 export default async function ShopLayout({ children }) {
   const [menuItems, categories] = await Promise.all([
-    fetchMenu('mega-menu-1'),
+    fetchMenu('main-menu-new'),
     fetchCategoryList()
   ]);
 
