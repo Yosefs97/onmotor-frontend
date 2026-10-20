@@ -96,9 +96,16 @@ export default function ShopHeader({ menuItems = [], categories = [] }) {
         {/* צד שמאל: ניווט, חיפוש ועגלה */}
         <div className="hidden md:flex items-center gap-6 justify-end flex-1 pl-2">
           
-          <div className="flex items-center gap-4 text-white font-medium [&_a]:!text-white [&_span]:!text-white [&_a:hover]:!text-[#e60000] transition-colors">
-            <CategoriesNav categories={categories} />
+          <div className="flex items-center gap-4 font-medium transition-colors">
+  
+            {/* התפריט הישן - עטוף ב-div משלו עם הגדרת הצבע הלבן כדי שלא ידרוס אחרים */}
+            <div className="flex items-center gap-4 text-white [&_a]:text-white hover:[&_a]:text-[#e60000]">
+              <CategoriesNav categories={categories} />
+            </div>
+
+            {/* המגה-תפריט החדש - עומד בפני עצמו, ללא אילוצי צבע לבן מההידר! */}
             <DesktopMegaMenu menuItems={menuItems} />
+
           </div>
 
           <div className="w-[200px] lg:w-[300px]">
