@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { ChevronDown } from 'lucide-react';
 
 export default function DesktopMegaMenu({ menuItems = [] }) {
+  // הדפסת הנתונים לטרמינל כדי לוודא שהרמות הפנימיות נמשכות בהצלחה
+  console.log("MEGA MENU DATA:", JSON.stringify(menuItems, null, 2));
   if (!menuItems || menuItems.length === 0) return null;
 
   return (
