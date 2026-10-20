@@ -9,7 +9,9 @@ export const revalidate = 600;
 
 export async function generateMetadata({ params }) {
   const resolvedParams = await params;
-  const handle = resolvedParams.handle;
+  
+  // התיקון: פענוח של ה-URL לעברית תקינה לפני הבקשה
+  const handle = decodeURIComponent(resolvedParams.handle);
   const product = await fetchProduct(handle);
 
   if (!product) return { title: 'מוצר לא נמצא' };
@@ -63,7 +65,8 @@ export default async function ProductPage({ params, searchParams }) {
   const resolvedParams = await params;
   const resolvedSearchParams = await searchParams;
 
-  const handle = resolvedParams.handle;
+  // התיקון: פענוח של ה-URL לעברית תקינה לפני משיכת המוצר והלוגיקה
+  const handle = decodeURIComponent(resolvedParams.handle);
 
   const filters = Object.fromEntries(
     Object.entries(resolvedSearchParams || {}).map(([k, v]) => [k, String(v)])
