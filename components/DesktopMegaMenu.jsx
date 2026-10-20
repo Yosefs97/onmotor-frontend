@@ -5,9 +5,26 @@ import React from 'react';
 import Link from 'next/link';
 import { ChevronDown } from 'lucide-react';
 
+// הפונקציה שמתרגמת כתובות שופיפיי לכתובות מקומיות באתר
+const formatUrl = (rawUrl) => {
+  if (!rawUrl || rawUrl === '#') return '#';
+  try {
+    const urlObj = new URL(rawUrl);
+    let newPath = urlObj.pathname;
+    
+    // החלפת /collections/ ל- /shop/collection/
+    if (newPath.startsWith('/collections/')) {
+      newPath = newPath.replace('/collections/', '/shop/collection/');
+    }
+    
+    // מחזיר את הנתיב המקומי יחד עם כל פרמטר סינון (כמו ?type=קסדות)
+    return newPath + decodeURIComponent(urlObj.search);
+  } catch (e) {
+    return rawUrl;
+  }
+};
+
 export default function DesktopMegaMenu({ menuItems = [] }) {
-  // הדפסת הנתונים לטרמינל כדי לוודא שהרמות הפנימיות נמשכות בהצלחה
-  console.log("MEGA MENU DATA:", JSON.stringify(menuItems, null, 2));
   if (!menuItems || menuItems.length === 0) return null;
 
   return (
@@ -16,12 +33,12 @@ export default function DesktopMegaMenu({ menuItems = [] }) {
         const hasSubItems = category.items && category.items.length > 0;
 
         return (
-          // הוספת המחלקה group - כל מה שבפנים יגיב לריחוף על ה-div הזה
           <div key={category.title} className="relative h-full flex items-center group">
             
             <Link
-              href={category.url || '#'}
-              className="flex items-center gap-1 text-sm font-bold text-zinc-800 hover:text-red-600 transition-colors py-8 px-2"
+              href={formatUrl(category.url)}
+              // כאן השארנו את הלבן עבור שורת התפריט העליונה
+              className="flex items-center gap-1 text-sm font-bold text-white hover:text-red-600 transition-colors py-8 px-2"
             >
               {category.title}
               {hasSubItems && (
@@ -31,7 +48,6 @@ export default function DesktopMegaMenu({ menuItems = [] }) {
 
             {hasSubItems && (
               <div 
-                // החלון מוסתר כברירת מחדל (hidden) ומופיע בעת ריחוף (group-hover:block)
                 className="absolute top-full right-0 w-[800px] hidden group-hover:block bg-white shadow-xl border border-gray-200 rounded-b-lg z-[100]"
                 style={{ marginTop: '-1px' }}
               >
@@ -43,9 +59,10 @@ export default function DesktopMegaMenu({ menuItems = [] }) {
 
                     return (
                       <div key={idx} className="space-y-3">
+                        {/* כותרת עמודה פנימית - אדומה באילוץ כדי למנוע דריסה */}
                         <Link 
-                          href={group.url || '#'} 
-                          className="block font-bold text-red-600 text-sm border-b pb-1 border-gray-100 hover:text-red-800 transition-colors"
+                          href={formatUrl(group.url)} 
+                          className="block font-bold !text-red-600 text-sm border-b pb-1 border-gray-100 hover:!text-red-800 transition-colors"
                         >
                           {group.title}
                         </Link>
@@ -55,8 +72,9 @@ export default function DesktopMegaMenu({ menuItems = [] }) {
                             {group.items.map((item) => (
                               <li key={item.title}>
                                 <Link
-                                  href={item.url || '#'}
-                                  className="text-gray-600 hover:text-red-600 text-sm block font-medium transition-colors hover:translate-x-[-2px]"
+                                  href={formatUrl(item.url)}
+                                  // פריט פנימי - אפור כהה באילוץ כדי שלא ייצבע בלבן!
+                                  className="block !text-gray-800 hover:!text-red-600 text-sm font-medium transition-colors hover:translate-x-[-2px]"
                                 >
                                   {item.title}
                                 </Link>
