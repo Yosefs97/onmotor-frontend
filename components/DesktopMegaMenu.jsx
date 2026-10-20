@@ -21,7 +21,7 @@ export default function DesktopMegaMenu({ menuItems = [] }) {
             
             <Link
               href={category.url || '#'}
-              className="flex items-center gap-1 text-sm font-bold text-gray-100 hover:text-red-600 transition-colors py-8 px-2"
+              className="flex items-center gap-1 text-sm font-bold text-zinc-800 hover:text-red-600 transition-colors py-8 px-2"
             >
               {category.title}
               {hasSubItems && (
