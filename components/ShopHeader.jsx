@@ -2,9 +2,9 @@
 'use client';
 
 import React, { useLayoutEffect, useRef, useEffect, useState } from 'react';
-import Link from 'next/link'; // 👈 ייבוא Link
+import Link from 'next/link';
 import { gsap } from 'gsap';
-import { User } from 'lucide-react'; // 👈 ייבוא אייקון המשתמש
+import { User } from 'lucide-react';
 import LiveSearchBar from './LiveSearchBar';
 import CategoriesNav from './CategoriesNav'; 
 import DesktopMegaMenu from './DesktopMegaMenu';
@@ -18,6 +18,16 @@ export default function ShopHeader({ menuItems = [], categories = [] }) {
   const isAnimating = useRef(false);
 
   const [total, setTotal] = useState(0);
+
+  // 🌟 המנגנון החכם לסינון כפילויות 🌟
+  // 1. שולפים את כל השמות של הקטגוריות שכבר קיימות במגה-תפריט (אלו שיש להן תפריט נפתח)
+  const megaMenuTitles = menuItems.map(item => item.title?.trim());
+  
+  // 2. מסננים את הקטגוריות הישנות: נשאיר רק קטגוריות שהשם שלהן *לא* מופיע במגה-תפריט
+  const filteredCategories = categories.filter(cat => {
+    const catName = (cat.title || cat.name || cat)?.trim();
+    return !megaMenuTitles.includes(catName);
+  });
 
   const fetchCart = async () => {
     try {
@@ -73,6 +83,7 @@ export default function ShopHeader({ menuItems = [], categories = [] }) {
         
         {/* כפתור המבורגר למובייל */}
         <div className="md:hidden flex items-center pr-2">
+          {/* במידת הצורך אפשר להעביר גם לכאן את filteredCategories */}
           <ShopMobileMenu categories={categories} />
         </div>
 
@@ -98,12 +109,12 @@ export default function ShopHeader({ menuItems = [], categories = [] }) {
           
           <div className="flex items-center gap-4 font-medium transition-colors">
   
-            {/* התפריט הישן - עטוף ב-div משלו עם הגדרת הצבע הלבן כדי שלא ידרוס אחרים */}
+            {/* התפריט הישן - מרונדר עכשיו עם הרשימה המסוננת (ללא כפילויות) */}
             <div className="flex items-center gap-4 text-white [&_a]:text-white hover:[&_a]:text-[#e60000]">
-              <CategoriesNav categories={categories} />
+              <CategoriesNav categories={filteredCategories} />
             </div>
 
-            {/* המגה-תפריט החדש - עומד בפני עצמו, ללא אילוצי צבע לבן מההידר! */}
+            {/* המגה-תפריט החדש */}
             <DesktopMegaMenu menuItems={menuItems} />
 
           </div>
@@ -112,10 +123,9 @@ export default function ShopHeader({ menuItems = [], categories = [] }) {
             <LiveSearchBar />
           </div>
 
-          {/* 🌟 אזור הכלים: כפתור אזור אישי + עגלה 🌟 */}
+          {/* אזור הכלים: כפתור אזור אישי + עגלה */}
           <div className="flex items-center gap-2">
             
-            {/* כפתור אזור אישי */}
             <Link 
               href="/shop/account" 
               className="flex items-center justify-center bg-zinc-900 w-10 h-10 rounded-full border border-gray-800 text-white hover:text-[#e60000] hover:border-[#e60000] transition-colors"
@@ -124,7 +134,6 @@ export default function ShopHeader({ menuItems = [], categories = [] }) {
               <User className="w-5 h-5" />
             </Link>
 
-            {/* עגלת קניות */}
             <div className="flex items-center gap-2 font-bold text-white shrink-0 bg-zinc-900 px-3 h-10 rounded-full border border-gray-800">
               <span className="text-base">₪{total}</span>
               <CartButton />
