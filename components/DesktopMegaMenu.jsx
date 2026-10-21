@@ -1,27 +1,19 @@
-// components/DesktopMegaMenu.jsx
 'use client';
 
 import React from 'react';
 import Link from 'next/link';
 import { ChevronDown } from 'lucide-react';
 
-// פונקציה חכמה שמתרגמת כתובות שופיפיי לכתובות מקומיות ומונעת קפיצות מיותרות
 const formatUrl = (rawUrl) => {
   if (!rawUrl) return '#';
-  
-  if (rawUrl === '#' || rawUrl.endsWith('#') || rawUrl === 'https://nwjhcm-gf.myshopify.com/') {
-    return '#';
-  }
+  if (rawUrl === '#' || rawUrl.endsWith('#') || rawUrl === 'https://nwjhcm-gf.myshopify.com/') return '#';
   
   try {
     const urlObj = new URL(rawUrl);
     let newPath = urlObj.pathname;
     
-    if (newPath === '/' && !urlObj.search) {
-       return '#';
-    }
+    if (newPath === '/' && !urlObj.search) return '#';
     
-    // החלפת הניתוב של שופיפיי לניתוב הדינמי שלך ב-Next.js
     if (newPath.startsWith('/collections/')) {
       newPath = newPath.replace('/collections/', '/shop/collection/');
     }
@@ -36,20 +28,22 @@ export default function DesktopMegaMenu({ menuItems = [] }) {
   if (!menuItems || menuItems.length === 0) return null;
 
   return (
-    <nav className="hidden lg:flex items-center gap-6 mr-4 h-full relative z-[60]" dir="rtl">
-      {menuItems.map((category) => {
+    <nav className="hidden md:flex items-center h-full relative z-[60]" dir="rtl">
+      {menuItems.map((category, index) => {
         const hasSubItems = category.items && category.items.length > 0;
 
         return (
           <div key={category.title} className="relative h-full flex items-center group">
             
+            {index > 0 && <div className="w-px h-4 bg-[#e60000] mx-3" />}
+            
             <Link
               href={formatUrl(category.url)}
-              className="flex items-center gap-1 text-sm font-bold text-white hover:text-red-600 transition-colors py-8 px-2"
+              className="flex items-center gap-1 text-base font-bold text-white hover:text-[#e60000] transition-colors py-8 px-2 whitespace-nowrap"
             >
               {category.title}
               {hasSubItems && (
-                <ChevronDown className="w-3 h-3 transition-transform duration-200 group-hover:rotate-180" />
+                <ChevronDown className="w-4 h-4 transition-transform duration-200 group-hover:rotate-180" />
               )}
             </Link>
 
@@ -67,13 +61,8 @@ export default function DesktopMegaMenu({ menuItems = [] }) {
 
                     return (
                       <div key={idx} className="space-y-3">
-                        
-                        {/* תת-קטגוריה: אם זה לינק אמיתי נרנדר Link, אם זה סולמית נרנדר טקסט רגיל */}
                         {groupUrl !== '#' ? (
-                          <Link 
-                            href={groupUrl} 
-                            className="block font-bold !text-red-600 text-sm border-b pb-1 border-gray-100 hover:!text-red-800 transition-colors"
-                          >
+                          <Link href={groupUrl} className="block font-bold !text-red-600 text-sm border-b pb-1 border-gray-100 hover:!text-red-800 transition-colors">
                             {group.title}
                           </Link>
                         ) : (
@@ -88,7 +77,6 @@ export default function DesktopMegaMenu({ menuItems = [] }) {
                               <li key={item.title}>
                                 <Link
                                   href={formatUrl(item.url)}
-                                  // הגנת צבע אפור כדי שההידר לא יצבע את זה בלבן
                                   className="block !text-gray-800 hover:!text-red-600 text-sm font-medium transition-colors hover:translate-x-[-2px]"
                                 >
                                   {item.title}

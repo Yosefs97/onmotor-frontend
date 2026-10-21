@@ -1,4 +1,3 @@
-// components/ShopHeader.jsx
 'use client';
 
 import React, { useLayoutEffect, useRef, useEffect, useState } from 'react';
@@ -6,7 +5,6 @@ import Link from 'next/link';
 import { gsap } from 'gsap';
 import { User } from 'lucide-react';
 import LiveSearchBar from './LiveSearchBar';
-import CategoriesNav from './CategoriesNav'; 
 import DesktopMegaMenu from './DesktopMegaMenu';
 import CartButton from './CartButton';
 import ShopMobileMenu from './ShopMobileMenu';
@@ -18,16 +16,6 @@ export default function ShopHeader({ menuItems = [], categories = [] }) {
   const isAnimating = useRef(false);
 
   const [total, setTotal] = useState(0);
-
-  // 🌟 המנגנון החכם לסינון כפילויות 🌟
-  // 1. שולפים את כל השמות של הקטגוריות שכבר קיימות במגה-תפריט (אלו שיש להן תפריט נפתח)
-  const megaMenuTitles = menuItems.map(item => item.title?.trim());
-  
-  // 2. מסננים את הקטגוריות הישנות: נשאיר רק קטגוריות שהשם שלהן *לא* מופיע במגה-תפריט
-  const filteredCategories = categories.filter(cat => {
-    const catName = (cat.title || cat.name || cat)?.trim();
-    return !megaMenuTitles.includes(catName);
-  });
 
   const fetchCart = async () => {
     try {
@@ -81,13 +69,11 @@ export default function ShopHeader({ menuItems = [], categories = [] }) {
     <>
       <header className="fixed top-0 left-0 right-0 z-[60] bg-black text-white h-[80px] flex items-center justify-between px-2 md:px-6 py-2 shadow-md border-b border-gray-800" dir="rtl">
         
-        {/* כפתור המבורגר למובייל */}
         <div className="md:hidden flex items-center pr-2">
-          {/* במידת הצורך אפשר להעביר גם לכאן את filteredCategories */}
-          <ShopMobileMenu categories={categories} />
+          {/* התיקון: מעבירים את menuItems משופיפיי במקום categories */}
+          <ShopMobileMenu menuItems={menuItems} />
         </div>
 
-        {/* הלוגו */}
         <div ref={containerRef} className="flex flex-row-reverse items-center gap-2 cursor-pointer shrink-0" onClick={handleClick}>
           <img ref={logoRef} src="/OnMotorLogonoback.png" alt="OnMotor Parts Logo" className="w-16 md:w-20 shrink-0 z-50" />
           <div className="truncate overflow-visible text-left">
@@ -104,28 +90,17 @@ export default function ShopHeader({ menuItems = [], categories = [] }) {
           </div>
         </div>
 
-        {/* צד שמאל: ניווט, חיפוש ועגלה */}
         <div className="hidden md:flex items-center gap-6 justify-end flex-1 pl-2">
-          
           <div className="flex items-center gap-4 font-medium transition-colors">
-  
-            {/* התפריט הישן - מרונדר עכשיו עם הרשימה המסוננת (ללא כפילויות) */}
-            <div className="flex items-center gap-4 text-white [&_a]:text-white hover:[&_a]:text-[#e60000]">
-              <CategoriesNav categories={filteredCategories} />
-            </div>
-
-            {/* המגה-תפריט החדש */}
+            {/* המגה תפריט בלבד - ללא כפילויות של התפריט הישן */}
             <DesktopMegaMenu menuItems={menuItems} />
-
           </div>
 
           <div className="w-[200px] lg:w-[300px]">
             <LiveSearchBar />
           </div>
 
-          {/* אזור הכלים: כפתור אזור אישי + עגלה */}
           <div className="flex items-center gap-2">
-            
             <Link 
               href="/shop/account" 
               className="flex items-center justify-center bg-zinc-900 w-10 h-10 rounded-full border border-gray-800 text-white hover:text-[#e60000] hover:border-[#e60000] transition-colors"
@@ -138,9 +113,7 @@ export default function ShopHeader({ menuItems = [], categories = [] }) {
               <span className="text-base">₪{total}</span>
               <CartButton />
             </div>
-
           </div>
-
         </div>
       </header>
       
