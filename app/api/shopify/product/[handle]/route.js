@@ -59,7 +59,7 @@ export async function GET(_req, { params }) {
         metafields(identifiers: [
           { namespace: "compatibility", key: "year_from" },
           { namespace: "compatibility", key: "year_to" },
-           { namespace: "custom", key: "compatible_models" }
+          { namespace: "custom", key: "compatible_models" }
         ]) {
           namespace
           key
