@@ -3,6 +3,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link'; 
+import PadCompatibility from '@/components/PadCompatibility';
 import { useRouter } from 'next/navigation'; // הוספת חבילת ניתוב
 import ShopLayoutInternal from '@/components/ShopLayoutInternal';
 import ProductGrid from '@/components/ProductGrid';
@@ -145,6 +146,23 @@ export default function ProductPageInner({ type, product, items, collectionStats
     
     return models;
   }, [product.tags]);
+
+  const modelsJsonData = useMemo(() => {
+    if (!product?.metafields) return null;
+    
+    // חיפוש המטא-פילד במערך (בהתאם לאיך שהשאילתה שלך מחזירה אותו)
+    const modelsMetafield = product.metafields.find(m => m && m.key === 'compatible_models');
+    
+    if (modelsMetafield?.value) {
+      try {
+        return JSON.parse(modelsMetafield.value);
+      } catch (e) {
+        console.error("Error parsing compatible models JSON:", e);
+        return null;
+      }
+    }
+    return null;
+  }, [product]);
 
   const yr = getProductYearRange(product);
   const yrText = formatYearRange(yr);
@@ -472,6 +490,12 @@ ${productUrl}
             </div>
             
           </div>
+          
+          {modelsJsonData && (
+            <div className="w-full my-4">
+              <PadCompatibility modelsData={modelsJsonData} />
+            </div>
+          )}
 
           <div className="mt-2">
             <ProductInfoModals />
