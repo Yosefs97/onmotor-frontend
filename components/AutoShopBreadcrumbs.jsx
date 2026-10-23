@@ -1,9 +1,11 @@
+// components/AutoShopBreadcrumbs.jsx
 'use client';
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { ChevronLeft, Store } from 'lucide-react';
 import BatterySearchWidget from './BatterySearchWidget';
+import PadsSearchWidget from './PadsSearchWidget'; // 👈 הייבוא החדש
 
 const toSlug = (str) => {
   if (!str || typeof str !== 'string') return '';
@@ -17,11 +19,13 @@ const CATEGORY_NAMES = {
   'tires': 'צמיגים',
   'helmets': 'קסדות',
   'accessories': 'אביזרים',
-  'oils': 'שמנים ונוזלים', // 👈 התווסף
-  'batteries': 'מצברים'    // 👈 התווסף
+  'oils': 'שמנים ונוזלים',
+  'batteries': 'מצברים',
+  'pads': 'רפידות' // 👈 הוספת קטגוריית רפידות
 };
 
-export default function AutoShopBreadcrumbs({ product = null, collection = null }) {
+// 👈 הוספנו את products כ-prop כדי להעביר את נתוני הקולקציה למנוע החיפוש
+export default function AutoShopBreadcrumbs({ product = null, collection = null, products = [] }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -53,11 +57,11 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
 
       if (tag) {
         crumbs.push({ label: tag, href: null });
-        pageTitle = `${type || collection.title} - ${tag}`;
+        pageTitle = `${type || collection.title} ${tag}`;
       } 
       else if (vendorParam) {
         crumbs.push({ label: vendorParam, href: null });
-        pageTitle = `${pageTitle} - ${vendorParam}`;
+        pageTitle = `${pageTitle} ${vendorParam}`;
       }
     }
     else if (product) {
@@ -76,7 +80,6 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
 
       let matchedModel = null;
 
-      // 🌟 השוואה מנורמלת ומדויקת בין ה-URL לתגיות
       if (modelParam) {
         const cleanParamModel = decodeURIComponent(modelParam).toLowerCase().replace(/[^a-z0-9]/g, '');
         
@@ -95,7 +98,6 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
         }
       }
 
-      // הגדרת ברירת מחדל אם נכנסו ישירות למוצר ללא קשר לדגם
       if (!matchedModel && fitModels.length > 0) {
         matchedModel = fitModels[0];
       }
@@ -131,19 +133,18 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
         }
       } 
       else {
-        // 🌟 הלוגיקה החכמה החדשה למוצרים שאינם חלקי חילוף 🌟
         let currentCatHandle = categoryTag;
 
-        // אם אין תגית קטגוריה, ננסה להבין אותה מסוג המוצר
         if (!currentCatHandle && product.productType && typeof product.productType === 'string') {
           const pType = product.productType;
-          // 👇 התיקון כאן: חיפוש של 'תחזוק' (שיתפוס גם 'תחזוקת') והוספנו 'פילטר'
           if (pType.includes('ניקוי') || pType.includes('תחזוק') || pType.includes('שמן') || pType.includes('נוזל') || pType.includes('פילטר')) {
             currentCatHandle = 'oils';
           } else if (pType.includes('צמיג')) {
             currentCatHandle = 'tires';
           } else if (pType.includes('מצבר')) {
             currentCatHandle = 'batteries';
+          } else if (pType.includes('רפיד')) { // 👈 זיהוי רפידות
+            currentCatHandle = 'pads';
           }
         }
 
@@ -212,18 +213,16 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
     console.error("AutoShopBreadcrumbs Error:", error);
   }
 
-  const isBatteriesPage = 
-    pageTitle === 'מצברים' || 
-    collection?.title === 'מצברים' || 
-    type === 'מצברים' ||
-    collection?.handle === 'batteries';
+  // 👈 הגדרות זיהוי עמודים
+  const isBatteriesPage = pageTitle === 'מצברים' || collection?.title === 'מצברים' || type === 'מצברים' || collection?.handle === 'batteries';
+  const isPadsPage = pageTitle === 'רפידות' || collection?.title === 'רפידות' || type === 'רפידות' || collection?.handle === 'pads' || (type && type.includes('רפידות'));
 
   return (
     <div className="mb-2 px-2 md:px-0">
       <nav className="flex items-center text-sm text-gray-500 mb-2" dir="rtl">
         <ul className="flex items-center gap-1 flex-wrap">
           {crumbs.map((crumb, index) => {
-            const isLast = index === crumbs.length - 1; // 👈 תיקון שגיאת התחביר שהייתה
+            const isLast = index === crumbs.length - 1;
 
             return (
               <li key={index} className="flex items-center">
@@ -252,9 +251,16 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null 
         </h1>
       )}
 
+      {/* 👈 הצגת הווידג'ט הרלוונטי לפי הקטגוריה */}
       {isBatteriesPage && (
         <div className="mt-1">
           <BatterySearchWidget />
+        </div>
+      )}
+      
+      {isPadsPage && (
+        <div className="mt-1">
+          <PadsSearchWidget products={products} />
         </div>
       )}
     </div>
