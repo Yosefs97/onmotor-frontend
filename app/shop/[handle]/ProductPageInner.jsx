@@ -4,7 +4,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link'; 
 import PadCompatibility from '@/components/PadCompatibility';
-import { useRouter } from 'next/navigation'; // הוספת חבילת ניתוב
+import { useRouter } from 'next/navigation';
 import ShopLayoutInternal from '@/components/ShopLayoutInternal';
 import ProductGrid from '@/components/ProductGrid';
 import ProductGallery from '@/components/ProductGallery';
@@ -17,7 +17,7 @@ import ProductInfoModals from '@/components/ProductInfoModals';
 import { getProductYearRange, formatYearRange } from '@/lib/productYears';
 
 export default function ProductPageInner({ type, product, items, collectionStats, modelImages = {} }) {
-  const router = useRouter(); // אתחול הראוטר
+  const router = useRouter(); 
   const [adding, setAdding] = useState(false);
   const [buying, setBuying] = useState(false);
   const [selectedOptions, setSelectedOptions] = useState({});
@@ -41,6 +41,12 @@ export default function ProductPageInner({ type, product, items, collectionStats
     if (!product) return false;
     const range = getProductYearRange(product);
     return range && (range.from || range.to);
+  }, [product]);
+
+  // זיהוי האם מדובר במוצר מסוג רפידות
+  const isPadProduct = useMemo(() => {
+    if (!product) return false;
+    return product.productType === 'רפידות' || product.title?.includes('רפידות') || product.title?.includes('רפידת');
   }, [product]);
 
   useEffect(() => {
@@ -150,7 +156,6 @@ export default function ProductPageInner({ type, product, items, collectionStats
   const modelsJsonData = useMemo(() => {
     if (!product?.metafields) return null;
     
-    // חיפוש המטא-פילד במערך (בהתאם לאיך שהשאילתה שלך מחזירה אותו)
     const modelsMetafield = product.metafields.find(m => m && m.key === 'compatible_models');
     
     if (modelsMetafield?.value) {
@@ -198,7 +203,6 @@ export default function ProductPageInner({ type, product, items, collectionStats
       
       if (json.cart) {
         window.dispatchEvent(new Event('cartUpdated')); 
-        // שינוי כאן: הפניה לעמוד התשלום המותאם שלנו במקום לשופיפיי
         router.push('/shop/checkout');
       } else {
         alert('שגיאה בהעברה לתשלום');
@@ -272,6 +276,13 @@ ${productUrl}
             selectedImage={currentVariant?.image?.url}
           />
           
+          {/* מנוע החיפוש הועבר לכאן ומוצג רק עבור מוצרי רפידות */}
+          {isPadProduct && modelsJsonData && (
+            <div className="w-full mt-2 z-10">
+              <PadCompatibility modelsData={modelsJsonData} />
+            </div>
+          )}
+          
           <div className="hidden md:block w-full mt-2">
             <RelatedProducts 
               excludeHandle={product.handle} 
@@ -335,10 +346,8 @@ ${productUrl}
           {currentVariant && (
             <div className="text-sm border-y border-gray-100 py-3 my-3 bg-gray-50/50 px-4 rounded-xl flex flex-col gap-1">
               
-              {/* תצוגת מחירים כולל מחיר מחוק */}
               <div className="flex flex-col mb-2">
                 
-                {/* הצגת מחיר המקור (המחוק) אם קיים והוא גבוה מהמחיר הרגיל */}
                 {currentVariant.compareAtPrice?.amount && 
                  parseFloat(currentVariant.compareAtPrice.amount) > parseFloat(currentVariant.price.amount) && (
                   <div className="text-lg text-gray-400 line-through font-medium">
@@ -346,7 +355,6 @@ ${productUrl}
                   </div>
                 )}
                 
-                {/* המחיר העדכני (הזול) */}
                 <div className="text-3xl font-black text-red-600 flex items-center gap-2">
                   {currentVariant.price.amount} <span className="text-xl font-bold">{currentVariant.price.currencyCode === 'ILS' ? '₪' : currentVariant.price.currencyCode}</span>
                 </div>
@@ -491,12 +499,6 @@ ${productUrl}
             
           </div>
           
-          {modelsJsonData && (
-            <div className="w-full my-4">
-              <PadCompatibility modelsData={modelsJsonData} />
-            </div>
-          )}
-
           <div className="mt-2">
             <ProductInfoModals />
           </div>
