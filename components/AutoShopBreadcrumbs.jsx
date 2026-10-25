@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { ChevronLeft, Store } from 'lucide-react';
 import BatterySearchWidget from './BatterySearchWidget';
-import PadsSearchWidget from './PadsSearchWidget'; // 👈 הייבוא החדש
+import PadsSearchWidget from './PadsSearchWidget';
 
 const toSlug = (str) => {
   if (!str || typeof str !== 'string') return '';
@@ -21,10 +21,9 @@ const CATEGORY_NAMES = {
   'accessories': 'אביזרים',
   'oils': 'שמנים ונוזלים',
   'batteries': 'מצברים',
-  'pads': 'רפידות' // 👈 הוספת קטגוריית רפידות
+  'pads': 'רפידות'
 };
 
-// 👈 הוספנו את products כ-prop כדי להעביר את נתוני הקולקציה למנוע החיפוש
 export default function AutoShopBreadcrumbs({ product = null, collection = null, products = [] }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -109,10 +108,15 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null,
         ? decodeURIComponent(vendorParam) 
         : (matchedModel && matchedModel.vendor ? matchedModel.vendor : product.vendor);
 
-      const isPart = matchedModel || 
-                     (typeof product.productType === 'string' && product.productType.includes('חילוף')) || 
-                     categoryTag === 'parts' ||
-                     categoryTag === 'oem';
+      // 🌟 החרגת רפידות ממנגנון חלקי החילוף
+      const isPadProduct = product.productType === 'רפידות' || (product.title && product.title.includes('רפידות'));
+
+      const isPart = !isPadProduct && (
+          matchedModel || 
+          (typeof product.productType === 'string' && product.productType.includes('חילוף')) || 
+          categoryTag === 'parts' ||
+          categoryTag === 'oem'
+      );
 
       if (isPart) {
         crumbs.push({ label: 'חלקי חילוף', href: '/shop/parts' });
@@ -143,34 +147,36 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null,
             currentCatHandle = 'tires';
           } else if (pType.includes('מצבר')) {
             currentCatHandle = 'batteries';
-          } else if (pType.includes('רפיד')) { // 👈 זיהוי רפידות
+          } else if (pType.includes('רפיד')) {
             currentCatHandle = 'pads';
           }
         }
 
-        if (currentCatHandle) {
-          const catLabel = CATEGORY_NAMES[currentCatHandle] || currentCatHandle;
-          crumbs.push({ 
-            label: catLabel, 
-            href: `/shop/collection/${currentCatHandle}` 
-          });
-        }
+        const pType = product.productType;
+        const catLabel = currentCatHandle ? (CATEGORY_NAMES[currentCatHandle] || currentCatHandle) : null;
+        
+        // 🌟 הפניית רפידות לנתיב חיפוש בטוח במקום קולקציה שלא קיימת
+        const collectionPath = (currentCatHandle && currentCatHandle !== 'pads') 
+            ? `/shop/collection/${currentCatHandle}` 
+            : '/shop';
 
-        if (product.productType && typeof product.productType === 'string') {
-          let typeHref = currentCatHandle 
-            ? `/shop/collection/${currentCatHandle}?type=${encodeURIComponent(product.productType)}` 
-            : `/shop?type=${encodeURIComponent(product.productType)}`;
-          
-          crumbs.push({ label: product.productType, href: typeHref });
+        // מונע את הכפילות "רפידות > רפידות"
+        if (pType) {
+            crumbs.push({ 
+                label: pType, 
+                href: collectionPath === '/shop' ? `/shop?type=${encodeURIComponent(pType)}` : `${collectionPath}?type=${encodeURIComponent(pType)}` 
+            });
+        } else if (catLabel) {
+            crumbs.push({ label: catLabel, href: collectionPath });
         }
 
         if (activeVendor && activeVendor.toLowerCase() !== 'unknown') {
-          let vendorHref = currentCatHandle
-            ? `/shop/collection/${currentCatHandle}?vendor=${encodeURIComponent(activeVendor)}`
-            : `/shop?vendor=${encodeURIComponent(activeVendor)}`;
+          let vendorHref = collectionPath === '/shop' 
+            ? `/shop?vendor=${encodeURIComponent(activeVendor)}`
+            : `${collectionPath}?vendor=${encodeURIComponent(activeVendor)}`;
             
-          if (product.productType && typeof product.productType === 'string') {
-            vendorHref += `&type=${encodeURIComponent(product.productType)}`;
+          if (pType) {
+            vendorHref += `&type=${encodeURIComponent(pType)}`;
           }
 
           crumbs.push({ label: String(activeVendor).toUpperCase(), href: vendorHref });
@@ -213,14 +219,14 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null,
     console.error("AutoShopBreadcrumbs Error:", error);
   }
 
-  // 👈 הגדרות זיהוי עמודים
   const isBatteriesPage = pageTitle === 'מצברים' || collection?.title === 'מצברים' || type === 'מצברים' || collection?.handle === 'batteries';
   
-const isPadsPage = 
+  const isPadsPage = 
     (pageTitle && pageTitle.includes('רפיד')) || 
     (collection?.title && collection.title.includes('רפיד')) || 
     (type && type.includes('רפיד')) || 
     (collection?.handle && collection.handle.includes('pad'));
+
   return (
     <div className="mb-2 px-2 md:px-0">
       <nav className="flex items-center text-sm text-gray-500 mb-2" dir="rtl">
@@ -255,7 +261,6 @@ const isPadsPage =
         </h1>
       )}
 
-      {/* 👈 הצגת הווידג'ט הרלוונטי לפי הקטגוריה */}
       {isBatteriesPage && (
         <div className="mt-1">
           <BatterySearchWidget />
