@@ -233,7 +233,8 @@ ${productUrl}
   };
 
   let sidebarContent;
-  if (isSparePart) {
+  // החרגנו את הרפידות מהתנאי - כך שהן יקבלו את התפריט הרגיל
+  if (isSparePart && !isPadProduct) {
     sidebarContent = null;
   } else {
     if (collectionStats) {
