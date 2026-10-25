@@ -7,7 +7,6 @@ import ShopInfoAccordion from '@/components/ShopInfoAccordion';
 import { buildUrlFromFilters } from '@/utils/buildUrlFromFilters';
 import { useSearchParams, usePathname, useRouter } from 'next/navigation';
 import { Filter } from 'lucide-react';
-import MobileCategoryNav from '@/components/MobileCategoryNav';
 
 function ShopLayoutInternalContent({ 
   children, 
@@ -81,8 +80,6 @@ function ShopLayoutInternalContent({
           <div className="md:hidden h-[35px] shrink-0"></div>
         </>
       )}
-
-      <MobileCategoryNav menuItems={menuItems} />
 
       {isMobileMenuOpen && !hideSidebar && (
         <div className="fixed inset-0 z-[70] flex md:hidden flex-col" dir="rtl">
