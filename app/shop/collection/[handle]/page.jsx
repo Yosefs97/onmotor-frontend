@@ -47,6 +47,7 @@ export default async function CollectionPage({ params, searchParams }) {
             title: collectionData.title, 
             handle: handle 
           }} 
+          products={collectionData.products}
         />
         
         {collectionData.description && (

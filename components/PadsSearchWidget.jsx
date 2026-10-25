@@ -126,7 +126,7 @@ export default function PadsSearchWidget({ products = [], compact = false }) {
     }
   };
 
-  if (options.length === 0) return <div className="bg-red-100 p-4 my-4 text-red-800 text-center font-bold">הווידג'ט נטען, אבל אין נתוני דגמים (products חסר או Metafields חסרים)</div>;
+  if (options.length === 0) return null; // לא מציג את המנוע אם אין נתונים
 
   if (compact) {
     return (
