@@ -81,14 +81,12 @@ export default function PadsSearchWidget({ products = [], compact = false }) {
   const [selectedModel, setSelectedModel] = useState(null);
   const router = useRouter();
 
-  // עיבוד כל המוצרים לחילוץ דגמי האופנועים מתוך ה-Metafields
   const options = useMemo(() => {
     if (!products || products.length === 0) return [];
     
     const allModels = [];
 
     products.forEach(product => {
-      // אם זה לא מוצר מסוג רפידות, נדלג עליו (אופציונלי - ליתר ביטחון)
       if (product.productType !== 'רפידות' && !product.title?.includes('רפידות')) return;
 
       const modelsMetafield = product.metafields?.find(m => m && m.key === 'compatible_models');
@@ -100,11 +98,11 @@ export default function PadsSearchWidget({ products = [], compact = false }) {
           Object.entries(data).forEach(([brand, models]) => {
             models.forEach(model => {
               allModels.push({
-                label: `${brand} ${model} - ${product.title}`, // התצוגה המלאה
-                modelName: `${brand} ${model}`, // שם הדגם בלבד
-                productTitle: product.title, // שם המוצר (קדמי/אחורי וכו')
-                searchTags: `${brand} ${model} ${product.title}`, // מילים לחיפוש
-                url: `/shop/${product.handle}` // הקישור למוצר
+                label: `${brand} ${model} - ${product.title}`,
+                modelName: `${brand} ${model}`,
+                productTitle: product.title,
+                searchTags: `${brand} ${model} ${product.title}`,
+                url: `/shop/${product.handle}`
               });
             });
           });
@@ -114,7 +112,6 @@ export default function PadsSearchWidget({ products = [], compact = false }) {
       }
     });
 
-    // מיון אלפביתי של הדגמים
     return allModels.sort((a, b) => a.modelName.localeCompare(b.modelName));
   }, [products]);
 
@@ -126,7 +123,7 @@ export default function PadsSearchWidget({ products = [], compact = false }) {
     }
   };
 
-  if (options.length === 0) return null; // לא מציג את המנוע אם אין נתונים
+  if (options.length === 0) return null;
 
   if (compact) {
     return (
@@ -174,6 +171,15 @@ export default function PadsSearchWidget({ products = [], compact = false }) {
         >
           עבור למוצר
         </button>
+      </div>
+
+      <div className="mt-6 pt-4 border-t border-gray-200 text-center">
+        <h3 className="font-semibold text-gray-700 mb-2">לכל שאלה, צור קשר:</h3>
+        <div className="flex justify-center gap-2">
+          <a href="https://wa.me/972506129664" target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
+            <img src="https://cdn.shopify.com/s/files/1/0691/9245/0274/files/whatsapp-social.png?v=1722724045" alt="WhatsApp" className="w-10 h-10" />
+          </a>
+        </div>
       </div>
     </div>
   );
