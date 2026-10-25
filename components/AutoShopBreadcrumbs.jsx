@@ -215,8 +215,12 @@ export default function AutoShopBreadcrumbs({ product = null, collection = null,
 
   // 👈 הגדרות זיהוי עמודים
   const isBatteriesPage = pageTitle === 'מצברים' || collection?.title === 'מצברים' || type === 'מצברים' || collection?.handle === 'batteries';
-  const isPadsPage = pageTitle === 'רפידות' || collection?.title === 'רפידות' || type === 'רפידות' || collection?.handle === 'pads' || (type && type.includes('רפידות'));
-
+  
+const isPadsPage = 
+    (pageTitle && pageTitle.includes('רפיד')) || 
+    (collection?.title && collection.title.includes('רפיד')) || 
+    (type && type.includes('רפיד')) || 
+    (collection?.handle && collection.handle.includes('pad'));
   return (
     <div className="mb-2 px-2 md:px-0">
       <nav className="flex items-center text-sm text-gray-500 mb-2" dir="rtl">
