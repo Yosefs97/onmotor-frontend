@@ -1,9 +1,10 @@
 /**
  * פונקציה להוספת לוגו ואופטימיזציה לתמונות Cloudinary
- * @param {string} url - הלינק המקורי שמגיע מסטראפי
- * @returns {string} - הלינק המעובד עם הלוגו
+ * @param {string} url הלינק המקורי שמגיע מסטראפי
+ * @param {number} maxWidth רוחב מקסימלי לתמונה (ברירת מחדל 1200px)
+ * @returns {string} הלינק המעובד עם הלוגו והגבלת המידות
  */
-export function getBrandedUrl(url) {
+export function getBrandedUrl(url, maxWidth = 1200) {
   // בדיקות תקינות בסיסיות
   if (!url || typeof url !== 'string') return '';
   
@@ -14,15 +15,12 @@ export function getBrandedUrl(url) {
   const logoId = 'Logo_for_image_web_vzv8p0';
 
   // 2. הגדרת המיקום והגודל (Watermark Configuration)
-  // l_ : שכבת הלוגו
-  // w_0.30,fl_relative : רוחב הלוגו יהיה 30% מרוחב התמונה (מתאים ללוגו רחב)
-  // g_south_west : מיקום פינה שמאלית תחתונה
-  // x_15,y_15 : מרווח מהשוליים
-  // o_90 : שקיפות 90%
   const watermark = `l_${logoId},w_0.30,fl_relative,g_south_west,x_15,y_15,o_90`;
 
-  // 3. הגדרות אופטימיזציה (דחיסה ופורמט אוטומטי)
-  const optimization = 'f_auto,q_auto';
+  // 3. הגדרות אופטימיזציה + הגבלת גודל!
+  // w_{maxWidth} - מקטין את רוחב התמונה למקסימום המוגדר (1200)
+  // c_limit - מבטיח שאם התמונה קטנה מ-1200, היא לא תוגדל ותימרח
+  const optimization = `f_auto,q_auto,w_${maxWidth},c_limit`;
 
   // חיבור השרשרת
   const transformation = `${optimization}/${watermark}`;
